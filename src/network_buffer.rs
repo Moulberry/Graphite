@@ -54,7 +54,7 @@ impl PacketReadBuffer {
             return Ok(PacketReadResult::Empty);
         } else if remaining >= 3 {
             // Packet must start with varint header specifying the amount of data
-            let (packet_size, varint_header_bytes) = varint::decode_varint3_unchecked(&self.vec[self.reader_index..]);
+            let (packet_size, varint_header_bytes) = varint::decode::u21(&self.vec[self.reader_index..])?;
             let packet_size = packet_size as usize;
 
             if packet_size > PacketReadBuffer::MAXIMUM_PACKET_SIZE {

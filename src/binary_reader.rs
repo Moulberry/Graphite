@@ -29,7 +29,7 @@ pub fn read_varint(bytes: &mut &[u8]) -> anyhow::Result<i32> {
         return Err(BinaryReadError::NotEnoughRemainingBytes.into());
     }
 
-    let (num, size) = varint::decode_varint(bytes)?;
+    let (num, size) = varint::decode::i32(bytes)?;
     *bytes = &bytes[size..];
     Ok(num)
 }
@@ -44,7 +44,7 @@ pub fn read_string_with_max_size<'a>(bytes: &mut &'a[u8], max_size: usize) -> an
     }
 
     // Get string length
-    let (string_size, consumed) = varint::decode_varint3(bytes)?;
+    let (string_size, consumed) = varint::decode::u21(bytes)?;
     *bytes = &bytes[consumed..];
     let string_size = string_size as usize;
 
@@ -72,6 +72,22 @@ pub fn read_string_with_max_size<'a>(bytes: &mut &'a[u8], max_size: usize) -> an
     Ok(string)
 }
 
+pub fn read_sized_blob<'a>(bytes: &mut &'a[u8]) -> anyhow::Result<&'a [u8]> {
+    if bytes.len() == 0 {
+        return Err(BinaryReadError::NotEnoughRemainingBytes.into());
+    }
+
+    // Get blob length
+    let (blob_size, consumed) = varint::decode::i32(bytes)?;
+    *bytes = &bytes[consumed..];
+    let blob_size = blob_size as usize;
+
+    // Get blob
+    let (blob, rest_bytes) = bytes.split_at(blob_size);
+    *bytes = rest_bytes;
+    Ok(blob)
+}
+
 macro_rules! read_from_primitive_impl {
     ($func:ident, $typ:tt::$conv:tt) => {
         pub fn $func(bytes: &mut &[u8]) -> anyhow::Result<$typ> {
@@ -93,3 +109,15 @@ macro_rules! read_from_primitive_impl {
 }
 
 read_from_primitive_impl!(read_u16, u16::from_be_bytes);
+read_from_primitive_impl!(read_i64, i64::from_be_bytes);
+
+pub fn read_bool(bytes: &mut &[u8]) -> anyhow::Result<bool> {
+    if bytes.len() == 0 {
+        return Err(BinaryReadError::NotEnoughRemainingBytes.into());
+    }
+
+    // Read byte, true if `u8 != 0`, false otherwise 
+    let ret = bytes[0] != 0;
+    *bytes = &bytes[1..];
+    Ok(ret)
+}

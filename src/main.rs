@@ -6,9 +6,12 @@ mod network_buffer;
 mod varint;
 mod packet;
 mod binary_reader;
+mod binary_writer;
 
 use anyhow::bail;
 use network_buffer::{PacketReadBuffer, PacketReadResult};
+use packet::Packet;
+use packet::login::login_start::LoginStart;
 use crate::packet::handshake::handshake::Handshake;
 
 #[derive(PartialEq, Eq)]
@@ -134,7 +137,22 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
             }
 
             return Ok(());
-        }
+        },
+        /*ConnectionState::Login => {
+            let mut bytes = bytes;
+
+            let packet_id = binary_reader::read_varint(&mut bytes)?;
+            match packet_id {
+                0 => {
+                    // https://wiki.vg/Protocol#Login_Start
+                    let login_start_packet = LoginStart::read(bytes)?;
+                    println!("got login start: {:?}", login_start_packet);
+                }
+            }
+
+
+            return Ok(());
+        },*/
         _ => {
             todo!()
         }
