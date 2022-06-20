@@ -2,13 +2,14 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 
-mod binary_buffer;
 mod network_buffer;
 mod varint;
+mod packet;
+mod binary_reader;
 
 use anyhow::bail;
-use bytes::Buf;
 use network_buffer::{PacketReadBuffer, PacketReadResult};
+use crate::packet::handshake::handshake::Handshake;
 
 #[derive(PartialEq, Eq)]
 struct Uuid(u128);
@@ -92,42 +93,41 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 bail!("legacy server list ping from 2013 is not supported");
             } else {
                 // Handshake: https://wiki.vg/Protocol#Handshake
-                let mut binary_buf = binary_buffer::BinaryBuf::new(bytes);
+                let mut bytes = bytes;
 
-                let packet_id = binary_buf.get_varint()?;
+                let packet_id = binary_reader::read_varint(&mut bytes)?;
                 if packet_id != 0 {
                     bail!("unknown packet_id {} during {:?}", packet_id, connection.state);
                 }
 
-                let _protocol_version = binary_buf.get_varint()?;
-                let _connected_from = binary_buf.get_string_with_max_size(256)?;
-                let _port = binary_buf.get_u16();
-                let next_state = binary_buf.get_varint()?;
+                let handshake_packet = Handshake::read(bytes)?;
 
-                binary_buf.check_finished()?;
-
-                connection.state = match next_state {
+                connection.state = match handshake_packet.next_state {
                     1 => ConnectionState::Status,
                     2 => ConnectionState::Login,
                     next => bail!("unknown next state {} during {:?}", next, connection.state)
                 };
-
-                //send_serverlist_response(&mut connection.stream);
 
                 return Ok(());
             }
         }
         ConnectionState::Status => {
             // Server List Ping: https://wiki.vg/Server_List_Ping
-            let mut binary_buf = binary_buffer::BinaryBuf::new(bytes);
+            let mut bytes = bytes;
 
-            let packet_id = binary_buf.get_varint()?;
+            let packet_id = binary_reader::read_varint(&mut bytes)?;
             match packet_id {
                 0 => send_serverlist_response(&mut connection.stream)?,
                 1 => {
-                    connection.stream.write_all(&[9, 1])?;
-                    connection.stream.write_all(binary_buf.get_all_bytes()?)?;
-                    connection.stream.flush()?;
+                    if bytes.len() == 8 {
+                        // length = 9, packet = 1, rest is copied over from `bytes`
+                        let mut response: [u8; 10] = [9, 1, 0, 0, 0, 0, 0, 0, 0, 0];
+                        response[2..].clone_from_slice(bytes);
+                        
+                        connection.stream.write_all(&response)?;
+                        connection.stream.flush()?;
+                    }
+
                     connection.close();
                 },
                 _ => bail!("unknown packet_id {} during {:?}", packet_id, connection.state)
