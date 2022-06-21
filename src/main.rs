@@ -9,10 +9,12 @@ mod binary_reader;
 mod binary_writer;
 
 use anyhow::bail;
+use anyhow::anyhow;
+
 use network_buffer::{PacketReadBuffer, PacketReadResult};
 use packet::Packet;
 use packet::login::login_start::LoginStart;
-use crate::packet::handshake::handshake::Handshake;
+use crate::packet::handshake::ClientHandshake;
 
 #[derive(PartialEq, Eq)]
 struct Uuid(u128);
@@ -98,18 +100,21 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 // Handshake: https://wiki.vg/Protocol#Handshake
                 let mut bytes = bytes;
 
-                let packet_id = binary_reader::read_varint(&mut bytes)?;
-                if packet_id != 0 {
-                    bail!("unknown packet_id {} during {:?}", packet_id, connection.state);
+                let packet_id_u8: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
+
+                if let Ok(packet_id) = packet::handshake::PacketId::try_from(packet_id_u8) {
+                    println!("got packet by id: {:?}", packet_id);
+
+                    let handshake_packet = ClientHandshake::read(bytes)?;
+
+                    connection.state = match handshake_packet.next_state {
+                        1 => ConnectionState::Status,
+                        2 => ConnectionState::Login,
+                        next => bail!("unknown next state {} during {:?}", next, connection.state)
+                    };
+                } else {
+                    bail!("unknown packet_id {} during {:?}", packet_id_u8, connection.state);
                 }
-
-                let handshake_packet = Handshake::read(bytes)?;
-
-                connection.state = match handshake_packet.next_state {
-                    1 => ConnectionState::Status,
-                    2 => ConnectionState::Login,
-                    next => bail!("unknown next state {} during {:?}", next, connection.state)
-                };
 
                 return Ok(());
             }

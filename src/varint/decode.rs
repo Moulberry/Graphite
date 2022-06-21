@@ -29,11 +29,11 @@ unsafe fn decode_varint_generic<R: Into<u64>>(bytes: *const u8, max_parts: usize
 pub fn i32(slice: &[u8]) -> Result<(i32, usize), VarintDecodeOutOfBounds> {
     let len = slice.len();
     if len >= 8 {
-        Ok(i32_unchecked(slice))
+        Ok(unsafe { i32_unchecked(slice) } )
     } else {
         let mut data = [0u8; 8];
         data[..len].copy_from_slice(slice);
-        let (num, size) = i32_unchecked(&data);
+        let (num, size) = unsafe { i32_unchecked(&data) };
 
         // Check bounds
         if size > len {
@@ -44,12 +44,9 @@ pub fn i32(slice: &[u8]) -> Result<(i32, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-pub fn i32_unchecked(slice: &[u8]) -> (i32, usize) {
-    unsafe { i32_unsafe(slice.as_ptr()) }
-}
-
-unsafe fn i32_unsafe(bytes: *const u8) -> (i32, usize) {
-    let (num, size) = decode_varint_generic::<u64>(bytes, 5);
+// invariant: must guarantee 8 available bytes in this slice
+pub unsafe fn i32_unchecked(slice: &[u8]) -> (i32, usize) {
+    let (num, size) = decode_varint_generic::<u64>(slice.as_ptr(), 5);
     (std::mem::transmute(num as u32), size)
 }
 
@@ -58,11 +55,11 @@ unsafe fn i32_unsafe(bytes: *const u8) -> (i32, usize) {
 pub fn u21(slice: &[u8]) -> Result<(u32, usize), VarintDecodeOutOfBounds> {
     let len = slice.len();
     if len >= 4 {
-        Ok(u21_unchecked(slice))
+        Ok(unsafe { u21_unchecked(slice) })
     } else {
         let mut data = [0u8; 4];
         data[..len].copy_from_slice(slice);
-        let (num, size) = u21_unchecked(&data);
+        let (num, size) = unsafe { u21_unchecked(&data) };
 
         // Check bounds
         if size > len {
@@ -73,12 +70,9 @@ pub fn u21(slice: &[u8]) -> Result<(u32, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-pub fn u21_unchecked(slice: &[u8]) -> (u32, usize) {
-    unsafe { u21_unsafe(slice.as_ptr()) }
-}
-
-unsafe fn u21_unsafe(bytes: *const u8) -> (u32, usize) {
-    let (num, size) = decode_varint_generic::<u32>(bytes, 3);
+// invariant: must guarantee 4 available bytes in this slice
+pub unsafe fn u21_unchecked(slice: &[u8]) -> (u32, usize) {
+    let (num, size) = decode_varint_generic::<u32>(slice.as_ptr(), 3);
     (num as u32, size)
 }
 
@@ -87,11 +81,11 @@ unsafe fn u21_unsafe(bytes: *const u8) -> (u32, usize) {
 pub fn u14(slice: &[u8]) -> Result<(u16, usize), VarintDecodeOutOfBounds> {
     let len = slice.len();
     if len >= 2 {
-        Ok(u14_unchecked(slice))
+        Ok(unsafe { u14_unchecked(slice) })
     } else {
         let mut data = [0u8; 2];
         data[..len].copy_from_slice(slice);
-        let (num, size) = u14_unchecked(&data);
+        let (num, size) = unsafe { u14_unchecked(&data) };
 
         // Check bounds
         if size > len {
@@ -102,12 +96,9 @@ pub fn u14(slice: &[u8]) -> Result<(u16, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-pub fn u14_unchecked(slice: &[u8]) -> (u16, usize) {
-    unsafe { u14_unsafe(slice.as_ptr()) }
-}
-
-unsafe fn u14_unsafe(bytes: *const u8) -> (u16, usize) {
-    let (num, size) = decode_varint_generic::<u16>(bytes, 2);
+// invariant: must guarantee 2 available bytes in this slice
+pub unsafe fn u14_unchecked(slice: &[u8]) -> (u16, usize) {
+    let (num, size) = decode_varint_generic::<u16>(slice.as_ptr(), 2);
     (num as u16, size)
 }
 
