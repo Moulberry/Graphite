@@ -44,8 +44,9 @@ pub fn i32(slice: &[u8]) -> Result<(i32, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-// invariant: must guarantee 8 available bytes in this slice
 pub unsafe fn i32_unchecked(slice: &[u8]) -> (i32, usize) {
+    debug_assert!(slice.len() >= 8, "invariant: slice must contain at least 8 bytes to decode varint");
+
     let (num, size) = decode_varint_generic::<u64>(slice.as_ptr(), 5);
     (std::mem::transmute(num as u32), size)
 }
@@ -70,8 +71,9 @@ pub fn u21(slice: &[u8]) -> Result<(u32, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-// invariant: must guarantee 4 available bytes in this slice
 pub unsafe fn u21_unchecked(slice: &[u8]) -> (u32, usize) {
+    debug_assert!(slice.len() >= 4, "invariant: slice must contain at least 4 bytes to decode varint");
+
     let (num, size) = decode_varint_generic::<u32>(slice.as_ptr(), 3);
     (num as u32, size)
 }
@@ -96,8 +98,9 @@ pub fn u14(slice: &[u8]) -> Result<(u16, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-// invariant: must guarantee 2 available bytes in this slice
 pub unsafe fn u14_unchecked(slice: &[u8]) -> (u16, usize) {
+    debug_assert!(slice.len() >= 2, "invariant: slice must contain at least 2 bytes to decode varint");
+
     let (num, size) = decode_varint_generic::<u16>(slice.as_ptr(), 2);
     (num as u16, size)
 }

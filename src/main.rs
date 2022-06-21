@@ -9,12 +9,10 @@ mod binary_reader;
 mod binary_writer;
 
 use anyhow::bail;
-use anyhow::anyhow;
 
 use network_buffer::{PacketReadBuffer, PacketReadResult};
 use packet::Packet;
 use packet::IdentifiedPacket;
-use packet::login::login_start::LoginStart;
 use crate::packet::handshake::ClientHandshake;
 use crate::packet::status::ServerResponse;
 
@@ -102,9 +100,9 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 // Handshake: https://wiki.vg/Protocol#Handshake
                 let mut bytes = bytes;
 
-                let packet_id_u8: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
+                let packet_id_byte: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
 
-                if let Ok(packet_id) = packet::handshake::PacketId::try_from(packet_id_u8) {
+                if let Ok(packet_id) = packet::handshake::PacketId::try_from(packet_id_byte) {
                     println!("got packet by id: {:?}", packet_id);
 
                     let handshake_packet = ClientHandshake::read(bytes)?;
@@ -115,7 +113,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                         next => bail!("unknown next state {} during {:?}", next, connection.state)
                     };
                 } else {
-                    bail!("unknown packet_id {} during {:?}", packet_id_u8, connection.state);
+                    bail!("unknown packet_id {} during {:?}", packet_id_byte, connection.state);
                 }
 
                 return Ok(());
@@ -130,6 +128,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 0 => send_serverlist_response(&mut connection.stream)?,
                 1 => {
                     if bytes.len() == 8 {
+                        // todo: should probably make this an actual packet, even if its slightly slower
                         // length = 9, packet = 1, rest is copied over from `bytes`
                         let mut response: [u8; 10] = [9, 1, 0, 0, 0, 0, 0, 0, 0, 0];
                         response[2..].clone_from_slice(bytes);
@@ -145,21 +144,27 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
             return Ok(());
         },
-        /*ConnectionState::Login => {
+        ConnectionState::Login => {
             let mut bytes = bytes;
 
-            let packet_id = binary_reader::read_varint(&mut bytes)?;
-            match packet_id {
-                0 => {
-                    // https://wiki.vg/Protocol#Login_Start
-                    let login_start_packet = LoginStart::read(bytes)?;
-                    println!("got login start: {:?}", login_start_packet);
-                }
+            let packet_id_byte: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
+
+            if let Ok(packet_id) = packet::login::PacketId::try_from(packet_id_byte) {
+                println!("got packet by id: {:?}", packet_id);
+
+                /*let handshake_packet = ClientHandshake::read(bytes)?;
+
+                connection.state = match handshake_packet.next_state {
+                    1 => ConnectionState::Status,
+                    2 => ConnectionState::Login,
+                    next => bail!("unknown next state {} during {:?}", next, connection.state)
+                };*/
+            } else {
+                bail!("unknown packet_id {} during {:?}", packet_id_byte, connection.state);
             }
 
-
             return Ok(());
-        },*/
+        },
         _ => {
             todo!()
         }
@@ -196,7 +201,7 @@ fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
     }
 
     let mut bytes = vec![0; 4 + expected_packet_size];
-    
+
     // invariant should be satisfied because we allocated at least `get_write_size` bytes
     let slice_after_writing = unsafe { server_response.write(&mut bytes[4..]) };
     let bytes_written = expected_packet_size - slice_after_writing.len();
@@ -206,7 +211,7 @@ fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
     let (varint_raw, written) = varint::encode::i32_raw(1 + bytes_written as i32);
     if written > 3 {
         bail!("packet too large!");
-    }  
+    }
 
     // println!("{:?}", varint_raw);
 
