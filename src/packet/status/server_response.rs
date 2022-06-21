@@ -1,6 +1,5 @@
 use crate::packet::Packet;
-use crate::binary_reader;
-use crate::binary_writer::BinaryWritable;
+use crate::{binary_reader, binary_writer};
 
 #[derive(Debug)]
 pub struct ServerResponse<'a> {
@@ -20,11 +19,12 @@ impl <'a> Packet<'a, super::PacketId> for ServerResponse<'a> {
         Ok(packet)
     }
 
-    fn get_write_len_hint(&self) -> usize {
+    fn get_write_size(&self) -> usize {
         5 + self.json.len()
     }
 
-    fn write(&self, vec: &mut Vec<u8>) {
-        vec.put_sized_string(self.json);
+    unsafe fn write<'b>(&self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
+        bytes = binary_writer::write_sized_string(bytes, self.json);
+        bytes
     }
 }

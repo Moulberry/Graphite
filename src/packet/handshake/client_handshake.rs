@@ -1,7 +1,6 @@
 use crate::packet::Packet;
 use crate::binary_reader;
-use crate::binary_writer::BinaryWritable;
-use bytes::BufMut;
+use crate::binary_writer;
 
 #[derive(Debug)]
 pub struct ClientHandshake<'a> {
@@ -27,14 +26,16 @@ impl <'a> Packet<'a, super::PacketId> for ClientHandshake<'a> {
         Ok(packet)
     }
 
-    fn get_write_len_hint(&self) -> usize {
+    fn get_write_size(&self) -> usize {
         5 + 5 + self.server_address.len() + 2 + 5
     }
 
-    fn write(&self, vec: &mut Vec<u8>) {
-        vec.put_varint_i32(self.protocol_version);
-        vec.put_sized_string(self.server_address);
-        vec.put_u16(self.server_port);
-        vec.put_varint_i32(self.next_state);
+    unsafe fn write<'b>(&self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
+        bytes = binary_writer::write_varint_i32(bytes, self.protocol_version);
+        bytes = binary_writer::write_sized_string(bytes, self.server_address);
+        bytes = binary_writer::write_u16(bytes, self.server_port);
+        bytes = binary_writer::write_varint_i32(bytes, self.next_state);
+
+        bytes
     }
 }

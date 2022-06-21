@@ -13,8 +13,10 @@ use anyhow::anyhow;
 
 use network_buffer::{PacketReadBuffer, PacketReadResult};
 use packet::Packet;
+use packet::IdentifiedPacket;
 use packet::login::login_start::LoginStart;
 use crate::packet::handshake::ClientHandshake;
+use crate::packet::status::ServerResponse;
 
 #[derive(PartialEq, Eq)]
 struct Uuid(u128);
@@ -185,18 +187,45 @@ fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
                 },
                 \"favicon\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAABGklEQVRo3u2aUQ7EIAhEbcNReiPP6Y16F/djk/1bozJASYffJu08BRxMj957yRxnSR4EIMDbAQTylrvWwdOrNTuAY6+NjhV7YiwDbEg3xVgDUKq3wIgp4rtW1FqYAEwuMAQDk0L/FE/q02TUqVR/tTb4vGkDBaTQjL4xIU/i91gJVNeDV8gZ+HnIorAGCJAAwKIBAACAhixyIvsyKL3Qg0bKqzXnbZlNoXmH/NwitvBkeuC1Ira2lk5daBvDAn6/iH9qAi+Fyva9EDDvlYTxVkJZx/RCBMgHgO1L3IEXAmANn+SV7r0DRk5b0im2BfAfaCRcn/JYkBIXwXejDzmPJZ1iVwCHAfrgD08EIAABCEAAAhCAAAQgwG58AEFWdXlZzlUbAAAAAElFTkSuQmCC\"
             }";
-    let mut bytes: Vec<u8> = vec![];
-    push_varint(&mut bytes, 1 + 2 + RESPONSE_JSON.len() as i32);
-    bytes.push(0);
-    push_varint(&mut bytes, RESPONSE_JSON.len() as i32);
-    bytes.extend_from_slice(RESPONSE_JSON.as_bytes());
-    stream.write_all(&bytes)?;
+
+    let server_response = ServerResponse { json: RESPONSE_JSON };
+    
+    let expected_packet_size = server_response.get_write_size();
+    if expected_packet_size > 2097148 {
+        bail!("packet too large!");
+    }
+
+    let mut bytes = vec![0; 4 + expected_packet_size];
+    
+    // invariant should be satisfied because we allocated at least `get_write_size` bytes
+    let slice_after_writing = unsafe { server_response.write(&mut bytes[4..]) };
+    let bytes_written = expected_packet_size - slice_after_writing.len();
+
+    // println!("wrote bytes: {}", bytes_written);
+
+    let (varint_raw, written) = varint::encode::i32_raw(1 + bytes_written as i32);
+    if written > 3 {
+        bail!("packet too large!");
+    }  
+
+    // println!("{:?}", varint_raw);
+
+    let varint_bytes_spare = 3 - written;
+
+    bytes[varint_bytes_spare..3].copy_from_slice(&varint_raw[..written]);
+    bytes[3] = ServerResponse::get_packet_id() as u8;
+
+    // println!("bytes: {:?}", &bytes[varint_bytes_spare..4+bytes_written]);
+
+    stream.write_all(&bytes[varint_bytes_spare..4+bytes_written])?;
+    stream.flush()?;
+
     Ok(())
 }
 
 // todo: move encoding to varint.rs
 
-fn push_varint(vec: &mut Vec<u8>, num: i32) {
+/*fn push_varint(vec: &mut Vec<u8>, num: i32) {
     let (bytes, size) = unsafe { encode_varint(num) };
     vec.extend_from_slice(&bytes[..size]);
 }
@@ -221,4 +250,4 @@ unsafe fn encode_varint(num: i32) -> ([u8; 16], usize) {
     let merged = stage1 | (msbs & msbmask);
 
     (std::mem::transmute([merged, 0]), bytes_needed as usize)
-}
+}*/

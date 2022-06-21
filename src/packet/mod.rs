@@ -1,17 +1,8 @@
-use self::handshake::ClientHandshake;
+use std::fmt::Debug;
 
 pub mod handshake;
 pub mod status;
-use std::{any::TypeId, fmt::Debug};
-
 pub mod login;
-
-enum ProtocolState {
-    Handshake,
-    Status,
-    Login,
-    Play
-}
 
 pub trait IdentifiedPacket<I> {
     fn get_packet_id() -> I;
@@ -19,16 +10,8 @@ pub trait IdentifiedPacket<I> {
 
 pub trait Packet<'a, I, T = Self> : Debug+IdentifiedPacket<I> {
     fn read(bytes: &'a [u8]) -> anyhow::Result<T>;
-    fn get_write_len_hint(&self) -> usize;
-    fn write(&self, vec: &mut Vec<u8>); // todo: Vec<u8> could be `T: binary_writer::BinaryWritable + bytes::BufMut`
-}
-
-fn packet_id_of<'a, T: 'static + Packet<'a, T>>() -> u8 {
-    if TypeId::of::<T>() == TypeId::of::<ClientHandshake>() {
-        0
-    } else {
-        panic!("unknown packet type");
-    }
+    fn get_write_size(&self) -> usize;
+    unsafe fn write<'b>(&self, bytes: &'b mut [u8]) -> &'b mut [u8];
 }
 
 macro_rules! identify_packets {
