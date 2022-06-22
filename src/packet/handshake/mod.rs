@@ -2,8 +2,11 @@ mod client_handshake;
 
 pub use client_handshake::ClientHandshake;
 
+use crate::packet::IdentifiedPacket;
+use derive_try_from_primitive::TryFromPrimitive;
 use super::identify_packets;
 
 identify_packets!(
-    ClientHandshake = 0
+    ClientPacketId,
+    ClientHandshake = 0x00
 );

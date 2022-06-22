@@ -10,7 +10,7 @@ pub struct ClientHandshake<'a> {
     pub next_state: i32
 }
 
-impl <'a> Packet<'a, super::PacketId> for ClientHandshake<'a> {
+impl <'a> Packet<'a, super::ClientPacketId> for ClientHandshake<'a> {
     fn read(bytes: &'a [u8]) -> anyhow::Result<ClientHandshake<'a>> {
         let mut bytes = bytes;
 

@@ -6,7 +6,7 @@ pub struct ServerResponse<'a> {
     pub json: &'a str
 }
 
-impl <'a> Packet<'a, super::PacketId> for ServerResponse<'a> {
+impl <'a> Packet<'a, super::ServerPacketId> for ServerResponse<'a> {
     fn read(bytes: &'a [u8]) -> anyhow::Result<ServerResponse<'a>> {
         let mut bytes = bytes;
 

@@ -2,8 +2,11 @@ mod server_response;
 
 pub use server_response::ServerResponse;
 
+use crate::packet::IdentifiedPacket;
+use derive_try_from_primitive::TryFromPrimitive;
 use super::identify_packets;
 
 identify_packets!(
-    ServerResponse = 0
+    ServerPacketId,
+    ServerResponse = 0x00
 );

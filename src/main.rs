@@ -13,7 +13,10 @@ use anyhow::bail;
 use network_buffer::{PacketReadBuffer, PacketReadResult};
 use packet::Packet;
 use packet::IdentifiedPacket;
+use rand::Rng;
 use crate::packet::handshake::ClientHandshake;
+use crate::packet::login::ClientLoginStart;
+use crate::packet::login::ServerLoginSuccess;
 use crate::packet::status::ServerResponse;
 
 #[derive(PartialEq, Eq)]
@@ -102,7 +105,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
                 let packet_id_byte: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
 
-                if let Ok(packet_id) = packet::handshake::PacketId::try_from(packet_id_byte) {
+                if let Ok(packet_id) = packet::handshake::ClientPacketId::try_from(packet_id_byte) {
                     println!("got packet by id: {:?}", packet_id);
 
                     let handshake_packet = ClientHandshake::read(bytes)?;
@@ -149,8 +152,22 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
             let packet_id_byte: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
 
-            if let Ok(packet_id) = packet::login::PacketId::try_from(packet_id_byte) {
+            if let Ok(packet_id) = packet::login::ClientPacketId::try_from(packet_id_byte) {
                 println!("got packet by id: {:?}", packet_id);
+
+                match packet_id {
+                    packet::login::ClientPacketId::ClientLoginStart => {
+                        let login_start_packet = ClientLoginStart::read(bytes)?;
+                        println!("logging in with username: {}", login_start_packet.username);
+
+                        let login_success_packet = ServerLoginSuccess {
+                            uuid: rand::thread_rng().gen(),
+                            username: login_start_packet.username
+                        };
+
+                        send_packet(&mut connection.stream, login_success_packet)?;
+                    }
+                }
 
                 /*let handshake_packet = ClientHandshake::read(bytes)?;
 
@@ -169,6 +186,40 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
             todo!()
         }
     }
+}
+
+fn send_packet<'a, I, T: Packet<'a, I>>(stream: &mut TcpStream, packet: T) -> anyhow::Result<()> {
+    let expected_packet_size = packet.get_write_size();
+    if expected_packet_size > 2097148 {
+        bail!("packet too large!");
+    }
+
+    let mut bytes = vec![0; 4 + expected_packet_size];
+
+    // invariant should be satisfied because we allocated at least `get_write_size` bytes
+    let slice_after_writing = unsafe { packet.write(&mut bytes[4..]) };
+    let bytes_written = expected_packet_size - slice_after_writing.len();
+
+    // println!("wrote bytes: {}", bytes_written);
+
+    let (varint_raw, written) = varint::encode::i32_raw(1 + bytes_written as i32);
+    if written > 3 {
+        bail!("packet too large!");
+    }
+
+    // println!("{:?}", varint_raw);
+
+    let varint_bytes_spare = 3 - written;
+
+    bytes[varint_bytes_spare..3].copy_from_slice(&varint_raw[..written]);
+    bytes[3] = packet.get_packet_id_as_u8();
+
+    // println!("bytes: {:?}", &bytes[varint_bytes_spare..4+bytes_written]);
+
+    stream.write_all(&bytes[varint_bytes_spare..4+bytes_written])?;
+    stream.flush()?;
+
+    Ok(())
 }
 
 fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
@@ -194,37 +245,7 @@ fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
             }";
 
     let server_response = ServerResponse { json: RESPONSE_JSON };
-    
-    let expected_packet_size = server_response.get_write_size();
-    if expected_packet_size > 2097148 {
-        bail!("packet too large!");
-    }
-
-    let mut bytes = vec![0; 4 + expected_packet_size];
-
-    // invariant should be satisfied because we allocated at least `get_write_size` bytes
-    let slice_after_writing = unsafe { server_response.write(&mut bytes[4..]) };
-    let bytes_written = expected_packet_size - slice_after_writing.len();
-
-    // println!("wrote bytes: {}", bytes_written);
-
-    let (varint_raw, written) = varint::encode::i32_raw(1 + bytes_written as i32);
-    if written > 3 {
-        bail!("packet too large!");
-    }
-
-    // println!("{:?}", varint_raw);
-
-    let varint_bytes_spare = 3 - written;
-
-    bytes[varint_bytes_spare..3].copy_from_slice(&varint_raw[..written]);
-    bytes[3] = ServerResponse::get_packet_id() as u8;
-
-    // println!("bytes: {:?}", &bytes[varint_bytes_spare..4+bytes_written]);
-
-    stream.write_all(&bytes[varint_bytes_spare..4+bytes_written])?;
-    stream.flush()?;
-
+    send_packet(stream, server_response)?;
     Ok(())
 }
 

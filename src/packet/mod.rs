@@ -5,7 +5,8 @@ pub mod status;
 pub mod login;
 
 pub trait IdentifiedPacket<I> {
-    fn get_packet_id() -> I;
+    fn get_packet_id(&self) -> I;
+    fn get_packet_id_as_u8(&self) -> u8;
 }
 
 pub trait Packet<'a, I, T = Self> : Debug+IdentifiedPacket<I> {
@@ -15,19 +16,19 @@ pub trait Packet<'a, I, T = Self> : Debug+IdentifiedPacket<I> {
 }
 
 macro_rules! identify_packets {
-    ( $( $packet:ident = $val:tt ),* ) => {
-        use crate::packet::IdentifiedPacket;
-        use derive_try_from_primitive::TryFromPrimitive;
-
+    ( $enum_name:ident, $( $packet:ident = $val:tt ),* ) => {
         #[derive(Debug, TryFromPrimitive)]
         #[repr(u8)]
-        pub enum PacketId {
+        pub enum $enum_name {
             $( $packet = $val,)*
         }
 
-        $(impl IdentifiedPacket<PacketId> for $packet<'_> {
-            fn get_packet_id() -> PacketId {
-                PacketId::$packet
+        $(impl IdentifiedPacket<$enum_name> for $packet<'_> {
+            fn get_packet_id(&self) -> $enum_name {
+                $enum_name::$packet
+            }
+            fn get_packet_id_as_u8(&self) -> u8 {
+                $enum_name::$packet as u8
             }
         })*
     }

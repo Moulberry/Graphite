@@ -3,17 +3,19 @@ use crate::binary_reader;
 use crate::binary_writer;
 
 #[derive(Debug)]
-pub struct LoginStart<'a> {
+pub struct ClientLoginStart<'a> {
     pub username: &'a str
 }
 
-impl <'a> Packet<'a, super::PacketId> for LoginStart<'a> {
-    fn read(bytes: &'a [u8]) -> anyhow::Result<LoginStart<'a>> {
+impl <'a> Packet<'a, super::ClientPacketId> for ClientLoginStart<'a> {
+    fn read(bytes: &'a [u8]) -> anyhow::Result<ClientLoginStart<'a>> {
         let mut bytes = bytes;
 
-        let packet = LoginStart {
+        let packet = ClientLoginStart {
             username: binary_reader::read_string_with_max_size(&mut bytes, 16)?,
         };
+
+        // todo: verify integrity of username ([a-zA-Z0-9_]{3,16})
 
         binary_reader::ensure_fully_read(bytes)?;
 
