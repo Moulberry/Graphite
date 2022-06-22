@@ -14,6 +14,7 @@ use rand::Rng;
 use crate::packet::handshake::ClientHandshake;
 use crate::packet::login::ClientLoginStart;
 use crate::packet::login::ServerLoginSuccess;
+use crate::packet::play::ServerJoinGame;
 use crate::packet::status::ServerResponse;
 
 #[derive(PartialEq, Eq)]
@@ -89,6 +90,8 @@ fn handle_connection(mut connection: PlayerConnection) {
     }
 }
 
+use binary::slice_serializable::SliceSerializable;
+
 fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> anyhow::Result<()> {
     match connection.state {
         ConnectionState::Handshake => {
@@ -105,7 +108,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 if let Ok(packet_id) = packet::handshake::ClientPacketId::try_from(packet_id_byte) {
                     println!("got packet by id: {:?}", packet_id);
 
-                    let handshake_packet = ClientHandshake::read(bytes)?;
+                    let handshake_packet = ClientHandshake::read(&mut bytes)?;
 
                     connection.state = match handshake_packet.next_state {
                         1 => ConnectionState::Status,
@@ -164,7 +167,20 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
                         net::packet_helper::send_packet(&mut connection.stream, login_success_packet)?;
 
-                        connection.state = ConnectionState::Play;
+                        // connection.state = ConnectionState::Play;
+
+                        // fake play, for testing
+
+                        std::thread::sleep(std::time::Duration::from_secs(1));
+
+                        let join_game_packet = ServerJoinGame {
+                            entity_id: 0
+                        };
+                        net::packet_helper::send_packet(&mut connection.stream, join_game_packet)?;
+
+                        std::thread::sleep(std::time::Duration::from_secs(1));
+
+                        connection.close();
                     }
                 }
             } else {

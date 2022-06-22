@@ -3,6 +3,7 @@ use std::fmt::Debug;
 pub mod handshake;
 pub mod status;
 pub mod login;
+pub mod play;
 
 pub trait IdentifiedPacket<I> {
     fn get_packet_id(&self) -> I;
@@ -16,14 +17,14 @@ pub trait Packet<'a, I, T = Self> : Debug+IdentifiedPacket<I> {
 }
 
 macro_rules! identify_packets {
-    ( $enum_name:ident, $( $packet:ident = $val:tt ),* ) => {
+    ( $enum_name:ident, $( $packet:ident $(<$life:lifetime>)? = $val:tt ),* ) => {
         #[derive(Debug, TryFromPrimitive)]
         #[repr(u8)]
         pub enum $enum_name {
             $( $packet = $val,)*
         }
 
-        $(impl IdentifiedPacket<$enum_name> for $packet<'_> {
+        $(impl IdentifiedPacket<$enum_name> for $packet $(<$life>)? {
             fn get_packet_id(&self) -> $enum_name {
                 $enum_name::$packet
             }

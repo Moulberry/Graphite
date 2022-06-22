@@ -10,10 +10,10 @@ use super::identify_packets;
 
 identify_packets!(
     ClientPacketId,
-    ClientLoginStart = 0x00
+    ClientLoginStart<'_> = 0x00
 );
 
 identify_packets!(
     ServerPacketId,
-    ServerLoginSuccess = 0x02
+    ServerLoginSuccess<'_> = 0x02
 );

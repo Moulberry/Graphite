@@ -8,5 +8,5 @@ use super::identify_packets;
 
 identify_packets!(
     ClientPacketId,
-    ClientHandshake = 0x00
+    ClientHandshake<'_> = 0x00
 );

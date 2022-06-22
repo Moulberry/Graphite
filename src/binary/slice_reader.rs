@@ -110,6 +110,7 @@ macro_rules! read_from_primitive_impl {
 
 read_from_primitive_impl!(read_u16, u16::from_be_bytes);
 read_from_primitive_impl!(read_u128, u128::from_be_bytes);
+read_from_primitive_impl!(read_i32, i32::from_be_bytes);
 
 pub fn read_bool(bytes: &mut &[u8]) -> anyhow::Result<bool> {
     if bytes.len() == 0 {

@@ -18,7 +18,7 @@ pub fn send_packet<'a, I, T: Packet<'a, I>>(stream: &mut TcpStream, packet: T) -
     let slice_after_writing = unsafe { packet.write(&mut bytes[4..]) };
     let bytes_written = expected_packet_size - slice_after_writing.len();
 
-    // get encoded varint for remaining size
+    // encode packet size varint for [packet id size (1) + content size]
     let (varint_raw, written) = varint::encode::i32_raw(1 + bytes_written as i32);
     if written > 3 {
         bail!("packet too large!");

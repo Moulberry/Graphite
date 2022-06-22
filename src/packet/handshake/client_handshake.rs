@@ -1,40 +1,9 @@
-use crate::packet::Packet;
-use crate::binary::{slice_reader, slice_writer};
+use crate::binary::slice_serializable::*;
 
-#[derive(Debug)]
-pub struct ClientHandshake<'a> {
-    pub protocol_version: i32,
-    pub server_address: &'a str,
-    pub server_port: u16,
-    pub next_state: i32
-}
-
-impl <'a> Packet<'a, super::ClientPacketId> for ClientHandshake<'a> {
-    fn read(bytes: &'a [u8]) -> anyhow::Result<ClientHandshake<'a>> {
-        let mut bytes = bytes;
-
-        let packet = ClientHandshake {
-            protocol_version: slice_reader::read_varint(&mut bytes)?,
-            server_address: slice_reader::read_string_with_max_size(&mut bytes, 256)?,
-            server_port: slice_reader::read_u16(&mut bytes)?,
-            next_state: slice_reader::read_varint(&mut bytes)?,
-        };
-
-        slice_reader::ensure_fully_read(bytes)?;
-
-        Ok(packet)
-    }
-
-    fn get_write_size(&self) -> usize {
-        5 + 5 + self.server_address.len() + 2 + 5
-    }
-
-    unsafe fn write<'b>(&self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
-        bytes = slice_writer::write_varint_i32(bytes, self.protocol_version);
-        bytes = slice_writer::write_sized_string(bytes, self.server_address);
-        bytes = slice_writer::write_u16(bytes, self.server_port);
-        bytes = slice_writer::write_varint_i32(bytes, self.next_state);
-
-        bytes
-    }
-}
+slice_serializable_composite!(
+    ClientHandshake<'a>,
+    protocol_version: i32 as VarInt,
+    server_address: &'a str as SizedStringWithMax<256>,
+    server_port: u16 as BigEndian,
+    next_state: i32 as VarInt
+);

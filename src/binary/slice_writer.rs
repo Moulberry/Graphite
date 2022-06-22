@@ -37,3 +37,4 @@ macro_rules! write_from_primitive_impl {
 
 write_from_primitive_impl!(write_u16, u16::to_be_bytes);
 write_from_primitive_impl!(write_u128, u128::to_be_bytes);
+write_from_primitive_impl!(write_i32, i32::to_be_bytes);

@@ -8,5 +8,5 @@ use super::identify_packets;
 
 identify_packets!(
     ServerPacketId,
-    ServerResponse = 0x00
+    ServerResponse<'_> = 0x00
 );
