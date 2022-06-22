@@ -1,7 +1,9 @@
+use crate::binary::varint;
+
 pub unsafe fn write_varint_i32(bytes: &mut [u8], num: i32) -> &mut [u8] {
     debug_assert!(bytes.len() >= 5, "invariant: slice must contain at least 5 bytes to perform varint_i32 write");
 
-    let (encoded, size) = crate::varint::encode::i32_raw(num);
+    let (encoded, size) = varint::encode::i32_raw(num);
     bytes[..size].clone_from_slice(&encoded[..size]);
     &mut bytes[size..]
 }

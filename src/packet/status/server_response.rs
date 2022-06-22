@@ -1,5 +1,5 @@
 use crate::packet::Packet;
-use crate::{binary_reader, binary_writer};
+use crate::binary::{slice_reader, slice_writer};
 
 #[derive(Debug)]
 pub struct ServerResponse<'a> {
@@ -11,10 +11,10 @@ impl <'a> Packet<'a, super::ServerPacketId> for ServerResponse<'a> {
         let mut bytes = bytes;
 
         let packet = ServerResponse {
-            json: binary_reader::read_string(&mut bytes)?
+            json: slice_reader::read_string(&mut bytes)?
         };
 
-        binary_reader::ensure_fully_read(bytes)?;
+        slice_reader::ensure_fully_read(bytes)?;
 
         Ok(packet)
     }
@@ -24,7 +24,7 @@ impl <'a> Packet<'a, super::ServerPacketId> for ServerResponse<'a> {
     }
 
     unsafe fn write<'b>(&self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
-        bytes = binary_writer::write_sized_string(bytes, self.json);
+        bytes = slice_writer::write_sized_string(bytes, self.json);
         bytes
     }
 }

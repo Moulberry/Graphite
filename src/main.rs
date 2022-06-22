@@ -2,17 +2,14 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 
-mod network_buffer;
-mod varint;
+mod binary;
+mod net;
 mod packet;
-mod binary_reader;
-mod binary_writer;
 
 use anyhow::bail;
 
-use network_buffer::{PacketReadBuffer, PacketReadResult};
+use net::network_buffer::{PacketReadBuffer, PacketReadResult};
 use packet::Packet;
-use packet::IdentifiedPacket;
 use rand::Rng;
 use crate::packet::handshake::ClientHandshake;
 use crate::packet::login::ClientLoginStart;
@@ -103,7 +100,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 // Handshake: https://wiki.vg/Protocol#Handshake
                 let mut bytes = bytes;
 
-                let packet_id_byte: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
+                let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
 
                 if let Ok(packet_id) = packet::handshake::ClientPacketId::try_from(packet_id_byte) {
                     println!("got packet by id: {:?}", packet_id);
@@ -113,7 +110,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                     connection.state = match handshake_packet.next_state {
                         1 => ConnectionState::Status,
                         2 => ConnectionState::Login,
-                        next => bail!("unknown next state {} during {:?}", next, connection.state)
+                        next => bail!("unknown next state {} for ClientHandshake", next)
                     };
                 } else {
                     bail!("unknown packet_id {} during {:?}", packet_id_byte, connection.state);
@@ -126,7 +123,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
             // Server List Ping: https://wiki.vg/Server_List_Ping
             let mut bytes = bytes;
 
-            let packet_id = binary_reader::read_varint(&mut bytes)?;
+            let packet_id = binary::slice_reader::read_varint(&mut bytes)?;
             match packet_id {
                 0 => send_serverlist_response(&mut connection.stream)?,
                 1 => {
@@ -150,7 +147,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
         ConnectionState::Login => {
             let mut bytes = bytes;
 
-            let packet_id_byte: u8 = binary_reader::read_varint(&mut bytes)?.try_into()?;
+            let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
 
             if let Ok(packet_id) = packet::login::ClientPacketId::try_from(packet_id_byte) {
                 println!("got packet by id: {:?}", packet_id);
@@ -165,17 +162,11 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                             username: login_start_packet.username
                         };
 
-                        send_packet(&mut connection.stream, login_success_packet)?;
+                        net::packet_helper::send_packet(&mut connection.stream, login_success_packet)?;
+
+                        connection.state = ConnectionState::Play;
                     }
                 }
-
-                /*let handshake_packet = ClientHandshake::read(bytes)?;
-
-                connection.state = match handshake_packet.next_state {
-                    1 => ConnectionState::Status,
-                    2 => ConnectionState::Login,
-                    next => bail!("unknown next state {} during {:?}", next, connection.state)
-                };*/
             } else {
                 bail!("unknown packet_id {} during {:?}", packet_id_byte, connection.state);
             }
@@ -186,40 +177,6 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
             todo!()
         }
     }
-}
-
-fn send_packet<'a, I, T: Packet<'a, I>>(stream: &mut TcpStream, packet: T) -> anyhow::Result<()> {
-    let expected_packet_size = packet.get_write_size();
-    if expected_packet_size > 2097148 {
-        bail!("packet too large!");
-    }
-
-    let mut bytes = vec![0; 4 + expected_packet_size];
-
-    // invariant should be satisfied because we allocated at least `get_write_size` bytes
-    let slice_after_writing = unsafe { packet.write(&mut bytes[4..]) };
-    let bytes_written = expected_packet_size - slice_after_writing.len();
-
-    // println!("wrote bytes: {}", bytes_written);
-
-    let (varint_raw, written) = varint::encode::i32_raw(1 + bytes_written as i32);
-    if written > 3 {
-        bail!("packet too large!");
-    }
-
-    // println!("{:?}", varint_raw);
-
-    let varint_bytes_spare = 3 - written;
-
-    bytes[varint_bytes_spare..3].copy_from_slice(&varint_raw[..written]);
-    bytes[3] = packet.get_packet_id_as_u8();
-
-    // println!("bytes: {:?}", &bytes[varint_bytes_spare..4+bytes_written]);
-
-    stream.write_all(&bytes[varint_bytes_spare..4+bytes_written])?;
-    stream.flush()?;
-
-    Ok(())
 }
 
 fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
@@ -245,35 +202,6 @@ fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
             }";
 
     let server_response = ServerResponse { json: RESPONSE_JSON };
-    send_packet(stream, server_response)?;
+    net::packet_helper::send_packet(stream, server_response)?;
     Ok(())
 }
-
-// todo: move encoding to varint.rs
-
-/*fn push_varint(vec: &mut Vec<u8>, num: i32) {
-    let (bytes, size) = unsafe { encode_varint(num) };
-    vec.extend_from_slice(&bytes[..size]);
-}
-
-unsafe fn encode_varint(num: i32) -> ([u8; 16], usize) {
-    let x = std::mem::transmute::<i32, u32>(num) as u64; 
-    let stage1 = (x & 0x000000000000007f)
-        | ((x & 0x0000000000003f80) << 1)
-        | ((x & 0x00000000001fc000) << 2)
-        | ((x & 0x000000000fe00000) << 3)
-        | ((x & 0x00000000f0000000) << 4);
-
-    let leading = stage1.leading_zeros();
-
-    let unused_bytes = (leading - 1) / 8;
-    let bytes_needed = 8 - unused_bytes;
-
-    // set all but the last MSBs
-    let msbs = 0x8080808080808080;
-    let msbmask = 0xFFFFFFFFFFFFFFFF >> ((8 - bytes_needed + 1) * 8 - 1);
-
-    let merged = stage1 | (msbs & msbmask);
-
-    (std::mem::transmute([merged, 0]), bytes_needed as usize)
-}*/

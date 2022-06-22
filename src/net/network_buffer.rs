@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::varint;
+use crate::binary::varint;
 
 pub enum PacketReadResult<'a> {
     Complete(&'a [u8]),

@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::varint;
+use crate::binary::varint;
 
 const DEFAULT_STRING_MAX_SIZE: usize = 32767;
 
@@ -109,7 +109,6 @@ macro_rules! read_from_primitive_impl {
 }
 
 read_from_primitive_impl!(read_u16, u16::from_be_bytes);
-read_from_primitive_impl!(read_i64, i64::from_be_bytes);
 read_from_primitive_impl!(read_u128, u128::from_be_bytes);
 
 pub fn read_bool(bytes: &mut &[u8]) -> anyhow::Result<bool> {
