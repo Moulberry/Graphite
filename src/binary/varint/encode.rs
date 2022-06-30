@@ -1,12 +1,10 @@
-
-
 pub fn extend_i32(vec: &mut Vec<u8>, num: i32) {
     let (bytes, size) = i32_raw(num);
     vec.extend_from_slice(&bytes[..size]);
 }
 
 pub fn i32_raw(num: i32) -> ([u8; 8], usize) {
-    let x = unsafe { std::mem::transmute::<i32, u32>(num) } as u64; 
+    let x = unsafe { std::mem::transmute::<i32, u32>(num) } as u64;
     let stage1 = (x & 0x000000000000007f)
         | ((x & 0x0000000000003f80) << 1)
         | ((x & 0x00000000001fc000) << 2)
@@ -24,7 +22,10 @@ pub fn i32_raw(num: i32) -> ([u8; 8], usize) {
 
     let merged = stage1 | (msbs & msbmask);
 
-    (unsafe { std::mem::transmute([merged]) }, bytes_needed as usize)
+    (
+        unsafe { std::mem::transmute([merged]) },
+        bytes_needed as usize,
+    )
 }
 
 pub fn needed_bytes(num: i32) -> usize {

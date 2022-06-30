@@ -5,19 +5,19 @@ use crate::binary::varint;
 pub enum PacketReadResult<'a> {
     Complete(&'a [u8]),
     Partial(&'a [u8]),
-    Empty
+    Empty,
 }
 
 pub struct PacketReadBuffer {
     pub vec: Vec<u8>,
     pub reader_index: usize,
-    pub writer_index: usize
+    pub writer_index: usize,
 }
 
 #[derive(Error, Debug)]
 pub enum PacketReadBufferError {
     #[error("received packet exceeds maximum size of 2097148")]
-    PacketTooBig
+    PacketTooBig,
 }
 
 impl PacketReadBuffer {
@@ -27,7 +27,11 @@ impl PacketReadBuffer {
     const MAXIMUM_PACKET_SIZE: usize = 2097148;
 
     pub fn new() -> PacketReadBuffer {
-        PacketReadBuffer {vec: vec![0u8; PacketReadBuffer::INITIAL_SIZE], reader_index: 0, writer_index: 0}
+        PacketReadBuffer {
+            vec: vec![0u8; PacketReadBuffer::INITIAL_SIZE],
+            reader_index: 0,
+            writer_index: 0,
+        }
     }
 
     pub fn read_all<T: std::io::Read>(&mut self, reader: &mut T) -> anyhow::Result<()> {
@@ -37,9 +41,13 @@ impl PacketReadBuffer {
         // todo: implement automatic truncation when capacity hasn't been utilised for some time
 
         // Allow growth up to ~2MB
-        while self.writer_index == self.vec.len() && self.vec.len() * PacketReadBuffer::GROWTH_FACTOR <= PacketReadBuffer::MAXIMUM_BUFFER_SIZE {
+        while self.writer_index == self.vec.len()
+            && self.vec.len() * PacketReadBuffer::GROWTH_FACTOR
+                <= PacketReadBuffer::MAXIMUM_BUFFER_SIZE
+        {
             let read_from = self.vec.len();
-            self.vec.resize(self.vec.len() * PacketReadBuffer::GROWTH_FACTOR, 0);
+            self.vec
+                .resize(self.vec.len() * PacketReadBuffer::GROWTH_FACTOR, 0);
 
             self.writer_index += reader.read(&mut self.vec[read_from..])?;
         }
@@ -54,7 +62,8 @@ impl PacketReadBuffer {
             return Ok(PacketReadResult::Empty);
         } else if remaining >= 3 {
             // Packet must start with varint header specifying the amount of data
-            let (packet_size, varint_header_bytes) = varint::decode::u21(&self.vec[self.reader_index..])?;
+            let (packet_size, varint_header_bytes) =
+                varint::decode::u21(&self.vec[self.reader_index..])?;
             let packet_size = packet_size as usize;
 
             if packet_size > PacketReadBuffer::MAXIMUM_PACKET_SIZE {
@@ -67,20 +76,27 @@ impl PacketReadBuffer {
                 self.reader_index += varint_header_bytes; // consume varint header
                 let start = self.reader_index; // mark start of packet
                 self.reader_index += packet_size; // advance to end of packet
-                return Ok(PacketReadResult::Complete(&self.vec[start..self.reader_index]));
+                return Ok(PacketReadResult::Complete(
+                    &self.vec[start..self.reader_index],
+                ));
             }
-        } else if remaining == 2 && self.vec[self.reader_index] == 1 { // Special case for packet of size 1
+        } else if remaining == 2 && self.vec[self.reader_index] == 1 {
+            // Special case for packet of size 1
             // Enough bytes (2) to fully read
             self.reader_index += 1; // consume varint header (1 byte)
             let start = self.reader_index; // mark start of packet
             self.reader_index += 1; // advance to end of packet (+1 byte)
-            return Ok(PacketReadResult::Complete(&self.vec[start..self.reader_index]));
+            return Ok(PacketReadResult::Complete(
+                &self.vec[start..self.reader_index],
+            ));
         }
 
         // Not enough bytes to fully read, emit [varint header + remaining data] as partial read
         let start = self.reader_index; // mark start
         self.reader_index = self.writer_index; // advance to end
-        Ok(PacketReadResult::Partial(&self.vec[start..self.reader_index]))
+        Ok(PacketReadResult::Partial(
+            &self.vec[start..self.reader_index],
+        ))
     }
 }
 

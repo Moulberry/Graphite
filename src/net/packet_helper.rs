@@ -1,11 +1,16 @@
-use anyhow::bail;
-use std::net::TcpStream;
-use std::io::Write;
+use crate::binary::slice_serializable::SliceSerializable;
 use crate::binary::varint;
-use crate::packet::Packet;
+use crate::packet::IdentifiedPacket;
+use anyhow::bail;
+use std::fmt::Debug;
+use std::io::Write;
+use std::net::TcpStream;
 
-pub fn send_packet<'a, I, T: Packet<'a, I>>(stream: &mut TcpStream, packet: T) -> anyhow::Result<()> {
-    let expected_packet_size = packet.get_write_size();
+pub fn send_packet<'a, I: Debug, T>(stream: &mut TcpStream, packet: &'a T) -> anyhow::Result<()>
+where
+    T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
+{
+    let expected_packet_size = T::get_write_size(packet);
     if expected_packet_size > 2097148 {
         bail!("packet too large!");
     }
@@ -15,7 +20,7 @@ pub fn send_packet<'a, I, T: Packet<'a, I>>(stream: &mut TcpStream, packet: T) -
 
     // write packet data
     // note: invariant should be satisfied because we allocated at least `get_write_size` bytes
-    let slice_after_writing = unsafe { packet.write(&mut bytes[4..]) };
+    let slice_after_writing = unsafe { T::write(&mut bytes[4..], packet) };
     let bytes_written = expected_packet_size - slice_after_writing.len();
 
     // encode packet size varint for [packet id size (1) + content size]
@@ -32,7 +37,10 @@ pub fn send_packet<'a, I, T: Packet<'a, I>>(stream: &mut TcpStream, packet: T) -
     bytes[3] = packet.get_packet_id_as_u8();
 
     // write buffer to stream
-    stream.write_all(&bytes[varint_bytes_spare..4+bytes_written])?;
+    println!("sending: {:?} (0x{:x})", packet.get_packet_id(), packet.get_packet_id_as_u8());
+    println!("buffer: {:?}", &bytes[4..4 + bytes_written]);
+
+    stream.write_all(&bytes[varint_bytes_spare..4 + bytes_written])?;
     stream.flush()?; // todo: is this needed?
 
     Ok(())
