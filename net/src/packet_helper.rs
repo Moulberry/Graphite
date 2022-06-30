@@ -1,6 +1,6 @@
-use crate::binary::slice_serializable::SliceSerializable;
-use crate::binary::varint;
-use crate::packet::IdentifiedPacket;
+use binary::slice_serializable::SliceSerializable;
+use binary::varint;
+use protocol::IdentifiedPacket;
 use anyhow::bail;
 use std::fmt::Debug;
 use std::io::Write;

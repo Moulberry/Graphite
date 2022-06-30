@@ -1,26 +1,20 @@
 use std::io::prelude::*;
-use std::io::Cursor;
 use std::net::TcpListener;
 use std::net::TcpStream;
-
-mod binary;
-mod net;
-mod packet;
 
 use anyhow::bail;
 use bytes::BufMut;
 
-use crate::binary::slice_reader;
-use crate::binary::slice_writer;
-use crate::packet::handshake::client::Handshake;
-use crate::packet::play::server::ChunkBlockData;
-use crate::packet::play::server::ChunkDataAndUpdateLight;
-use crate::packet::play::server::ChunkLightData;
-use crate::packet::play::server::JoinGame;
-use crate::packet::play::server::PlayerPositionAndLook;
-use crate::packet::play::server::PluginMessage;
-use crate::packet::play::server::UpdateViewPosition;
-use crate::packet::status::server::Response;
+use binary::slice_reader;
+use protocol::handshake::client::Handshake;
+use protocol::play::server::ChunkBlockData;
+use protocol::play::server::ChunkDataAndUpdateLight;
+use protocol::play::server::ChunkLightData;
+use protocol::play::server::JoinGame;
+use protocol::play::server::PlayerPositionAndLook;
+use protocol::play::server::PluginMessage;
+use protocol::play::server::UpdateViewPosition;
+use protocol::status::server::Response;
 use net::network_buffer::{PacketReadBuffer, PacketReadResult};
 use rand::Rng;
 
@@ -117,7 +111,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 let packet_id_byte: u8 =
                     binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
 
-                if let Ok(packet_id) = packet::handshake::client::PacketId::try_from(packet_id_byte)
+                if let Ok(packet_id) = protocol::handshake::client::PacketId::try_from(packet_id_byte)
                 {
                     println!("got packet by id: {:?}", packet_id);
 
@@ -174,18 +168,18 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
             let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
 
-            if let Ok(packet_id) = packet::login::client::PacketId::try_from(packet_id_byte) {
+            if let Ok(packet_id) = protocol::login::client::PacketId::try_from(packet_id_byte) {
                 println!("got packet by id: {:?}", packet_id);
 
                 match packet_id {
-                    packet::login::client::PacketId::LoginStart => {
+                    protocol::login::client::PacketId::LoginStart => {
                         let login_start_packet =
-                            packet::login::client::LoginStart::read(&mut bytes)?;
+                        protocol::login::client::LoginStart::read(&mut bytes)?;
                         slice_reader::ensure_fully_read(bytes)?;
 
                         println!("logging in with username: {}", login_start_packet.username);
 
-                        let login_success_packet = packet::login::server::LoginSuccess {
+                        let login_success_packet = protocol::login::server::LoginSuccess {
                             uuid: rand::thread_rng().gen(),
                             username: login_start_packet.username,
                             property_count: 0
@@ -202,7 +196,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
                         std::thread::sleep(std::time::Duration::from_millis(100));
 
-                        let registry_codec = quartz_nbt::snbt::parse(include_str!("../assets/registry_codec.json"))?;
+                        let registry_codec = quartz_nbt::snbt::parse(include_str!("../../assets/registry_codec.json"))?;
                         let mut binary: Vec<u8> = Vec::new();
                         quartz_nbt::io::write_nbt(&mut binary, None, &registry_codec,
                             quartz_nbt::io::Flavor::Uncompressed)?;
@@ -239,7 +233,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
                         let mut heightmap_nbt = quartz_nbt::NbtCompound::new();
                         let mut motion_blocking_nbt = quartz_nbt::NbtList::new();
-                        for i in 0..256 {
+                        for _ in 0..256 {
                             motion_blocking_nbt.push(0_i64);
                         }
                         heightmap_nbt.insert("MOTION_BLOCKING", motion_blocking_nbt);
@@ -333,9 +327,6 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
             println!("got play packet: {:?}", packet_id_byte);
 
             return Ok(());
-        }
-        _ => {
-            todo!()
         }
     }
 }

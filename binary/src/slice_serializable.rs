@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::binary::varint;
-use crate::binary::slice_reader::BinaryReadError;
-use anyhow::bail;
+use crate::slice_reader::BinaryReadError;
 
 pub trait SliceSerializable<'a, T = Self> {
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<T>;
@@ -24,7 +22,7 @@ impl<'a, T, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for Sized
 
         let mut vec = Vec::with_capacity(size as usize);
 
-        for i in 0..size {
+        for _ in 0..size {
             vec.push(S::read(bytes)?);
         }
 
@@ -300,6 +298,7 @@ for_primitive!(f64, BigEndian, from_be_bytes, to_be_bytes);
 
 // Macro to generate composite slice_serializables
 
+#[macro_export]
 macro_rules! resolve_wire_type {
     ( $typ:ty ) => {
         $typ
@@ -309,6 +308,7 @@ macro_rules! resolve_wire_type {
     }
 }
 
+#[macro_export]
 macro_rules! slice_serializable_composite {
     { $struct_name:ident, $( $field_name:ident : $typ:ty $( as $wire:ty )? ),* } => {
         #[derive(Debug)]
@@ -372,5 +372,5 @@ macro_rules! slice_serializable_composite {
     }
 }
 
-pub(crate) use resolve_wire_type;
-pub(crate) use slice_serializable_composite;
+pub use resolve_wire_type;
+pub use slice_serializable_composite;

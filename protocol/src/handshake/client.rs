@@ -1,7 +1,7 @@
-use crate::binary::slice_serializable::*;
+use binary::slice_serializable::*;
 
-use crate::packet::identify_packets;
-use crate::packet::IdentifiedPacket;
+use crate::identify_packets;
+use crate::IdentifiedPacket;
 use derive_try_from_primitive::TryFromPrimitive;
 
 identify_packets! {

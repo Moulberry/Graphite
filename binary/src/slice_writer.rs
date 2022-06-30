@@ -1,4 +1,4 @@
-use crate::binary::varint;
+use crate::varint;
 
 pub unsafe fn write_varint_i32(bytes: &mut [u8], num: i32) -> &mut [u8] {
     debug_assert!(

@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::binary::varint;
+use crate::varint;
 
 const DEFAULT_STRING_MAX_SIZE: usize = 32767;
 

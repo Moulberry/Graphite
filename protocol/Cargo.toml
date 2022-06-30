@@ -1,0 +1,10 @@
+[package]
+name = "protocol"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.57"
+derive-try-from-primitive = "1.0.0"
+
+binary = { path = "../binary" }
