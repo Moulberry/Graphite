@@ -8,6 +8,7 @@ pub enum PacketReadResult<'a> {
     Empty,
 }
 
+#[derive(Default)]
 pub struct PacketReadBuffer {
     pub vec: Vec<u8>,
     pub reader_index: usize,

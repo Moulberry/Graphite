@@ -17,7 +17,7 @@ pub enum BinaryReadError {
 }
 
 pub fn ensure_fully_read(bytes: &[u8]) -> anyhow::Result<()> {
-    if bytes.len() == 0 {
+    if bytes.is_empty() {
         Ok(())
     } else {
         Err(BinaryReadError::DidntFullyConsume(bytes.len()).into())
@@ -25,7 +25,7 @@ pub fn ensure_fully_read(bytes: &[u8]) -> anyhow::Result<()> {
 }
 
 pub fn read_varint(bytes: &mut &[u8]) -> anyhow::Result<i32> {
-    if bytes.len() == 0 {
+    if bytes.is_empty() {
         return Err(BinaryReadError::NotEnoughRemainingBytes.into());
     }
 
@@ -42,7 +42,7 @@ pub fn read_string_with_max_size<'a>(
     bytes: &mut &'a [u8],
     max_size: usize,
 ) -> anyhow::Result<&'a str> {
-    if bytes.len() == 0 {
+    if bytes.is_empty() {
         return Err(BinaryReadError::NotEnoughRemainingBytes.into());
     }
 
@@ -78,7 +78,7 @@ pub fn read_string_with_max_size<'a>(
 }
 
 pub fn read_sized_blob<'a>(bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
-    if bytes.len() == 0 {
+    if bytes.is_empty() {
         return Err(BinaryReadError::NotEnoughRemainingBytes.into());
     }
 
@@ -118,7 +118,7 @@ read_from_primitive_impl!(read_u128, u128::from_be_bytes);
 read_from_primitive_impl!(read_i32, i32::from_be_bytes);
 
 pub fn read_bool(bytes: &mut &[u8]) -> anyhow::Result<bool> {
-    if bytes.len() == 0 {
+    if bytes.is_empty() {
         return Err(BinaryReadError::NotEnoughRemainingBytes.into());
     }
 

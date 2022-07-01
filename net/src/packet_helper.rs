@@ -1,7 +1,7 @@
+use anyhow::bail;
 use binary::slice_serializable::SliceSerializable;
 use binary::varint;
 use protocol::IdentifiedPacket;
-use anyhow::bail;
 use std::fmt::Debug;
 use std::io::Write;
 use std::net::TcpStream;
@@ -37,7 +37,11 @@ where
     bytes[3] = packet.get_packet_id_as_u8();
 
     // write buffer to stream
-    println!("sending: {:?} (0x{:x})", packet.get_packet_id(), packet.get_packet_id_as_u8());
+    println!(
+        "sending: {:?} (0x{:x})",
+        packet.get_packet_id(),
+        packet.get_packet_id_as_u8()
+    );
     println!("buffer: {:?}", &bytes[4..4 + bytes_written]);
 
     stream.write_all(&bytes[varint_bytes_spare..4 + bytes_written])?;

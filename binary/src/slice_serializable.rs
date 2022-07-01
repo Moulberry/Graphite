@@ -81,7 +81,7 @@ impl<'a, T, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> for Op
 pub enum Single {}
 impl SliceSerializable<'_, u8> for Single {
     fn read(bytes: &mut &[u8]) -> anyhow::Result<u8> {
-        if bytes.len() < 1 {
+        if bytes.is_empty() {
             return Err(BinaryReadError::NotEnoughRemainingBytes.into());
         }
 
@@ -96,7 +96,7 @@ impl SliceSerializable<'_, u8> for Single {
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &u8) -> &'b mut [u8] {
         debug_assert!(
-            bytes.len() >= 1,
+            !bytes.is_empty(),
             "invariant: slice must contain at least 1 byte to perform read"
         );
 
@@ -106,10 +106,10 @@ impl SliceSerializable<'_, u8> for Single {
 }
 impl SliceSerializable<'_, i8> for Single {
     fn read(bytes: &mut &[u8]) -> anyhow::Result<i8> {
-        if bytes.len() < 1 {
+        if bytes.is_empty() {
             return Err(BinaryReadError::NotEnoughRemainingBytes.into());
         }
-        
+
         let ret = unsafe { std::mem::transmute(bytes[0]) };
         *bytes = &bytes[1..];
         Ok(ret)
@@ -121,7 +121,7 @@ impl SliceSerializable<'_, i8> for Single {
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &i8) -> &'b mut [u8] {
         debug_assert!(
-            bytes.len() >= 1,
+            !bytes.is_empty(),
             "invariant: slice must contain at least 1 byte to perform read"
         );
 
@@ -131,7 +131,7 @@ impl SliceSerializable<'_, i8> for Single {
 }
 impl SliceSerializable<'_, bool> for Single {
     fn read(bytes: &mut &[u8]) -> anyhow::Result<bool> {
-        if bytes.len() < 1 {
+        if bytes.is_empty() {
             return Err(BinaryReadError::NotEnoughRemainingBytes.into());
         }
 
@@ -146,7 +146,7 @@ impl SliceSerializable<'_, bool> for Single {
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &bool) -> &'b mut [u8] {
         debug_assert!(
-            bytes.len() >= 1,
+            !bytes.is_empty(),
             "invariant: slice must contain at least 1 byte to perform read"
         );
 
@@ -169,8 +169,6 @@ impl SliceSerializable<'_, i32> for VarInt {
         super::slice_writer::write_varint_i32(bytes, *data)
     }
 }
-
-
 
 pub enum GreedyBlob {}
 impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
@@ -202,7 +200,7 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a [u8]> for SizedBlob<MA
         if blob_size > bytes.len() {
             return Err(BinaryReadError::NotEnoughRemainingBytes.into());
         }
-    
+
         // Validate utf-8
         let (blob_bytes, rest_bytes) = bytes.split_at(blob_size);
         *bytes = rest_bytes;
@@ -219,13 +217,13 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a [u8]> for SizedBlob<MA
 
         // 1. write len(blob) as varint header
         bytes = VarInt::write(bytes, &(len as i32));
-    
+
         // 2. write blob itself
         debug_assert!(
             bytes.len() >= len,
             "invariant: slice must contain at least 5+len(blob) bytes to perform write"
         );
-    
+
         // split bytes, write into first, set bytes to remaining
         bytes[..len].clone_from_slice(data);
         &mut bytes[len..]
@@ -305,7 +303,7 @@ macro_rules! resolve_wire_type {
     };
     ( $typ:ty as $wire:ty ) => {
         $wire
-    }
+    };
 }
 
 #[macro_export]

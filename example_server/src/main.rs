@@ -6,6 +6,7 @@ use anyhow::bail;
 use bytes::BufMut;
 
 use binary::slice_reader;
+use net::network_buffer::{PacketReadBuffer, PacketReadResult};
 use protocol::handshake::client::Handshake;
 use protocol::play::server::ChunkBlockData;
 use protocol::play::server::ChunkDataAndUpdateLight;
@@ -15,7 +16,6 @@ use protocol::play::server::PlayerPositionAndLook;
 use protocol::play::server::PluginMessage;
 use protocol::play::server::UpdateViewPosition;
 use protocol::status::server::Response;
-use net::network_buffer::{PacketReadBuffer, PacketReadResult};
 use rand::Rng;
 
 #[derive(PartialEq, Eq)]
@@ -111,7 +111,8 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 let packet_id_byte: u8 =
                     binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
 
-                if let Ok(packet_id) = protocol::handshake::client::PacketId::try_from(packet_id_byte)
+                if let Ok(packet_id) =
+                    protocol::handshake::client::PacketId::try_from(packet_id_byte)
                 {
                     println!("got packet by id: {:?}", packet_id);
 
@@ -130,8 +131,6 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                         connection.state
                     );
                 }
-
-                return Ok(());
             }
         }
         ConnectionState::Status => {
@@ -174,7 +173,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 match packet_id {
                     protocol::login::client::PacketId::LoginStart => {
                         let login_start_packet =
-                        protocol::login::client::LoginStart::read(&mut bytes)?;
+                            protocol::login::client::LoginStart::read(&mut bytes)?;
                         slice_reader::ensure_fully_read(bytes)?;
 
                         println!("logging in with username: {}", login_start_packet.username);
@@ -182,7 +181,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                         let login_success_packet = protocol::login::server::LoginSuccess {
                             uuid: rand::thread_rng().gen(),
                             username: login_start_packet.username,
-                            property_count: 0
+                            property_count: 0,
                         };
 
                         net::packet_helper::send_packet(
@@ -196,10 +195,16 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
                         std::thread::sleep(std::time::Duration::from_millis(100));
 
-                        let registry_codec = quartz_nbt::snbt::parse(include_str!("../../assets/registry_codec.json"))?;
+                        let registry_codec = quartz_nbt::snbt::parse(include_str!(
+                            "../../assets/registry_codec.json"
+                        ))?;
                         let mut binary: Vec<u8> = Vec::new();
-                        quartz_nbt::io::write_nbt(&mut binary, None, &registry_codec,
-                            quartz_nbt::io::Flavor::Uncompressed)?;
+                        quartz_nbt::io::write_nbt(
+                            &mut binary,
+                            None,
+                            &registry_codec,
+                            quartz_nbt::io::Flavor::Uncompressed,
+                        )?;
                         binary.shrink_to_fit();
 
                         // Join Game
@@ -220,14 +225,14 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                             enable_respawn_screen: true,
                             is_debug: false,
                             is_flat: false,
-                            has_death_location: false
+                            has_death_location: false,
                         };
                         net::packet_helper::send_packet(&mut connection.stream, &join_game_packet)?;
 
                         // Brand
                         let brand_packet = PluginMessage {
                             channel: "minecraft:brand",
-                            data: b"\x08Graphite"
+                            data: b"\x08Graphite",
                         };
                         net::packet_helper::send_packet(&mut connection.stream, &brand_packet)?;
 
@@ -239,17 +244,20 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                         heightmap_nbt.insert("MOTION_BLOCKING", motion_blocking_nbt);
 
                         let mut binary: Vec<u8> = Vec::new();
-                        quartz_nbt::io::write_nbt(&mut binary, None, &heightmap_nbt,
-                            quartz_nbt::io::Flavor::Uncompressed)?;
+                        quartz_nbt::io::write_nbt(
+                            &mut binary,
+                            None,
+                            &heightmap_nbt,
+                            quartz_nbt::io::Flavor::Uncompressed,
+                        )?;
                         binary.shrink_to_fit();
 
-                        
                         // Chunk
                         for x in -5..5 {
                             for z in -5..5 {
-                                let mut chunk_data = vec!(0_u8; 0);
+                                let mut chunk_data = vec![0_u8; 0];
                                 for i in 0..24 {
-                                    chunk_data.put_i16(16*16*16); // block count
+                                    chunk_data.put_i16(16 * 16 * 16); // block count
 
                                     // blocks
                                     chunk_data.put_u8(0); // single pallete, 0 bits per entry
@@ -259,7 +267,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                                         chunk_data.put_u8(0); // palette. air
                                     }
                                     chunk_data.put_u8(0); // 0 size array
-            
+
                                     // biomes
                                     chunk_data.put_u8(0); // single pallete, 0 bits per entry
                                     chunk_data.put_u8(1); // some biome
@@ -273,7 +281,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                                         heightmaps: &binary,
                                         data: &chunk_data,
                                         block_entity_count: 0,
-                                        trust_edges: false
+                                        trust_edges: false,
                                     },
                                     chunk_light_data: ChunkLightData {
                                         sky_light_mask: vec![],
@@ -282,18 +290,24 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                                         empty_block_light_mask: vec![],
                                         sky_light_entries: vec![],
                                         block_light_entries: vec![],
-                                    }
+                                    },
                                 };
-                                net::packet_helper::send_packet(&mut connection.stream, &chunk_packet)?;
+                                net::packet_helper::send_packet(
+                                    &mut connection.stream,
+                                    &chunk_packet,
+                                )?;
                             }
                         }
 
                         // Update view position
                         let update_view_position_packet = UpdateViewPosition {
                             chunk_x: 0,
-                            chunk_z: 0
+                            chunk_z: 0,
                         };
-                        net::packet_helper::send_packet(&mut connection.stream, &update_view_position_packet)?;
+                        net::packet_helper::send_packet(
+                            &mut connection.stream,
+                            &update_view_position_packet,
+                        )?;
 
                         // Position
                         let position_packet = PlayerPositionAndLook {
@@ -316,8 +330,6 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                     connection.state
                 );
             }
-
-            return Ok(());
         }
         ConnectionState::Play => {
             let mut bytes = bytes;
@@ -325,10 +337,10 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
             let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
 
             println!("got play packet: {:?}", packet_id_byte);
-
-            return Ok(());
         }
     }
+
+    Ok(())
 }
 
 fn send_serverlist_response(stream: &mut TcpStream) -> anyhow::Result<()> {
