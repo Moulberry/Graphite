@@ -6,6 +6,8 @@ use anyhow::bail;
 use bytes::BufMut;
 
 use binary::slice_reader;
+use concierge::Concierge;
+use concierge::ConciergeService;
 use net::network_buffer::{PacketReadBuffer, PacketReadResult};
 use protocol::handshake::client::Handshake;
 use protocol::play::server::ChunkBlockData;
@@ -18,24 +20,27 @@ use protocol::play::server::UpdateViewPosition;
 use protocol::status::server::Response;
 use rand::Rng;
 
-#[derive(PartialEq, Eq)]
-struct Uuid(u128);
+mod echo;
 
-#[derive(Debug)]
-enum ConnectionState {
-    Handshake,
-    Status,
-    Login,
-    Play,
+struct MyConciergeImpl {
+    counter: u8
 }
 
-struct PlayerConnection {
-    stream: TcpStream,
-    state: ConnectionState,
-    closed: bool,
+impl ConciergeService for MyConciergeImpl {
+    fn get_message(&mut self) -> String {
+        self.counter += 1;
+        let string = String::from(format!("times called: {}", self.counter));
+        string
+    }
 }
 
 fn main() {
+    echo::main();
+
+    /*Concierge::bind("127.0.0.1:25565", MyConciergeImpl {
+        counter: 0
+    }).await.unwrap();
+
     let listener = TcpListener::bind("127.0.0.1:25565").unwrap();
 
     //let map: HashMap<UUID, Player> = HashMap::new();
@@ -43,26 +48,17 @@ fn main() {
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        let connection = PlayerConnection {
+        let connection = net::PlayerConnection {
             stream,
-            state: ConnectionState::Handshake,
+            state: net::ConnectionState::Handshake,
             closed: false,
         };
 
         handle_connection(connection);
-    }
+    }*/
 }
 
-impl PlayerConnection {
-    pub fn close(&mut self) {
-        if !self.closed {
-            let _ = self.stream.shutdown(std::net::Shutdown::Both);
-            self.closed = true;
-        }
-    }
-}
-
-fn handle_connection(mut connection: PlayerConnection) {
+fn handle_connection(mut connection: net::PlayerConnection) {
     let mut buffer = PacketReadBuffer::new();
 
     while !connection.closed {
@@ -97,9 +93,9 @@ fn handle_connection(mut connection: PlayerConnection) {
 
 use binary::slice_serializable::SliceSerializable;
 
-fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> anyhow::Result<()> {
+fn process_framed_packet(connection: &mut net::PlayerConnection, bytes: &[u8]) -> anyhow::Result<()> {
     match connection.state {
-        ConnectionState::Handshake => {
+        net::ConnectionState::Handshake => {
             if bytes.len() < 3 {
                 bail!("insufficient bytes for handshake");
             } else if bytes[0..3] == [0xFE, 0x01, 0xFA] {
@@ -120,8 +116,8 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                     slice_reader::ensure_fully_read(bytes)?;
 
                     connection.state = match handshake_packet.next_state {
-                        1 => ConnectionState::Status,
-                        2 => ConnectionState::Login,
+                        1 => net::ConnectionState::Status,
+                        2 => net::ConnectionState::Login,
                         next => bail!("unknown next state {} for ClientHandshake", next),
                     };
                 } else {
@@ -133,7 +129,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 }
             }
         }
-        ConnectionState::Status => {
+        net::ConnectionState::Status => {
             // Server List Ping: https://wiki.vg/Server_List_Ping
             let mut bytes = bytes;
 
@@ -162,7 +158,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
 
             return Ok(());
         }
-        ConnectionState::Login => {
+        net::ConnectionState::Login => {
             let mut bytes = bytes;
 
             let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
@@ -189,7 +185,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                             &login_success_packet,
                         )?;
 
-                        connection.state = ConnectionState::Play;
+                        connection.state = net::ConnectionState::Play;
 
                         // fake play, for testing
 
@@ -331,7 +327,7 @@ fn process_framed_packet(connection: &mut PlayerConnection, bytes: &[u8]) -> any
                 );
             }
         }
-        ConnectionState::Play => {
+        net::ConnectionState::Play => {
             let mut bytes = bytes;
 
             let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;

@@ -3,18 +3,6 @@ members = [
     "binary",
     "net",
     "protocol",
+    "concierge",
     "example_server"
 ]
-
-#[package]
-#name = "graphite"
-#version = "0.1.0"
-#edition = "2021"
-
-#[dependencies]
-#anyhow = "1.0.57"
-#bytes = "1.1.0"
-#derive-try-from-primitive = "1.0.0"
-#rand = "0.8.5"
-#thiserror = "1.0.31"
-#quartz_nbt = "0.2.6"

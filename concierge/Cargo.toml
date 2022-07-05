@@ -1,0 +1,10 @@
+[package]
+name = "concierge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.19.2", features = ["net", "rt"] }
+anyhow = "1.0.57"
+
+net = { path = "../net" }
