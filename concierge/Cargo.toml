@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1.19.2", features = ["net", "rt"] }
 anyhow = "1.0.57"
+bytes = "1.1.0"
+rand = "0.8.5"
+quartz_nbt = "0.2.6"
 
 net = { path = "../net" }
+binary = { path = "../binary" }
+protocol = { path = "../protocol" }

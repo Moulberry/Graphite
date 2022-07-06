@@ -2,6 +2,7 @@ use std::net::TcpStream;
 
 pub mod network_buffer;
 pub mod packet_helper;
+pub mod network_handler;
 
 #[derive(Debug)]
 pub enum ConnectionState {

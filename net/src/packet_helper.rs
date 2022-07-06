@@ -1,4 +1,5 @@
 use anyhow::bail;
+use thiserror::Error;
 use binary::slice_serializable::SliceSerializable;
 use binary::varint;
 use protocol::IdentifiedPacket;
@@ -6,7 +7,9 @@ use std::fmt::Debug;
 use std::io::Write;
 use std::net::TcpStream;
 
-pub fn send_packet<'a, I: Debug, T>(stream: &mut TcpStream, packet: &'a T) -> anyhow::Result<()>
+use crate::network_handler::ByteSender;
+
+pub fn send_packet<'a, I: Debug, T>(byte_sender: &mut impl ByteSender, packet: &'a T) -> anyhow::Result<()>
 where
     T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
 {
@@ -42,10 +45,71 @@ where
         packet.get_packet_id(),
         packet.get_packet_id_as_u8()
     );
-    println!("buffer: {:?}", &bytes[4..4 + bytes_written]);
+    println!("buffer: {:?}", &bytes[varint_bytes_spare..4+bytes_written]);
 
-    stream.write_all(&bytes[varint_bytes_spare..4 + bytes_written])?;
-    stream.flush()?; // todo: is this needed?
+    byte_sender.send(Box::from(&bytes[varint_bytes_spare..4 + bytes_written]));
 
     Ok(())
+}
+
+pub enum PacketReadResult<'a> {
+    Complete(&'a [u8]),
+    Partial,
+    Empty,
+}
+
+#[derive(Error, Debug)]
+pub enum PacketReadBufferError {
+    #[error("received packet exceeds maximum size of 2097148")]
+    PacketTooBig,
+}
+
+const MAXIMUM_PACKET_SIZE: usize = 2097148;
+
+pub fn try_read_packet<'a>(slice: &mut &'a [u8]) -> anyhow::Result<PacketReadResult<'a>> {
+    let remaining = slice.len();
+
+    if remaining == 0 {
+        return Ok(PacketReadResult::Empty);
+    } else if remaining >= 3 {
+        // Packet must start with varint header specifying the amount of data
+        let (packet_size, varint_header_bytes) =
+            varint::decode::u21(slice)?;
+        let packet_size = packet_size as usize;
+
+        if packet_size > MAXIMUM_PACKET_SIZE {
+            return Err(PacketReadBufferError::PacketTooBig.into());
+        }
+
+        let remaining = remaining - varint_header_bytes;
+        if remaining >= packet_size {
+            // Enough bytes to fully read, consume varint header & emit fully read packet
+            let ret = PacketReadResult::Complete(
+                &slice[varint_header_bytes..varint_header_bytes+packet_size],
+            );
+
+            *slice = &slice[varint_header_bytes+packet_size..];
+
+            return Ok(ret);
+        }
+    } else if remaining == 2 && slice[0] == 1 {
+        // Special case for packet of size 1
+        // Enough bytes (2) to fully read
+        let ret = PacketReadResult::Complete(
+            &slice[1..2],
+        );
+
+        *slice = &slice[2..];
+
+        return Ok(ret);
+    }
+
+    // Not enough bytes to fully read, emit [varint header + remaining data] as partial read
+    /*let start = self.reader_index; // mark start
+    self.reader_index = self.writer_index; // advance to end
+    Ok(PacketReadResult::Partial(
+        &self.vec[start..self.reader_index],
+    ))*/
+
+    Ok(PacketReadResult::Partial)
 }
