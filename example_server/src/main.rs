@@ -1,92 +1,37 @@
-use std::io::prelude::*;
-use std::net::TcpStream;
-
-use anyhow::bail;
-use bytes::BufMut;
-
-use binary::slice_reader;
 use concierge::Concierge;
 use concierge::ConciergeService;
-use net::network_buffer::{PacketReadBuffer, PacketReadResult};
-use protocol::handshake::client::Handshake;
-use protocol::play::server::ChunkBlockData;
-use protocol::play::server::ChunkDataAndUpdateLight;
-use protocol::play::server::ChunkLightData;
-use protocol::play::server::JoinGame;
-use protocol::play::server::PlayerPositionAndLook;
-use protocol::play::server::PluginMessage;
-use protocol::play::server::UpdateViewPosition;
-use protocol::status::server::Response;
-use rand::Rng;
 
 struct MyConciergeImpl {
-    counter: u8
+    counter: u8,
 }
 
 impl ConciergeService for MyConciergeImpl {
-    fn get_message(&mut self) -> String {
+    /*fn get_message(&mut self) -> String {
         self.counter += 1;
-        let string = String::from(format!("times called: {}", self.counter));
+        let string = format!("times called: {}", self.counter);
         string
+    }*/
+
+    fn get_serverlist_response(&mut self) -> String {
+        self.counter += 1;
+        format!("{{\
+            \"version\": {{
+                \"name\": \"1.19\",
+                \"protocol\": 759
+            }},
+            \"players\": {{
+                \"max\": 100,
+                \"online\": {},
+                \"sample\": []
+            }},
+            \"description\": {{
+                \"text\": \"Hello world\"
+            }},
+            \"favicon\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAABGklEQVRo3u2aUQ7EIAhEbcNReiPP6Y16F/djk/1bozJASYffJu08BRxMj957yRxnSR4EIMDbAQTylrvWwdOrNTuAY6+NjhV7YiwDbEg3xVgDUKq3wIgp4rtW1FqYAEwuMAQDk0L/FE/q02TUqVR/tTb4vGkDBaTQjL4xIU/i91gJVNeDV8gZ+HnIorAGCJAAwKIBAACAhixyIvsyKL3Qg0bKqzXnbZlNoXmH/NwitvBkeuC1Ira2lk5daBvDAn6/iH9qAi+Fyva9EDDvlYTxVkJZx/RCBMgHgO1L3IEXAmANn+SV7r0DRk5b0im2BfAfaCRcn/JYkBIXwXejDzmPJZ1iVwCHAfrgD08EIAABCEAAAhCAAAQgwG58AEFWdXlZzlUbAAAAAElFTkSuQmCC\"
+        }}", self.counter)
     }
 }
 
 fn main() {
-    Concierge::bind("127.0.0.1:25565", MyConciergeImpl {
-        counter: 0
-    }).unwrap();
-
-    /*let listener = TcpListener::bind("127.0.0.1:25565").unwrap();
-
-    //let map: HashMap<UUID, Player> = HashMap::new();
-
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
-
-        let connection = net::PlayerConnection {
-            stream,
-            state: net::ConnectionState::Handshake,
-            closed: false,
-        };
-
-        handle_connection(connection);
-    }
-    */
+    Concierge::bind("127.0.0.1:25565", MyConciergeImpl { counter: 0 }).unwrap();
 }
-
-/*fn handle_connection(mut connection: net::PlayerConnection) {
-    let mut buffer = PacketReadBuffer::new();
-
-    while !connection.closed {
-        if buffer.read_all(&mut connection.stream).is_err() {
-            // todo: maybe inform player of error via disconnect packet?
-            connection.close();
-        }
-
-        while !connection.closed {
-            if let Ok(packet_read_result) = buffer.try_read_packet() {
-                match packet_read_result {
-                    PacketReadResult::Complete(bytes) => {
-                        println!("Request: {:?}", bytes);
-                        if let Err(e) = process_framed_packet(&mut connection, bytes) {
-                            println!("got error: {:?}", e);
-                            // todo: maybe inform player of error via disconnect packet?
-                            connection.close();
-                        }
-                    }
-                    PacketReadResult::Partial(_bytes) => {
-                        todo!();
-                    }
-                    PacketReadResult::Empty => break,
-                }
-            } else {
-                // todo: maybe inform player of error via disconnect packet?
-                connection.close();
-            }
-        }
-    }
-}*/
-
-use binary::slice_serializable::SliceSerializable;
-
-
