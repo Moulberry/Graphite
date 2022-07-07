@@ -30,6 +30,7 @@ impl SliceSerializable<'_, i32> for VarInt {
         &mut bytes[size..]
     }
     
+    #[inline(always)]
     fn maybe_deref(t: &i32) -> Self::RefType {
         *t
     }

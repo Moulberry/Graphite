@@ -40,6 +40,7 @@ macro_rules! for_primitive {
                 &mut bytes[SIZE..]
             }
 
+            #[inline(always)]
             fn maybe_deref(t: &$typ) -> Self::RefType {
                 *t
             }

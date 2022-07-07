@@ -35,6 +35,7 @@ macro_rules! single_impl {
                 &mut bytes[1..]
             }
 
+            #[inline(always)]
             fn maybe_deref(t: &$typ) -> Self::RefType {
                 *t
             }

@@ -69,6 +69,7 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
         &mut bytes[len..]
     }
 
+    #[inline(always)]
     fn maybe_deref(t: &&'a [u8]) -> Self::RefType {
         *t
     }

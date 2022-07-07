@@ -32,6 +32,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> fo
         bytes
     }
 
+    #[inline(always)]
     fn maybe_deref(t: &'a Option<T>) -> Self::RefType {
         t
     }
