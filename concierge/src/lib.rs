@@ -8,8 +8,7 @@ use net::{
     network_handler::{
         ByteSender, ConnectionService, NetworkManagerService,
     },
-    packet_helper::PacketReadResult,
-    ConnectionState,
+    packet_helper::PacketReadResult
 };
 use protocol::{
     handshake::client::Handshake,
@@ -23,6 +22,13 @@ use rand::Rng;
 
 struct ProtoPlayer {
     connection_state: ConnectionState,
+}
+
+#[derive(Debug)]
+pub enum ConnectionState {
+    Handshake,
+    Status,
+    Login
 }
 
 impl<T: ConciergeService> ConnectionService<Concierge<T>> for ProtoPlayer {
@@ -84,7 +90,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
         bytes: &[u8],
     ) -> anyhow::Result<()> {
         match protoplayer.connection_state {
-            net::ConnectionState::Handshake => {
+            ConnectionState::Handshake => {
                 if bytes.len() < 3 {
                     bail!("insufficient bytes for handshake");
                 } else if bytes[0..3] == [0xFE, 0x01, 0xFA] {
@@ -104,8 +110,8 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                         slice_serialization::check_empty(bytes)?;
     
                         protoplayer.connection_state = match handshake_packet.next_state {
-                            1 => net::ConnectionState::Status,
-                            2 => net::ConnectionState::Login,
+                            1 => ConnectionState::Status,
+                            2 => ConnectionState::Login,
                             next => bail!("unknown next state {} for ClientHandshake", next),
                         };
                     } else {
@@ -117,7 +123,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                     }
                 }
             }
-            net::ConnectionState::Status => {
+            ConnectionState::Status => {
                 // Server List Ping: https://wiki.vg/Server_List_Ping
                 let mut bytes = bytes;
     
@@ -150,7 +156,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
     
                 return Ok(());
             }
-            net::ConnectionState::Login => {
+            ConnectionState::Login => {
                 let mut bytes = bytes;
     
                 let packet_id_byte: u8 = slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
@@ -177,8 +183,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                             println!("sending login success!");
     
                             net::packet_helper::send_packet(byte_sender, &login_success_packet)?;
-    
-                            protoplayer.connection_state = net::ConnectionState::Play;
+
     
                             // fake play, for testing
     
@@ -314,13 +319,13 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                     );
                 }
             }
-            net::ConnectionState::Play => {
+            /*net::ConnectionState::Play => {
                 let mut bytes = bytes;
     
                 let packet_id_byte: u8 = slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
     
                 println!("got play packet: {:?}", packet_id_byte);
-            }
+            }*/
         }
     
         Ok(())
