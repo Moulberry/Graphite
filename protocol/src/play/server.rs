@@ -1,4 +1,4 @@
-use binary::slice_serializable::*;
+use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::IdentifiedPacket;
@@ -30,12 +30,12 @@ slice_serializable_composite! {
 
 slice_serializable_composite! {
     ChunkLightData<'a>,
-    sky_light_mask: Vec<u64> as SizedArray<BigEndian, _>,
-    block_light_mask: Vec<u64> as SizedArray<BigEndian, _>,
-    empty_sky_light_mask: Vec<u64> as SizedArray<BigEndian, _>,
-    empty_block_light_mask: Vec<u64> as SizedArray<BigEndian, _>,
-    sky_light_entries: Vec<&'a [u8]> as SizedArray<SizedBlob, _>,
-    block_light_entries: Vec<&'a [u8]> as SizedArray<SizedBlob, _>
+    sky_light_mask: Vec<u64> as SizedArray<BigEndian>,
+    block_light_mask: Vec<u64> as SizedArray<BigEndian>,
+    empty_sky_light_mask: Vec<u64> as SizedArray<BigEndian>,
+    empty_block_light_mask: Vec<u64> as SizedArray<BigEndian>,
+    sky_light_entries: Vec<&'a [u8]> as SizedArray<SizedBlob>,
+    block_light_entries: Vec<&'a [u8]> as SizedArray<SizedBlob>
 }
 
 slice_serializable_composite! {
@@ -52,7 +52,7 @@ slice_serializable_composite! {
     is_hardcore: bool as Single,
     gamemode: u8 as Single,
     previous_gamemode: i8 as Single,
-    dimension_names: Vec<&'a str> as SizedArray<SizedString, _>,
+    dimension_names: Vec<&'a str> as SizedArray<SizedString>,
     registry_codec: &'a [u8] as GreedyBlob, // todo: actually nbt, don't use blob, doesn't have correct read semantics
     dimension_type: &'a str as SizedString,
     dimension_name: &'a str as SizedString,

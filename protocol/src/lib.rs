@@ -10,12 +10,6 @@ pub trait IdentifiedPacket<I: Debug> {
     fn get_packet_id_as_u8(&self) -> u8;
 }
 
-/*pub trait Packet<'a, I, T = Self> : Debug+IdentifiedPacket<I> {
-    fn read(bytes: &'a [u8]) -> anyhow::Result<T>;
-    fn get_write_size(&self) -> usize;
-    unsafe fn write<'b>(&self, bytes: &'b mut [u8]) -> &'b mut [u8];
-}*/
-
 macro_rules! identify_packets {
     { $enum_name:ident, $( $packet:ident $(<$life:lifetime>)? = $val:tt ),* } => {
         #[derive(Debug, TryFromPrimitive)]

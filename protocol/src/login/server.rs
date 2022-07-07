@@ -1,4 +1,4 @@
-use binary::slice_serializable::*;
+use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::IdentifiedPacket;

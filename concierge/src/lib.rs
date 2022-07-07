@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use anyhow::bail;
-use binary::{slice_reader, slice_serializable::SliceSerializable};
+use binary::slice_serialization;
+use binary::slice_serialization::SliceSerializable;
 use bytes::BufMut;
 use net::{
     network_handler::{
@@ -92,8 +93,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                     // Handshake: https://wiki.vg/Protocol#Handshake
                     let mut bytes = bytes;
     
-                    let packet_id_byte: u8 =
-                        binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
+                    let packet_id_byte: u8 = slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
     
                     if let Ok(packet_id) =
                         protocol::handshake::client::PacketId::try_from(packet_id_byte)
@@ -101,7 +101,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                         println!("got packet by id: {:?}", packet_id);
     
                         let handshake_packet = Handshake::read(&mut bytes)?;
-                        slice_reader::ensure_fully_read(bytes)?;
+                        slice_serialization::check_empty(bytes)?;
     
                         protoplayer.connection_state = match handshake_packet.next_state {
                             1 => net::ConnectionState::Status,
@@ -121,7 +121,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                 // Server List Ping: https://wiki.vg/Server_List_Ping
                 let mut bytes = bytes;
     
-                let packet_id = binary::slice_reader::read_varint(&mut bytes)?;
+                let packet_id = slice_serialization::VarInt::read(&mut bytes)?;
                 match packet_id {
                     0 => {
                         let server_response = Response {
@@ -153,7 +153,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
             net::ConnectionState::Login => {
                 let mut bytes = bytes;
     
-                let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
+                let packet_id_byte: u8 = slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
     
                 if let Ok(packet_id) = protocol::login::client::PacketId::try_from(packet_id_byte) {
                     println!("login - got packet by id: {:?}", packet_id);
@@ -162,7 +162,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                         protocol::login::client::PacketId::LoginStart => {
                             let login_start_packet =
                                 protocol::login::client::LoginStart::read(&mut bytes)?;
-                            slice_reader::ensure_fully_read(bytes)?;
+                            slice_serialization::check_empty(bytes)?;
     
                             println!("logging in with username: {}", login_start_packet.username);
     
@@ -317,7 +317,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
             net::ConnectionState::Play => {
                 let mut bytes = bytes;
     
-                let packet_id_byte: u8 = binary::slice_reader::read_varint(&mut bytes)?.try_into()?;
+                let packet_id_byte: u8 = slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
     
                 println!("got play packet: {:?}", packet_id_byte);
             }

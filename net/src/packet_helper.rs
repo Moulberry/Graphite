@@ -1,5 +1,5 @@
 use anyhow::bail;
-use binary::slice_serializable::SliceSerializable;
+use binary::slice_serialization::SliceSerializable;
 use binary::varint;
 use protocol::IdentifiedPacket;
 use std::fmt::Debug;
@@ -14,7 +14,7 @@ pub fn send_packet<'a, I: Debug, T>(
 where
     T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
 {
-    let expected_packet_size = T::get_write_size(packet);
+    let expected_packet_size = T::get_write_size(T::maybe_deref(packet));
     if expected_packet_size > 2097148 {
         bail!("packet too large!");
     }
@@ -24,7 +24,7 @@ where
 
     // write packet data
     // note: invariant should be satisfied because we allocated at least `get_write_size` bytes
-    let slice_after_writing = unsafe { T::write(&mut bytes[4..], packet) };
+    let slice_after_writing = unsafe { T::write(&mut bytes[4..], T::maybe_deref(packet)) };
     let bytes_written = expected_packet_size - slice_after_writing.len();
 
     // encode packet size varint for [packet id size (1) + content size]

@@ -229,11 +229,12 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
             backlog: &mut self.backlog,
         };
 
-        // Submit initial tick via Timeout opcode
+        // Separate duration into seconds and nanoseconds
         let tick_duration = T::TICK_RATE.unwrap_or(Duration::from_secs(0));
         let tick_s = tick_duration.as_secs();
         let tick_ns = tick_duration.subsec_nanos();
 
+        // Submit initial tick via Timeout opcode
         if let Some(_) = T::TICK_RATE {
             let timespec = nix::time::clock_gettime(nix::time::ClockId::CLOCK_MONOTONIC)?;
             self.tv_sec = timespec.tv_sec() as u64 + tick_s;
@@ -276,9 +277,9 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
                         libc::ETIME => (),
                         err => {
                             eprintln!(
-                                "userdata: {:?} got error: {:?}",
-                                user_data,
-                                io::Error::from_raw_os_error(err)
+                                "io_uring: completion query entry error:\n{:?}\nuserdata: {:?}",
+                                io::Error::from_raw_os_error(err),
+                                user_data
                             );
                             continue;
                         }
