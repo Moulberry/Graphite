@@ -51,7 +51,7 @@ where
         &bytes[varint_bytes_spare..4 + bytes_written]
     );
 
-    byte_sender.send(Box::from(&bytes[varint_bytes_spare..4 + bytes_written]));
+    byte_sender.send(&bytes[varint_bytes_spare..4 + bytes_written]);
 
     Ok(())
 }

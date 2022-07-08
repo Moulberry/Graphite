@@ -65,10 +65,12 @@ dependencies = [
  "anyhow",
  "binary",
  "bytes",
+ "io-uring",
  "net",
  "protocol",
  "quartz_nbt",
  "rand",
+ "slab",
 ]
 
 [[package]]
@@ -99,10 +101,12 @@ dependencies = [
  "binary",
  "bytes",
  "concierge",
+ "io-uring",
  "net",
  "protocol",
  "quartz_nbt",
  "rand",
+ "slab",
  "thiserror",
  "tokio",
 ]
@@ -177,6 +181,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "binary",
+ "bytes",
  "io-uring",
  "libc",
  "nix",
