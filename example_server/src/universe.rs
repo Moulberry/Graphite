@@ -23,8 +23,14 @@ struct Player {
 }
 
 impl Player {
-    fn get_universe(&mut self) -> &mut Universe {
+    fn get_universe(&self) -> &mut Universe {
         unsafe { self.universe.as_mut().unwrap() }
+    }
+
+    fn remove_from_world(&mut self) {
+        unsafe { self.universe.as_mut() }.unwrap().remove_player(self);
+        self.universe = std::ptr::null_mut();
+
     }
 }
 
@@ -49,22 +55,23 @@ fn my_code() {
     };
 
     universe.players.insert(player);
-
     let player = universe.players.get_mut(0).unwrap();
 
     let universe = player.get_universe();
-    let player = universe.players.get_mut(0).unwrap();
+    //let player = universe.players.get_mut(0).unwrap();
 
     let player_id = player.player_id;
 
-    universe.players.remove(player_id as _);
+    player.remove_from_world();
+
+    //universe.remove_player(player);
 
     //player.get_universe();
 
     //universe.remove_player(player);
     
     //std::mem::drop(player);
-    println!("{:?}", universe.players);
+    //println!("{:?}", universe.players);
 
     //drop(player);
     //universe.remove_player(player);
@@ -75,7 +82,7 @@ pub struct Universe {
 }
 
 impl Universe {
-    fn remove_player(&mut self, player: &Player) {
+    fn remove_player(&mut self, player: &mut Player) {
         self.players.remove(player.player_id as _);
     }
 }

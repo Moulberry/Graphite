@@ -2,13 +2,12 @@ use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
 use binary::varint;
 use protocol::IdentifiedPacket;
+use crate::network_buffer::WriteBuffer;
 use std::fmt::Debug;
 use thiserror::Error;
 
-use crate::network_handler::ByteSender;
-
-pub fn send_packet<'a, I: Debug, T>(
-    byte_sender: &mut ByteSender,
+pub fn write_packet<'a, I: Debug, T>(
+    write_buffer: &mut WriteBuffer,
     packet: &'a T,
 ) -> anyhow::Result<()>
 where
@@ -20,7 +19,7 @@ where
     }
 
     // allocate necessary bytes
-    let mut bytes = vec![0; 4 + expected_packet_size];
+    let bytes = write_buffer.get_unwritten(4 + expected_packet_size);
 
     // write packet data
     // note: invariant should be satisfied because we allocated at least `get_write_size` bytes
@@ -28,14 +27,22 @@ where
     let bytes_written = expected_packet_size - slice_after_writing.len();
 
     // encode packet size varint for [packet id size (1) + content size]
-    let (varint_raw, written) = varint::encode::i32_raw(1 + bytes_written as i32);
-    if written > 3 {
+    let (varint_raw, varint_bytes) = varint::encode::i32_raw(1 + bytes_written as i32);
+    if varint_bytes > 3 {
         bail!("packet too large!");
     }
 
     // write packet size varint
-    let varint_bytes_spare = 3 - written;
-    bytes[varint_bytes_spare..3].copy_from_slice(&varint_raw[..written]);
+    bytes[0..varint_bytes].copy_from_slice(&varint_raw[..varint_bytes]);
+
+    if varint_bytes == 1 {
+        bytes[0] |= 0b10000000;
+        bytes[1] = 0b10000000;
+        bytes[2] = 0b00000000;
+    } else if varint_bytes == 2 {
+        bytes[1] |= 0b10000000;
+        bytes[2] = 0b00000000;
+    }
 
     // write packet id
     bytes[3] = packet.get_packet_id_as_u8();
@@ -48,10 +55,10 @@ where
     );
     println!(
         "buffer: {:?}",
-        &bytes[varint_bytes_spare..4 + bytes_written]
+        &bytes[..4 + bytes_written]
     );
 
-    byte_sender.send(&bytes[varint_bytes_spare..4 + bytes_written]);
+    unsafe { write_buffer.advance(4 + bytes_written); }
 
     Ok(())
 }

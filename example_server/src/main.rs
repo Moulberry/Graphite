@@ -2,11 +2,11 @@ use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::Connection;
 
-mod universe;
+// mod universe;
 
 struct MyConciergeImpl {
     counter: u8,
-    connected_players: Vec<Connection<concierge::ProtoPlayer>>
+    connected_players: Vec<Connection<Concierge<Self>>>
 }
 
 impl ConciergeService for MyConciergeImpl {
@@ -35,10 +35,10 @@ impl ConciergeService for MyConciergeImpl {
         }}", self.counter)
     }
 
-    fn accept_player(&mut self, player_connection: Connection<concierge::ProtoPlayer>) {
-        // self.connected_players.push(player_connection);
-        let universe = universe::create_and_start();
-        universe.send(player_connection);
+    fn accept_player(&mut self, player_connection: Connection<Concierge<Self>>) {
+        self.connected_players.push(player_connection);
+        //let universe = universe::create_and_start();
+        //universe.send(player_connection);
 
         // fake play, for testing
             

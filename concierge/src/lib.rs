@@ -1,4 +1,4 @@
-use std::{time::Duration, collections::VecDeque};
+use std::{time::Duration, collections::VecDeque, marker::PhantomData};
 
 use anyhow::bail;
 use binary::slice_serialization;
@@ -8,7 +8,7 @@ use net::{
     network_handler::{
         ByteSender, ConnectionService, NetworkManagerService, Connection,
     },
-    packet_helper::PacketReadResult
+    packet_helper::PacketReadResult, network_buffer::WriteBuffer
 };
 use protocol::{
     handshake::client::Handshake,
@@ -16,8 +16,10 @@ use protocol::{
 };
 use rand::Rng;
 use slab::Slab;
+use bytes::BufMut;
 
-pub struct ProtoPlayer {
+pub struct ProtoPlayer<T> {
+    _phantom: PhantomData<T>,
     connection_state: ConnectionState,
     pub username: Option<String>,
     pub uuid: Option<u128>
@@ -30,77 +32,62 @@ pub enum ConnectionState {
     Login
 }
 
-impl<T: ConciergeService> ConnectionService<Concierge<T>> for ProtoPlayer {
+impl <T: ConciergeService> ConnectionService for ProtoPlayer<T> {
+    type NetworkManagerServiceType = Concierge<T>;
+
     fn on_receive(
         &mut self,
-        service: &mut Concierge<T>,
-        bytes: &mut &[u8],
-        mut byte_sender: ByteSender,
-    ) -> anyhow::Result<bool> {
+        connection: &mut Connection<Self::NetworkManagerServiceType>,
+        num_bytes: u32,
+    ) -> anyhow::Result<u32> {
+        /*if true {
+            connection.write(&[69, 69, 69]);
+            return Ok(0);
+        }*/
+
+        let mut bytes = connection.read_bytes(num_bytes);
+        let mut write_buffer: WriteBuffer = WriteBuffer::new();
+
         loop {
-            let packet_read_result = net::packet_helper::try_read_packet(bytes)?;
+            let packet_read_result = net::packet_helper::try_read_packet(&mut bytes)?;
             match packet_read_result {
                 PacketReadResult::Complete(bytes) => {
                     println!("Request: {:x?}", bytes);
-                    let should_consume = service.process_framed_packet(self, &mut byte_sender, bytes)?;
-                    if should_consume {
+                    let should_consume = self.process_framed_packet(&mut write_buffer, connection, bytes)?;
+                    /*if should_consume {
                         return Ok(true)
-                    }
+                    }*/
                 }
-                PacketReadResult::Partial => return Ok(false),
-                PacketReadResult::Empty => return Ok(false),
+                PacketReadResult::Partial => break,
+                PacketReadResult::Empty => break,
             }
         }
+
+        let bytes_remaining = bytes.len() as u32;
+
+        let to_write = write_buffer.get_written();
+        if to_write.len() > 0 {
+            connection.write(to_write);
+        }
+
+        Ok(bytes_remaining)
     }
 
     fn on_created(&mut self, _: ByteSender) {
     }
 }
 
-pub struct Concierge<T: ConciergeService + 'static> {
-    serverlist_response: String,
-    service: T,
-}
-
-impl<'a, T: ConciergeService + 'static> NetworkManagerService<ProtoPlayer> for Concierge<T> {
-    const TICK_RATE: Option<Duration> = Some(Duration::from_secs(10));
-
-    fn new_connection_service(&mut self) -> ProtoPlayer {
-        ProtoPlayer {
-            username: None,
-            uuid: None,
-            connection_state: ConnectionState::Handshake,
-        }
-    }
-
-    fn tick(&mut self, _: &mut Slab<Connection<ProtoPlayer>>, _: SubmissionQueue, _: &mut VecDeque<squeue::Entry>) {
-        self.serverlist_response = self.service.get_serverlist_response();
-    }
-
-    fn consume_connection(&mut self, connection: Connection<ProtoPlayer>) {
-        self.service.accept_player(connection);
-    }
-}
-
-impl<'a, T: ConciergeService + 'static> Concierge<T> {
-    pub fn bind(addr: &str, mut service: T) -> anyhow::Result<()> {
-        let concierge = Concierge {
-            serverlist_response: service.get_serverlist_response(),
-            service
-        };
-
-        net::network_handler::start(concierge, Some(addr))?;
-
-        Ok(())
-    }
-
+impl <T: ConciergeService> ProtoPlayer<T> {
     fn process_framed_packet(
         &mut self,
-        protoplayer: &mut ProtoPlayer,
-        byte_sender: &mut ByteSender,
+        write_buffer: &mut WriteBuffer,
+        //concierge: &Concierge<T>,
+        connection: &Connection<Concierge<T>>,
+        //protoplayer: &mut ProtoPlayer<T>,
+        //byte_sender: &mut ByteSender,
         bytes: &[u8],
     ) -> anyhow::Result<bool> {
-        match protoplayer.connection_state {
+        match self.connection_state {
             ConnectionState::Handshake => {
                 if bytes.len() < 3 {
                     bail!("insufficient bytes for handshake");
@@ -120,7 +107,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                         let handshake_packet = Handshake::read(&mut bytes)?;
                         slice_serialization::check_empty(bytes)?;
     
-                        protoplayer.connection_state = match handshake_packet.next_state {
+                        self.connection_state = match handshake_packet.next_state {
                             1 => ConnectionState::Status,
                             2 => ConnectionState::Login,
                             next => bail!("unknown next state {} for ClientHandshake", next),
@@ -129,7 +116,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                         bail!(
                             "unknown packet_id {} during {:?}",
                             packet_id_byte,
-                            protoplayer.connection_state
+                            self.connection_state
                         );
                     }
                 }
@@ -141,19 +128,21 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                 let packet_id = slice_serialization::VarInt::read(&mut bytes)?;
                 match packet_id {
                     0 => {
+                        let concierge = &connection.get_network_manager().service;
                         let server_response = Response {
-                            json: &self.serverlist_response,
+                            json: &concierge.serverlist_response,
                         };
-                        net::packet_helper::send_packet(byte_sender, &server_response)?;
+                        net::packet_helper::write_packet(write_buffer, &server_response)?;
                     },
                     1 => {
                         if bytes.len() == 8 {
-                            // todo: should probably make this an actual packet, even if its slightly slower
+                            // todo: make this an actual packet
                             // length = 9, packet = 1, rest is copied over from `bytes`
                             let mut response: [u8; 10] = [9, 1, 0, 0, 0, 0, 0, 0, 0, 0];
                             response[2..].clone_from_slice(bytes);
-    
-                            byte_sender.send(&response);
+
+                            write_buffer.get_unwritten(10).put_slice(&response);
+                            unsafe { write_buffer.advance(10) };
                         }
     
                         // protoplayer.close();
@@ -161,7 +150,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                     _ => bail!(
                         "unknown packet_id {} during {:?}",
                         packet_id,
-                        protoplayer.connection_state
+                        self.connection_state
                     ),
                 }
             }
@@ -183,16 +172,16 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
     
                             // std::thread::sleep(std::time::Duration::from_millis(100));
 
-                            protoplayer.username = Some(String::from(login_start_packet.username));
-                            protoplayer.uuid = rand::thread_rng().gen();
+                            self.username = Some(String::from(login_start_packet.username));
+                            self.uuid = Some(rand::thread_rng().gen());
     
                             let login_success_packet = protocol::login::server::LoginSuccess {
-                                uuid: protoplayer.uuid.unwrap(),
+                                uuid: self.uuid.unwrap(),
                                 username: login_start_packet.username,
                                 property_count: 0,
                             };
     
-                            net::packet_helper::send_packet(byte_sender, &login_success_packet)?;
+                            net::packet_helper::write_packet(write_buffer, &login_success_packet)?;
 
                             return Ok(true); // Consume the connection
                         }
@@ -201,7 +190,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
                     bail!(
                         "unknown packet_id {} during {:?}",
                         packet_id_byte,
-                        protoplayer.connection_state
+                        self.connection_state
                     );
                 }
             }
@@ -218,7 +207,50 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
     }
 }
 
-pub trait ConciergeService {
+pub struct Concierge<T: ConciergeService> {
+    serverlist_response: String,
+    service: T,
+}
+
+impl<'a, T: ConciergeService> NetworkManagerService for Concierge<T> {
+    const TICK_RATE: Option<Duration> = Some(Duration::from_secs(10));
+    type ConnectionServiceType = ProtoPlayer<T>;
+
+    fn new_connection_service(&mut self) -> ProtoPlayer<T> {
+        ProtoPlayer {
+            _phantom: PhantomData,
+            username: None,
+            uuid: None,
+            connection_state: ConnectionState::Handshake,
+        }
+    }
+
+    fn consume_connection(&mut self, connection: Connection<Self>) {
+        self.service.accept_player(connection);
+    }
+
+    fn tick(&mut self, connections: &mut Slab<(Connection<Self>, Self::ConnectionServiceType)>, sq: SubmissionQueue, backlog: &mut VecDeque<squeue::Entry>) {
+        self.serverlist_response = self.service.get_serverlist_response();
+    }
+}
+
+impl<'a, T: ConciergeService + 'static> Concierge<T> {
+    pub fn bind(addr: &str, mut service: T) -> anyhow::Result<()> {
+        let concierge = Concierge {
+            serverlist_response: service.get_serverlist_response(),
+            service
+        };
+
+        net::network_handler::start(concierge, Some(addr))?;
+
+        Ok(())
+    }
+
+    
+}
+
+pub trait ConciergeService
+where Self: Sized {
     fn get_serverlist_response(&mut self) -> String;
-    fn accept_player(&mut self, player_connection: Connection<ProtoPlayer>);
+    fn accept_player(&mut self, player_connection: Connection<Concierge<Self>>);
 }

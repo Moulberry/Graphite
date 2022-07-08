@@ -77,7 +77,7 @@ impl AcceptCount {
 
 use bytes::BufMut;
 
-pub struct ByteSender<'a, 'b> {
+/*pub struct ByteSender<'a, 'b> {
     buffer: Vec<u8>,
     output_buffers: &'a mut Slab<Box<[u8]>>,
     connection_index: u16,
@@ -119,7 +119,7 @@ impl <'a, 'b> Drop for ByteSender<'a, 'b> {
             }
         }
     }
-}
+}*/
 
 pub struct AutoclosingFd(RawFd);
 impl Drop for AutoclosingFd {
@@ -130,19 +130,21 @@ impl Drop for AutoclosingFd {
     }
 }
 
-pub struct Connection<C> {
-    pub fd: AutoclosingFd,
-    pub write_buffers: Slab<Box<[u8]>>,
+pub struct Connection<N: NetworkManagerService> {
+    network_manager: *const NetworkManager<N>,
+    submission_backlog: *mut VecDeque<squeue::Entry>,
+
+    self_index: u16,
+    fd: AutoclosingFd,
+    write_buffers: Slab<Box<[u8]>>,
 
     rbuff_data_offset: usize,
     rbuff_write_offset: usize,
     read_buffer: Vec<u8>,
-    
-    pub service: C,
 }
 
-impl <C> Connection<C> {
-    pub fn with_service<C2>(self, service: C2) -> Connection<C2> {
+impl <N: NetworkManagerService> Connection<N> {
+    /*pub fn with_service<C2>(self, service: C2) -> Connection<C2> {
         Connection {
             fd: self.fd,
             write_buffers: self.write_buffers,
@@ -151,27 +153,67 @@ impl <C> Connection<C> {
             read_buffer: self.read_buffer,
             service,
         }
+    }*/
+
+    pub fn get_network_manager(&self) -> &NetworkManager<N> {
+        unsafe { self.network_manager.as_ref().unwrap() }
+    }
+
+    pub fn read_bytes(&self, num_bytes: u32) -> &[u8] {
+        &self.read_buffer[self.rbuff_data_offset..num_bytes as usize]
+    }
+
+    pub fn write(&mut self, bytes: &[u8]) {
+        let bytes: Box<[u8]> = Box::from(bytes);
+
+        // get length and pointer for ffi
+        let bytes_len = bytes.len();
+        let bytes_pointer = &*bytes as *const _ as *const u8;
+
+        // put bytes into output_buffers, get an index
+        let write_index = self.write_buffers.insert(bytes);
+
+        // create user data for write operation, needed in order to drop the write_buffer once finished
+        let write_user_data = UserData::Write {
+            connection_index: self.self_index,
+            write_buffer_index: write_index as u16,
+        };
+
+        // submit the write operation to io_uring
+        let write_e = opcode::Send::new(types::Fd(self.fd.0), bytes_pointer, bytes_len as u32)
+            .build()
+            .user_data(write_user_data.into());
+        unsafe {
+            let network_manager = self.network_manager.as_ref().unwrap();
+            let mut ring_squeue = network_manager.ring.submission_shared();
+
+            if ring_squeue.push(&write_e).is_err() {
+                let backlog = self.submission_backlog.as_mut().unwrap();
+                backlog.push_back(write_e);
+            }
+        }
     }
 }
 
-pub trait ConnectionService<T: NetworkManagerService<Self>>
-where Self: Sized{
+pub trait ConnectionService
+where Self: Sized {
     const BUFFER_SIZE: u32 = 4_194_304;
+    type NetworkManagerServiceType: NetworkManagerService<ConnectionServiceType = Self>;
 
     fn on_created(&mut self, byte_sender: ByteSender);
-    fn on_receive(&mut self, service: &mut T, bytes: &mut &[u8], byte_sender: ByteSender) -> anyhow::Result<bool>;
+    fn on_receive(&mut self, connection: &mut Connection<Self::NetworkManagerServiceType>, num_bytes: u32) -> anyhow::Result<u32>;
 }
 
-pub trait NetworkManagerService<C: ConnectionService<Self>>
-where Self: Sized
-{
+pub trait NetworkManagerService
+where Self: Sized {
     const TICK_RATE: Option<Duration>;
+    type ConnectionServiceType: ConnectionService<NetworkManagerServiceType = Self>;
 
-    fn new_connection_service(&mut self) -> C;
-    fn consume_connection(&mut self, connection: Connection<C>);
-    fn tick(&mut self, connections: &mut Slab<Connection<C>>, sq: SubmissionQueue, backlog: &mut VecDeque<squeue::Entry>);
+    fn new_connection_service(&mut self) -> Self::ConnectionServiceType;
+    fn consume_connection(&mut self, connection: Connection<Self>);
+    fn tick(&mut self, connections: &mut Slab<(Connection<Self>, Self::ConnectionServiceType)>, sq: SubmissionQueue, backlog: &mut VecDeque<squeue::Entry>);
 
-    fn take_connection<'a, 'b>(mut connection: Connection<C>, connections: &mut Slab<Connection<C>>, sq: &'a mut SubmissionQueue<'b>,
+    fn take_connection<'a, 'b>(mut connection: Connection<Self>, connections: &mut Slab<Connection<Self>>, sq: &'a mut SubmissionQueue<'b>,
                 backlog: &'a mut VecDeque<squeue::Entry>) {
         // Check for connection limit (u16::MAX)
         if connections.len() > u16::MAX as usize {
@@ -184,7 +226,7 @@ where Self: Sized
         let connection_index = vacant_entry.key() as u16;
 
         // Call on_created
-        let byte_sender = ByteSender {
+        /*let byte_sender = ByteSender {
             buffer: Vec::new(),
             output_buffers: &mut connection.write_buffers,
             connection_index,
@@ -192,37 +234,37 @@ where Self: Sized
             backlog,
             ring_squeue: sq,
         };
-        connection.service.on_created(byte_sender);
+        connection.service.on_created(byte_sender);*/
 
         // Kickstart the recv event
         let read_buffer_ptr = connection.read_buffer.as_mut_ptr();
-        NetworkManager::<Self, C>::push_recv_event(
+        NetworkManager::<Self>::push_recv_event(
             sq,
             backlog,
             fd,
             connection_index as u16,
             read_buffer_ptr,
-            C::BUFFER_SIZE,
+            Self::ConnectionServiceType::BUFFER_SIZE,
         );
 
         vacant_entry.insert(connection);
     }
 }
 
-pub struct NetworkManager<T: NetworkManagerService<C>, C: ConnectionService<T>> {
+pub struct NetworkManager<N: NetworkManagerService> {
+    pub service: N,
+
     ring: IoUring,
     backlog: VecDeque<squeue::Entry>,
-    connections: Slab<Connection<C>>,
+    connections: Slab<(Connection<N>, N::ConnectionServiceType)>,
 
     tv_sec: u64,
     tv_nsec: u32,
     current_timespec: Timespec,
-
-    service: T,
 }
 
 // Publically exposed start method
-pub fn start<T: NetworkManagerService<C>, C: ConnectionService<T>>(
+pub fn start<T: NetworkManagerService>(
     service: T,
     addr: Option<&str>,
 ) -> anyhow::Result<()> {
@@ -231,8 +273,8 @@ pub fn start<T: NetworkManagerService<C>, C: ConnectionService<T>>(
     Ok(())
 }
 
-impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> {
-    fn new(service: T) -> anyhow::Result<Self> {
+impl<N: NetworkManagerService> NetworkManager<N> {
+    fn new(service: N) -> anyhow::Result<Self> {
         // todo: maybe use IORING_SETUP_SQPOLL?
 
         let ring = IoUring::new(128)?; // 128? too large? too small?
@@ -246,7 +288,6 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
             backlog,
             connections: connection_alloc,
 
-        
             tv_sec: 0,
             tv_nsec: 0,
             current_timespec: Timespec::new(),
@@ -267,18 +308,18 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
         let mut ring_cqueue = unsafe { self.ring.completion_shared() };
 
         // Separate duration into seconds and nanoseconds
-        let tick_duration = T::TICK_RATE.unwrap_or(Duration::from_secs(0));
+        let tick_duration = N::TICK_RATE.unwrap_or(Duration::from_secs(0));
         let tick_s = tick_duration.as_secs();
         let tick_ns = tick_duration.subsec_nanos();
 
         // Submit initial tick via Timeout opcode
-        if let Some(_) = T::TICK_RATE {
+        if let Some(_) = N::TICK_RATE {
             let timespec = nix::time::clock_gettime(nix::time::ClockId::CLOCK_MONOTONIC)?;
             self.tv_sec = timespec.tv_sec() as u64 + tick_s;
             self.tv_nsec = timespec.tv_nsec() as u32 + tick_ns;
             self.current_timespec = self.current_timespec.sec(self.tv_sec).nsec(self.tv_nsec);
 
-            NetworkManager::<T, C>::push_tick_timeout_event(unsafe { self.ring.submission_shared() }, &mut self.backlog, &self.current_timespec);
+            NetworkManager::<N>::push_tick_timeout_event(unsafe { self.ring.submission_shared() }, &mut self.backlog, &self.current_timespec);
         }
 
         loop {
@@ -287,7 +328,7 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
             if let Some(ref mut accept) = accept {
                 accept.push_to(&mut squeue);
             }
-            NetworkManager::<T, C>::clean_backlog(&mut self.backlog, &ring_submitter, squeue)?;
+            NetworkManager::<N>::clean_backlog(&mut self.backlog, &ring_submitter, squeue)?;
 
             // Submit from submission queue and wait for some event on the completion queu
             match ring_submitter.submit_and_wait(1) {
@@ -328,7 +369,7 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
                         write_buffer_index,
                     } => {
                         // Write has completed, we can drop the associated buffer
-                        if let Some(connection) =
+                        if let Some((connection, _)) =
                             self.connections.get_mut(connection_index as usize)
                         {
                             connection
@@ -364,7 +405,7 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
                         self.current_timespec = self.current_timespec.sec(self.tv_sec).nsec(self.tv_nsec);
 
                         // Push a timeout event using `current_timespec`
-                        NetworkManager::<T, C>::push_tick_timeout_event(unsafe { self.ring.submission_shared() }, &mut self.backlog, &self.current_timespec);
+                        NetworkManager::<N>::push_tick_timeout_event(unsafe { self.ring.submission_shared() }, &mut self.backlog, &self.current_timespec);
 
                         // Call the service-defined tick method
                         self.service.tick(&mut self.connections, unsafe { self.ring.submission_shared() }, &mut self.backlog);
@@ -382,16 +423,26 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
                         }
 
                         // Allocate a new connection struct
-                        let mut read_buffer = vec![0_u8; C::BUFFER_SIZE as usize];
+                        let mut read_buffer = vec![0_u8; N::ConnectionServiceType::BUFFER_SIZE as usize];
                         let read_buffer_ptr = read_buffer.as_mut_ptr();
-                        let connection_index = self.connections.insert(Connection {
+
+                        let self_ptr: *const NetworkManager<N> = self;
+
+                        let vacant_entry = self.connections.vacant_entry();
+                        let connection_index = vacant_entry.key();
+
+                        vacant_entry.insert((Connection {
                             fd: AutoclosingFd(fd),
+
+                            network_manager: self_ptr,
+                            submission_backlog: &mut self.backlog,
+                            self_index: connection_index as u16,
+
                             rbuff_data_offset: 0,
                             rbuff_write_offset: 0,
                             read_buffer,
                             write_buffers: Slab::new(),
-                            service: self.service.new_connection_service(),
-                        });
+                        }, self.service.new_connection_service()));
 
                         // todo: fire on_created
 
@@ -401,13 +452,13 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
                         }
 
                         // Kickstart the recv event
-                        NetworkManager::<T, C>::push_recv_event(
+                        NetworkManager::<N>::push_recv_event(
                             &mut unsafe { self.ring.submission_shared() },
                             &mut self.backlog,
                             result,
                             connection_index as u16,
                             read_buffer_ptr,
-                            C::BUFFER_SIZE,
+                            N::ConnectionServiceType::BUFFER_SIZE,
                         );
                     }
                     UserData::Read { connection_index } => {
@@ -415,14 +466,14 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
 
                         if result <= 0 {
                             // Connection closed by remote, clean up
-                            NetworkManager::<T, C>::try_close_connection_by_index(&mut self.connections, connection_index);
-                        } else if let Some(connection) = self.connections.get_mut(connection_index as _) {
+                            NetworkManager::<N>::try_close_connection_by_index(&mut self.connections, connection_index);
+                        } else if let Some((connection, connection_service)) = self.connections.get_mut(connection_index as _) {
                             // Some data has been read
 
                             let bytes_end = connection.rbuff_write_offset + result as usize;
-                            if bytes_end >= C::BUFFER_SIZE as usize {
+                            if bytes_end >= N::ConnectionServiceType::BUFFER_SIZE as usize {
                                 // Exceeded buffer size... crap...
-                                    NetworkManager::<T, C>::try_close_connection_by_index(&mut self.connections, connection_index);
+                                    NetworkManager::<N>::try_close_connection_by_index(&mut self.connections, connection_index);
                                 break;
                             }
 
@@ -433,35 +484,32 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
                             let mut bytes = &connection.read_buffer[connection.rbuff_data_offset..bytes_end];
                             let num_bytes_received = bytes.len();
 
-                            let mut ring_squeue = unsafe { self.ring.submission_shared() };
+                            //let mut ring_squeue = unsafe { self.ring.submission_shared() };
 
-                            let byte_sender = ByteSender {
+                            /*let byte_sender = ByteSender {
                                 buffer: Vec::new(),
                                 output_buffers: &mut connection.write_buffers,
                                 connection_index: connection_index as _,
                                 fd: connection.fd.0,
                                 backlog: &mut self.backlog,
                                 ring_squeue: &mut ring_squeue,
-                            };
+                            };*/
 
                             // Call the service-defined receive method
-                            let receive_result = connection.service.on_receive(&mut self.service, &mut bytes, byte_sender);
+                            let receive_result = connection_service.on_receive(connection, bytes_end as u32);
 
                             match receive_result {
                                 Err(err) => {
                                     eprintln!("error: {:?}", err);
-                                    NetworkManager::<T, C>::try_close_connection_by_index(&mut self.connections, connection_index);
+                                    NetworkManager::<N>::try_close_connection_by_index(&mut self.connections, connection_index);
                                     continue;
                                 },
-                                Ok(should_pop_connection) => {
-                                    if should_pop_connection {
+                                Ok(remaining_bytes) => {
+                                    if false {
                                         // todo: ???
                                         // ring_squeue.sync();
                                     } else {
-                                        //let connection_option = NetworkManager::<T, C>::handle_receive(connection,
-                                        //    &mut self.service, connection_index as _, &mut ring_squeue, bytes_end);
-
-                                        let remaining_bytes = bytes.len();
+                                        // let remaining_bytes = bytes.len();
                                         if remaining_bytes == 0 {
                                             // Fully read
 
@@ -472,7 +520,7 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
                                             // Partial read
 
                                             // Set the `data_offset` to the start of the partially-unread data
-                                            let bytes_consumed = num_bytes_received - remaining_bytes;
+                                            let bytes_consumed = num_bytes_received - remaining_bytes as usize;
                                             connection.rbuff_data_offset += bytes_consumed;
 
                                             // Set the `write_offset` to the end of the byte stream,
@@ -482,13 +530,13 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
 
                                         // Re-queue the recv event
                                         let read_buffer_ptr = unsafe { connection.read_buffer.as_mut_ptr().offset(connection.rbuff_write_offset as isize) };
-                                        NetworkManager::<T, C>::push_recv_event(
+                                        NetworkManager::<N>::push_recv_event(
                                             &mut unsafe { self.ring.submission_shared() },
                                             &mut self.backlog,
                                             connection.fd.0,
                                             connection_index as _,
                                             read_buffer_ptr,
-                                            C::BUFFER_SIZE - connection.rbuff_write_offset as u32,
+                                            N::ConnectionServiceType::BUFFER_SIZE - connection.rbuff_write_offset as u32,
                                         );
                                         continue;
                                     }
@@ -498,7 +546,7 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
 
                         // Connection service requested that we consume the connection
                         // Typically this should be used in order to transfer this connection to another network_handler
-                        if let Some(mut connection) = self.connections.try_remove(connection_index as _) {
+                        if let Some((mut connection, _)) = self.connections.try_remove(connection_index as _) {
                             connection.rbuff_data_offset = 0;
                             connection.rbuff_write_offset = 0;
 
@@ -542,13 +590,14 @@ impl<T: NetworkManagerService<C>, C: ConnectionService<T>> NetworkManager<T, C> 
         Some((connection, remaining_bytes))
     }*/
 
-    fn try_close_connection_by_index(connections: &mut Slab<Connection<C>>, connection_index: u16) {
+    fn try_close_connection_by_index(connections: &mut Slab<(Connection<N>, N::ConnectionServiceType)>, connection_index: u16) {
         if let Some(connection) = connections.try_remove(connection_index as _) {
-            NetworkManager::<T, C>::close_connection(connection);
+            NetworkManager::<N>::close_connection(connection.0);
         }
     }
 
-    fn close_connection(connection: Connection<C>) {
+    // todo: put method on Connection instead
+    fn close_connection(connection: Connection<N>) {
         std::mem::drop(connection);
     }
 
