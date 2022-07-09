@@ -1,21 +1,14 @@
 use concierge::Concierge;
 use concierge::ConciergeService;
-use net::network_handler::Connection;
+use net::network_handler::UninitializedConnection;
 
-// mod universe;
+mod universe;
 
 struct MyConciergeImpl {
-    counter: u8,
-    connected_players: Vec<Connection<Concierge<Self>>>
+    counter: u8
 }
 
 impl ConciergeService for MyConciergeImpl {
-    /*fn get_message(&mut self) -> String {
-        self.counter += 1;
-        let string = format!("times called: {}", self.counter);
-        string
-    }*/
-
     fn get_serverlist_response(&mut self) -> String {
         self.counter += 1;
         format!("{{\
@@ -35,24 +28,15 @@ impl ConciergeService for MyConciergeImpl {
         }}", self.counter)
     }
 
-    fn accept_player(&mut self, player_connection: Connection<Concierge<Self>>) {
-        self.connected_players.push(player_connection);
-        //let universe = universe::create_and_start();
-        //universe.send(player_connection);
-
-        // fake play, for testing
-            
-        /*std::thread::sleep(std::time::Duration::from_millis(100));
-            
-        
-
-        println!("accepted player from concierge!");*/
+    fn accept_player(&mut self, player_connection: UninitializedConnection, protoplayer: concierge::ProtoPlayer<Self>) {
+        println!("managed to get connection: {:?}", protoplayer.username);
+        let universe = universe::create_and_start();
+        universe.send(player_connection).unwrap();
     }
 }
 
 fn main() {
     Concierge::bind("127.0.0.1:25565", MyConciergeImpl {
-        counter: 0,
-        connected_players: Vec::new()
+        counter: 0
     }).unwrap();
 }

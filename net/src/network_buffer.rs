@@ -23,13 +23,16 @@ impl WriteBuffer {
     }
 
     pub fn get_unwritten(&mut self, capacity: usize) -> &mut [u8] {
-        let needed = capacity as isize - self.vec.capacity() as isize + self.write_index as isize;
+        let needed = capacity as isize - self.vec.len() as isize + self.write_index as isize;
+
         if needed > 0 {
             self.vec.reserve(needed as usize);
         }
 
-        let ptr = self.vec.as_mut_ptr();
-        unsafe { std::slice::from_raw_parts_mut(ptr, capacity) }
+        unsafe {
+            let ptr = self.vec.as_mut_ptr().offset(self.write_index as isize);
+            std::slice::from_raw_parts_mut(ptr, capacity)
+        }
     }
 
     /// This function should be used after successfully writing some data with `get_unwritten`
@@ -39,7 +42,7 @@ impl WriteBuffer {
     /// 2.  At least `advance` bytes must have been written to the slice returned by `get_unwritten`,
     ///     otherwise `get_written` will return uninitialized memory
     pub unsafe fn advance(&mut self, advance: usize) {
-        debug_assert!(self.write_index + advance <= self.vec.capacity(), "advance must be less than the remaining bytes");
+        debug_assert!(self.write_index + advance <= self.vec.capacity(), "advance {} must be <= the remaining bytes {}", advance, self.vec.capacity() - self.write_index);
         self.write_index += advance;
     }
 }

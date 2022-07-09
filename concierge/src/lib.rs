@@ -6,7 +6,7 @@ use binary::slice_serialization::SliceSerializable;
 use io_uring::{SubmissionQueue, squeue};
 use net::{
     network_handler::{
-        ByteSender, ConnectionService, NetworkManagerService, Connection,
+        ConnectionService, NetworkManagerService, Connection, NewConnectionAccepter, UninitializedConnection,
     },
     packet_helper::PacketReadResult, network_buffer::WriteBuffer
 };
@@ -32,7 +32,7 @@ pub enum ConnectionState {
     Login
 }
 
-impl <T: ConciergeService> ConnectionService for ProtoPlayer<T> {
+impl <T: ConciergeService + 'static> ConnectionService for ProtoPlayer<T> {
     type NetworkManagerServiceType = Concierge<T>;
 
     fn on_receive(
@@ -40,23 +40,17 @@ impl <T: ConciergeService> ConnectionService for ProtoPlayer<T> {
         connection: &mut Connection<Self::NetworkManagerServiceType>,
         num_bytes: u32,
     ) -> anyhow::Result<u32> {
-        /*if true {
-            connection.write(&[69, 69, 69]);
-            return Ok(0);
-        }*/
-
         let mut bytes = connection.read_bytes(num_bytes);
         let mut write_buffer: WriteBuffer = WriteBuffer::new();
+
+        let mut should_consume = false;
 
         loop {
             let packet_read_result = net::packet_helper::try_read_packet(&mut bytes)?;
             match packet_read_result {
                 PacketReadResult::Complete(bytes) => {
                     println!("Request: {:x?}", bytes);
-                    let should_consume = self.process_framed_packet(&mut write_buffer, connection, bytes)?;
-                    /*if should_consume {
-                        return Ok(true)
-                    }*/
+                    should_consume = self.process_framed_packet(&mut write_buffer, connection, bytes)?;
                 }
                 PacketReadResult::Partial => break,
                 PacketReadResult::Empty => break,
@@ -70,14 +64,17 @@ impl <T: ConciergeService> ConnectionService for ProtoPlayer<T> {
             connection.write(to_write);
         }
 
-        Ok(bytes_remaining)
-    }
+        if should_consume {
+            connection.request_redirect(Box::from(|service: &mut Concierge<T>, connection, connection_service| {
+                service.service.accept_player(connection, connection_service);
+            }));
+        }
 
-    fn on_created(&mut self, _: ByteSender) {
+        Ok(bytes_remaining)
     }
 }
 
-impl <T: ConciergeService> ProtoPlayer<T> {
+impl <T: ConciergeService + 'static> ProtoPlayer<T> {
     fn process_framed_packet(
         &mut self,
         write_buffer: &mut WriteBuffer,
@@ -212,7 +209,7 @@ pub struct Concierge<T: ConciergeService> {
     service: T,
 }
 
-impl<'a, T: ConciergeService> NetworkManagerService for Concierge<T> {
+impl<'a, T: ConciergeService + 'static> NetworkManagerService for Concierge<T> {
     const TICK_RATE: Option<Duration> = Some(Duration::from_secs(10));
     type ConnectionServiceType = ProtoPlayer<T>;
 
@@ -225,11 +222,11 @@ impl<'a, T: ConciergeService> NetworkManagerService for Concierge<T> {
         }
     }
 
-    fn consume_connection(&mut self, connection: Connection<Self>) {
+    /*fn consume_connection(&mut self, connection: Connection<Self>) {
         self.service.accept_player(connection);
-    }
+    }*/
 
-    fn tick(&mut self, connections: &mut Slab<(Connection<Self>, Self::ConnectionServiceType)>, sq: SubmissionQueue, backlog: &mut VecDeque<squeue::Entry>) {
+    fn tick(&mut self, connections: &mut Slab<(Connection<Self>, Self::ConnectionServiceType)>, _: NewConnectionAccepter<Self>) {
         self.serverlist_response = self.service.get_serverlist_response();
     }
 }
@@ -250,7 +247,7 @@ impl<'a, T: ConciergeService + 'static> Concierge<T> {
 }
 
 pub trait ConciergeService
-where Self: Sized {
+where Self: Sized + 'static {
     fn get_serverlist_response(&mut self) -> String;
-    fn accept_player(&mut self, player_connection: Connection<Concierge<Self>>);
+    fn accept_player(&mut self, player_connection: UninitializedConnection, player_service: ProtoPlayer<Self>);
 }
