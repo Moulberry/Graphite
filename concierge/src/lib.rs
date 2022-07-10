@@ -58,7 +58,7 @@ impl<T: ConciergeService + 'static> ConnectionService for ProtoPlayer<T> {
         let bytes_remaining = bytes.len() as u32;
 
         let to_write = write_buffer.get_written();
-        if to_write.len() > 0 {
+        if !to_write.is_empty() {
             connection.write(to_write);
         }
 
@@ -209,7 +209,7 @@ pub struct Concierge<T: ConciergeService> {
     service: T,
 }
 
-impl<'a, T: ConciergeService + 'static> NetworkManagerService for Concierge<T> {
+impl<T: ConciergeService + 'static> NetworkManagerService for Concierge<T> {
     const TICK_RATE: Option<Duration> = Some(Duration::from_secs(10));
     type ConnectionServiceType = ProtoPlayer<T>;
 
@@ -236,7 +236,7 @@ impl<'a, T: ConciergeService + 'static> NetworkManagerService for Concierge<T> {
     }
 }
 
-impl<'a, T: ConciergeService + 'static> Concierge<T> {
+impl<T: ConciergeService + 'static> Concierge<T> {
     pub fn bind(addr: &str, mut service: T) -> anyhow::Result<()> {
         let concierge = Concierge {
             serverlist_response: service.get_serverlist_response(),

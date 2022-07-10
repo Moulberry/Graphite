@@ -43,9 +43,9 @@ impl From<u64> for UserData {
     }
 }
 
-impl Into<u64> for UserData {
-    fn into(self) -> u64 {
-        unsafe { std::mem::transmute(self) }
+impl From<UserData> for u64 {
+    fn from(data: UserData) -> Self {
+        unsafe { std::mem::transmute(data) }
     }
 }
 
@@ -92,9 +92,9 @@ pub struct NewConnectionAccepter<N: NetworkManagerService> {
 impl<N: NetworkManagerService> NewConnectionAccepter<N> {
     // todo: safe `accept` that doesn't return pointer
 
-    /// SAFETY:
+    /// # Safety
     /// Returned pointer is valid as long as the connection is part of the relevant NetworkManager
-    /// If `request_redirect` is called on the connection, the returned pointer is no longer valid
+    /// If `request_redirect` or `request_close` is called on the connection, the pointer is no longer valid
     pub unsafe fn accept_and_get_ptr(
         &self,
         uninitialized_conn: UninitializedConnection,
@@ -137,8 +137,7 @@ impl<N: NetworkManagerService> NewConnectionAccepter<N> {
 
         let read_buffer_ptr = connection
             .read_buffer
-            .as_mut_ptr()
-            .offset(connection.rbuff_write_offset as isize);
+            .as_mut_ptr().add(connection.rbuff_write_offset);
         NetworkManager::<N>::push_recv_event(
             &mut sq,
             backlog,
@@ -218,6 +217,8 @@ pub struct UninitializedConnection {
     read_buffer: Vec<u8>,
 }
 
+type FnConnectionRedirect<N, C> = Box<dyn FnMut(&mut N, UninitializedConnection, &C)>;
+
 pub struct Connection<N: NetworkManagerService> {
     network_manager: *const NetworkManager<N>,
     submission_backlog: *mut VecDeque<squeue::Entry>,
@@ -227,8 +228,7 @@ pub struct Connection<N: NetworkManagerService> {
     fd: AutoclosingFd,
     write_buffers: Slab<Box<[u8]>>,
 
-    connection_redirect:
-        Option<Box<dyn FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType)>>,
+    connection_redirect: Option<FnConnectionRedirect<N, N::ConnectionServiceType>>,
 
     is_processing_read: bool,
 
@@ -480,10 +480,8 @@ impl<N: NetworkManagerService> NetworkManager<N> {
             // Redirect connections
             self.connections_waiting_for_redirect
                 .retain(|_, connection_index| {
-                    let is_empty;
-
                     let (connection, _) = self.connections.get(*connection_index as _).unwrap();
-                    is_empty = connection.write_buffers.is_empty();
+                    let is_empty = connection.write_buffers.is_empty();
 
                     if is_empty {
                         let (connection, service) = self.connections.remove(*connection_index as _);
@@ -729,8 +727,7 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                                         let read_buffer_ptr = unsafe {
                                             connection
                                                 .read_buffer
-                                                .as_mut_ptr()
-                                                .offset(connection.rbuff_write_offset as isize)
+                                                .as_mut_ptr().add(connection.rbuff_write_offset)
                                         };
                                         NetworkManager::<N>::push_recv_event(
                                             &mut unsafe { self.ring.submission_shared() },

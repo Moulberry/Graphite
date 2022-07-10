@@ -49,12 +49,10 @@ impl<P: PlayerService> Player<P> {
 
 impl<P: PlayerService> Drop for Player<P> {
     fn drop(&mut self) {
-        println!("player was dropped!");
         if !self.connection_closed {
             let successfully_closed =
                 unsafe { self.connection_service.as_mut().unwrap() }.close_if_open();
             if successfully_closed {
-                println!("requesting close!");
                 unsafe { self.connection.as_mut().unwrap() }.request_close();
             }
         }

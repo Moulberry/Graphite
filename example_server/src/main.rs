@@ -46,9 +46,7 @@ impl ConciergeService for MyConciergeImpl {
     ) {
         println!("managed to get connection: {:?}", protoplayer.username);
         let universe = universe::create_and_start(|| {
-            let universe = MyUniverseService { the_world: None };
-
-            universe
+            MyUniverseService { the_world: None }
         });
         universe.send(player_connection).unwrap();
     }
@@ -78,8 +76,7 @@ impl UniverseService for MyUniverseService {
     fn initialize(universe: &mut Universe<Self>) {
         let world = World::new(
             MyWorldService {
-                players: Vec::new(),
-                counter: 0,
+                players: Vec::new()
             },
             universe,
         );
@@ -98,8 +95,7 @@ impl UniverseService for MyUniverseService {
 // world
 
 struct MyWorldService {
-    players: Vec<Player<MyPlayerService>>,
-    counter: usize,
+    players: Vec<Player<MyPlayerService>>
 }
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
@@ -116,12 +112,6 @@ impl WorldService for MyWorldService {
     }
 
     fn tick(world: &mut World<Self>) {
-        if !world.service.players.is_empty() {
-            world.service.counter += 1;
-            if world.service.counter >= 300 {
-                world.service.players.clear();
-            }
-        }
         world.service.players.retain_mut(|p| p.tick().is_ok());
     }
 

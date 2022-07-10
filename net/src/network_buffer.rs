@@ -1,15 +1,7 @@
+#[derive(Default)]
 pub struct WriteBuffer {
     vec: Vec<u8>,
     write_index: usize,
-}
-
-impl Default for WriteBuffer {
-    fn default() -> Self {
-        Self {
-            vec: Vec::new(),
-            write_index: 0,
-        }
-    }
 }
 
 impl WriteBuffer {
@@ -30,14 +22,14 @@ impl WriteBuffer {
         }
 
         unsafe {
-            let ptr = self.vec.as_mut_ptr().offset(self.write_index as isize);
+            let ptr = self.vec.as_mut_ptr().add(self.write_index);
             std::slice::from_raw_parts_mut(ptr, capacity)
         }
     }
 
     /// This function should be used after successfully writing some data with `get_unwritten`
     ///
-    /// SAFETY:
+    /// # Safety
     /// 1. `advance` must be less than the capacity requested in `get_unwritten`
     /// 2.  At least `advance` bytes must have been written to the slice returned by `get_unwritten`,
     ///     otherwise `get_written` will return uninitialized memory

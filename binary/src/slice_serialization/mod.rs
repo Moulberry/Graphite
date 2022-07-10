@@ -36,7 +36,10 @@ pub trait SliceSerializable<'a, T = Self> {
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<T>;
     fn get_write_size(data: Self::RefType) -> usize;
-    unsafe fn write<'b>(bytes: &'b mut [u8], data: Self::RefType) -> &'b mut [u8];
+
+    /// # Safety
+    /// Caller must guarantee that `bytes` contains at least `get_write_size` bytes
+    unsafe fn write(bytes: &mut [u8], data: Self::RefType) -> &mut [u8];
 
     fn maybe_deref(t: &'a T) -> Self::RefType;
 }

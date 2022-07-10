@@ -12,7 +12,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Vec<T>> {
         let array_length = VarInt::read(bytes)? as usize;
 
-        if array_length <= 0 {
+        if array_length == 0 {
             return Ok(vec![]);
         }
 

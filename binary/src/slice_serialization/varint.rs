@@ -18,7 +18,7 @@ impl SliceSerializable<'_, i32> for VarInt {
         5 // todo: we could calculate the needed bits as a time->space tradeoff. probably not worth?
     }
 
-    unsafe fn write<'b>(bytes: &'b mut [u8], data: i32) -> &'b mut [u8] {
+    unsafe fn write(bytes: &mut [u8], data: i32) -> &mut [u8] {
         debug_assert!(
             bytes.len() >= 5,
             "invariant: slice must contain at least 5 bytes to perform varint_i32 write"

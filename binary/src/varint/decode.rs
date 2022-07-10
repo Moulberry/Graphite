@@ -44,7 +44,7 @@ pub fn i32(slice: &[u8]) -> Result<(i32, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-pub unsafe fn i32_unchecked(slice: &[u8]) -> (i32, usize) {
+unsafe fn i32_unchecked(slice: &[u8]) -> (i32, usize) {
     debug_assert!(
         slice.len() >= 8,
         "invariant: slice must contain at least 8 bytes to decode varint"
@@ -74,7 +74,7 @@ pub fn u21(slice: &[u8]) -> Result<(u32, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-pub unsafe fn u21_unchecked(slice: &[u8]) -> (u32, usize) {
+unsafe fn u21_unchecked(slice: &[u8]) -> (u32, usize) {
     debug_assert!(
         slice.len() >= 4,
         "invariant: slice must contain at least 4 bytes to decode varint"
@@ -104,7 +104,7 @@ pub fn u14(slice: &[u8]) -> Result<(u16, usize), VarintDecodeOutOfBounds> {
     }
 }
 
-pub unsafe fn u14_unchecked(slice: &[u8]) -> (u16, usize) {
+unsafe fn u14_unchecked(slice: &[u8]) -> (u16, usize) {
     debug_assert!(
         slice.len() >= 2,
         "invariant: slice must contain at least 2 bytes to decode varint"

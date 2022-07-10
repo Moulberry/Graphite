@@ -42,11 +42,24 @@ macro_rules! single_impl {
     };
 }
 
-#[inline(always)]
+// u8
+single_impl!(u8, noop, noop);
+
 fn noop(byte: u8) -> u8 {
     byte
 }
 
-single_impl!(u8, noop, noop);
+// i8
 single_impl!(i8, transmute, transmute);
-single_impl!(bool, transmute, transmute);
+
+// bool
+single_impl!(bool, byte_from_bool, byte_to_bool);
+
+fn byte_from_bool(byte: u8) -> bool {
+    byte != 0
+}
+
+fn byte_to_bool(bool: bool) -> u8 {
+    if bool { 1 } else { 0 }
+}
+

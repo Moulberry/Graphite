@@ -52,7 +52,7 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
         let bytes_remaining = bytes.len() as u32;
 
         let to_write = write_buffer.get_written();
-        if to_write.len() > 0 {
+        if !to_write.is_empty() {
             connection.write(to_write);
         }
 
@@ -83,14 +83,14 @@ impl<U: UniverseService> PlayerConnection<U> {
 
     pub(crate) fn close_if_open(&mut self) -> bool {
         if self.is_closing {
-            return false;
+            false
         } else {
             if self.is_leaked {
                 unsafe { std::mem::drop(Box::from_raw(self)) };
             }
             self.is_closing = true;
 
-            return true;
+            true
         }
     }
 

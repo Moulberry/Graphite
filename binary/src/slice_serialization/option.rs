@@ -13,6 +13,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> fo
         }
     }
 
+    #[allow(clippy::needless_borrow)] // maybe_deref is needed for some types
     fn get_write_size(option: &'a Option<T>) -> usize {
         if let Some(inner) = option {
             1 + S::get_write_size(S::maybe_deref(&inner))
@@ -21,6 +22,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> fo
         }
     }
 
+    #[allow(clippy::needless_borrow)] // maybe_deref is needed for some types
     unsafe fn write<'b>(mut bytes: &'b mut [u8], option: &'a Option<T>) -> &'b mut [u8] {
         if let Some(inner) = option {
             bytes = <Single as SliceSerializable<bool>>::write(bytes, true);

@@ -150,10 +150,7 @@ impl<W: WorldService> World<W> {
         };
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &position_packet)?;
 
-        Ok(ChunkViewPosition {
-            0: (spawn_point.0 / 16.0) as i32,
-            1: (spawn_point.2 / 16.0) as i32,
-        })
+        Ok(ChunkViewPosition((spawn_point.0 / 16.0) as i32, (spawn_point.2 / 16.0) as i32))
     }
 
     pub(crate) fn write_game_join_packet(
