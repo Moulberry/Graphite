@@ -1,16 +1,28 @@
 use bytes::BufMut;
 use net::network_buffer::WriteBuffer;
-use protocol::play::server::{JoinGame, ChunkDataAndUpdateLight, ChunkBlockData, ChunkLightData, UpdateViewPosition, PlayerPositionAndLook};
+use protocol::play::server::{
+    ChunkBlockData, ChunkDataAndUpdateLight, ChunkLightData, JoinGame, PlayerPositionAndLook,
+    UpdateViewPosition,
+};
 
-use crate::{universe::{UniverseService, Universe}, proto_player::{ProtoPlayer, self}, player::{Player, PlayerService}};
+use crate::{
+    proto_player::ProtoPlayer,
+    universe::{Universe, UniverseService},
+};
 
 // user defined world service trait
 
 pub trait WorldService
-where Self: Sized {
+where
+    Self: Sized,
+{
     type UniverseServiceType: UniverseService;
 
-    fn handle_player_join(world: &mut World<Self>, proto_player: ProtoPlayer<Self::UniverseServiceType>);
+    fn handle_player_join(
+        world: &mut World<Self>,
+        proto_player: ProtoPlayer<Self::UniverseServiceType>,
+    );
+    fn tick(world: &mut World<Self>);
 }
 
 // graphite world
@@ -24,16 +36,17 @@ pub struct ChunkViewPosition(i32, i32);
 
 // graphite world impl
 
-impl <W: WorldService> World<W> {
+impl<W: WorldService> World<W> {
     pub fn get_universe(&mut self) -> &mut Universe<W::UniverseServiceType> {
         unsafe { self.universe.as_mut().unwrap() }
     }
 
-    pub fn new(service: W, universe: &mut Universe<W::UniverseServiceType>) -> Self {
-        Self {
-            service,
-            universe,
-        }
+    pub(crate) fn new(service: W, universe: &mut Universe<W::UniverseServiceType>) -> Self {
+        Self { service, universe }
+    }
+
+    pub fn tick(&mut self) {
+        W::tick(self);
     }
 
     pub fn send_player_to(&mut self, proto_player: ProtoPlayer<W::UniverseServiceType>) {
@@ -44,7 +57,10 @@ impl <W: WorldService> World<W> {
         W::handle_player_join(self, proto_player);
     }
 
-    pub(crate) fn initialize_view_position(&mut self, proto_player: &mut ProtoPlayer<W::UniverseServiceType>) -> anyhow::Result<ChunkViewPosition> {
+    pub(crate) fn initialize_view_position(
+        &mut self,
+        proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
+    ) -> anyhow::Result<ChunkViewPosition> {
         let spawn_point: (f64, f64, f64) = (0.0, 500.0, 0.0);
 
         let mut heightmap_nbt = quartz_nbt::NbtCompound::new();
@@ -60,7 +76,8 @@ impl <W: WorldService> World<W> {
             None,
             &heightmap_nbt,
             quartz_nbt::io::Flavor::Uncompressed,
-        ).unwrap();
+        )
+        .unwrap();
         binary.shrink_to_fit();
 
         // Chunk
@@ -103,7 +120,8 @@ impl <W: WorldService> World<W> {
                         block_light_entries: vec![],
                     },
                 };
-                net::packet_helper::write_packet(&mut proto_player.write_buffer, &chunk_packet).unwrap();
+                net::packet_helper::write_packet(&mut proto_player.write_buffer, &chunk_packet)
+                    .unwrap();
             }
         }
 
@@ -112,7 +130,11 @@ impl <W: WorldService> World<W> {
             chunk_x: 0,
             chunk_z: 0,
         };
-        net::packet_helper::write_packet(&mut proto_player.write_buffer, &update_view_position_packet).unwrap();
+        net::packet_helper::write_packet(
+            &mut proto_player.write_buffer,
+            &update_view_position_packet,
+        )
+        .unwrap();
 
         // Position
         let position_packet = PlayerPositionAndLook {
@@ -128,22 +150,25 @@ impl <W: WorldService> World<W> {
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &position_packet)?;
 
         Ok(ChunkViewPosition {
-            0: (spawn_point.0/16.0) as i32,
-            1: (spawn_point.2/16.0) as i32
+            0: (spawn_point.0 / 16.0) as i32,
+            1: (spawn_point.2 / 16.0) as i32,
         })
     }
 
-    pub(crate) fn write_game_join_packet(&mut self, write_buffer: &mut WriteBuffer) -> anyhow::Result<()> {
-        let registry_codec = quartz_nbt::snbt::parse(include_str!(
-            "../../assets/registry_codec.json"
-        )).unwrap();
+    pub(crate) fn write_game_join_packet(
+        &mut self,
+        write_buffer: &mut WriteBuffer,
+    ) -> anyhow::Result<()> {
+        let registry_codec =
+            quartz_nbt::snbt::parse(include_str!("../../assets/registry_codec.json")).unwrap();
         let mut binary: Vec<u8> = Vec::new();
         quartz_nbt::io::write_nbt(
             &mut binary,
             None,
             &registry_codec,
             quartz_nbt::io::Flavor::Uncompressed,
-        ).unwrap();
+        )
+        .unwrap();
         binary.shrink_to_fit();
 
         let join_game_packet = JoinGame {
@@ -167,6 +192,5 @@ impl <W: WorldService> World<W> {
         };
 
         net::packet_helper::write_packet(write_buffer, &join_game_packet)
-
     }
 }

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::*;
 
 pub struct SizedArray<S> {
-    _a: PhantomData<S>
+    _a: PhantomData<S>,
 }
 
 impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for SizedArray<S> {
@@ -39,7 +39,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
         }
         bytes
     }
-    
+
     #[inline(always)]
     fn maybe_deref(t: &'a Vec<T>) -> Self::RefType {
         t

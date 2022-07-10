@@ -1,4 +1,3 @@
-
 use super::*;
 pub enum GreedyBlob {}
 
@@ -15,7 +14,7 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
         data.len()
     }
 
-    unsafe fn write<'b>(bytes: &'b mut [u8], data: &[u8], ) -> &'b mut [u8] {
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
         bytes[0..data.len()].clone_from_slice(data);
         &mut bytes[data.len()..]
     }
@@ -27,7 +26,9 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
 }
 
 pub enum SizedBlob<const MAX_SIZE: usize = 2097152, const SIZE_MULT: usize = 1> {}
-impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'a [u8]> for SizedBlob<MAX_SIZE, SIZE_MULT> {
+impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'a [u8]>
+    for SizedBlob<MAX_SIZE, SIZE_MULT>
+{
     type RefType = &'a [u8];
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
@@ -35,7 +36,9 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
 
         // Validate blob byte-length
         if blob_size > MAX_SIZE * SIZE_MULT {
-            return Err(BinaryReadError::BlobBytesExceedMaxSize(blob_size, MAX_SIZE * SIZE_MULT).into());
+            return Err(
+                BinaryReadError::BlobBytesExceedMaxSize(blob_size, MAX_SIZE * SIZE_MULT).into(),
+            );
         }
         if blob_size > bytes.len() {
             return Err(BinaryReadError::NotEnoughRemainingBytes.into());
@@ -82,10 +85,10 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<M
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a str> {
         let string_bytes = SizedBlob::<MAX_SIZE, 4>::read(bytes)?;
-    
+
         // Validate utf-8
         let string = std::str::from_utf8(string_bytes)?;
-    
+
         // Check character count, if necessary
         if string_bytes.len() > MAX_SIZE {
             let character_count = string.chars().count();
@@ -95,7 +98,7 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<M
                 );
             }
         }
-    
+
         Ok(string)
     }
 

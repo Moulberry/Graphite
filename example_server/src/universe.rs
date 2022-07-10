@@ -1,21 +1,26 @@
-use std::marker::PhantomData;
-use std::{time::Duration, sync::mpsc::Sender};
-use std::sync::mpsc::{self, Receiver};
 use net::network_buffer::WriteBuffer;
-use net::network_handler::{NetworkManagerService, Connection, NewConnectionAccepter, UninitializedConnection};
+use net::network_handler::{
+    Connection, NetworkManagerService, NewConnectionAccepter, UninitializedConnection,
+};
+use std::sync::mpsc::{self, Receiver};
+use std::{sync::mpsc::Sender, time::Duration};
 
+use crate::proto_player::ProtoPlayer;
 use protocol::play::server::PluginMessage;
 use slab::Slab;
-use crate::proto_player::ProtoPlayer;
 
 use crate::player_connection::PlayerConnection;
 
 // user defined universe service trait
 
 pub trait UniverseService
-where Self: Sized {
+where
+    Self: Sized,
+{
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>);
     fn initialize(universe: &mut Universe<Self>);
+
+    fn tick(universe: &mut Universe<Self>);
 }
 
 // graphite universe
@@ -27,13 +32,19 @@ pub struct Universe<U: UniverseService> {
 
 // graphite universe impl
 
-impl <U: UniverseService> Universe<U> {
-    fn handle_player_connect(&mut self, connection_ptr: *mut Connection<Self>) {
+impl<U: UniverseService> Universe<U> {
+    fn handle_player_connect(
+        &mut self,
+        connection_ptr: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>),
+    ) {
         let proto_player = ProtoPlayer::new(connection_ptr);
         U::handle_player_join(self, proto_player);
     }
 
-    pub(crate) fn write_brand_packet(&mut self, write_buffer: &mut WriteBuffer) -> anyhow::Result<()> {
+    pub(crate) fn write_brand_packet(
+        &mut self,
+        write_buffer: &mut WriteBuffer,
+    ) -> anyhow::Result<()> {
         let brand_packet = PluginMessage {
             channel: "minecraft:brand",
             data: b"\x08Graphite",
@@ -42,10 +53,9 @@ impl <U: UniverseService> Universe<U> {
     }
 }
 
-
 // network service impl
 
-impl <U: UniverseService> NetworkManagerService for Universe<U> {
+impl<U: UniverseService> NetworkManagerService for Universe<U> {
     const TICK_RATE: Option<std::time::Duration> = Some(Duration::from_millis(50));
     type ConnectionServiceType = PlayerConnection<U>;
 
@@ -53,7 +63,11 @@ impl <U: UniverseService> NetworkManagerService for Universe<U> {
         unimplemented!();
     }
 
-    fn tick(&mut self, connections: &mut Slab<(Connection<Self>, Self::ConnectionServiceType)>, accepter: NewConnectionAccepter<Self>) {
+    fn tick(
+        &mut self,
+        connections: &mut Slab<(Connection<Self>, Box<Self::ConnectionServiceType>)>,
+        accepter: NewConnectionAccepter<Self>,
+    ) {
         // Accept pending connections
         while let Ok(connection) = self.player_receiver.try_recv() {
             let accept_result = unsafe {
@@ -63,17 +77,21 @@ impl <U: UniverseService> NetworkManagerService for Universe<U> {
                 self.handle_player_connect(connection_ptr);
             }
         }
+
+        U::tick(self);
     }
 }
 
-pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send + 'static>(service_func: F) -> Sender<UninitializedConnection> {
+pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send + 'static>(
+    service_func: F,
+) -> Sender<UninitializedConnection> {
     let (rx, tx) = mpsc::channel::<UninitializedConnection>();
 
     std::thread::spawn(|| {
         let service = service_func();
         let mut universe = Universe {
             service,
-            player_receiver: tx
+            player_receiver: tx,
         };
 
         U::initialize(&mut universe);
@@ -82,7 +100,7 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
     });
 
     rx
-} 
+}
 
 // fn send_initial_packets_for_testing(connection: &mut Connection<Universe>) {
 //     let mut write_buffer = WriteBuffer::new();

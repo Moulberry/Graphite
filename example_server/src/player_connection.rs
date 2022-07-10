@@ -1,27 +1,38 @@
 use std::marker::PhantomData;
 
-use net::{packet_helper::PacketReadResult, network_handler::{ConnectionService, Connection}, network_buffer::WriteBuffer};
+use binary::slice_serialization::{self, SliceSerializable};
+use net::{
+    network_buffer::WriteBuffer,
+    network_handler::{Connection, ConnectionService},
+    packet_helper::PacketReadResult,
+};
 
 use crate::universe::{Universe, UniverseService};
 
+#[repr(C)]
 pub struct PlayerConnection<U: UniverseService> {
-    _phantom: PhantomData<U>
+    _phantom: PhantomData<U>,
+    is_closing: bool,
 }
 
-impl <U: UniverseService> PlayerConnection<U> {
+impl<U: UniverseService> PlayerConnection<U> {
     pub fn new() -> Self {
         Self {
-            _phantom: PhantomData
+            _phantom: PhantomData,
+            is_closing: false,
         }
     }
 }
 
-impl <U: UniverseService> ConnectionService for PlayerConnection<U> {
+impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
     const BUFFER_SIZE: u32 = 4_194_304;
     type NetworkManagerServiceType = Universe<U>;
 
-    fn on_receive(&mut self, connection: &mut Connection<Self::NetworkManagerServiceType>, num_bytes: u32) -> anyhow::Result<u32> {
-        let mut bytes = connection.read_bytes(num_bytes);
+    fn on_receive(
+        &mut self,
+        connection: &mut Connection<Self::NetworkManagerServiceType>,
+    ) -> anyhow::Result<u32> {
+        let mut bytes = connection.read_bytes();
         let mut write_buffer: WriteBuffer = WriteBuffer::new();
 
         loop {
@@ -29,7 +40,7 @@ impl <U: UniverseService> ConnectionService for PlayerConnection<U> {
             match packet_read_result {
                 PacketReadResult::Complete(bytes) => {
                     println!("Request: {:x?}", bytes);
-                    //self.process_framed_packet(&mut write_buffer, connection, bytes)?;
+                    self.process_framed_packet(&mut write_buffer, bytes)?;
                 }
                 PacketReadResult::Partial => break,
                 PacketReadResult::Empty => break,
@@ -45,9 +56,40 @@ impl <U: UniverseService> ConnectionService for PlayerConnection<U> {
 
         Ok(bytes_remaining)
     }
+
+    fn delete(mut boxed: Box<Self>) {
+        boxed.is_closing = true;
+        Box::leak(boxed);
+    }
 }
 
+impl<U: UniverseService> PlayerConnection<U> {
+    pub fn check_connection_open(&mut self) -> bool {
+        if self.is_closing {
+            unsafe { std::mem::drop(Box::from_raw(self)) };
 
-impl <U: UniverseService> PlayerConnection<U> {
+            false
+        } else {
+            true
+        }
+    }
 
+    fn process_framed_packet(
+        &mut self,
+        _: &mut WriteBuffer,
+        // connection: &Connection<<PlayerConnection<U> as ConnectionService>::NetworkManagerServiceType>,
+        bytes: &[u8],
+    ) -> anyhow::Result<()> {
+        let mut bytes = bytes;
+
+        let packet_id_byte: u8 = slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
+
+        if let Ok(packet_id) = protocol::play::client::PacketId::try_from(packet_id_byte) {
+            println!("got known packet id: {:?}", packet_id);
+        } else {
+            println!("unknown packet id: {:x}", packet_id_byte);
+        }
+
+        Ok(())
+    }
 }

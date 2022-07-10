@@ -9,14 +9,14 @@ use universe::UniverseService;
 use world::World;
 use world::WorldService;
 
-mod universe;
-mod world;
 mod player;
 mod player_connection;
 mod proto_player;
+mod universe;
+mod world;
 
 struct MyConciergeImpl {
-    counter: u8
+    counter: u8,
 }
 
 impl ConciergeService for MyConciergeImpl {
@@ -39,12 +39,14 @@ impl ConciergeService for MyConciergeImpl {
         }}", self.counter)
     }
 
-    fn accept_player(&mut self, player_connection: UninitializedConnection, protoplayer: concierge::ProtoPlayer<Self>) {
+    fn accept_player(
+        &mut self,
+        player_connection: UninitializedConnection,
+        protoplayer: &concierge::ProtoPlayer<Self>,
+    ) {
         println!("managed to get connection: {:?}", protoplayer.username);
         let universe = universe::create_and_start(|| {
-            let universe = MyUniverseService {
-                the_world: None,
-            };
+            let universe = MyUniverseService { the_world: None };
 
             universe
         });
@@ -54,54 +56,69 @@ impl ConciergeService for MyConciergeImpl {
 
 fn main() {
     //typemap::my_func();
-    Concierge::bind("127.0.0.1:25565", MyConciergeImpl {
-        counter: 0
-    }).unwrap();
+    Concierge::bind("127.0.0.1:25565", MyConciergeImpl { counter: 0 }).unwrap();
 }
 
 // universe
 
 struct MyUniverseService {
-    the_world: Option<World<MyWorldService>>
+    the_world: Option<World<MyWorldService>>,
 }
 
 impl UniverseService for MyUniverseService {
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {
-        universe.service.the_world.as_mut().unwrap().send_player_to(proto_player);
+        universe
+            .service
+            .the_world
+            .as_mut()
+            .unwrap()
+            .send_player_to(proto_player);
     }
 
     fn initialize(universe: &mut Universe<Self>) {
-        let world = World::new(MyWorldService {
-            players: Vec::new(),
-        },  universe);
+        let world = World::new(
+            MyWorldService {
+                players: Vec::new(),
+            },
+            universe,
+        );
         universe.service.the_world = Some(world);
+    }
+
+    fn tick(universe: &mut Universe<Self>) {
+        universe.service.the_world.as_mut().unwrap().tick();
     }
 }
 
 // world
 
 struct MyWorldService {
-    players: Vec<Player<MyPlayerService>>
+    players: Vec<Player<MyPlayerService>>,
 }
 
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
 
-    fn handle_player_join(world: &mut World<Self>, proto_player: ProtoPlayer<Self::UniverseServiceType>) {
+    fn handle_player_join(
+        world: &mut World<Self>,
+        proto_player: ProtoPlayer<Self::UniverseServiceType>,
+    ) {
         // make player from proto_player
         let player = proto_player.create_player(MyPlayerService {}, world);
 
         // push
         world.service.players.push(player.unwrap());
     }
+
+    fn tick(world: &mut World<Self>) {
+        // world.service.players.retain_mut(|p| p.tick());
+        world.service.players.iter_mut().for_each(|p| { p.tick(); } );
+    }
 }
 
 // player
 
-
-struct MyPlayerService {
-
-}
+struct MyPlayerService {}
 
 impl PlayerService for MyPlayerService {
     type UniverseServiceType = MyUniverseService;

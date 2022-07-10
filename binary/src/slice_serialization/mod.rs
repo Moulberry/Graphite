@@ -97,13 +97,13 @@ macro_rules! slice_serializable_composite {
 
             unsafe fn write<'b>(mut bytes: &'b mut [u8], object: &$($lt)?$struct_name) -> &'b mut [u8] {
                 $(
-                    bytes = <resolve_wire_type!($typ $( as $wire )?) as SliceSerializable<$typ>>::write(bytes, 
+                    bytes = <resolve_wire_type!($typ $( as $wire )?) as SliceSerializable<$typ>>::write(bytes,
                         <resolve_wire_type!($typ $( as $wire )?) as SliceSerializable<$typ>>::maybe_deref(&object.$field_name));
                 )*
                 bytes
             }
 
-            
+
             fn maybe_deref(t: &'a $struct_name) -> Self::RefType {
                 t
             }

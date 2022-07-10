@@ -2,7 +2,7 @@ use super::*;
 
 impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> for Option<S> {
     type RefType = &'a Option<T>;
-    
+
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Option<T>> {
         let is_present = Single::read(bytes)?;
 

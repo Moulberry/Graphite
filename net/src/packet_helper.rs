@@ -1,8 +1,8 @@
+use crate::network_buffer::WriteBuffer;
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
 use binary::varint;
 use protocol::IdentifiedPacket;
-use crate::network_buffer::WriteBuffer;
 use std::fmt::Debug;
 use thiserror::Error;
 
@@ -53,12 +53,14 @@ where
         packet.get_packet_id(),
         packet.get_packet_id_as_u8()
     );
-    println!(
+    /*println!(
         "buffer: {:?}",
         &bytes[..4 + bytes_written]
-    );
+    );*/
 
-    unsafe { write_buffer.advance(4 + bytes_written); }
+    unsafe {
+        write_buffer.advance(4 + bytes_written);
+    }
 
     Ok(())
 }
