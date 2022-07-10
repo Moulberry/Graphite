@@ -6,7 +6,7 @@ use derive_try_from_primitive::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
-    LoginStart<'_> = 0x00
+    Hello<'_> = 0x00
 }
 
 slice_serializable_composite! {
@@ -17,7 +17,8 @@ slice_serializable_composite! {
 }
 
 slice_serializable_composite! {
-    LoginStart<'a>,
+    Hello<'a>,
     username: &'a str as SizedString<16>,
-    signature_data: Option<LoginStartSignatureData<'a>>
+    signature_data: Option<LoginStartSignatureData<'a>>,
+    uuid: Option<u128> as Option<BigEndian>
 }
