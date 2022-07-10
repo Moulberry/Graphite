@@ -1,23 +1,25 @@
 use crate::{
     player::{Player, PlayerService},
     player_connection::PlayerConnection,
-    universe::{Universe, UniverseService},
+    universe::{Universe, UniverseService, EntityId},
     world::World,
 };
 use net::{network_buffer::WriteBuffer, network_handler::Connection};
 
 pub struct ProtoPlayer<U: UniverseService> {
     pub write_buffer: WriteBuffer,
+    pub entity_id: EntityId,
     connection_service: *mut PlayerConnection<U>,
     connection: *mut Connection<Universe<U>>,
 }
 
 impl<U: UniverseService> ProtoPlayer<U> {
-    pub fn new(connection: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>)) -> Self {
+    pub fn new(connection: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>), entity_id: EntityId) -> Self {
         Self {
             write_buffer: WriteBuffer::new(),
             connection: connection.0,
             connection_service: connection.1,
+            entity_id
         }
     }
 
@@ -27,7 +29,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
         world: &mut World<P::WorldServiceType>,
     ) -> anyhow::Result<Player<P>> {
         // Fill write buffer with required initial packets
-        world.write_game_join_packet(&mut self.write_buffer)?;
+        world.write_game_join_packet(&mut self)?;
         world
             .get_universe()
             .write_brand_packet(&mut self.write_buffer)?;
@@ -42,6 +44,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
         let player = Player {
             world,
             service,
+            entity_id: self.entity_id,
             view_position,
             connection: self.connection,
             connection_service: self.connection_service,

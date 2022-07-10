@@ -27,9 +27,19 @@ where
 
 // graphite universe
 
+#[repr(transparent)]
+pub struct EntityId(i32);
+
+impl EntityId {
+    pub fn as_i32(&self) -> i32 {
+        self.0
+    }
+}
+
 pub struct Universe<U: UniverseService> {
     pub service: U,
     player_receiver: Receiver<UninitializedConnection>,
+    entity_id_counter: i32
 }
 
 // graphite universe impl
@@ -39,7 +49,7 @@ impl<U: UniverseService> Universe<U> {
         &mut self,
         connection_ptr: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>),
     ) {
-        let proto_player = ProtoPlayer::new(connection_ptr);
+        let proto_player = ProtoPlayer::new(connection_ptr, self.new_entity_id());
         U::handle_player_join(self, proto_player);
     }
 
@@ -52,6 +62,11 @@ impl<U: UniverseService> Universe<U> {
             data: b"\x08Graphite",
         };
         net::packet_helper::write_packet(write_buffer, &brand_packet)
+    }
+
+    pub fn new_entity_id(&mut self) -> EntityId {
+        self.entity_id_counter = self.entity_id_counter.wrapping_add(1);
+        EntityId(self.entity_id_counter)
     }
 }
 
@@ -116,6 +131,7 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
         let mut universe = Universe {
             service,
             player_receiver: tx,
+            entity_id_counter: 0
         };
 
         U::initialize(&mut universe);

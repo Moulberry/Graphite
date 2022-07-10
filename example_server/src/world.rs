@@ -7,7 +7,7 @@ use protocol::play::server::{
 
 use crate::{
     proto_player::ProtoPlayer,
-    universe::{Universe, UniverseService},
+    universe::{Universe, UniverseService, EntityId},
 };
 
 // user defined world service trait
@@ -51,9 +51,6 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn send_player_to(&mut self, proto_player: ProtoPlayer<W::UniverseServiceType>) {
-        // send some default packets like join game etc.
-        println!("got the connection, would send smth here");
-
         // notify service
         W::handle_player_join(self, proto_player);
     }
@@ -155,7 +152,8 @@ impl<W: WorldService> World<W> {
 
     pub(crate) fn write_game_join_packet(
         &mut self,
-        write_buffer: &mut WriteBuffer,
+        //write_buffer: &mut WriteBuffer,
+        proto_player: &mut ProtoPlayer<W::UniverseServiceType>
     ) -> anyhow::Result<()> {
         let registry_codec =
             quartz_nbt::snbt::parse(include_str!("../../assets/registry_codec.json")).unwrap();
@@ -170,7 +168,7 @@ impl<W: WorldService> World<W> {
         binary.shrink_to_fit();
 
         let join_game_packet = JoinGame {
-            entity_id: 0,
+            entity_id: proto_player.entity_id.as_i32(),
             is_hardcore: false,
             gamemode: 1,
             previous_gamemode: -1,
@@ -189,6 +187,6 @@ impl<W: WorldService> World<W> {
             has_death_location: false,
         };
 
-        net::packet_helper::write_packet(write_buffer, &join_game_packet)
+        net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)
     }
 }

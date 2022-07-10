@@ -3,7 +3,7 @@ use thiserror::Error;
 
 use crate::{
     player_connection::PlayerConnection,
-    universe::{Universe, UniverseService},
+    universe::{Universe, UniverseService, EntityId},
     world::{ChunkViewPosition, World, WorldService},
 };
 
@@ -19,6 +19,7 @@ pub trait PlayerService {
 pub struct Player<P: PlayerService> {
     pub service: P,
     pub world: *mut World<P::WorldServiceType>,
+    pub entity_id: EntityId,
 
     pub view_position: ChunkViewPosition,
     pub connection_service: *mut PlayerConnection<P::UniverseServiceType>,
