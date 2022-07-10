@@ -78,10 +78,7 @@ impl <T: ConciergeService + 'static> ProtoPlayer<T> {
     fn process_framed_packet(
         &mut self,
         write_buffer: &mut WriteBuffer,
-        //concierge: &Concierge<T>,
         connection: &Connection<Concierge<T>>,
-        //protoplayer: &mut ProtoPlayer<T>,
-        //byte_sender: &mut ByteSender,
         bytes: &[u8],
     ) -> anyhow::Result<bool> {
         match self.connection_state {
