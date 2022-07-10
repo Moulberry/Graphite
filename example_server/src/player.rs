@@ -1,4 +1,5 @@
 use net::network_handler::Connection;
+use thiserror::Error;
 
 use crate::{
     player_connection::PlayerConnection,
@@ -23,22 +24,39 @@ pub struct Player<P: PlayerService> {
     pub connection_service: *mut PlayerConnection<P::UniverseServiceType>,
     pub connection: *mut Connection<Universe<P::UniverseServiceType>>,
 
-    pub deleted: bool
+    pub connection_closed: bool,
 }
 
 // graphite player impl
 
+#[derive(Debug, Error)]
+#[error("connection has been closed by the remote host")]
+struct ConnectionClosedError;
+
 impl<P: PlayerService> Player<P> {
-    pub fn tick(&mut self) -> bool {
+    pub fn tick(&mut self) -> anyhow::Result<()> {
         // todo: replace this error message with something that references documentation instead
-        debug_assert!(!self.deleted, "`tick` called on player that was deleted. Make sure to remove the Player from your list if the tick function returns false");
+        debug_assert!(!self.connection_closed, "`tick` called on player with closed connection. Make sure to remove the Player from your list if the tick function returns ConnectionClosedError");
 
         if !unsafe { self.connection_service.as_mut().unwrap() }.check_connection_open() {
-            self.deleted = true;
-            return false;
+            self.connection_closed = true;
+            return Err(ConnectionClosedError.into());
         }
 
-        println!("player tick!");
-        true
+        Ok(())
+    }
+}
+
+impl<P: PlayerService> Drop for Player<P> {
+    fn drop(&mut self) {
+        println!("player was dropped!");
+        if !self.connection_closed {
+            let successfully_closed =
+                unsafe { self.connection_service.as_mut().unwrap() }.close_if_open();
+            if successfully_closed {
+                println!("requesting close!");
+                unsafe { self.connection.as_mut().unwrap() }.request_close();
+            }
+        }
     }
 }

@@ -63,11 +63,13 @@ impl<T: ConciergeService + 'static> ConnectionService for ProtoPlayer<T> {
         }
 
         if should_consume {
-            connection.request_redirect(|service: &mut Concierge<T>, connection, connection_service| {
-                service
-                    .service
-                    .accept_player(connection, connection_service);
-            });
+            connection.request_redirect(
+                |service: &mut Concierge<T>, connection, connection_service| {
+                    service
+                        .service
+                        .accept_player(connection, connection_service);
+                },
+            );
         }
 
         Ok(bytes_remaining)
@@ -228,8 +230,9 @@ impl<'a, T: ConciergeService + 'static> NetworkManagerService for Concierge<T> {
         &mut self,
         _: &mut Slab<(Connection<Self>, Box<Self::ConnectionServiceType>)>,
         _: NewConnectionAccepter<Self>,
-    ) {
+    ) -> anyhow::Result<()> {
         self.serverlist_response = self.service.get_serverlist_response();
+        Ok(())
     }
 }
 

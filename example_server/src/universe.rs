@@ -1,8 +1,9 @@
+use anyhow::bail;
 use net::network_buffer::WriteBuffer;
 use net::network_handler::{
     Connection, NetworkManagerService, NewConnectionAccepter, UninitializedConnection,
 };
-use std::sync::mpsc::{self, Receiver};
+use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::{sync::mpsc::Sender, time::Duration};
 
 use crate::proto_player::ProtoPlayer;
@@ -21,6 +22,7 @@ where
     fn initialize(universe: &mut Universe<Self>);
 
     fn tick(universe: &mut Universe<Self>);
+    fn get_player_count(universe: &mut Universe<Self>) -> usize;
 }
 
 // graphite universe
@@ -67,18 +69,40 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
         &mut self,
         connections: &mut Slab<(Connection<Self>, Box<Self::ConnectionServiceType>)>,
         accepter: NewConnectionAccepter<Self>,
-    ) {
+    ) -> anyhow::Result<()> {
         // Accept pending connections
-        while let Ok(connection) = self.player_receiver.try_recv() {
-            let accept_result = unsafe {
-                accepter.accept_and_get_ptr(connection, PlayerConnection::new(), connections)
-            };
-            if let Some(connection_ptr) = accept_result {
-                self.handle_player_connect(connection_ptr);
+        loop {
+            match self.player_receiver.try_recv() {
+                Ok(connection) => {
+                    println!("got new connection!");
+                    let accept_result = unsafe {
+                        accepter.accept_and_get_ptr(
+                            connection,
+                            PlayerConnection::new(),
+                            connections,
+                        )
+                    };
+                    if let Some(connection_ptr) = accept_result {
+                        self.handle_player_connect(connection_ptr);
+                    }
+                }
+                Err(err) if err == TryRecvError::Disconnected => {
+                    if U::get_player_count(self) == 0 {
+                        println!("emptying universe!!!");
+                        bail!("empty universe");
+                    } else {
+                        break;
+                    }
+                }
+                Err(_) => {
+                    break;
+                }
             }
         }
 
         U::tick(self);
+
+        Ok(())
     }
 }
 
@@ -96,7 +120,7 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
 
         U::initialize(&mut universe);
 
-        net::network_handler::start(universe, None).unwrap();
+        let _ = net::network_handler::start(universe, None);
     });
 
     rx

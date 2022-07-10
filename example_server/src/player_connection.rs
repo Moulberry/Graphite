@@ -13,6 +13,7 @@ use crate::universe::{Universe, UniverseService};
 pub struct PlayerConnection<U: UniverseService> {
     _phantom: PhantomData<U>,
     is_closing: bool,
+    is_leaked: bool,
 }
 
 impl<U: UniverseService> PlayerConnection<U> {
@@ -20,6 +21,7 @@ impl<U: UniverseService> PlayerConnection<U> {
         Self {
             _phantom: PhantomData,
             is_closing: false,
+            is_leaked: false,
         }
     }
 }
@@ -57,20 +59,38 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
         Ok(bytes_remaining)
     }
 
-    fn delete(mut boxed: Box<Self>) {
-        boxed.is_closing = true;
-        Box::leak(boxed);
+    fn close(mut boxed: Box<Self>) {
+        if !boxed.is_closing {
+            boxed.is_closing = true;
+            boxed.is_leaked = true;
+            Box::leak(boxed);
+        }
     }
 }
 
 impl<U: UniverseService> PlayerConnection<U> {
-    pub fn check_connection_open(&mut self) -> bool {
+    pub(crate) fn check_connection_open(&mut self) -> bool {
         if self.is_closing {
-            unsafe { std::mem::drop(Box::from_raw(self)) };
+            if self.is_leaked {
+                unsafe { std::mem::drop(Box::from_raw(self)) };
+            }
 
             false
         } else {
             true
+        }
+    }
+
+    pub(crate) fn close_if_open(&mut self) -> bool {
+        if self.is_closing {
+            return false;
+        } else {
+            if self.is_leaked {
+                unsafe { std::mem::drop(Box::from_raw(self)) };
+            }
+            self.is_closing = true;
+
+            return true;
         }
     }
 

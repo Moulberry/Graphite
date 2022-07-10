@@ -23,6 +23,7 @@ where
         proto_player: ProtoPlayer<Self::UniverseServiceType>,
     );
     fn tick(world: &mut World<Self>);
+    fn get_player_count(world: &mut World<Self>) -> usize;
 }
 
 // graphite world

@@ -9,24 +9,32 @@ use io_uring::types::Timespec;
 use io_uring::{opcode, squeue, types, IoUring, SubmissionQueue, Submitter};
 use slab::Slab;
 
-#[derive(Debug)]
-#[repr(u8)]
+#[derive(Debug, PartialEq, Copy, Clone)]
+#[repr(u16)]
 enum UserData {
     Accept,
+    CancelRead,
     Read {
+        // hack in order to make that top bits of the u64 not filled with garbage data
         connection_index: u16,
+        _2: u16,
+        _3: u16,
     },
     TickTimeout,
     Write {
         connection_index: u16,
         write_buffer_index: u16,
     },
-    #[allow(dead_code)] // Just used to ensure the enum takes up 64 bits
-    Unused {
-        _1: u8,
-        _2: u16,
-        _3: u32,
-    },
+}
+
+impl UserData {
+    fn create_read(connection_index: u16) -> UserData {
+        UserData::Read {
+            connection_index,
+            _2: 0,
+            _3: 0,
+        }
+    }
 }
 
 impl From<u64> for UserData {
@@ -78,6 +86,7 @@ impl AcceptCount {
 pub struct NewConnectionAccepter<N: NetworkManagerService> {
     network_manager: *const NetworkManager<N>,
     submission_backlog: *mut VecDeque<squeue::Entry>,
+    connections_waiting_for_close: *mut Vec<u16>,
 }
 
 impl<N: NetworkManagerService> NewConnectionAccepter<N> {
@@ -104,6 +113,10 @@ impl<N: NetworkManagerService> NewConnectionAccepter<N> {
         let mut connection = Connection {
             network_manager: self.network_manager,
             submission_backlog: self.submission_backlog,
+            connections_waiting_for_close: self.connections_waiting_for_close,
+
+            is_processing_read: false,
+
             self_index: connection_index,
             fd: uninitialized_conn.fd,
             write_buffers: Slab::new(),
@@ -208,6 +221,7 @@ pub struct UninitializedConnection {
 pub struct Connection<N: NetworkManagerService> {
     network_manager: *const NetworkManager<N>,
     submission_backlog: *mut VecDeque<squeue::Entry>,
+    connections_waiting_for_close: *mut Vec<u16>,
 
     self_index: u16,
     fd: AutoclosingFd,
@@ -215,6 +229,8 @@ pub struct Connection<N: NetworkManagerService> {
 
     connection_redirect:
         Option<Box<dyn FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType)>>,
+
+    is_processing_read: bool,
 
     rbuff_data_offset: usize,
     rbuff_write_offset: usize,
@@ -234,7 +250,43 @@ impl<N: NetworkManagerService> Connection<N> {
         &mut self,
         func: impl FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType) + 'static,
     ) {
-        self.connection_redirect = Some(Box::from(func));
+        if self.is_processing_read {
+            self.connection_redirect = Some(Box::from(func));
+        } else {
+            unimplemented!();
+            // put into waiting list somehow??
+        }
+    }
+
+    pub fn request_close(&mut self) {
+        if self.is_processing_read {
+            unimplemented!();
+            // handle in read process
+        } else {
+            // submit the cancel read operation
+            let cancel_e = opcode::AsyncCancel::new(UserData::create_read(self.self_index).into())
+                .build()
+                .user_data(UserData::CancelRead.into());
+            unsafe {
+                let network_manager = self.network_manager.as_ref().unwrap();
+                let mut ring_squeue = network_manager.ring.submission_shared();
+
+                if ring_squeue.push(&cancel_e).is_err() {
+                    let backlog = self.submission_backlog.as_mut().unwrap();
+                    backlog.push_back(cancel_e);
+                }
+
+                // Submit into cancel list
+                self.connections_waiting_for_close
+                    .as_mut()
+                    .unwrap()
+                    .push(self.self_index);
+            }
+        }
+
+        // todo: put into waiting for redirect if during tick
+
+        // cancel read
     }
 
     pub fn write(&mut self, bytes: &[u8]) {
@@ -268,7 +320,15 @@ impl<N: NetworkManagerService> Connection<N> {
         }
     }
 
-    fn redirect(mut self, network_service: &mut N, connection_service: &N::ConnectionServiceType) {
+    fn close(self) {
+        std::mem::drop(self);
+    }
+
+    fn redirect(
+        mut self,
+        network_service: &mut N,
+        connection_service: Box<N::ConnectionServiceType>,
+    ) {
         debug_assert!(self.connection_redirect.is_some());
         debug_assert!(self.write_buffers.is_empty());
 
@@ -279,7 +339,13 @@ impl<N: NetworkManagerService> Connection<N> {
             read_buffer: self.read_buffer,
         };
 
-        self.connection_redirect.take().unwrap()(network_service, unintialized, connection_service);
+        self.connection_redirect.take().unwrap()(
+            network_service,
+            unintialized,
+            &connection_service,
+        );
+
+        N::ConnectionServiceType::close(connection_service);
     }
 }
 
@@ -294,7 +360,10 @@ where
         &mut self,
         connection: &mut Connection<Self::NetworkManagerServiceType>,
     ) -> anyhow::Result<u32>;
-    fn delete(boxed: Box<Self>) {}
+
+    fn close(boxed: Box<Self>) {
+        std::mem::drop(boxed);
+    }
 }
 
 pub trait NetworkManagerService
@@ -310,7 +379,7 @@ where
         &mut self,
         connections: &mut Slab<(Connection<Self>, Box<Self::ConnectionServiceType>)>, // todo: move this field into accepter
         accepter: NewConnectionAccepter<Self>,
-    );
+    ) -> anyhow::Result<()>;
 }
 
 pub struct NetworkManager<N: NetworkManagerService> {
@@ -319,7 +388,9 @@ pub struct NetworkManager<N: NetworkManagerService> {
     ring: IoUring,
     backlog: VecDeque<squeue::Entry>,
     connections: Slab<(Connection<N>, Box<N::ConnectionServiceType>)>,
+
     connections_waiting_for_redirect: Slab<u16>,
+    connections_waiting_for_close: Vec<u16>,
 
     tv_sec: u64,
     tv_nsec: u32,
@@ -346,7 +417,9 @@ impl<N: NetworkManagerService> NetworkManager<N> {
             ring,
             backlog,
             connections: Default::default(),
+
             connections_waiting_for_redirect: Default::default(),
+            connections_waiting_for_close: Default::default(),
 
             tv_sec: 0,
             tv_nsec: 0,
@@ -394,30 +467,7 @@ impl<N: NetworkManagerService> NetworkManager<N> {
             }
             NetworkManager::<N>::clean_backlog(&mut self.backlog, &ring_submitter, squeue)?;
 
-            self.connections_waiting_for_redirect
-                .retain(|_, connection_index| {
-                    let is_empty;
-
-                    if let Some((connection, _)) = self.connections.get(*connection_index as _) {
-                        is_empty = connection.write_buffers.is_empty();
-                    } else {
-                        return false; // remove from waitlist
-                    }
-
-                    if is_empty {
-                        let (connection, service) =
-                            self.connections.remove(*connection_index as _);
-                        connection.redirect(&mut self.service, &service);
-
-                        N::ConnectionServiceType::delete(service);
-
-                        false // remove from waitlist
-                    } else {
-                        true // keep in waitlist
-                    }
-                });
-
-            // Submit from submission queue and wait for some event on the completion queu
+            // Submit from submission queue and wait for some event on the completion queue
             match ring_submitter.submit_and_wait(1) {
                 Ok(_) => (),
                 Err(ref err) if err.raw_os_error() == Some(libc::EBUSY) => (),
@@ -427,6 +477,36 @@ impl<N: NetworkManagerService> NetworkManager<N> {
             // Sync completion queue
             ring_cqueue.sync();
 
+            // Redirect connections
+            self.connections_waiting_for_redirect
+                .retain(|_, connection_index| {
+                    let is_empty;
+
+                    let (connection, _) = self.connections.get(*connection_index as _).unwrap();
+                    is_empty = connection.write_buffers.is_empty();
+
+                    if is_empty {
+                        let (connection, service) = self.connections.remove(*connection_index as _);
+                        connection.redirect(&mut self.service, service);
+
+                        false // remove from waitlist
+                    } else {
+                        true // keep in waitlist
+                    }
+                });
+
+            // Close connections
+            self.connections_waiting_for_close
+                .iter()
+                .for_each(|connection_index| {
+                    println!("actually closing the connection!");
+                    let (connection, service) =
+                        self.connections.try_remove(*connection_index as _).unwrap();
+                    connection.close();
+                    N::ConnectionServiceType::close(service);
+                });
+            self.connections_waiting_for_close.clear();
+
             // Read all the entries in the completion queue
             for cqe in &mut ring_cqueue {
                 let result = cqe.result();
@@ -435,10 +515,10 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                 // Handle cqe error
                 if result < 0 {
                     match -result {
-                        libc::ETIME => (),
+                        libc::EALREADY | libc::ECANCELED | libc::ETIME => (),
                         err => {
                             eprintln!(
-                                "io_uring: completion query entry error:\n{:?}\nuserdata: {:?}",
+                                "io_uring: completion query entry error:\n  {:?}\n  userdata: {:?}",
                                 io::Error::from_raw_os_error(err),
                                 user_data
                             );
@@ -448,22 +528,19 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                 }
 
                 match user_data {
-                    UserData::Unused { _1, _2, _3 } => {
-                        panic!("unused")
-                    }
+                    UserData::CancelRead => (),
                     UserData::Write {
                         connection_index,
                         write_buffer_index,
                     } => {
                         // Write has completed, we can drop the associated buffer
-                        if let Some((connection, _)) =
-                            self.connections.get_mut(connection_index as usize)
-                        {
-                            connection
-                                .write_buffers
-                                .try_remove(write_buffer_index as usize);
-                            // println!("removing buffer: {:?}", a);
-                        }
+                        let (connection, _) =
+                            self.connections.get_mut(connection_index as usize).unwrap();
+
+                        connection
+                            .write_buffers
+                            .try_remove(write_buffer_index as usize)
+                            .unwrap();
                     }
                     UserData::TickTimeout => {
                         // Finished waiting for our tick
@@ -504,8 +581,9 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                         let accepter = NewConnectionAccepter {
                             network_manager: self,
                             submission_backlog: &mut self.backlog,
+                            connections_waiting_for_close: &mut self.connections_waiting_for_close,
                         };
-                        self.service.tick(&mut self.connections, accepter);
+                        self.service.tick(&mut self.connections, accepter)?;
                     }
                     UserData::Accept => {
                         // New TCP connection has been accepted
@@ -535,8 +613,12 @@ impl<N: NetworkManagerService> NetworkManager<N> {
 
                                 network_manager: self_ptr,
                                 submission_backlog: &mut self.backlog,
+                                connections_waiting_for_close: &mut self
+                                    .connections_waiting_for_close,
+
                                 // connections_waiting_for_redirect: &mut self.connections_waiting_for_redirect,
                                 self_index: connection_index as u16,
+                                is_processing_read: false,
 
                                 connection_redirect: None,
 
@@ -565,7 +647,11 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                             N::ConnectionServiceType::BUFFER_SIZE,
                         );
                     }
-                    UserData::Read { connection_index } => {
+                    UserData::Read {
+                        connection_index,
+                        _2,
+                        _3,
+                    } => {
                         // Received some data over the TCP connection
 
                         if result <= 0 {
@@ -575,10 +661,11 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                                 connection_index,
                             );
                             continue;
-                        } else if let Some((connection, connection_service)) =
-                            self.connections.get_mut(connection_index as _)
-                        {
+                        } else {
                             // Some data has been read
+
+                            let (connection, connection_service) =
+                                self.connections.get_mut(connection_index as _).unwrap();
 
                             connection.rbuff_write_offset += result as usize;
                             if connection.rbuff_write_offset
@@ -593,7 +680,9 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                             }
 
                             // Call the service-defined receive method
+                            connection.is_processing_read = true;
                             let receive_result = connection_service.on_receive(connection);
+                            connection.is_processing_read = false;
 
                             match receive_result {
                                 Err(err) => {
@@ -659,11 +748,8 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                         }
 
                         // No pending writes, we can redirect the connection immediately
-                        let (connection, service) =
-                            self.connections.remove(connection_index as _);
-                        connection.redirect(&mut self.service, &service);
-
-                        N::ConnectionServiceType::delete(service);
+                        let (connection, service) = self.connections.remove(connection_index as _);
+                        connection.redirect(&mut self.service, service);
                     }
                 }
             }
@@ -711,14 +797,9 @@ impl<N: NetworkManagerService> NetworkManager<N> {
         connection_index: u16,
     ) {
         if let Some((connection, service)) = connections.try_remove(connection_index as _) {
-            NetworkManager::<N>::close_connection(connection);
-            N::ConnectionServiceType::delete(service);
+            connection.close();
+            N::ConnectionServiceType::close(service);
         }
-    }
-
-    // todo: put method on Connection instead
-    fn close_connection(connection: Connection<N>) {
-        std::mem::drop(connection);
     }
 
     fn push_tick_timeout_event(
@@ -746,9 +827,10 @@ impl<N: NetworkManagerService> NetworkManager<N> {
         read_buffer_ptr: *mut u8,
         buffer_size: u32,
     ) {
+        // todo: maybe try RecvMsg?
         let read_e = opcode::Recv::new(types::Fd(fd), read_buffer_ptr, buffer_size)
             .build()
-            .user_data(UserData::Read { connection_index }.into());
+            .user_data(UserData::create_read(connection_index).into());
 
         unsafe {
             if sq.push(&read_e).is_err() {

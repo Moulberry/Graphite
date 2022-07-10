@@ -45,7 +45,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
             view_position,
             connection: self.connection,
             connection_service: self.connection_service,
-            deleted: false
+            connection_closed: false,
         };
 
         Ok(player)

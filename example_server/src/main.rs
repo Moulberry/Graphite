@@ -79,6 +79,7 @@ impl UniverseService for MyUniverseService {
         let world = World::new(
             MyWorldService {
                 players: Vec::new(),
+                counter: 0,
             },
             universe,
         );
@@ -88,14 +89,18 @@ impl UniverseService for MyUniverseService {
     fn tick(universe: &mut Universe<Self>) {
         universe.service.the_world.as_mut().unwrap().tick();
     }
+
+    fn get_player_count(universe: &mut Universe<Self>) -> usize {
+        MyWorldService::get_player_count(universe.service.the_world.as_mut().unwrap())
+    }
 }
 
 // world
 
 struct MyWorldService {
     players: Vec<Player<MyPlayerService>>,
+    counter: usize,
 }
-
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
 
@@ -111,8 +116,17 @@ impl WorldService for MyWorldService {
     }
 
     fn tick(world: &mut World<Self>) {
-        // world.service.players.retain_mut(|p| p.tick());
-        world.service.players.iter_mut().for_each(|p| { p.tick(); } );
+        if !world.service.players.is_empty() {
+            world.service.counter += 1;
+            if world.service.counter >= 300 {
+                world.service.players.clear();
+            }
+        }
+        world.service.players.retain_mut(|p| p.tick().is_ok());
+    }
+
+    fn get_player_count(world: &mut World<Self>) -> usize {
+        world.service.players.len()
     }
 }
 
