@@ -7,8 +7,10 @@ use crate::{
 use net::{network_buffer::WriteBuffer, network_handler::Connection};
 
 pub struct ProtoPlayer<U: UniverseService> {
-    pub write_buffer: WriteBuffer,
-    pub entity_id: EntityId,
+    pub hardcore: bool,
+
+    pub(crate) write_buffer: WriteBuffer,
+    pub(crate) entity_id: EntityId,
     connection_service: *mut PlayerConnection<U>,
     connection: *mut Connection<Universe<U>>,
 }
@@ -16,10 +18,13 @@ pub struct ProtoPlayer<U: UniverseService> {
 impl<U: UniverseService> ProtoPlayer<U> {
     pub fn new(connection: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>), entity_id: EntityId) -> Self {
         Self {
+            hardcore: false,
+
             write_buffer: WriteBuffer::new(),
+            entity_id,
+
             connection: connection.0,
             connection_service: connection.1,
-            entity_id
         }
     }
 

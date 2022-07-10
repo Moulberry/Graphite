@@ -102,8 +102,10 @@ impl WorldService for MyWorldService {
 
     fn handle_player_join(
         world: &mut World<Self>,
-        proto_player: ProtoPlayer<Self::UniverseServiceType>,
+        mut proto_player: ProtoPlayer<Self::UniverseServiceType>,
     ) {
+        proto_player.hardcore = true;
+
         // make player from proto_player
         let player = proto_player.create_player(MyPlayerService {}, world);
 

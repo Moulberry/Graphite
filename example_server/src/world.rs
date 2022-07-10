@@ -1,5 +1,4 @@
 use bytes::BufMut;
-use net::network_buffer::WriteBuffer;
 use protocol::play::server::{
     ChunkBlockData, ChunkDataAndUpdateLight, ChunkLightData, JoinGame, PlayerPositionAndLook,
     UpdateViewPosition,
@@ -7,7 +6,7 @@ use protocol::play::server::{
 
 use crate::{
     proto_player::ProtoPlayer,
-    universe::{Universe, UniverseService, EntityId},
+    universe::{Universe, UniverseService},
 };
 
 // user defined world service trait
@@ -169,8 +168,8 @@ impl<W: WorldService> World<W> {
 
         let join_game_packet = JoinGame {
             entity_id: proto_player.entity_id.as_i32(),
-            is_hardcore: false,
-            gamemode: 1,
+            is_hardcore: proto_player.hardcore,
+            gamemode: 0,
             previous_gamemode: -1,
             dimension_names: vec!["minecraft:overworld"],
             registry_codec: &binary,
