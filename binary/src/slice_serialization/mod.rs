@@ -34,22 +34,24 @@ pub enum BinaryReadError {
 pub trait SliceSerializable<'a, T = Self> {
     type RefType;
 
+    fn maybe_deref(t: &'a T) -> Self::RefType;
+
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<T>;
-    fn get_write_size(data: Self::RefType) -> usize;
+
+    fn read_fully(bytes: &mut &'a [u8]) -> anyhow::Result<T> {
+        let serialized = Self::read(bytes)?;
+
+        if bytes.is_empty() {
+            Ok(serialized)
+        } else {
+            Err(BinaryReadError::DidntFullyConsume(bytes.len()).into())
+        }
+    }
 
     /// # Safety
     /// Caller must guarantee that `bytes` contains at least `get_write_size` bytes
     unsafe fn write(bytes: &mut [u8], data: Self::RefType) -> &mut [u8];
-
-    fn maybe_deref(t: &'a T) -> Self::RefType;
-}
-
-pub fn check_empty(bytes: &[u8]) -> anyhow::Result<()> {
-    if bytes.is_empty() {
-        Ok(())
-    } else {
-        Err(BinaryReadError::DidntFullyConsume(bytes.len()).into())
-    }
+    fn get_write_size(data: Self::RefType) -> usize;
 }
 
 // Macro to generate composite slice_serializables

@@ -146,13 +146,16 @@ impl<W: WorldService> World<W> {
         };
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &position_packet)?;
 
-        Ok(ChunkViewPosition((spawn_point.0 / 16.0) as i32, (spawn_point.2 / 16.0) as i32))
+        Ok(ChunkViewPosition(
+            (spawn_point.0 / 16.0) as i32,
+            (spawn_point.2 / 16.0) as i32,
+        ))
     }
 
     pub(crate) fn write_game_join_packet(
         &mut self,
         //write_buffer: &mut WriteBuffer,
-        proto_player: &mut ProtoPlayer<W::UniverseServiceType>
+        proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
     ) -> anyhow::Result<()> {
         let registry_codec =
             quartz_nbt::snbt::parse(include_str!("../../assets/registry_codec.json")).unwrap();
@@ -175,8 +178,8 @@ impl<W: WorldService> World<W> {
             registry_codec: &binary,
             dimension_type: "minecraft:overworld",
             dimension_name: "minecraft:overworld",
-            hashed_seed: 69,
-            max_players: 100,
+            hashed_seed: 0, // affects biome noise
+            max_players: 0, // unused
             view_distance: 8,
             simulation_distance: 8,
             reduced_debug_info: false,

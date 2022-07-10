@@ -6,10 +6,16 @@ use derive_try_from_primitive::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
-    Response<'_> = 0x00
+    StatusResponse<'_> = 0x00,
+    PongResponse = 0x01
 }
 
 slice_serializable_composite! {
-    Response<'a>,
+    StatusResponse<'a>,
     json: &'a str as SizedString
+}
+
+slice_serializable_composite! {
+    PongResponse,
+    time: u64 as BigEndian
 }

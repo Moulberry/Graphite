@@ -24,8 +24,8 @@ impl ConciergeService for MyConciergeImpl {
         self.counter += 1;
         format!("{{\
             \"version\": {{
-                \"name\": \"1.19\",
-                \"protocol\": 759
+                \"name\": \"1.19.1\",
+                \"protocol\": 1073741921
             }},
             \"players\": {{
                 \"max\": 100,
@@ -45,9 +45,7 @@ impl ConciergeService for MyConciergeImpl {
         protoplayer: &concierge::ProtoPlayer<Self>,
     ) {
         println!("managed to get connection: {:?}", protoplayer.username);
-        let universe = universe::create_and_start(|| {
-            MyUniverseService { the_world: None }
-        });
+        let universe = universe::create_and_start(|| MyUniverseService { the_world: None });
         universe.send(player_connection).unwrap();
     }
 }
@@ -76,7 +74,7 @@ impl UniverseService for MyUniverseService {
     fn initialize(universe: &mut Universe<Self>) {
         let world = World::new(
             MyWorldService {
-                players: Vec::new()
+                players: Vec::new(),
             },
             universe,
         );
@@ -95,7 +93,7 @@ impl UniverseService for MyUniverseService {
 // world
 
 struct MyWorldService {
-    players: Vec<Player<MyPlayerService>>
+    players: Vec<Player<MyPlayerService>>,
 }
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;

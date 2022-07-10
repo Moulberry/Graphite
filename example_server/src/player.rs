@@ -3,7 +3,7 @@ use thiserror::Error;
 
 use crate::{
     player_connection::PlayerConnection,
-    universe::{Universe, UniverseService, EntityId},
+    universe::{EntityId, Universe, UniverseService},
     world::{ChunkViewPosition, World, WorldService},
 };
 

@@ -60,6 +60,9 @@ fn byte_from_bool(byte: u8) -> bool {
 }
 
 fn byte_to_bool(bool: bool) -> u8 {
-    if bool { 1 } else { 0 }
+    if bool {
+        1
+    } else {
+        0
+    }
 }
-

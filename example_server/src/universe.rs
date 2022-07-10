@@ -39,7 +39,7 @@ impl EntityId {
 pub struct Universe<U: UniverseService> {
     pub service: U,
     player_receiver: Receiver<UninitializedConnection>,
-    entity_id_counter: i32
+    entity_id_counter: i32,
 }
 
 // graphite universe impl
@@ -131,7 +131,7 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
         let mut universe = Universe {
             service,
             player_receiver: tx,
-            entity_id_counter: 0
+            entity_id_counter: 0,
         };
 
         U::initialize(&mut universe);

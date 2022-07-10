@@ -1,7 +1,7 @@
 use crate::{
     player::{Player, PlayerService},
     player_connection::PlayerConnection,
-    universe::{Universe, UniverseService, EntityId},
+    universe::{EntityId, Universe, UniverseService},
     world::World,
 };
 use net::{network_buffer::WriteBuffer, network_handler::Connection};
@@ -16,7 +16,10 @@ pub struct ProtoPlayer<U: UniverseService> {
 }
 
 impl<U: UniverseService> ProtoPlayer<U> {
-    pub fn new(connection: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>), entity_id: EntityId) -> Self {
+    pub fn new(
+        connection: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>),
+        entity_id: EntityId,
+    ) -> Self {
         Self {
             hardcore: false,
 

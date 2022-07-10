@@ -6,13 +6,15 @@ use derive_try_from_primitive::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
-    Intention<'_> = 0x00
+    StatusRequest = 0x00,
+    PingRequest = 0x01
 }
 
 slice_serializable_composite! {
-    Intention<'a>,
-    protocol_version: i32 as VarInt,
-    host_name: &'a str as SizedString<256>,
-    port: u16 as BigEndian,
-    intention: i32 as VarInt
+    StatusRequest,
+}
+
+slice_serializable_composite! {
+    PingRequest,
+    time: u64 as BigEndian
 }
