@@ -7,7 +7,7 @@ use net::{
     network_buffer::WriteBuffer,
     network_handler::{
         Connection, ConnectionService, NetworkManagerService, NewConnectionAccepter,
-        UninitializedConnection,
+        UninitializedConnection, ConnectionSlab,
     },
     packet_helper::PacketReadResult,
 };
@@ -19,7 +19,7 @@ use protocol::{
 use rand::Rng;
 use slab::Slab;
 
-pub struct ProtoPlayer<T> {
+pub struct ConciergeConnection<T> {
     _phantom: PhantomData<T>,
     connection_state: ConnectionState,
     pub username: Option<String>,
@@ -33,7 +33,7 @@ pub enum ConnectionState {
     Login,
 }
 
-impl<T: ConciergeService + 'static> ConnectionService for ProtoPlayer<T> {
+impl<T: ConciergeService + 'static> ConnectionService for ConciergeConnection<T> {
     type NetworkManagerServiceType = Concierge<T>;
 
     fn on_receive(
@@ -58,7 +58,7 @@ impl<T: ConciergeService + 'static> ConnectionService for ProtoPlayer<T> {
             }
         }
 
-        let bytes_remaining = bytes.len() as u32;
+        let remaining_bytes = bytes.len() as u32;
 
         let to_write = write_buffer.get_written();
         if !to_write.is_empty() {
@@ -80,11 +80,11 @@ impl<T: ConciergeService + 'static> ConnectionService for ProtoPlayer<T> {
             }
         }
 
-        Ok(bytes_remaining)
+        Ok(remaining_bytes)
     }
 }
 
-impl<T: ConciergeService + 'static> ProtoPlayer<T> {
+impl<T: ConciergeService + 'static> ConciergeConnection<T> {
     fn handle_framed_packet(
         &mut self,
         connection: &Connection<Concierge<T>>,
@@ -94,19 +94,17 @@ impl<T: ConciergeService + 'static> ProtoPlayer<T> {
         match self.connection_state {
             ConnectionState::Handshake => {
                 // Handshake: https://wiki.vg/Handshake
-                self.handle_handshake(&mut bytes)?;
+                self.handle_handshake(&mut bytes)
             }
             ConnectionState::Status => {
                 // Server List Ping: https://wiki.vg/Server_List_Ping
-                self.handle_status(&mut bytes, connection, write_buffer)?;
+                self.handle_status(&mut bytes, connection, write_buffer)
             }
             ConnectionState::Login => {
                 // todo: add reference to login protocol
-                self.handle_login(&mut bytes, write_buffer)?;
+                self.handle_login(&mut bytes, write_buffer)
             }
         }
-
-        Ok(false)
     }
 
     fn handle_handshake(&mut self, bytes: &mut &[u8]) -> anyhow::Result<bool> {
@@ -182,8 +180,8 @@ impl<T: ConciergeService + 'static> ProtoPlayer<T> {
         let packet_id: u8 = slice_serialization::VarInt::read(bytes)?.try_into()?;
         if let Ok(packet_id) = login::client::PacketId::try_from(packet_id) {
             match packet_id {
-                login::client::PacketId::LoginStart => {
-                    let login_start_packet = login::client::LoginStart::read_fully(bytes)?;
+                login::client::PacketId::Hello => {
+                    let login_start_packet = login::client::Hello::read_fully(bytes)?;
 
                     self.username = Some(String::from(login_start_packet.username));
                     self.uuid = Some(rand::thread_rng().gen());
@@ -216,10 +214,10 @@ pub struct Concierge<T: ConciergeService> {
 
 impl<T: ConciergeService + 'static> NetworkManagerService for Concierge<T> {
     const TICK_RATE: Option<Duration> = Some(Duration::from_secs(10));
-    type ConnectionServiceType = ProtoPlayer<T>;
+    type ConnectionServiceType = ConciergeConnection<T>;
 
-    fn new_connection_service(&mut self) -> ProtoPlayer<T> {
-        ProtoPlayer {
+    fn new_connection_service(&mut self) -> ConciergeConnection<T> {
+        ConciergeConnection {
             _phantom: PhantomData,
             username: None,
             uuid: None,
@@ -227,13 +225,9 @@ impl<T: ConciergeService + 'static> NetworkManagerService for Concierge<T> {
         }
     }
 
-    /*fn consume_connection(&mut self, connection: Connection<Self>) {
-        self.service.accept_player(connection);
-    }*/
-
     fn tick(
         &mut self,
-        _: &mut Slab<(Connection<Self>, Box<Self::ConnectionServiceType>)>,
+        _: &mut ConnectionSlab<Self>,
         _: NewConnectionAccepter<Self>,
     ) -> anyhow::Result<()> {
         self.serverlist_response = self.service.get_serverlist_response();
@@ -262,6 +256,6 @@ where
     fn accept_player(
         &mut self,
         player_connection: UninitializedConnection,
-        player_service: &ProtoPlayer<Self>,
+        player_service: &ConciergeConnection<Self>,
     );
 }

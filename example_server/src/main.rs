@@ -1,8 +1,8 @@
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
-use player::Player;
 use player::PlayerService;
+use player_vec::PlayerVec;
 use proto_player::ProtoPlayer;
 use universe::Universe;
 use universe::UniverseService;
@@ -14,6 +14,8 @@ mod player_connection;
 mod proto_player;
 mod universe;
 mod world;
+mod player_vec;
+mod error;
 
 struct MyConciergeImpl {
     counter: u8,
@@ -42,23 +44,40 @@ impl ConciergeService for MyConciergeImpl {
     fn accept_player(
         &mut self,
         player_connection: UninitializedConnection,
-        protoplayer: &concierge::ProtoPlayer<Self>,
+        protoplayer: &concierge::ConciergeConnection<Self>,
     ) {
         println!("managed to get connection: {:?}", protoplayer.username);
-        let universe = universe::create_and_start(|| MyUniverseService { the_world: None });
+        let universe = universe::create_and_start(|| {
+            MyUniverseService {
+                the_world: World::new(
+                    MyWorldService {
+                        players: player_vec::PlayerVec::new(),
+                        counter: 0
+                    }
+                )
+            }
+        });
         universe.send(player_connection).unwrap();
     }
 }
 
+
+
 fn main() {
-    //typemap::my_func();
+    /*let mut indices = vec!();
+    for i in 0..1000 {
+        let index = rand::thread_rng().next_u64() as usize % (1000 - i);
+        indices.push(index);
+    }
+    println!("{:?}", indices);*/
+
     Concierge::bind("127.0.0.1:25565", MyConciergeImpl { counter: 0 }).unwrap();
 }
 
 // universe
 
 struct MyUniverseService {
-    the_world: Option<World<MyWorldService>>,
+    the_world: World<MyWorldService>,
 }
 
 impl UniverseService for MyUniverseService {
@@ -66,34 +85,30 @@ impl UniverseService for MyUniverseService {
         universe
             .service
             .the_world
-            .as_mut()
-            .unwrap()
             .send_player_to(proto_player);
     }
 
-    fn initialize(universe: &mut Universe<Self>) {
-        let world = World::new(
-            MyWorldService {
-                players: Vec::new(),
-            },
-            universe,
-        );
-        universe.service.the_world = Some(world);
+    fn initialize(universe: &Universe<Self>) {
+        universe.service.the_world.initialize(universe);
     }
 
     fn tick(universe: &mut Universe<Self>) {
-        universe.service.the_world.as_mut().unwrap().tick();
+        universe.service.the_world.tick();
     }
 
-    fn get_player_count(universe: &mut Universe<Self>) -> usize {
-        MyWorldService::get_player_count(universe.service.the_world.as_mut().unwrap())
+    fn get_player_count(universe: &Universe<Self>) -> usize {
+        MyWorldService::get_player_count(&universe.service.the_world)
     }
 }
 
 // world
 
+// DungeonPlayer
+// SpectatingPlayer
+
 struct MyWorldService {
-    players: Vec<Player<MyPlayerService>>,
+    players: PlayerVec<MyPlayerService>,
+    counter: usize
 }
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
@@ -105,17 +120,25 @@ impl WorldService for MyWorldService {
         proto_player.hardcore = true;
 
         // make player from proto_player
-        let player = proto_player.create_player(MyPlayerService {}, world);
+        world.service.players.add(proto_player, MyPlayerService {}).unwrap();
+    }
 
-        // push
-        world.service.players.push(player.unwrap());
+    fn initialize(world: &World<Self>) {
+        world.service.players.initialize(world);
     }
 
     fn tick(world: &mut World<Self>) {
-        world.service.players.retain_mut(|p| p.tick().is_ok());
+        if world.service.players.len() > 0 {
+            world.service.counter += 1;
+            if world.service.counter > 100 {
+                world.service.counter = 0;
+                world.service.players.remove(0);
+            }
+        }
+        world.service.players.tick();
     }
 
-    fn get_player_count(world: &mut World<Self>) -> usize {
+    fn get_player_count(world: &World<Self>) -> usize {
         world.service.players.len()
     }
 }

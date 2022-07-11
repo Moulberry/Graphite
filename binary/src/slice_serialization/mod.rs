@@ -64,7 +64,7 @@ macro_rules! slice_serializable_composite {
     { @resolve_wire_type $typ:ty as $wire:ty } => {
         $wire
     };
-    { $struct_name:ident$(<$lt:lifetime>)?, $( $field_name:ident : $typ:ty $( as $wire:ty )? ),* } => {
+    { $struct_name:ident$(<$lt:lifetime>)?, $( $field_name:ident : $typ:ty $( as $wire:ty )? ),* $(,)?} => {
         #[derive(Debug)]
         pub struct $struct_name$(<$lt>)? {
             $(pub $field_name: $typ,)*

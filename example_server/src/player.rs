@@ -1,15 +1,18 @@
-use net::network_handler::Connection;
+use concierge::ConciergeConnection;
+use net::{network_handler::Connection, network_buffer::WriteBuffer, packet_helper::PacketReadResult};
+use sticky::Unsticky;
 use thiserror::Error;
 
 use crate::{
-    player_connection::PlayerConnection,
+    player_connection::{PlayerConnection},
     universe::{EntityId, Universe, UniverseService},
-    world::{ChunkViewPosition, World, WorldService},
+    world::{ChunkViewPosition, World, WorldService}, proto_player::{ProtoPlayer, ConnectionReference},
 };
 
 // user defined player service trait
 
-pub trait PlayerService {
+pub trait PlayerService
+where Self: Sized {
     type UniverseServiceType: UniverseService;
     type WorldServiceType: WorldService<UniverseServiceType = Self::UniverseServiceType>;
 }
@@ -18,14 +21,13 @@ pub trait PlayerService {
 
 pub struct Player<P: PlayerService> {
     pub service: P,
-    pub world: *mut World<P::WorldServiceType>,
-    pub entity_id: EntityId,
 
-    pub view_position: ChunkViewPosition,
-    pub connection_service: *mut PlayerConnection<P::UniverseServiceType>,
-    pub connection: *mut Connection<Universe<P::UniverseServiceType>>,
+    view_position: ChunkViewPosition,
+    entity_id: EntityId,
 
-    pub connection_closed: bool,
+    world: *mut World<P::WorldServiceType>,
+
+    connection: ConnectionReference<P::UniverseServiceType>
 }
 
 // graphite player impl
@@ -35,27 +37,58 @@ pub struct Player<P: PlayerService> {
 struct ConnectionClosedError;
 
 impl<P: PlayerService> Player<P> {
-    pub fn tick(&mut self) -> anyhow::Result<()> {
-        // todo: replace this error message with something that references documentation instead
-        debug_assert!(!self.connection_closed, "`tick` called on player with closed connection. Make sure to remove the Player from your list if the tick function returns ConnectionClosedError");
+    pub(crate) fn new(service: P, world: &mut World<P::WorldServiceType>, entity_id: EntityId,
+                    view_position: ChunkViewPosition, connection: ConnectionReference<P::UniverseServiceType>) -> Self {
+        Self {
+            service,
+            world,
+            entity_id,
+            view_position,
+            connection
+        }
+    }
 
-        if !unsafe { self.connection_service.as_mut().unwrap() }.check_connection_open() {
-            self.connection_closed = true;
-            return Err(ConnectionClosedError.into());
+    pub fn tick(&mut self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    pub fn handle_packet(player: *mut Player<P>) -> anyhow::Result<u32> {
+        let player = unsafe { player.as_mut() }.unwrap();
+        
+        // println!("got process!");
+        // println!("i have entity id: {:?}", player.entity_id);
+
+        Ok(0)
+    }
+
+    pub fn handle_disconnect(player: *mut Player<P>) {
+        unsafe {
+            let player: &mut Player<P> = player.as_mut().unwrap();
+            player.connection.forget();
         }
 
-        Ok(())
+        println!("closed by remote");
+
+        todo!();
+        // todo: remove self from PlayerList containing this
+
+        // todo: notify world/universe of disconnect
     }
 }
 
-impl<P: PlayerService> Drop for Player<P> {
-    fn drop(&mut self) {
-        if !self.connection_closed {
-            let successfully_closed =
-                unsafe { self.connection_service.as_mut().unwrap() }.close_if_open();
-            if successfully_closed {
-                unsafe { self.connection.as_mut().unwrap() }.request_close();
-            }
-        }
+unsafe impl<P: PlayerService> Unsticky for Player<P> {
+    type UnstuckType = (ProtoPlayer<P::UniverseServiceType>, P);
+
+    fn update_pointer(&mut self, _: usize) {
+        // todo: use index to be able to remove self from sticky
+        let ptr: *mut Player<P> = self;
+        self.connection.update_player_pointer(ptr);
+    }
+
+    fn unstick(self) -> Self::UnstuckType {
+        (
+            ProtoPlayer::new(self.connection, self.entity_id),
+            self.service
+        )
     }
 }

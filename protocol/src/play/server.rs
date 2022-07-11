@@ -6,19 +6,21 @@ use derive_try_from_primitive::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
-    PluginMessage<'_> = 0x15,
-    ChunkDataAndUpdateLight<'_> = 0x1F,
-    JoinGame<'_> = 0x23,
-    PlayerPositionAndLook = 0x36,
-    UpdateViewPosition = 0x48
+    CustomPayload<'_> = 0x16,
+    LevelChunkWithLight<'_> = 0x21,
+    Login<'_> = 0x25,
+    PlayerPosition = 0x39,
+    SetChunkCacheCenter = 0x4b
 }
 
+// Custom Payload
 slice_serializable_composite! {
-    PluginMessage<'a>,
+    CustomPayload<'a>,
     channel: &'a str as SizedString,
     data: &'a [u8] as GreedyBlob
 }
 
+// LevelChunkWithLight
 slice_serializable_composite! {
     ChunkBlockData<'a>,
     heightmaps: &'a [u8] as GreedyBlob, // todo: actually nbt, don't use blob, doesn't have correct read semantics
@@ -39,15 +41,16 @@ slice_serializable_composite! {
 }
 
 slice_serializable_composite! {
-    ChunkDataAndUpdateLight<'a>,
+    LevelChunkWithLight<'a>,
     chunk_x: i32 as BigEndian,
     chunk_z: i32 as BigEndian,
     chunk_block_data: ChunkBlockData<'a>,
     chunk_light_data: ChunkLightData<'a>
 }
 
+// Login
 slice_serializable_composite! {
-    JoinGame<'a>,
+    Login<'a>,
     entity_id: i32 as BigEndian,
     is_hardcore: bool as Single,
     gamemode: u8 as Single,
@@ -67,20 +70,22 @@ slice_serializable_composite! {
     has_death_location: bool as Single // must be false
 }
 
+// Player Position
 slice_serializable_composite! {
-    PlayerPositionAndLook,
+    PlayerPosition,
     x: f64 as BigEndian,
     y: f64 as BigEndian,
     z: f64 as BigEndian,
     yaw: f32 as BigEndian,
     pitch: f32 as BigEndian,
-    flags: u8 as Single,
-    teleport_id: i32 as VarInt,
+    relative_arguments: u8 as Single,
+    id: i32 as VarInt,
     dismount_vehicle: bool as Single
 }
 
+// Set Chunk Cache Center
 slice_serializable_composite! {
-    UpdateViewPosition,
+    SetChunkCacheCenter,
     chunk_x: i32 as VarInt,
     chunk_z: i32 as VarInt
 }

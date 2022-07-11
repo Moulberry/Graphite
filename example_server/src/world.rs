@@ -1,12 +1,14 @@
+use std::pin::Pin;
+
 use bytes::BufMut;
 use protocol::play::server::{
-    ChunkBlockData, ChunkDataAndUpdateLight, ChunkLightData, JoinGame, PlayerPositionAndLook,
-    UpdateViewPosition,
+    ChunkBlockData, LevelChunkWithLight, ChunkLightData, Login, PlayerPosition,
+    SetChunkCacheCenter,
 };
 
 use crate::{
     proto_player::ProtoPlayer,
-    universe::{Universe, UniverseService},
+    universe::{Universe, UniverseService}, player::{Player, PlayerService},
 };
 
 // user defined world service trait
@@ -21,8 +23,9 @@ where
         world: &mut World<Self>,
         proto_player: ProtoPlayer<Self::UniverseServiceType>,
     );
+    fn initialize(world: &World<Self>);
     fn tick(world: &mut World<Self>);
-    fn get_player_count(world: &mut World<Self>) -> usize;
+    fn get_player_count(world: &World<Self>) -> usize;
 }
 
 // graphite world
@@ -41,8 +44,20 @@ impl<W: WorldService> World<W> {
         unsafe { self.universe.as_mut().unwrap() }
     }
 
-    pub(crate) fn new(service: W, universe: &mut Universe<W::UniverseServiceType>) -> Self {
-        Self { service, universe }
+    pub(crate) fn new(service: W) -> Self {
+        Self { service, universe: std::ptr::null_mut() }
+    }
+
+    pub fn initialize(&self, universe: &Universe<W::UniverseServiceType>) {
+        // todo: justify this
+        unsafe {
+            let self_mut: *mut World<W> = self as *const _ as *mut _;
+            let self_mut_ref: &mut World<W> = self_mut.as_mut().unwrap();
+            assert!(self_mut_ref.universe.is_null(), "cannot initialize twice");
+            self_mut_ref.universe = universe as *const _ as *mut _;
+        }
+
+        W::initialize(self);
     }
 
     pub fn tick(&mut self) {
@@ -99,7 +114,7 @@ impl<W: WorldService> World<W> {
                     chunk_data.put_u8(0); // 0 size array
                 }
 
-                let chunk_packet = ChunkDataAndUpdateLight {
+                let chunk_packet = LevelChunkWithLight {
                     chunk_x: x,
                     chunk_z: z,
                     chunk_block_data: ChunkBlockData {
@@ -123,7 +138,7 @@ impl<W: WorldService> World<W> {
         }
 
         // Update view position
-        let update_view_position_packet = UpdateViewPosition {
+        let update_view_position_packet = SetChunkCacheCenter {
             chunk_x: 0,
             chunk_z: 0,
         };
@@ -134,14 +149,14 @@ impl<W: WorldService> World<W> {
         .unwrap();
 
         // Position
-        let position_packet = PlayerPositionAndLook {
+        let position_packet = PlayerPosition {
             x: 0.0,
             y: 500.0,
             z: 0.0,
             yaw: 15.0,
             pitch: 0.0,
-            flags: 0,
-            teleport_id: 0,
+            relative_arguments: 0,
+            id: 0,
             dismount_vehicle: false,
         };
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &position_packet)?;
@@ -169,7 +184,9 @@ impl<W: WorldService> World<W> {
         .unwrap();
         binary.shrink_to_fit();
 
-        let join_game_packet = JoinGame {
+        println!("codec bytes: {}", binary.len());
+
+        let join_game_packet = Login {
             entity_id: proto_player.entity_id.as_i32(),
             is_hardcore: proto_player.hardcore,
             gamemode: 0,

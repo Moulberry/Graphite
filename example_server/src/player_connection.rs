@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use anyhow::bail;
 use binary::slice_serialization::{self, SliceSerializable};
 use net::{
     network_buffer::WriteBuffer,
@@ -7,25 +8,18 @@ use net::{
     packet_helper::PacketReadResult,
 };
 
-use crate::universe::{Universe, UniverseService};
+use crate::{universe::{Universe, UniverseService}, player::{Player, PlayerService}};
 
-#[repr(C)]
+// Player connection
+
 pub struct PlayerConnection<U: UniverseService> {
     _phantom: PhantomData<U>,
     is_closing: bool,
-    is_leaked: bool,
+    
+    player_ptr: *mut (),
+    player_process_packet: Option<fn(*mut ()) -> anyhow::Result<u32>>,
+    player_process_disconnect: Option<fn(*mut ())>,
 }
-
-impl<U: UniverseService> PlayerConnection<U> {
-    pub fn new() -> Self {
-        Self {
-            _phantom: PhantomData,
-            is_closing: false,
-            is_leaked: false,
-        }
-    }
-}
-
 impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
     const BUFFER_SIZE: u32 = 4_194_304;
     type NetworkManagerServiceType = Universe<U>;
@@ -34,82 +28,57 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
         &mut self,
         connection: &mut Connection<Self::NetworkManagerServiceType>,
     ) -> anyhow::Result<u32> {
-        let mut bytes = connection.read_bytes();
-        let mut write_buffer: WriteBuffer = WriteBuffer::new();
-
-        loop {
-            let packet_read_result = net::packet_helper::try_read_packet(&mut bytes)?;
-            match packet_read_result {
-                PacketReadResult::Complete(bytes) => {
-                    println!("Request: {:x?}", bytes);
-                    self.process_framed_packet(&mut write_buffer, bytes)?;
-                }
-                PacketReadResult::Partial => break,
-                PacketReadResult::Empty => break,
-            }
+        debug_assert!(!self.is_closing, "connection should be closed, but I still got some data!");
+        
+        if let Some(handle_packet) = self.player_process_packet {
+            handle_packet(self.player_ptr)
+        } else {
+            Ok(connection.read_bytes().len() as u32)
         }
-
-        let bytes_remaining = bytes.len() as u32;
-
-        let to_write = write_buffer.get_written();
-        if !to_write.is_empty() {
-            connection.write(to_write);
-        }
-
-        Ok(bytes_remaining)
     }
 
-    fn close(mut boxed: Box<Self>) {
-        if !boxed.is_closing {
-            boxed.is_closing = true;
-            boxed.is_leaked = true;
-            Box::leak(boxed);
+    fn close(mut self) {
+        if !self.is_closing {
+            self.is_closing = true;
+
+            if let Some(handle_disconnect) = self.player_process_disconnect {
+                handle_disconnect(self.player_ptr);
+            } else {
+                panic!("connection was closed by remote while belonging to a protoplayer, this should never happen");
+            }
         }
     }
 }
 
 impl<U: UniverseService> PlayerConnection<U> {
-    pub(crate) fn check_connection_open(&mut self) -> bool {
-        if self.is_closing {
-            if self.is_leaked {
-                unsafe { std::mem::drop(Box::from_raw(self)) };
-            }
-
-            false
-        } else {
-            true
+    pub fn new() -> Self {
+        Self {
+            _phantom: PhantomData,
+            is_closing: false,
+            player_ptr: std::ptr::null_mut(),
+            player_process_packet: None,
+            player_process_disconnect: None
         }
     }
 
-    pub(crate) fn close_if_open(&mut self) -> bool {
-        if self.is_closing {
-            false
-        } else {
-            if self.is_leaked {
-                unsafe { std::mem::drop(Box::from_raw(self)) };
-            }
-            self.is_closing = true;
-
-            true
-        }
+    pub fn mark_closed(&mut self) {
+        self.is_closing = true;
     }
 
-    fn process_framed_packet(
-        &mut self,
-        _: &mut WriteBuffer,
-        // connection: &Connection<<PlayerConnection<U> as ConnectionService>::NetworkManagerServiceType>,
-        bytes: &[u8],
-    ) -> anyhow::Result<()> {
-        let mut bytes = bytes;
+    pub(crate) fn update_player_pointer<T: PlayerService>(&mut self, player: *mut Player<T>) {
+        debug_assert!(!self.is_closing);
 
-        let packet_id_byte: u8 = slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
+        self.player_ptr = player as *mut ();
 
-        if let Ok(packet_id) = protocol::play::client::PacketId::try_from(packet_id_byte) {
-            println!("got known packet id: {:?}", packet_id);
-        } else {
-            println!("unknown packet id: {:x}", packet_id_byte);
-        }
+        let process_packet_ptr = Player::<T>::handle_packet  as *const ();
+        self.player_process_packet = Some(unsafe { std::mem::transmute(process_packet_ptr) });
 
-        Ok(())
+        let process_disconnect_ptr = Player::<T>::handle_disconnect  as *const ();
+        self.player_process_disconnect = Some(unsafe { std::mem::transmute(process_disconnect_ptr) });
+
+    }
+    
+    pub(crate) fn clear_player_pointer(&mut self) {
+        self.player_process_packet = None;
     }
 }

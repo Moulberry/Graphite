@@ -1,13 +1,13 @@
 use anyhow::bail;
 use net::network_buffer::WriteBuffer;
 use net::network_handler::{
-    Connection, NetworkManagerService, NewConnectionAccepter, UninitializedConnection,
+    Connection, NetworkManagerService, NewConnectionAccepter, UninitializedConnection, ConnectionSlab,
 };
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::{sync::mpsc::Sender, time::Duration};
 
-use crate::proto_player::ProtoPlayer;
-use protocol::play::server::PluginMessage;
+use crate::proto_player::{ProtoPlayer, ConnectionReference};
+use protocol::play::server::CustomPayload;
 use slab::Slab;
 
 use crate::player_connection::PlayerConnection;
@@ -19,14 +19,15 @@ where
     Self: Sized,
 {
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>);
-    fn initialize(universe: &mut Universe<Self>);
+    fn initialize(universe: &Universe<Self>);
 
     fn tick(universe: &mut Universe<Self>);
-    fn get_player_count(universe: &mut Universe<Self>) -> usize;
+    fn get_player_count(universe: &Universe<Self>) -> usize;
 }
 
 // graphite universe
 
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct EntityId(i32);
 
@@ -47,9 +48,9 @@ pub struct Universe<U: UniverseService> {
 impl<U: UniverseService> Universe<U> {
     fn handle_player_connect(
         &mut self,
-        connection_ptr: (*mut Connection<Universe<U>>, *mut PlayerConnection<U>),
+        connection_ref: ConnectionReference<U>,
     ) {
-        let proto_player = ProtoPlayer::new(connection_ptr, self.new_entity_id());
+        let proto_player = ProtoPlayer::new(connection_ref, self.new_entity_id());
         U::handle_player_join(self, proto_player);
     }
 
@@ -57,7 +58,7 @@ impl<U: UniverseService> Universe<U> {
         &mut self,
         write_buffer: &mut WriteBuffer,
     ) -> anyhow::Result<()> {
-        let brand_packet = PluginMessage {
+        let brand_packet = CustomPayload {
             channel: "minecraft:brand",
             data: b"\x08Graphite",
         };
@@ -82,7 +83,7 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
 
     fn tick(
         &mut self,
-        connections: &mut Slab<(Connection<Self>, Box<Self::ConnectionServiceType>)>,
+        connections: &mut ConnectionSlab<Self>,
         accepter: NewConnectionAccepter<Self>,
     ) -> anyhow::Result<()> {
         // Accept pending connections
@@ -90,16 +91,16 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
             match self.player_receiver.try_recv() {
                 Ok(connection) => {
                     println!("got new connection!");
-                    let accept_result = unsafe {
-                        accepter.accept_and_get_ptr(
-                            connection,
-                            PlayerConnection::new(),
-                            connections,
-                        )
-                    };
-                    if let Some(connection_ptr) = accept_result {
-                        self.handle_player_connect(connection_ptr);
-                    }
+                    let connection_index = accepter.accept_and_get_index(
+                        connection,
+                        PlayerConnection::new(),
+                        connections,
+                    )?;
+                    let connection_ref = ConnectionReference::new(
+                        connections, 
+                        connection_index
+                    );
+                    self.handle_player_connect(connection_ref);
                 }
                 Err(err) if err == TryRecvError::Disconnected => {
                     if U::get_player_count(self) == 0 {
