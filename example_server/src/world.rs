@@ -1,14 +1,11 @@
-use std::pin::Pin;
-
 use bytes::BufMut;
 use protocol::play::server::{
-    ChunkBlockData, LevelChunkWithLight, ChunkLightData, Login, PlayerPosition,
-    SetChunkCacheCenter,
+    ChunkBlockData, ChunkLightData, LevelChunkWithLight, Login, PlayerPosition, SetChunkCacheCenter,
 };
 
 use crate::{
     proto_player::ProtoPlayer,
-    universe::{Universe, UniverseService}, player::{Player, PlayerService},
+    universe::{Universe, UniverseService},
 };
 
 // user defined world service trait
@@ -45,7 +42,10 @@ impl<W: WorldService> World<W> {
     }
 
     pub(crate) fn new(service: W) -> Self {
-        Self { service, universe: std::ptr::null_mut() }
+        Self {
+            service,
+            universe: std::ptr::null_mut(),
+        }
     }
 
     pub fn initialize(&self, universe: &Universe<W::UniverseServiceType>) {

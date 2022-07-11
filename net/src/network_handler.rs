@@ -92,7 +92,10 @@ impl AcceptCount {
     }
 }
 
+#[allow(type_alias_bounds)]
 pub type ConnectionSlab<N: NetworkManagerService> = Slab<(Connection<N>, N::ConnectionServiceType)>;
+#[allow(type_alias_bounds)]
+type FnConnectionRedirect<N: NetworkManagerService> = Box<dyn FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType)>;
 
 pub struct NewConnectionAccepter<N: NetworkManagerService> {
     network_manager: *const NetworkManager<N>,
@@ -135,9 +138,14 @@ impl<N: NetworkManagerService> NewConnectionAccepter<N> {
 
         // Kickstart the recv event
         unsafe {
-            let mut sq = self.network_manager.as_ref().unwrap().ring.submission_shared();
+            let mut sq = self
+                .network_manager
+                .as_ref()
+                .unwrap()
+                .ring
+                .submission_shared();
             let backlog = self.submission_backlog.as_mut().unwrap();
-    
+
             let read_buffer_ptr = connection
                 .read_buffer
                 .as_mut_ptr()
@@ -173,8 +181,6 @@ pub struct UninitializedConnection {
     read_buffer: Vec<u8>,
 }
 
-type FnConnectionRedirect<N, C> = Box<dyn FnMut(&mut N, UninitializedConnection, &C)>;
-
 pub struct Connection<N: NetworkManagerService> {
     network_manager: *const NetworkManager<N>,
     submission_backlog: *mut VecDeque<squeue::Entry>,
@@ -185,7 +191,7 @@ pub struct Connection<N: NetworkManagerService> {
     write_buffers: Slab<Box<[u8]>>,
 
     close_requested: bool,
-    connection_redirect: Option<FnConnectionRedirect<N, N::ConnectionServiceType>>,
+    connection_redirect: Option<FnConnectionRedirect<N>>,
 
     is_processing_read: bool,
 
@@ -278,11 +284,7 @@ impl<N: NetworkManagerService> Connection<N> {
         std::mem::drop(self);
     }
 
-    fn redirect(
-        mut self,
-        network_service: &mut N,
-        connection_service: N::ConnectionServiceType,
-    ) {
+    fn redirect(mut self, network_service: &mut N, connection_service: N::ConnectionServiceType) {
         debug_assert!(self.connection_redirect.is_some());
         debug_assert!(self.write_buffers.is_empty());
 
@@ -658,16 +660,17 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                             let remaining_bytes = receive_result.unwrap();
                             if remaining_bytes == 0 {
                                 // Fully read
-                    
+
                                 // Since we fully read, we can start receving again from the start of the buffer
                                 connection.rbuff_data_offset = 0;
                                 connection.rbuff_write_offset = 0;
                             } else {
                                 // Partial read
-                    
+
                                 // Set the `data_offset` to the start of the partially-unread data
-                                connection.rbuff_data_offset = connection.rbuff_write_offset - remaining_bytes as usize;
-                    
+                                connection.rbuff_data_offset =
+                                    connection.rbuff_write_offset - remaining_bytes as usize;
+
                                 // Keep reading from the existing write offset
                             }
 
@@ -750,19 +753,13 @@ impl<N: NetworkManagerService> NetworkManager<N> {
         Some((connection, remaining_bytes))
     }*/
 
-    fn close_connection_by_index(
-        connections: &mut ConnectionSlab<N>,
-        connection_index: u16,
-    ) {
+    fn close_connection_by_index(connections: &mut ConnectionSlab<N>, connection_index: u16) {
         let (connection, service) = connections.remove(connection_index as _);
         connection.close();
         N::ConnectionServiceType::close(service);
     }
 
-    fn try_close_connection_by_index(
-        connections: &mut ConnectionSlab<N>,
-        connection_index: u16,
-    ) {
+    fn try_close_connection_by_index(connections: &mut ConnectionSlab<N>, connection_index: u16) {
         if let Some((connection, service)) = connections.try_remove(connection_index as _) {
             connection.close();
             N::ConnectionServiceType::close(service);

@@ -1,14 +1,14 @@
 use anyhow::bail;
 use net::network_buffer::WriteBuffer;
 use net::network_handler::{
-    Connection, NetworkManagerService, NewConnectionAccepter, UninitializedConnection, ConnectionSlab,
+    ConnectionSlab, NetworkManagerService, NewConnectionAccepter,
+    UninitializedConnection,
 };
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::{sync::mpsc::Sender, time::Duration};
 
-use crate::proto_player::{ProtoPlayer, ConnectionReference};
+use crate::proto_player::{ConnectionReference, ProtoPlayer};
 use protocol::play::server::CustomPayload;
-use slab::Slab;
 
 use crate::player_connection::PlayerConnection;
 
@@ -46,10 +46,7 @@ pub struct Universe<U: UniverseService> {
 // graphite universe impl
 
 impl<U: UniverseService> Universe<U> {
-    fn handle_player_connect(
-        &mut self,
-        connection_ref: ConnectionReference<U>,
-    ) {
+    fn handle_player_connect(&mut self, connection_ref: ConnectionReference<U>) {
         let proto_player = ProtoPlayer::new(connection_ref, self.new_entity_id());
         U::handle_player_join(self, proto_player);
     }
@@ -96,10 +93,7 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
                         PlayerConnection::new(),
                         connections,
                     )?;
-                    let connection_ref = ConnectionReference::new(
-                        connections, 
-                        connection_index
-                    );
+                    let connection_ref = ConnectionReference::new(connections, connection_index);
                     self.handle_player_connect(connection_ref);
                 }
                 Err(err) if err == TryRecvError::Disconnected => {
@@ -129,13 +123,13 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
 
     std::thread::spawn(|| {
         let service = service_func();
-        let mut universe = Universe {
+        let universe = Universe {
             service,
             player_receiver: tx,
             entity_id_counter: 0,
         };
 
-        U::initialize(&mut universe);
+        U::initialize(&universe);
 
         let _ = net::network_handler::start(universe, None);
     });

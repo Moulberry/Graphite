@@ -1,15 +1,18 @@
-use slab::Slab;
 use sticky::Unsticky;
-use thiserror::Error;
 
-use crate::{player::{PlayerService, Player}, proto_player::ProtoPlayer, world::World, error::UninitializedError};
+use crate::{
+    error::UninitializedError,
+    player::{Player, PlayerService},
+    proto_player::ProtoPlayer,
+    world::World,
+};
 
 pub struct PlayerVec<P: PlayerService> {
     players: sticky::StickyVec<Player<P>>,
     world: *mut World<P::WorldServiceType>,
 }
 
-impl <P: PlayerService> PlayerVec<P> {
+impl<P: PlayerService> PlayerVec<P> {
     pub fn new() -> Self {
         Self {
             players: Default::default(),
@@ -28,10 +31,14 @@ impl <P: PlayerService> PlayerVec<P> {
     }
 
     pub fn get_world(&self) -> anyhow::Result<&mut World<P::WorldServiceType>> {
-        unsafe { self.world.as_mut() }.ok_or(UninitializedError.into())
+        unsafe { self.world.as_mut() }.ok_or_else(|| UninitializedError.into())
     }
 
-    pub fn add(&mut self, proto_player: ProtoPlayer<P::UniverseServiceType>, service: P) -> anyhow::Result<()> {
+    pub fn add(
+        &mut self,
+        proto_player: ProtoPlayer<P::UniverseServiceType>,
+        service: P,
+    ) -> anyhow::Result<()> {
         let world = self.get_world()?;
         let player = proto_player.create_player(service, world)?;
         self.players.insert(player);

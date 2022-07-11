@@ -1,18 +1,18 @@
-use concierge::ConciergeConnection;
-use net::{network_handler::Connection, network_buffer::WriteBuffer, packet_helper::PacketReadResult};
 use sticky::Unsticky;
 use thiserror::Error;
 
 use crate::{
-    player_connection::{PlayerConnection},
-    universe::{EntityId, Universe, UniverseService},
-    world::{ChunkViewPosition, World, WorldService}, proto_player::{ProtoPlayer, ConnectionReference},
+    proto_player::{ConnectionReference, ProtoPlayer},
+    universe::{EntityId, UniverseService},
+    world::{ChunkViewPosition, World, WorldService},
 };
 
 // user defined player service trait
 
 pub trait PlayerService
-where Self: Sized {
+where
+    Self: Sized,
+{
     type UniverseServiceType: UniverseService;
     type WorldServiceType: WorldService<UniverseServiceType = Self::UniverseServiceType>;
 }
@@ -27,7 +27,7 @@ pub struct Player<P: PlayerService> {
 
     world: *mut World<P::WorldServiceType>,
 
-    connection: ConnectionReference<P::UniverseServiceType>
+    connection: ConnectionReference<P::UniverseServiceType>,
 }
 
 // graphite player impl
@@ -37,14 +37,19 @@ pub struct Player<P: PlayerService> {
 struct ConnectionClosedError;
 
 impl<P: PlayerService> Player<P> {
-    pub(crate) fn new(service: P, world: &mut World<P::WorldServiceType>, entity_id: EntityId,
-                    view_position: ChunkViewPosition, connection: ConnectionReference<P::UniverseServiceType>) -> Self {
+    pub(crate) fn new(
+        service: P,
+        world: &mut World<P::WorldServiceType>,
+        entity_id: EntityId,
+        view_position: ChunkViewPosition,
+        connection: ConnectionReference<P::UniverseServiceType>,
+    ) -> Self {
         Self {
             service,
             world,
             entity_id,
             view_position,
-            connection
+            connection,
         }
     }
 
@@ -54,9 +59,6 @@ impl<P: PlayerService> Player<P> {
 
     pub fn handle_packet(player: *mut Player<P>) -> anyhow::Result<u32> {
         let player = unsafe { player.as_mut() }.unwrap();
-        
-        // println!("got process!");
-        // println!("i have entity id: {:?}", player.entity_id);
 
         Ok(0)
     }
@@ -88,7 +90,7 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
     fn unstick(self) -> Self::UnstuckType {
         (
             ProtoPlayer::new(self.connection, self.entity_id),
-            self.service
+            self.service,
         )
     }
 }

@@ -6,20 +6,20 @@ use std::fmt::Debug;
 pub struct StickyVec<T> {
     buckets: Vec<Vec<T>>,
     len: usize,
-    next: usize
+    next: usize,
 }
 
-impl <T> Default for StickyVec<T> {
+impl<T> Default for StickyVec<T> {
     fn default() -> Self {
         Self {
             buckets: Default::default(),
             len: 0,
-            next: 0
+            next: 0,
         }
     }
 }
 
-impl <T: Unsticky> StickyVec<T> {
+impl<T: Unsticky> StickyVec<T> {
     pub fn new() -> Self {
         Default::default()
     }
@@ -30,10 +30,11 @@ impl <T: Unsticky> StickyVec<T> {
 
     pub fn insert(&mut self, t: T) {
         debug_assert!(self.buckets.len() >= self.next);
-        
+
         // Allocate the bucket if needed
         if self.buckets.len() == self.next {
-            self.buckets.push(Vec::with_capacity(Self::get_capacity_for_index(self.next)));
+            self.buckets
+                .push(Vec::with_capacity(Self::get_capacity_for_index(self.next)));
         }
 
         // Get the next bucket
@@ -60,7 +61,7 @@ impl <T: Unsticky> StickyVec<T> {
                 if bucket.len() < bucket.capacity() {
                     break;
                 }
-            };
+            }
         }
     }
 
@@ -69,11 +70,11 @@ impl <T: Unsticky> StickyVec<T> {
     }
 
     fn get_capacity_for_index(index: usize) -> usize {
-        1 << (index+3)
+        1 << (index + 3)
     }
 }
 
-impl <T: Unsticky> StickyVec<T> {
+impl<T: Unsticky> StickyVec<T> {
     pub fn remove(&mut self, index: usize) -> T::UnstuckType {
         assert!(index < self.len);
 
@@ -117,10 +118,13 @@ impl <T: Unsticky> StickyVec<T> {
     }
 }
 
-impl <T> Drop for StickyVec<T> {
+impl<T> Drop for StickyVec<T> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(self.len == 0, "StickyVec must be drained before it can be dropped");
+            assert!(
+                self.len == 0,
+                "StickyVec must be drained before it can be dropped"
+            );
         }
     }
 }

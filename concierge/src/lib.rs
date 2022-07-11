@@ -6,8 +6,8 @@ use binary::slice_serialization::SliceSerializable;
 use net::{
     network_buffer::WriteBuffer,
     network_handler::{
-        Connection, ConnectionService, NetworkManagerService, NewConnectionAccepter,
-        UninitializedConnection, ConnectionSlab,
+        Connection, ConnectionService, ConnectionSlab, NetworkManagerService,
+        NewConnectionAccepter, UninitializedConnection,
     },
     packet_helper::PacketReadResult,
 };
@@ -17,7 +17,6 @@ use protocol::{
     status::{self, client::PingRequest, server::StatusResponse},
 };
 use rand::Rng;
-use slab::Slab;
 
 pub struct ConciergeConnection<T> {
     _phantom: PhantomData<T>,

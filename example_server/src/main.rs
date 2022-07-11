@@ -9,13 +9,13 @@ use universe::UniverseService;
 use world::World;
 use world::WorldService;
 
+mod error;
 mod player;
 mod player_connection;
+mod player_vec;
 mod proto_player;
 mod universe;
 mod world;
-mod player_vec;
-mod error;
 
 struct MyConciergeImpl {
     counter: u8,
@@ -47,21 +47,15 @@ impl ConciergeService for MyConciergeImpl {
         protoplayer: &concierge::ConciergeConnection<Self>,
     ) {
         println!("managed to get connection: {:?}", protoplayer.username);
-        let universe = universe::create_and_start(|| {
-            MyUniverseService {
-                the_world: World::new(
-                    MyWorldService {
-                        players: player_vec::PlayerVec::new(),
-                        counter: 0
-                    }
-                )
-            }
+        let universe = universe::create_and_start(|| MyUniverseService {
+            the_world: World::new(MyWorldService {
+                players: player_vec::PlayerVec::new(),
+                counter: 0,
+            }),
         });
         universe.send(player_connection).unwrap();
     }
 }
-
-
 
 fn main() {
     /*let mut indices = vec!();
@@ -82,10 +76,7 @@ struct MyUniverseService {
 
 impl UniverseService for MyUniverseService {
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {
-        universe
-            .service
-            .the_world
-            .send_player_to(proto_player);
+        universe.service.the_world.send_player_to(proto_player);
     }
 
     fn initialize(universe: &Universe<Self>) {
@@ -108,7 +99,7 @@ impl UniverseService for MyUniverseService {
 
 struct MyWorldService {
     players: PlayerVec<MyPlayerService>,
-    counter: usize
+    counter: usize,
 }
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
@@ -120,7 +111,11 @@ impl WorldService for MyWorldService {
         proto_player.hardcore = true;
 
         // make player from proto_player
-        world.service.players.add(proto_player, MyPlayerService {}).unwrap();
+        world
+            .service
+            .players
+            .add(proto_player, MyPlayerService {})
+            .unwrap();
     }
 
     fn initialize(world: &World<Self>) {
