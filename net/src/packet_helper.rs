@@ -53,10 +53,6 @@ where
         packet.get_packet_id(),
         packet.get_packet_id_as_u8()
     );
-    /*println!(
-        "buffer: {:?}",
-        &bytes[..4 + bytes_written]
-    );*/
 
     unsafe {
         write_buffer.advance(4 + bytes_written);

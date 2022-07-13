@@ -14,6 +14,7 @@ identify_packets! {
     AcceptTeleportation = 0x00,
     ClientInformation<'_> = 0x07,
     CustomPayload<'_> = 0x0c,
+    KeepAlive = 0x11,
     MovePlayerPos = 0x13,
     MovePlayerPosRot = 0x14,
     MovePlayerRot = 0x15,
@@ -46,6 +47,12 @@ slice_serializable_composite! {
     CustomPayload<'a>,
     channel: &'a str as SizedString,
     data: &'a [u8] as GreedyBlob
+}
+
+// Keep Alive
+slice_serializable_composite! {
+    KeepAlive,
+    id: u64 as BigEndian
 }
 
 // Move Player

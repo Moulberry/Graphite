@@ -7,6 +7,7 @@ use num_enum::TryFromPrimitive;
 identify_packets! {
     PacketId,
     CustomPayload<'_> = 0x16,
+    KeepAlive = 0x20,
     LevelChunkWithLight<'_> = 0x21,
     Login<'_> = 0x25,
     SetPlayerPosition = 0x39,
@@ -18,6 +19,12 @@ slice_serializable_composite! {
     CustomPayload<'a>,
     channel: &'a str as SizedString,
     data: &'a [u8] as GreedyBlob
+}
+
+// Keep Alive
+slice_serializable_composite! {
+    KeepAlive,
+    id: u64 as BigEndian
 }
 
 // LevelChunkWithLight

@@ -5,7 +5,7 @@ use protocol::play::server::{
 };
 
 use crate::{
-    player::proto_player::ProtoPlayer,
+    player::{proto_player::ProtoPlayer, Player, PlayerService},
     position::Position,
     universe::{Universe, UniverseService},
 };
@@ -75,6 +75,32 @@ impl<W: WorldService> World<W> {
         W::handle_player_join(self, proto_player);
     }
 
+    pub(crate) fn update_view_position<P: PlayerService>(
+        &self,
+        player: &mut Player<P>,
+        position: Position,
+    ) -> anyhow::Result<ChunkViewPosition> {
+        // todo: send new chunks & entities
+
+        let chunk_view_position = ChunkViewPosition {
+            x: (position.coord.x / 16.0) as i32,
+            z: (position.coord.z / 16.0) as i32,
+        };
+
+        if player.chunk_view_position.x == chunk_view_position.x && player.chunk_view_position.z == chunk_view_position.z {
+            return Ok(player.chunk_view_position);
+        }
+
+        // Update view position
+        let update_view_position_packet = SetChunkCacheCenter {
+            chunk_x: chunk_view_position.x,
+            chunk_z: chunk_view_position.z,
+        };
+        player.write_packet(&update_view_position_packet)?;
+
+        Ok(chunk_view_position)
+    }
+
     pub(crate) fn initialize_view_position(
         &mut self,
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
@@ -137,8 +163,7 @@ impl<W: WorldService> World<W> {
                         block_light_entries: vec![],
                     },
                 };
-                net::packet_helper::write_packet(&mut proto_player.write_buffer, &chunk_packet)
-                    .unwrap();
+                net::packet_helper::write_packet(&mut proto_player.write_buffer, &chunk_packet)?;
             }
         }
 
@@ -155,14 +180,13 @@ impl<W: WorldService> World<W> {
         net::packet_helper::write_packet(
             &mut proto_player.write_buffer,
             &update_view_position_packet,
-        )
-        .unwrap();
+        )?;
 
         // Position
         let position_packet = SetPlayerPosition {
-            x: position.coord.x,
-            y: position.coord.y,
-            z: position.coord.z,
+            x: position.coord.x as _,
+            y: position.coord.y as _,
+            z: position.coord.z as _,
             yaw: position.rot.yaw,
             pitch: position.rot.pitch,
             relative_arguments: 0,

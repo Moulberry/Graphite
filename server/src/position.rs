@@ -1,22 +1,68 @@
 use std::fmt::Debug;
 
-#[derive(Debug, Clone, Copy)]
+// Coordinate (x, y, z)
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Coordinate {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
+impl Vec3f for Coordinate {
+    #[inline(always)]
+    fn x(self) -> f32 {
+        self.x
+    }
+
+    #[inline(always)]
+    fn y(self) -> f32 {
+        self.y
+    }
+
+    #[inline(always)]
+    fn z(self) -> f32 {
+        self.z
+    }
+}
+
+// Rotation (yaw, pitch)
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Rotation {
     pub yaw: f32,
     pub pitch: f32,
 }
 
-#[derive(Clone, Copy)]
+impl Rotation {
+    pub fn is_diff_u8(self, other: Rotation) -> bool {
+        self.yaw as u8 != other.yaw as u8 || self.pitch as u8 != other.pitch as u8
+    }
+}
+
+// Position (x, y, z, yaw, pitch)
+
+#[derive(Clone, Copy, PartialEq)]
 pub struct Position {
     pub coord: Coordinate,
     pub rot: Rotation,
+}
+
+impl Vec3f for Position {
+    #[inline(always)]
+    fn x(self) -> f32 {
+        self.coord.x
+    }
+
+    #[inline(always)]
+    fn y(self) -> f32 {
+        self.coord.y
+    }
+
+    #[inline(always)]
+    fn z(self) -> f32 {
+        self.coord.z
+    }
 }
 
 impl Debug for Position {
@@ -28,5 +74,27 @@ impl Debug for Position {
             .field("yaw", &self.rot.yaw)
             .field("pitch", &self.rot.pitch)
             .finish()
+    }
+}
+
+// Trait
+
+pub trait Vec3f
+where
+    Self: Sized + Copy,
+{
+    fn x(self) -> f32;
+    fn y(self) -> f32;
+    fn z(self) -> f32;
+
+    fn distance_sq(self, other: impl Vec3f) -> f32 {
+        let x = other.x() - self.x();
+        let y = other.y() - self.y();
+        let z = other.z() - self.z();
+        x * x + y * y + z * z
+    }
+
+    fn distance(self, other: impl Vec3f) -> f32 {
+        self.distance_sq(other).sqrt()
     }
 }

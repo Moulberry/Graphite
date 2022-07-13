@@ -1,9 +1,9 @@
 use anyhow::bail;
 use protocol::{
-    play::client::{
+    play::{client::{
         self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
         MovePlayerPosRot, MovePlayerRot, PlayerAction,
-    },
+    }, server},
     types::Action,
 };
 use queues::IsQueue;
@@ -18,11 +18,11 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             return Ok(());
         }
 
-        self.position.coord.x = packet.x;
-        self.position.coord.y = packet.y;
-        self.position.coord.z = packet.z;
-        self.position.rot.yaw = packet.yaw;
-        self.position.rot.pitch = packet.pitch;
+        self.client_position.coord.x = packet.x as _;
+        self.client_position.coord.y = packet.y as _;
+        self.client_position.coord.z = packet.z as _;
+        self.client_position.rot.yaw = packet.yaw;
+        self.client_position.rot.pitch = packet.pitch;
 
         // todo: check for moving too fast
 
@@ -34,9 +34,9 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             return Ok(());
         }
 
-        self.position.coord.x = packet.x;
-        self.position.coord.y = packet.y;
-        self.position.coord.z = packet.z;
+        self.client_position.coord.x = packet.x as _;
+        self.client_position.coord.y = packet.y as _;
+        self.client_position.coord.z = packet.z as _;
 
         // todo: check for moving too fast
 
@@ -48,8 +48,8 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             return Ok(());
         }
 
-        self.position.rot.yaw = packet.yaw;
-        self.position.rot.pitch = packet.pitch;
+        self.client_position.rot.yaw = packet.yaw;
+        self.client_position.rot.pitch = packet.pitch;
 
         Ok(())
     }
@@ -103,6 +103,14 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             Action::DropItem => todo!(),
             Action::ReleaseUseItem => todo!(),
             Action::SwapItemWithOffHand => todo!(),
+        }
+
+        Ok(())
+    }
+
+    fn handle_keep_alive(&mut self, packet: client::KeepAlive) -> anyhow::Result<()> {
+        if packet.id == self.current_keep_alive {
+            self.current_keep_alive = 0;
         }
 
         Ok(())
