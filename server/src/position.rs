@@ -1,24 +1,22 @@
 use std::fmt::Debug;
 
-
-
 #[derive(Debug, Clone, Copy)]
 pub struct Coordinate {
     pub x: f64,
     pub y: f64,
-    pub z: f64
+    pub z: f64,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Rotation {
     pub yaw: f32,
-    pub pitch: f32
+    pub pitch: f32,
 }
 
 #[derive(Clone, Copy)]
 pub struct Position {
     pub coord: Coordinate,
-    pub rot: Rotation
+    pub rot: Rotation,
 }
 
 impl Debug for Position {

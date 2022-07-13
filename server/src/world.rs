@@ -5,7 +5,9 @@ use protocol::play::server::{
 };
 
 use crate::{
-    universe::{Universe, UniverseService}, position::Position, player::proto_player::ProtoPlayer,
+    player::proto_player::ProtoPlayer,
+    position::Position,
+    universe::{Universe, UniverseService},
 };
 
 // user defined world service trait
@@ -35,7 +37,7 @@ pub struct World<W: WorldService> {
 #[derive(Debug, Clone, Copy)]
 pub struct ChunkViewPosition {
     x: i32,
-    z: i32
+    z: i32,
 }
 
 // graphite world impl
@@ -76,7 +78,7 @@ impl<W: WorldService> World<W> {
     pub(crate) fn initialize_view_position(
         &mut self,
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
-        position: Position
+        position: Position,
     ) -> anyhow::Result<ChunkViewPosition> {
         let mut heightmap_nbt = quartz_nbt::NbtCompound::new();
         let mut motion_blocking_nbt = quartz_nbt::NbtList::new();
@@ -140,7 +142,7 @@ impl<W: WorldService> World<W> {
             }
         }
 
-        let chunk_view_position = ChunkViewPosition{
+        let chunk_view_position = ChunkViewPosition {
             x: (position.coord.x / 16.0) as i32,
             z: (position.coord.z / 16.0) as i32,
         };

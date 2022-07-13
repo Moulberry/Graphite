@@ -1,11 +1,11 @@
 use sticky::Unsticky;
 
-use crate::{
-    error::UninitializedError,
-    world::World, position::Position,
-};
+use crate::{error::UninitializedError, position::Position, world::World};
 
-use super::{player::{PlayerService, Player}, proto_player::ProtoPlayer};
+use super::{
+    player::{Player, PlayerService},
+    proto_player::ProtoPlayer,
+};
 
 pub struct PlayerVec<P: PlayerService> {
     players: sticky::StickyVec<Player<P>>,

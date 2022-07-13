@@ -1,12 +1,12 @@
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
-use server::player::PlayerService;
 use server::player::player_vec::PlayerVec;
+use server::player::proto_player::ProtoPlayer;
+use server::player::PlayerService;
 use server::position::Coordinate;
 use server::position::Position;
 use server::position::Rotation;
-use server::player::proto_player::ProtoPlayer;
 use server::universe::Universe;
 use server::universe::UniverseService;
 use server::world::World;
@@ -100,17 +100,21 @@ impl WorldService for MyWorldService {
         world
             .service
             .players
-            .add(proto_player, MyPlayerService {}, Position {
-                coord: Coordinate {
-                    x: 0.0,
-                    y: 500.0,
-                    z: 0.0
+            .add(
+                proto_player,
+                MyPlayerService {},
+                Position {
+                    coord: Coordinate {
+                        x: 0.0,
+                        y: 500.0,
+                        z: 0.0,
+                    },
+                    rot: Rotation {
+                        yaw: 0.0,
+                        pitch: 0.0,
+                    },
                 },
-                rot: Rotation {
-                    yaw: 0.0,
-                    pitch: 0.0
-                },
-            })
+            )
             .unwrap();
     }
 

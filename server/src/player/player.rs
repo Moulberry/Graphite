@@ -1,17 +1,20 @@
 use anyhow::bail;
-use binary::slice_serialization::{self, SliceSerializable};
 use net::{network_buffer::WriteBuffer, packet_helper::PacketReadResult};
-use protocol::{play::client::{self, PacketHandler, MovePlayerPosRot, MovePlayerPos, MovePlayerRot, AcceptTeleportation, ClientInformation}, types::{ChatVisibility, ArmPosition}};
-use queues::{Queue, Buffer, IsQueue};
+use protocol::play::client::PacketHandler;
+use queues::Buffer;
 use sticky::Unsticky;
 use thiserror::Error;
 
 use crate::{
+    position::Position,
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, World, WorldService}, position::Position,
+    world::{ChunkViewPosition, World, WorldService},
 };
 
-use super::{player_connection::ConnectionReference, proto_player::ProtoPlayer, player_settings::PlayerSettings};
+use super::{
+    player_connection::ConnectionReference, player_settings::PlayerSettings,
+    proto_player::ProtoPlayer,
+};
 
 // user defined player service trait
 
@@ -28,52 +31,7 @@ where
 
     type UniverseServiceType: UniverseService;
     type WorldServiceType: WorldService<UniverseServiceType = Self::UniverseServiceType>;
-
-    // fn handle_event_xyz(event: Event) {}
 }
-
-/*pub trait PlayerEventHandle {
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {}
-}
-
-impl PlayerEventHandle for MyPlayerService {
-    fn handle_event_block_break(event: &mut BlockBreakEvent) {
-        // ...
-    }
-}
-
-struct GamePlayer;
-
-struct SpectatingPlayer;
-
-impl BlockBreak for SpectatingPlayer {
-    event.cancel();
-}
-
-struct BlockBreakEvent;
-
-fn break_block() {
-    if !can_break_block {
-        return;
-    }
-
-    // player.handle_event_xyz(BlockBreakEvent);
-    let vec: Vec<Box<dyn BlockBreakEvent>> = Default::default();
-    player.handle_event(BlockBreakEvent);
-
-    setblock to air
-    remove the old block entity
-    // ...
-}*/
 
 // graphite player
 
@@ -85,12 +43,12 @@ pub struct Player<P: PlayerService> {
 
     world: *mut World<P::WorldServiceType>,
     entity_id: EntityId,
-    settings: PlayerSettings,
+    pub settings: PlayerSettings,
 
-    position: Position,
-    view_position: ChunkViewPosition,
-    teleport_id_timer: u8,
-    waiting_teleportation_id: Buffer<i32>,
+    pub position: Position,
+    pub(crate) view_position: ChunkViewPosition,
+    pub(crate) teleport_id_timer: u8,
+    pub(crate) waiting_teleportation_id: Buffer<i32>,
 }
 
 // graphite player impl
@@ -129,12 +87,11 @@ impl<P: PlayerService> Player<P> {
         self.write_buffer.reset();
         self.write_buffer.tick_and_maybe_shrink();
 
-        println!("player has position: {:?}", self.position);
-
+        // Check teleport timer
         if self.teleport_id_timer > 0 {
             self.teleport_id_timer += 1;
 
-            if self.teleport_id_timer == 20 {
+            if self.teleport_id_timer >= 20 {
                 bail!("player sent incorrect teleport id and failed to rectify within time limit");
             }
         }
@@ -177,79 +134,9 @@ impl<P: PlayerService> Player<P> {
             player.connection.forget();
         }
 
-        todo!();
         // todo: remove self from PlayerList containing this
         // todo: notify world/universe of disconnect
-    }
-}
-
-impl<P: PlayerService> client::PacketHandler for Player<P> {
-    const DEBUG: bool = true;
-
-    fn handle_move_player_pos_rot(&mut self, packet: MovePlayerPosRot) -> anyhow::Result<()> {
-        if self.waiting_teleportation_id.size() > 0 {
-            return Ok(());
-        }
-
-        self.position.coord.x = packet.x;
-        self.position.coord.y = packet.y;
-        self.position.coord.z = packet.z;
-        self.position.rot.yaw = packet.yaw;
-        self.position.rot.pitch = packet.pitch;
-
-        // todo: check for moving too fast
-
-        Ok(())
-    }
-
-    fn handle_move_player_pos(&mut self, packet: MovePlayerPos) -> anyhow::Result<()> {
-        if self.waiting_teleportation_id.size() > 0 {
-            return Ok(());
-        }
-
-        self.position.coord.x = packet.x;
-        self.position.coord.y = packet.y;
-        self.position.coord.z = packet.z;
-
-        // todo: check for moving too fast
-
-        Ok(())
-    }
-
-    fn handle_move_player_rot(&mut self, packet: MovePlayerRot) -> anyhow::Result<()> {
-        if self.waiting_teleportation_id.size() > 0 {
-            return Ok(());
-        }
-
-        self.position.rot.yaw = packet.yaw;
-        self.position.rot.pitch = packet.pitch;
-
-        Ok(())
-    }
-
-    fn handle_accept_teleportation(&mut self, packet: AcceptTeleportation) -> anyhow::Result<()> {
-        // todo: make sure this is working correctly
-
-        if let Ok(teleport_id) = self.waiting_teleportation_id.peek() {
-            if teleport_id == packet.id {
-                // Pop the teleport ID from the queue
-                self.waiting_teleportation_id.remove().unwrap();
-
-                // Reset the timer, the player has confirmed the teleport
-                self.teleport_id_timer = 0;
-            } else {
-                // Wrong teleport ID! But lets not kick the player just yet...
-                // Start a timer, if they don't send the correct ID within 20 ticks,
-                // they will be kicked then.
-                self.teleport_id_timer = 1;
-            }
-        }
-        Ok(())
-    }
-
-    fn handle_client_information(&mut self, packet: ClientInformation) -> anyhow::Result<()> {
-        self.settings.update(packet);
-        Ok(())
+        todo!();
     }
 }
 

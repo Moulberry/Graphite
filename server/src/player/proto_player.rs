@@ -1,13 +1,17 @@
 use crate::{
+    position::Position,
     universe::{EntityId, Universe, UniverseService},
-    world::World, position::Position,
+    world::World,
 };
 use net::{
     network_buffer::WriteBuffer,
     network_handler::{Connection, ConnectionSlab},
 };
 
-use super::{player_connection::ConnectionReference, player::{PlayerService, Player}};
+use super::{
+    player::{Player, PlayerService},
+    player_connection::ConnectionReference,
+};
 
 // Proto player
 
