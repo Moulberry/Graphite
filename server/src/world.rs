@@ -1,11 +1,11 @@
 use bytes::BufMut;
 use protocol::play::server::{
-    ChunkBlockData, ChunkLightData, LevelChunkWithLight, Login, PlayerPosition, SetChunkCacheCenter,
+    ChunkBlockData, ChunkLightData, LevelChunkWithLight, Login, SetChunkCacheCenter,
+    SetPlayerPosition,
 };
 
 use crate::{
-    proto_player::ProtoPlayer,
-    universe::{Universe, UniverseService},
+    universe::{Universe, UniverseService}, position::Position, player::proto_player::ProtoPlayer,
 };
 
 // user defined world service trait
@@ -32,7 +32,11 @@ pub struct World<W: WorldService> {
     universe: *mut Universe<W::UniverseServiceType>,
 }
 
-pub struct ChunkViewPosition(i32, i32);
+#[derive(Debug, Clone, Copy)]
+pub struct ChunkViewPosition {
+    x: i32,
+    z: i32
+}
 
 // graphite world impl
 
@@ -41,7 +45,7 @@ impl<W: WorldService> World<W> {
         unsafe { self.universe.as_mut().unwrap() }
     }
 
-    pub(crate) fn new(service: W) -> Self {
+    pub fn new(service: W) -> Self {
         Self {
             service,
             universe: std::ptr::null_mut(),
@@ -72,9 +76,8 @@ impl<W: WorldService> World<W> {
     pub(crate) fn initialize_view_position(
         &mut self,
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
+        position: Position
     ) -> anyhow::Result<ChunkViewPosition> {
-        let spawn_point: (f64, f64, f64) = (0.0, 500.0, 0.0);
-
         let mut heightmap_nbt = quartz_nbt::NbtCompound::new();
         let mut motion_blocking_nbt = quartz_nbt::NbtList::new();
         for _ in 0..256 {
@@ -137,10 +140,15 @@ impl<W: WorldService> World<W> {
             }
         }
 
+        let chunk_view_position = ChunkViewPosition{
+            x: (position.coord.x / 16.0) as i32,
+            z: (position.coord.z / 16.0) as i32,
+        };
+
         // Update view position
         let update_view_position_packet = SetChunkCacheCenter {
-            chunk_x: 0,
-            chunk_z: 0,
+            chunk_x: chunk_view_position.x,
+            chunk_z: chunk_view_position.z,
         };
         net::packet_helper::write_packet(
             &mut proto_player.write_buffer,
@@ -149,22 +157,19 @@ impl<W: WorldService> World<W> {
         .unwrap();
 
         // Position
-        let position_packet = PlayerPosition {
-            x: 0.0,
-            y: 500.0,
-            z: 0.0,
-            yaw: 15.0,
-            pitch: 0.0,
+        let position_packet = SetPlayerPosition {
+            x: position.coord.x,
+            y: position.coord.y,
+            z: position.coord.z,
+            yaw: position.rot.yaw,
+            pitch: position.rot.pitch,
             relative_arguments: 0,
             id: 0,
             dismount_vehicle: false,
         };
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &position_packet)?;
 
-        Ok(ChunkViewPosition(
-            (spawn_point.0 / 16.0) as i32,
-            (spawn_point.2 / 16.0) as i32,
-        ))
+        Ok(chunk_view_position)
     }
 
     pub(crate) fn write_game_join_packet(

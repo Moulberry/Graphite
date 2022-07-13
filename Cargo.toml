@@ -4,6 +4,7 @@ members = [
     "net",
     "protocol",
     "concierge",
+    "server",
     "example_server",
     "sticky"
 ]

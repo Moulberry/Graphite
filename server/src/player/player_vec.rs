@@ -2,10 +2,10 @@ use sticky::Unsticky;
 
 use crate::{
     error::UninitializedError,
-    player::{Player, PlayerService},
-    proto_player::ProtoPlayer,
-    world::World,
+    world::World, position::Position,
 };
+
+use super::{player::{PlayerService, Player}, proto_player::ProtoPlayer};
 
 pub struct PlayerVec<P: PlayerService> {
     players: sticky::StickyVec<Player<P>>,
@@ -38,9 +38,10 @@ impl<P: PlayerService> PlayerVec<P> {
         &mut self,
         proto_player: ProtoPlayer<P::UniverseServiceType>,
         service: P,
+        position: Position,
     ) -> anyhow::Result<()> {
         let world = self.get_world()?;
-        let player = proto_player.create_player(service, world)?;
+        let player = proto_player.create_player(service, world, position)?;
         self.players.insert(player);
         Ok(())
     }
@@ -54,6 +55,6 @@ impl<P: PlayerService> PlayerVec<P> {
     }
 
     pub fn tick(&mut self) {
-        // todo: retain thing here?
+        self.players.retain_mut(|player| player.tick().is_ok());
     }
 }

@@ -1,0 +1,20 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.57"
+bytes = "1.1.0"
+rand = "0.8.5"
+thiserror = "1.0.31"
+slab = "0.4.6"
+queues = "1.1.0"
+io-uring = { version = "0.5.2", features = ["unstable"] }
+quartz_nbt = "0.2.6"
+
+binary = { path = "../binary" }
+net = { path = "../net" }
+protocol = { path = "../protocol" }
+concierge = { path = "../concierge" }
+sticky = { path = "../sticky" }

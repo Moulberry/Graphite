@@ -1,21 +1,16 @@
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
-use player::PlayerService;
-use player_vec::PlayerVec;
-use proto_player::ProtoPlayer;
-use universe::Universe;
-use universe::UniverseService;
-use world::World;
-use world::WorldService;
-
-mod error;
-mod player;
-mod player_connection;
-mod player_vec;
-mod proto_player;
-mod universe;
-mod world;
+use server::player::PlayerService;
+use server::player::player_vec::PlayerVec;
+use server::position::Coordinate;
+use server::position::Position;
+use server::position::Rotation;
+use server::player::proto_player::ProtoPlayer;
+use server::universe::Universe;
+use server::universe::UniverseService;
+use server::world::World;
+use server::world::WorldService;
 
 struct MyConciergeImpl {
     counter: u8,
@@ -47,10 +42,9 @@ impl ConciergeService for MyConciergeImpl {
         protoplayer: &concierge::ConciergeConnection<Self>,
     ) {
         println!("managed to get connection: {:?}", protoplayer.username);
-        let universe = universe::create_and_start(|| MyUniverseService {
+        let universe = server::universe::create_and_start(|| MyUniverseService {
             the_world: World::new(MyWorldService {
-                players: player_vec::PlayerVec::new(),
-                counter: 0,
+                players: PlayerVec::new(),
             }),
         });
         universe.send(player_connection).unwrap();
@@ -58,13 +52,6 @@ impl ConciergeService for MyConciergeImpl {
 }
 
 fn main() {
-    /*let mut indices = vec!();
-    for i in 0..1000 {
-        let index = rand::thread_rng().next_u64() as usize % (1000 - i);
-        indices.push(index);
-    }
-    println!("{:?}", indices);*/
-
     Concierge::bind("127.0.0.1:25565", MyConciergeImpl { counter: 0 }).unwrap();
 }
 
@@ -99,7 +86,6 @@ impl UniverseService for MyUniverseService {
 
 struct MyWorldService {
     players: PlayerVec<MyPlayerService>,
-    counter: usize,
 }
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
@@ -114,7 +100,17 @@ impl WorldService for MyWorldService {
         world
             .service
             .players
-            .add(proto_player, MyPlayerService {})
+            .add(proto_player, MyPlayerService {}, Position {
+                coord: Coordinate {
+                    x: 0.0,
+                    y: 500.0,
+                    z: 0.0
+                },
+                rot: Rotation {
+                    yaw: 0.0,
+                    pitch: 0.0
+                },
+            })
             .unwrap();
     }
 
@@ -123,13 +119,6 @@ impl WorldService for MyWorldService {
     }
 
     fn tick(world: &mut World<Self>) {
-        if world.service.players.len() > 0 {
-            world.service.counter += 1;
-            if world.service.counter > 100 {
-                world.service.counter = 0;
-                world.service.players.remove(0);
-            }
-        }
         world.service.players.tick();
     }
 

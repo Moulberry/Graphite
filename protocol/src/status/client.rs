@@ -2,7 +2,7 @@ use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::IdentifiedPacket;
-use derive_try_from_primitive::TryFromPrimitive;
+use num_enum::TryFromPrimitive;
 
 identify_packets! {
     PacketId,

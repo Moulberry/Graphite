@@ -1,16 +1,15 @@
 use anyhow::bail;
 use net::network_buffer::WriteBuffer;
 use net::network_handler::{
-    ConnectionSlab, NetworkManagerService, NewConnectionAccepter,
-    UninitializedConnection,
+    ConnectionSlab, NetworkManagerService, NewConnectionAccepter, UninitializedConnection,
 };
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::{sync::mpsc::Sender, time::Duration};
 
-use crate::proto_player::{ConnectionReference, ProtoPlayer};
 use protocol::play::server::CustomPayload;
 
-use crate::player_connection::PlayerConnection;
+use crate::player::player_connection::{ConnectionReference, PlayerConnection};
+use crate::player::proto_player::ProtoPlayer;
 
 // user defined universe service trait
 

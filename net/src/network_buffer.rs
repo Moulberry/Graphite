@@ -1,12 +1,45 @@
-#[derive(Default)]
+const MIN_SIZE: usize = 1024;
 pub struct WriteBuffer {
     vec: Vec<u8>,
     write_index: usize,
+    shrink_counter: usize,
+    utilization: usize,
+}
+
+impl Default for WriteBuffer {
+    fn default() -> Self {
+        Self {
+            vec: Vec::with_capacity(MIN_SIZE),
+            write_index: 0,
+            utilization: 0,
+            shrink_counter: 0,
+        }
+    }
 }
 
 impl WriteBuffer {
     pub fn new() -> WriteBuffer {
         Default::default()
+    }
+
+    pub fn tick_and_maybe_shrink(&mut self) {
+        self.shrink_counter += 1;
+
+        if self.shrink_counter > 100 {
+            self.shrink_counter = 0;
+
+            self.vec.shrink_to(self.utilization);
+            self.utilization = MIN_SIZE;
+        }
+    }
+
+    pub fn reset(&mut self) {
+        let current_utilization = self.write_index * 2;
+        if current_utilization > self.utilization {
+            self.utilization = current_utilization;
+        }
+
+        self.write_index = 0;
     }
 
     pub fn get_written(&self) -> &[u8] {

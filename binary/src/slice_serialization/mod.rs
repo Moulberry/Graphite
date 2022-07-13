@@ -1,23 +1,27 @@
 use thiserror::Error;
 
-pub mod option;
+mod option;
 
-pub mod sized_array;
+mod sized_array;
 pub use sized_array::SizedArray;
 
-pub mod single_byte;
+mod single_byte;
 pub use single_byte::Single;
 
-pub mod varint;
+mod varint;
 pub use varint::VarInt;
 
-pub mod blob;
+mod blob;
 pub use blob::GreedyBlob;
 pub use blob::SizedBlob;
 pub use blob::SizedString;
 
-pub mod primitive;
+mod primitive;
 pub use primitive::BigEndian;
+pub use primitive::LittleEndian;
+
+mod from;
+pub use from::AttemptFrom;
 
 #[derive(Error, Debug)]
 pub enum BinaryReadError {

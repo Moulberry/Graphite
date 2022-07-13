@@ -95,7 +95,8 @@ impl AcceptCount {
 #[allow(type_alias_bounds)]
 pub type ConnectionSlab<N: NetworkManagerService> = Slab<(Connection<N>, N::ConnectionServiceType)>;
 #[allow(type_alias_bounds)]
-type FnConnectionRedirect<N: NetworkManagerService> = Box<dyn FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType)>;
+type FnConnectionRedirect<N: NetworkManagerService> =
+    Box<dyn FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType)>;
 
 pub struct NewConnectionAccepter<N: NetworkManagerService> {
     network_manager: *const NetworkManager<N>,
@@ -491,13 +492,14 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                         write_buffer_index,
                     } => {
                         // Write has completed, we can drop the associated buffer
-                        let (connection, _) =
-                            self.connections.get_mut(connection_index as usize).unwrap();
-
-                        connection
-                            .write_buffers
-                            .try_remove(write_buffer_index as usize)
-                            .unwrap();
+                        if let Some((connection, _)) =
+                            self.connections.get_mut(connection_index as usize)
+                        {
+                            connection
+                                .write_buffers
+                                .try_remove(write_buffer_index as usize)
+                                .unwrap();
+                        }
                     }
                     UserData::TickTimeout => {
                         // Finished waiting for our tick

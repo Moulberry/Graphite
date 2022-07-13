@@ -1,7 +1,12 @@
+use std::{
+    rc::Rc,
+    sync::atomic::{AtomicU16, AtomicUsize, Ordering},
+};
+
 use crate::{unsticky::Unsticky, vec::StickyVec};
 
 #[test]
-fn check_insert() {
+fn insert() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
@@ -14,7 +19,7 @@ fn check_insert() {
 }
 
 #[test]
-fn check_get_bucket_index() {
+fn get_bucket_index() {
     for i in 0..7 {
         assert_eq!(StickyVec::<MyStickyType>::get_bucket_index(i), 0);
     }
@@ -44,7 +49,7 @@ unsafe impl Unsticky for MyStickyType {
 }
 
 #[test]
-fn check_remove_descending() {
+fn remove_descending() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
@@ -61,7 +66,7 @@ fn check_remove_descending() {
 }
 
 #[test]
-fn check_remove_ascending() {
+fn remove_ascending() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
@@ -78,7 +83,7 @@ fn check_remove_ascending() {
 }
 
 #[test]
-fn check_remove_random() {
+fn remove_random() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
@@ -145,4 +150,72 @@ fn check_remove_random() {
     }
 
     assert_eq!(sticky_vec.len(), 0);
+}
+
+#[derive(Debug)]
+struct PanicOnModuloDrop {
+    original_index: usize,
+    current_index: usize,
+    should_be_dropped: bool,
+    drop_counter: Rc<AtomicUsize>,
+}
+impl Drop for PanicOnModuloDrop {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            if self.should_be_dropped {
+                self.drop_counter.fetch_add(1, Ordering::Relaxed);
+            } else {
+                panic!("dropped: {:?}", self);
+            }
+        }
+    }
+}
+unsafe impl Unsticky for PanicOnModuloDrop {
+    type UnstuckType = Self;
+
+    fn update_pointer(&mut self, index: usize) {
+        self.current_index = index;
+    }
+
+    fn unstick(self) -> Self::UnstuckType {
+        self
+    }
+}
+
+#[test]
+fn retain_modulo() {
+    let count = 1000;
+
+    for modulo in 0..20 {
+        for eq in 0..modulo {
+            let mut sticky_vec = StickyVec::new();
+
+            let drop_counter = Rc::new(AtomicUsize::new(0));
+
+            for i in 0..count {
+                sticky_vec.insert(PanicOnModuloDrop {
+                    original_index: i,
+                    current_index: i,
+                    should_be_dropped: i % modulo != eq,
+                    drop_counter: drop_counter.clone(),
+                });
+            }
+
+            assert_eq!(sticky_vec.len(), count);
+
+            sticky_vec.retain(|e| e.original_index % modulo == eq);
+
+            assert_eq!(
+                sticky_vec.len() + drop_counter.load(std::sync::atomic::Ordering::Relaxed),
+                count
+            );
+
+            sticky_vec.enumerate_mut(|index, e| {
+                assert_eq!(e.original_index % modulo, eq);
+                assert_eq!(e.current_index, index);
+            });
+
+            std::mem::forget(sticky_vec); // don't drop contents
+        }
+    }
 }

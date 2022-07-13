@@ -1,6 +1,7 @@
 use super::*;
 
 pub enum BigEndian {}
+pub enum LittleEndian {}
 
 macro_rules! for_primitive {
     ($typ:tt, $mode:ident, $conv_from:tt, $conv_to:tt) => {
@@ -15,7 +16,7 @@ macro_rules! for_primitive {
                 }
 
                 // Read value using conversion function
-                let ret = unsafe { $typ::$conv_from(*(bytes as *const _ as *const [_; SIZE])) };
+                let ret = unsafe { $typ::$conv_from(*(*bytes as *const _ as *const [_; SIZE])) };
 
                 // Advance
                 *bytes = &bytes[SIZE..];

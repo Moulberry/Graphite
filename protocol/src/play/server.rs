@@ -2,14 +2,14 @@ use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::IdentifiedPacket;
-use derive_try_from_primitive::TryFromPrimitive;
+use num_enum::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
     CustomPayload<'_> = 0x16,
     LevelChunkWithLight<'_> = 0x21,
     Login<'_> = 0x25,
-    PlayerPosition = 0x39,
+    SetPlayerPosition = 0x39,
     SetChunkCacheCenter = 0x4b
 }
 
@@ -72,7 +72,7 @@ slice_serializable_composite! {
 
 // Player Position
 slice_serializable_composite! {
-    PlayerPosition,
+    SetPlayerPosition,
     x: f64 as BigEndian,
     y: f64 as BigEndian,
     z: f64 as BigEndian,
