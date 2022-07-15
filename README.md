@@ -10,6 +10,16 @@
 - [ ] Allow multiple players to connect (and see each other)
 - [ ] Allow chunk/world modification
 
+# Subprojects
+
+- `binary`: zero-copy serialization
+- `concierge`: component that accepts new connections, handles status and login. Can be used to create proxies, servers, etc.
+- `example_server`: example server using various Graphite components
+- `net`: networking components and utilities
+- `protocol`: the minecraft protocol
+- `server`: the minecraft server. entities, chunks, players, all that good stuff
+- `sticky`: collection(s) that guarantee the memory-location of its contents
+
 # Warning
 
 Project is currently under heavy development, many things are completely non-functional
