@@ -12,13 +12,13 @@
 
 # Subprojects
 
-- `binary`: zero-copy serialization
-- `concierge`: component that accepts new connections, handles status and login. Can be used to create proxies, servers, etc.
-- `example_server`: example server using various Graphite components
-- `net`: networking components and utilities
-- `protocol`: the minecraft protocol
-- `server`: the minecraft server. entities, chunks, players, all that good stuff
-- `sticky`: collection(s) that guarantee the memory-location of its contents
+- `binary`: zero-copy serialization.
+- `concierge`: component that accepts new connections, handles status and login. can be used to create proxies, servers, etc.
+- `example_server`: example server using various Graphite components.
+- `net`: networking components and utilities.
+- `protocol`: the minecraft protocol.
+- `server`: the minecraft server. entities, chunks, players, all that good stuff.
+- `sticky`: collection(s) that guarantee the memory-location of its contents.
 
 # Warning
 
