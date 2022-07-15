@@ -16,8 +16,8 @@ Project is currently under heavy development, many things are completely non-fun
 
 # How to run the example server
 
-!!! Currently Graphite only supports modern versions of Linux with io_uring !!!
-(An alternative network backend will be available eventually, but is not a priority)
+!!! Currently Graphite only supports modern versions of Linux with io_uring !!!  
+(An alternative network backend will be available eventually, but is not a priority)  
 
 ```
 $ cargo run --bin example_server
