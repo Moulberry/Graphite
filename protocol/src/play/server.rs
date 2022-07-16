@@ -1,17 +1,27 @@
 use binary::slice_serialization::*;
 
 use crate::identify_packets;
+use crate::types::CommandNode;
 use crate::IdentifiedPacket;
 use num_enum::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
+    Commands = 0x0f,
     CustomPayload<'_> = 0x16,
     KeepAlive = 0x20,
     LevelChunkWithLight<'_> = 0x21,
     Login<'_> = 0x25,
     SetPlayerPosition = 0x39,
     SetChunkCacheCenter = 0x4b
+}
+
+// Commands
+
+slice_serializable_composite! {
+    Commands,
+    nodes: Vec<CommandNode> as SizedArray<CommandNode>,
+    root_index: i32 as VarInt
 }
 
 // Custom Payload

@@ -35,6 +35,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "bytemuck"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c53dfa917ec274df8ed3c572698f381a24eef2efba9492d797301b72b6db408a"
+
+[[package]]
 name = "byteorder"
 version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -59,16 +65,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "command"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "bytes",
+ "command_derive",
+ "maplit",
+ "protocol",
+ "thiserror",
+]
+
+[[package]]
+name = "command_derive"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "thiserror",
+]
+
+[[package]]
 name = "concierge"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "binary",
- "bytes",
  "io-uring",
  "net",
  "protocol",
- "quartz_nbt",
  "rand",
  "slab",
 ]
@@ -86,6 +114,7 @@ dependencies = [
 name = "example_server"
 version = "0.1.0"
 dependencies = [
+ "command",
  "concierge",
  "net",
  "server",
@@ -129,6 +158,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
+name = "maplit"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
+
+[[package]]
 name = "memoffset"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -152,7 +187,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "binary",
- "bytes",
  "io-uring",
  "libc",
  "nix",
@@ -317,7 +351,6 @@ dependencies = [
  "anyhow",
  "binary",
  "bytes",
- "concierge",
  "io-uring",
  "net",
  "protocol",
@@ -338,9 +371,6 @@ checksum = "eb703cfe953bccee95685111adeedb76fabe4e97549a58d16f03ea7b9367bb32"
 [[package]]
 name = "sticky"
 version = "0.1.0"
-dependencies = [
- "rand",
-]
 
 [[package]]
 name = "syn"

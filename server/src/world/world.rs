@@ -1,7 +1,10 @@
 use bytes::BufMut;
-use protocol::play::server::{
-    ChunkBlockData, ChunkLightData, LevelChunkWithLight, Login, SetChunkCacheCenter,
-    SetPlayerPosition,
+use protocol::{
+    play::server::{
+        ChunkBlockData, ChunkLightData, Commands, LevelChunkWithLight, Login, SetChunkCacheCenter,
+        SetPlayerPosition,
+    },
+    types::{CommandNode, CommandNodeParser},
 };
 
 use crate::{
@@ -10,6 +13,8 @@ use crate::{
     universe::{Universe, UniverseService},
 };
 
+use super::chunk::Chunk;
+
 // user defined world service trait
 
 pub trait WorldService
@@ -17,6 +22,8 @@ where
     Self: Sized,
 {
     type UniverseServiceType: UniverseService;
+    const CHUNKS_X: usize;
+    const CHUNKS_Z: usize;
 
     fn handle_player_join(
         world: &mut World<Self>,
@@ -32,6 +39,8 @@ where
 pub struct World<W: WorldService> {
     pub service: W,
     universe: *mut Universe<W::UniverseServiceType>,
+    chunks: Vec<Vec<Chunk>>,
+    empty_chunk: Chunk,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -48,14 +57,25 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn new(service: W) -> Self {
+        let mut chunks = Vec::with_capacity(W::CHUNKS_X);
+        for _ in 0..W::CHUNKS_X {
+            let mut chunks_z = Vec::with_capacity(W::CHUNKS_Z);
+            for _ in 0..W::CHUNKS_Z {
+                chunks_z.push(Chunk::new(false));
+            }
+            chunks.push(chunks_z);
+        }
+
         Self {
             service,
             universe: std::ptr::null_mut(),
+            chunks,
+            empty_chunk: Chunk::new(true),
         }
     }
 
     pub fn initialize(&self, universe: &Universe<W::UniverseServiceType>) {
-        // todo: justify this
+        // todo: justify this as being sound
         unsafe {
             let self_mut: *mut World<W> = self as *const _ as *mut _;
             let self_mut_ref: &mut World<W> = self_mut.as_mut().unwrap();
@@ -70,8 +90,7 @@ impl<W: WorldService> World<W> {
         W::tick(self);
     }
 
-    pub fn send_player_to(&mut self, proto_player: ProtoPlayer<W::UniverseServiceType>) {
-        // notify service
+    pub fn handle_player_join(&mut self, proto_player: ProtoPlayer<W::UniverseServiceType>) {
         W::handle_player_join(self, proto_player);
     }
 
@@ -87,8 +106,37 @@ impl<W: WorldService> World<W> {
             z: (position.coord.z / 16.0) as i32,
         };
 
-        if player.chunk_view_position.x == chunk_view_position.x && player.chunk_view_position.z == chunk_view_position.z {
+        if player.chunk_view_position.x == chunk_view_position.x
+            && player.chunk_view_position.z == chunk_view_position.z
+        {
             return Ok(player.chunk_view_position);
+        }
+
+        // Chunk
+        for x in -10..10 {
+            let chunk_x = x + chunk_view_position.x;
+
+            if chunk_x >= 0 && chunk_x < W::CHUNKS_X as _ {
+                let chunk_list = &self.chunks[chunk_x as usize];
+
+                for z in -10..10 {
+                    let chunk_z = z + chunk_view_position.z;
+
+                    if chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _ {
+                        let chunk = &chunk_list[chunk_z as usize];
+                        chunk.write(&mut player.write_buffer, chunk_x, chunk_z)?;
+                    } else {
+                        self.empty_chunk
+                            .write(&mut player.write_buffer, chunk_x, chunk_z)?;
+                    }
+                }
+            } else {
+                for z in -10..10 {
+                    let chunk_z = z + chunk_view_position.z;
+                    self.empty_chunk
+                        .write(&mut player.write_buffer, chunk_x, chunk_z)?;
+                }
+            }
         }
 
         // Update view position
@@ -124,8 +172,8 @@ impl<W: WorldService> World<W> {
         binary.shrink_to_fit();
 
         // Chunk
-        for x in -5..5 {
-            for z in -5..5 {
+        for x in -10..10 {
+            for z in -10..10 {
                 let mut chunk_data = vec![0_u8; 0];
                 for i in 0..24 {
                     chunk_data.put_i16(16 * 16 * 16); // block count
@@ -152,7 +200,7 @@ impl<W: WorldService> World<W> {
                         heightmaps: &binary,
                         data: &chunk_data,
                         block_entity_count: 0,
-                        trust_edges: false,
+                        trust_edges: true,
                     },
                     chunk_light_data: ChunkLightData {
                         sky_light_mask: vec![],
@@ -204,7 +252,7 @@ impl<W: WorldService> World<W> {
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
     ) -> anyhow::Result<()> {
         let registry_codec =
-            quartz_nbt::snbt::parse(include_str!("../../assets/registry_codec.json")).unwrap();
+            quartz_nbt::snbt::parse(include_str!("../../../assets/registry_codec.json")).unwrap();
         let mut binary: Vec<u8> = Vec::new();
         quartz_nbt::io::write_nbt(
             &mut binary,
@@ -220,7 +268,7 @@ impl<W: WorldService> World<W> {
         let join_game_packet = Login {
             entity_id: proto_player.entity_id.as_i32(),
             is_hardcore: proto_player.hardcore,
-            gamemode: 0,
+            gamemode: 1,
             previous_gamemode: -1,
             dimension_names: vec!["minecraft:overworld"],
             registry_codec: &binary,
@@ -237,6 +285,32 @@ impl<W: WorldService> World<W> {
             has_death_location: false,
         };
 
-        net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)
+        net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)?;
+
+        let mut nodes = Vec::new();
+        nodes.push(CommandNode::Root { children: vec![1] });
+        nodes.push(CommandNode::Literal {
+            children: vec![2],
+            is_executable: false,
+            redirect: None,
+            name: "myfirstcommand",
+        });
+        nodes.push(CommandNode::Argument {
+            children: vec![],
+            is_executable: true,
+            redirect: None,
+            name: "myfirstargument",
+            suggestion: None,
+            parser: CommandNodeParser::IntRange,
+        });
+
+        let commands_packet = Commands {
+            nodes,
+            root_index: 0,
+        };
+
+        net::packet_helper::write_packet(&mut proto_player.write_buffer, &commands_packet)?;
+
+        Ok(())
     }
 }

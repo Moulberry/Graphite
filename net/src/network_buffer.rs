@@ -3,7 +3,8 @@ pub struct WriteBuffer {
     vec: Vec<u8>,
     write_index: usize,
     shrink_counter: usize,
-    utilization: usize,
+    current_requested_capacity: usize,
+    max_requested_capacity: usize,
 }
 
 impl Default for WriteBuffer {
@@ -11,11 +12,14 @@ impl Default for WriteBuffer {
         Self {
             vec: Vec::with_capacity(MIN_SIZE),
             write_index: 0,
-            utilization: 0,
+            current_requested_capacity: 0,
+            max_requested_capacity: 0,
             shrink_counter: 0,
         }
     }
 }
+
+// todo: add tests for this type
 
 impl WriteBuffer {
     pub fn new() -> WriteBuffer {
@@ -28,17 +32,17 @@ impl WriteBuffer {
         if self.shrink_counter > 100 {
             self.shrink_counter = 0;
 
-            self.vec.shrink_to(self.utilization);
-            self.utilization = MIN_SIZE;
+            self.vec.shrink_to(self.max_requested_capacity);
+            self.max_requested_capacity = MIN_SIZE;
         }
     }
 
     pub fn reset(&mut self) {
-        let current_utilization = self.write_index * 2;
-        if current_utilization > self.utilization {
-            self.utilization = current_utilization;
+        if self.current_requested_capacity > self.max_requested_capacity {
+            self.max_requested_capacity = self.current_requested_capacity;
         }
 
+        self.current_requested_capacity = 0;
         self.write_index = 0;
     }
 
@@ -48,11 +52,9 @@ impl WriteBuffer {
     }
 
     pub fn get_unwritten(&mut self, capacity: usize) -> &mut [u8] {
-        let needed = capacity as isize - self.vec.len() as isize + self.write_index as isize;
+        self.current_requested_capacity = self.write_index + capacity; // mark the current utilization
 
-        if needed > 0 {
-            self.vec.reserve(needed as usize);
-        }
+        self.vec.reserve(self.current_requested_capacity);
 
         unsafe {
             let ptr = self.vec.as_mut_ptr().add(self.write_index);

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
@@ -12,36 +14,32 @@ use server::universe::UniverseService;
 use server::world::World;
 use server::world::WorldService;
 
-struct MyConciergeImpl {
-    counter: u8,
-}
+struct MyConciergeImpl;
 
 impl ConciergeService for MyConciergeImpl {
     fn get_serverlist_response(&mut self) -> String {
-        self.counter += 1;
         format!("{{\
             \"version\": {{
                 \"name\": \"1.19.1\",
                 \"protocol\": 1073741921
             }},
             \"players\": {{
-                \"max\": 100,
-                \"online\": {},
+                \"max\": 0,
+                \"online\": 0,
                 \"sample\": []
             }},
             \"description\": {{
                 \"text\": \"Hello world\"
             }},
             \"favicon\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAABGklEQVRo3u2aUQ7EIAhEbcNReiPP6Y16F/djk/1bozJASYffJu08BRxMj957yRxnSR4EIMDbAQTylrvWwdOrNTuAY6+NjhV7YiwDbEg3xVgDUKq3wIgp4rtW1FqYAEwuMAQDk0L/FE/q02TUqVR/tTb4vGkDBaTQjL4xIU/i91gJVNeDV8gZ+HnIorAGCJAAwKIBAACAhixyIvsyKL3Qg0bKqzXnbZlNoXmH/NwitvBkeuC1Ira2lk5daBvDAn6/iH9qAi+Fyva9EDDvlYTxVkJZx/RCBMgHgO1L3IEXAmANn+SV7r0DRk5b0im2BfAfaCRcn/JYkBIXwXejDzmPJZ1iVwCHAfrgD08EIAABCEAAAhCAAAQgwG58AEFWdXlZzlUbAAAAAElFTkSuQmCC\"
-        }}", self.counter)
+        }}")
     }
 
     fn accept_player(
         &mut self,
         player_connection: UninitializedConnection,
-        protoplayer: &concierge::ConciergeConnection<Self>,
+        _: &concierge::ConciergeConnection<Self>,
     ) {
-        println!("managed to get connection: {:?}", protoplayer.username);
         let universe = server::universe::create_and_start(|| MyUniverseService {
             the_world: World::new(MyWorldService {
                 players: PlayerVec::new(),
@@ -52,7 +50,8 @@ impl ConciergeService for MyConciergeImpl {
 }
 
 fn main() {
-    Concierge::bind("127.0.0.1:25565", MyConciergeImpl { counter: 0 }).unwrap();
+    // server::command::dispatcher::dispatch("hello 100 whatever_we_want 7174");
+    //Concierge::bind("127.0.0.1:25565", MyConciergeImpl).unwrap();
 }
 
 // universe
@@ -63,7 +62,7 @@ struct MyUniverseService {
 
 impl UniverseService for MyUniverseService {
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {
-        universe.service.the_world.send_player_to(proto_player);
+        universe.service.the_world.handle_player_join(proto_player);
     }
 
     fn initialize(universe: &Universe<Self>) {
@@ -89,6 +88,8 @@ struct MyWorldService {
 }
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
+    const CHUNKS_X: usize = 6;
+    const CHUNKS_Z: usize = 6;
 
     fn handle_player_join(
         world: &mut World<Self>,
@@ -105,9 +106,9 @@ impl WorldService for MyWorldService {
                 MyPlayerService {},
                 Position {
                     coord: Coordinate {
-                        x: 0.0,
+                        x: 32.0,
                         y: 500.0,
-                        z: 0.0,
+                        z: 32.0,
                     },
                     rot: Rotation {
                         yaw: 0.0,

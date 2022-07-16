@@ -36,7 +36,7 @@ pub enum BinaryReadError {
 }
 
 pub trait SliceSerializable<'a, T = Self> {
-    type RefType;
+    type RefType: Copy;
 
     fn maybe_deref(t: &'a T) -> Self::RefType;
 

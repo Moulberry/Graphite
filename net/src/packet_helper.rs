@@ -6,14 +6,36 @@ use protocol::IdentifiedPacket;
 use std::fmt::Debug;
 use thiserror::Error;
 
-pub fn write_packet<'a, I: Debug, T>(
+pub fn write_slice_serializable<'a, T>(write_buffer: &mut WriteBuffer, serializable: &'a T)
+where
+    T: SliceSerializable<'a, T>,
+{
+    let ref_type = T::maybe_deref(serializable);
+
+    let expected_size = T::get_write_size(ref_type);
+
+    // allocate necessary bytes
+    let bytes = write_buffer.get_unwritten(expected_size);
+
+    // write the serializable
+    let slice_after_writing = unsafe { T::write(bytes, ref_type) };
+    let bytes_written = expected_size - slice_after_writing.len();
+
+    // advance the write buffer
+    unsafe {
+        write_buffer.advance(bytes_written);
+    }
+}
+
+pub fn write_custom_packet<'a, T>(
     write_buffer: &mut WriteBuffer,
-    packet: &'a T,
+    packet_id: u8,
+    serializable: &'a T,
 ) -> anyhow::Result<()>
 where
-    T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
+    T: SliceSerializable<'a, T>,
 {
-    let expected_packet_size = T::get_write_size(T::maybe_deref(packet));
+    let expected_packet_size = T::get_write_size(T::maybe_deref(serializable));
     if expected_packet_size > 2097148 {
         bail!("packet too large!");
     }
@@ -23,7 +45,7 @@ where
 
     // write packet data
     // note: invariant should be satisfied because we allocated at least `get_write_size` bytes
-    let slice_after_writing = unsafe { T::write(&mut bytes[4..], T::maybe_deref(packet)) };
+    let slice_after_writing = unsafe { T::write(&mut bytes[4..], T::maybe_deref(serializable)) };
     let bytes_written = expected_packet_size - slice_after_writing.len();
 
     // encode packet size varint for [packet id size (1) + content size]
@@ -45,20 +67,24 @@ where
     }
 
     // write packet id
-    bytes[3] = packet.get_packet_id_as_u8();
-
-    // write buffer to stream
-    println!(
-        "sending: {:?} (0x{:x})",
-        packet.get_packet_id(),
-        packet.get_packet_id_as_u8()
-    );
+    bytes[3] = packet_id;
 
     unsafe {
+        // advance write buffer
         write_buffer.advance(4 + bytes_written);
     }
 
     Ok(())
+}
+
+pub fn write_packet<'a, I: Debug, T>(
+    write_buffer: &mut WriteBuffer,
+    packet: &'a T,
+) -> anyhow::Result<()>
+where
+    T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
+{
+    write_custom_packet(write_buffer, packet.get_packet_id_as_u8(), packet)
 }
 
 pub enum PacketReadResult<'a> {

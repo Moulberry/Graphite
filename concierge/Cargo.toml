@@ -5,11 +5,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.57"
-bytes = "1.1.0"
 io-uring = { version = "0.5.2", features = ["unstable"] }
 slab = "0.4.6"
 rand = "0.8.5"
-quartz_nbt = "0.2.6"
 
 net = { path = "../net" }
 binary = { path = "../binary" }

@@ -16,5 +16,4 @@ quartz_nbt = "0.2.6"
 binary = { path = "../binary" }
 net = { path = "../net" }
 protocol = { path = "../protocol" }
-concierge = { path = "../concierge" }
 sticky = { path = "../sticky" }

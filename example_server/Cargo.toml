@@ -7,3 +7,4 @@ edition = "2021"
 server = { path = "../server" }
 net = { path = "../net" }
 concierge = { path = "../concierge" }
+command = { path = "../command" }

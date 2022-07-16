@@ -1,24 +1,27 @@
 use binary::slice_serialization::*;
 
 use crate::identify_packets;
-use crate::types::Action;
 use crate::types::ArmPosition;
 use crate::types::BlockPosition;
 use crate::types::ChatVisibility;
 use crate::types::Direction;
+use crate::types::HandAction;
+use crate::types::MoveAction;
 use crate::IdentifiedPacket;
 use num_enum::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
     AcceptTeleportation = 0x00,
+    ChatCommand<'_> = 0x03,
     ClientInformation<'_> = 0x07,
     CustomPayload<'_> = 0x0c,
     KeepAlive = 0x11,
     MovePlayerPos = 0x13,
     MovePlayerPosRot = 0x14,
     MovePlayerRot = 0x15,
-    PlayerAction = 0x1c
+    PlayerHandAction = 0x1c,
+    PlayerMoveAction = 0x1d
 }
 
 // Accept Teleportation
@@ -26,6 +29,23 @@ identify_packets! {
 slice_serializable_composite! {
     AcceptTeleportation,
     id: i32 as VarInt
+}
+
+// Chat Command
+
+slice_serializable_composite! {
+    Signature<'a>,
+    string: &'a str as SizedString<256>,
+    bytes: &'a [u8] as SizedBlob<16> // 32?
+}
+
+slice_serializable_composite! {
+    ChatCommand<'a>,
+    command: &'a str as SizedString<256>,
+    timestamp: u64 as BigEndian,
+    salt: u64 as BigEndian,
+    signatures: Vec<Signature<'a>> as SizedArray<Signature<'_>>,
+    signed: bool as Single
 }
 
 // Client Information
@@ -85,9 +105,16 @@ slice_serializable_composite! {
 // Player Action
 
 slice_serializable_composite! {
-    PlayerAction,
-    action: Action as AttemptFrom<Single, u8>,
+    PlayerHandAction,
+    action: HandAction as AttemptFrom<Single, u8>,
     block_pos: BlockPosition,
     direction: Direction as AttemptFrom<Single, u8>,
     sequence: i32 as VarInt
+}
+
+slice_serializable_composite! {
+    PlayerMoveAction,
+    id: i32 as VarInt,
+    action: MoveAction as AttemptFrom<Single, u8>,
+    data: i32 as VarInt,
 }

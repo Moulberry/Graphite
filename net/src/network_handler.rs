@@ -11,7 +11,7 @@ use io_uring::{opcode, squeue, types, IoUring, SubmissionQueue, Submitter};
 use slab::Slab;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-#[repr(u16)]
+#[repr(C, u16)]
 enum UserData {
     Accept,
     CancelRead,

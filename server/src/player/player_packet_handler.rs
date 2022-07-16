@@ -1,10 +1,13 @@
 use anyhow::bail;
 use protocol::{
-    play::{client::{
-        self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
-        MovePlayerPosRot, MovePlayerRot, PlayerAction,
-    }, server},
-    types::Action,
+    play::{
+        client::{
+            self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
+            MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction,
+        },
+        server,
+    },
+    types::{HandAction, MoveAction},
 };
 use queues::IsQueue;
 
@@ -94,15 +97,31 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         Ok(())
     }
 
-    fn handle_player_action(&mut self, packet: PlayerAction) -> anyhow::Result<()> {
+    fn handle_player_hand_action(&mut self, packet: PlayerHandAction) -> anyhow::Result<()> {
         match packet.action {
-            Action::StartDestroyBlock => todo!(),
-            Action::AbortDestroyBlock => todo!(),
-            Action::StopDestroyBlock => todo!(),
-            Action::DropAllItems => todo!(),
-            Action::DropItem => todo!(),
-            Action::ReleaseUseItem => todo!(),
-            Action::SwapItemWithOffHand => todo!(),
+            HandAction::StartDestroyBlock => (),
+            HandAction::AbortDestroyBlock => (),
+            HandAction::StopDestroyBlock => (),
+            HandAction::DropAllItems => (),
+            HandAction::DropItem => (),
+            HandAction::ReleaseUseItem => (),
+            HandAction::SwapItemWithOffHand => (),
+        }
+
+        Ok(())
+    }
+
+    fn handle_player_move_action(&mut self, packet: PlayerMoveAction) -> anyhow::Result<()> {
+        match packet.action {
+            MoveAction::PressShiftKey => (),
+            MoveAction::ReleaseShiftKey => (),
+            MoveAction::StopSleeping => (),
+            MoveAction::StartSprinting => (),
+            MoveAction::StopSprinting => (),
+            MoveAction::StartRidingJump => (),
+            MoveAction::StopRidingJump => (),
+            MoveAction::OpenInventory => (),
+            MoveAction::StartFallFlying => (),
         }
 
         Ok(())

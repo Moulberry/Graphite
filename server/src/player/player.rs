@@ -5,7 +5,10 @@ use net::{
     packet_helper::{self, PacketReadResult},
 };
 use protocol::{
-    play::{client::PacketHandler, server::{self, KeepAlive}},
+    play::{
+        client::PacketHandler,
+        server::{self, KeepAlive},
+    },
     IdentifiedPacket,
 };
 use queues::Buffer;
@@ -47,7 +50,7 @@ pub struct Player<P: PlayerService> {
     pub service: P,
 
     connection: ConnectionReference<P::UniverseServiceType>,
-    write_buffer: WriteBuffer,
+    pub(crate) write_buffer: WriteBuffer,
 
     world: *mut World<P::WorldServiceType>,
     entity_id: EntityId,
@@ -62,7 +65,7 @@ pub struct Player<P: PlayerService> {
     pub(crate) waiting_teleportation_id: Buffer<i32>,
 
     pub(crate) current_keep_alive: u64,
-    keep_alive_timer: u8
+    keep_alive_timer: u8,
 }
 
 // graphite player impl
@@ -95,7 +98,7 @@ impl<P: PlayerService> Player<P> {
             waiting_teleportation_id: Buffer::new(20),
 
             current_keep_alive: 0,
-            keep_alive_timer: 0
+            keep_alive_timer: 0,
         }
     }
 
@@ -126,7 +129,7 @@ impl<P: PlayerService> Player<P> {
             self.current_keep_alive = rand::thread_rng().next_u64();
 
             self.write_packet(&server::KeepAlive {
-                id: self.current_keep_alive
+                id: self.current_keep_alive,
             })?;
         }
 
@@ -140,7 +143,6 @@ impl<P: PlayerService> Player<P> {
         // Write packets from buffer
         let written_bytes = self.write_buffer.get_written();
         if !written_bytes.is_empty() {
-            println!("writing bytes: {:?}", written_bytes);
             self.connection.write_bytes(written_bytes);
             self.write_buffer.reset();
         }
@@ -154,7 +156,7 @@ impl<P: PlayerService> Player<P> {
         let rotation_changed = self.client_position.rot.is_diff_u8(self.last_position.rot);
         let coord_changed = distance_sq > 0.0001;
 
-        if rotation_changed || coord_changed  {
+        if rotation_changed || coord_changed {
             self.chunk_view_position = self.get_world().update_view_position(self, to)?;
 
             self.position = to;

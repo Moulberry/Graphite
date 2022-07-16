@@ -6,5 +6,7 @@ members = [
     "concierge",
     "server",
     "example_server",
-    "sticky"
+    "sticky",
+    "command",
+    "command_derive"
 ]
