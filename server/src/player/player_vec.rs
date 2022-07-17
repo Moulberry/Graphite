@@ -12,12 +12,18 @@ pub struct PlayerVec<P: PlayerService> {
     world: *mut World<P::WorldServiceType>,
 }
 
-impl<P: PlayerService> PlayerVec<P> {
-    pub fn new() -> Self {
+impl<P: PlayerService> Default for PlayerVec<P> {
+    fn default() -> Self {
         Self {
             players: Default::default(),
             world: std::ptr::null_mut(),
         }
+    }
+}
+
+impl<P: PlayerService> PlayerVec<P> {
+    pub fn new() -> Self {
+        Default::default()
     }
 
     pub fn initialize(&self, world: &World<P::WorldServiceType>) {
@@ -52,6 +58,10 @@ impl<P: PlayerService> PlayerVec<P> {
 
     pub fn len(&self) -> usize {
         self.players.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.players.is_empty()
     }
 
     pub fn tick(&mut self) {

@@ -1,11 +1,10 @@
 use crate::{
     position::Position,
-    universe::{EntityId, Universe, UniverseService},
+    universe::{EntityId, UniverseService},
     world::World,
 };
 use net::{
     network_buffer::WriteBuffer,
-    network_handler::{Connection, ConnectionSlab},
 };
 
 use super::{

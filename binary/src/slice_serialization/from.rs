@@ -19,7 +19,7 @@ impl<'a, F, T: TryFrom<F> + Into<F> + Copy, S: SliceSerializable<'a, F, RefType 
         S::get_write_size(T::into(t))
     }
 
-    unsafe fn write<'b>(bytes: &'b mut [u8], t: T) -> &'b mut [u8] {
+    unsafe fn write(bytes: &mut [u8], t: T) -> &mut [u8] {
         S::write(bytes, T::into(t))
     }
 

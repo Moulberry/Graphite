@@ -7,14 +7,13 @@ use net::{
 use protocol::{
     play::{
         client::PacketHandler,
-        server::{self, KeepAlive},
+        server,
     },
     IdentifiedPacket,
 };
 use queues::Buffer;
 use rand::RngCore;
 use sticky::Unsticky;
-use thiserror::Error;
 
 use crate::{
     position::{Position, Vec3f},

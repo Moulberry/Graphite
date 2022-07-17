@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use command::brigadier;
 use command::types::CommandResult;
 use concierge::Concierge;
@@ -20,21 +18,21 @@ struct MyConciergeImpl;
 
 impl ConciergeService for MyConciergeImpl {
     fn get_serverlist_response(&mut self) -> String {
-        format!("{{\
-            \"version\": {{
+        "{\
+            \"version\": {
                 \"name\": \"1.19.1\",
                 \"protocol\": 1073741921
-            }},
-            \"players\": {{
+            },
+            \"players\": {
                 \"max\": 0,
                 \"online\": 0,
                 \"sample\": []
-            }},
-            \"description\": {{
+            },
+            \"description\": {
                 \"text\": \"Hello world\"
-            }},
+            },
             \"favicon\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAABGklEQVRo3u2aUQ7EIAhEbcNReiPP6Y16F/djk/1bozJASYffJu08BRxMj957yRxnSR4EIMDbAQTylrvWwdOrNTuAY6+NjhV7YiwDbEg3xVgDUKq3wIgp4rtW1FqYAEwuMAQDk0L/FE/q02TUqVR/tTb4vGkDBaTQjL4xIU/i91gJVNeDV8gZ+HnIorAGCJAAwKIBAACAhixyIvsyKL3Qg0bKqzXnbZlNoXmH/NwitvBkeuC1Ira2lk5daBvDAn6/iH9qAi+Fyva9EDDvlYTxVkJZx/RCBMgHgO1L3IEXAmANn+SV7r0DRk5b0im2BfAfaCRcn/JYkBIXwXejDzmPJZ1iVwCHAfrgD08EIAABCEAAAhCAAAQgwG58AEFWdXlZzlUbAAAAAElFTkSuQmCC\"
-        }}")
+        }".into()
     }
 
     fn accept_player(

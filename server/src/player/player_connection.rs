@@ -129,7 +129,7 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
 }
 
 impl<U: UniverseService> PlayerConnection<U> {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             _phantom: PhantomData,
             is_closing: false,
@@ -139,7 +139,7 @@ impl<U: UniverseService> PlayerConnection<U> {
         }
     }
 
-    pub fn mark_closed(&mut self) {
+    pub(crate) fn mark_closed(&mut self) {
         self.is_closing = true;
     }
 

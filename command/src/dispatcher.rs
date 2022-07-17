@@ -1,6 +1,6 @@
 use std::collections::{HashMap, BTreeMap};
 
-use crate::types::{ParseState, SpannedWord, CommandDispatchResult, CommandResult, CommandParseResult, Span};
+use crate::types::{ParseState, SpannedWord, CommandDispatchResult, CommandParseResult, DispatchFunction};
 
 // Node implemenatations
 
@@ -53,7 +53,7 @@ pub(crate) struct DispatchNode {
     pub(crate) literals: BTreeMap<&'static str, DispatchNode>,
     pub(crate) aliases: BTreeMap<&'static str, &'static str>,
     pub(crate) parsers: Vec<ArgumentNode>,
-    pub(crate) executor: Option<fn(&[u8], &[Span]) -> CommandDispatchResult>,
+    pub(crate) executor: Option<DispatchFunction>,
 }
 
 impl DispatchNode {

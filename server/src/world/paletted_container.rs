@@ -12,7 +12,7 @@ impl SliceSerializable<'_> for PalettedContainer {
         *t
     }
 
-    fn read(bytes: &mut &[u8]) -> anyhow::Result<Self> {
+    fn read(_: &mut &[u8]) -> anyhow::Result<Self> {
         unimplemented!()
     }
 

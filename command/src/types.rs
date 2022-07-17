@@ -5,8 +5,8 @@ use bytes::BufMut;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Span {
-    start: usize,
-    end: usize,
+    pub start: usize,
+    pub end: usize,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -15,7 +15,7 @@ pub struct SpannedWord<'a> {
     pub word: &'a str
 }
 
-pub(crate)  struct ParseState<'a> {
+pub  struct ParseState<'a> {
     pub(crate) current_alignment: usize,
     pub(crate) arguments: Vec<u8>,
     pub(crate) argument_spans: Vec<Span>,
@@ -110,43 +110,49 @@ impl<'a> ParseState<'a> {
     }
 
     fn push_bytes(&mut self, bytes: &[u8], alignment: usize) {
-        if alignment > self.current_alignment {
-            if self.current_alignment > 0 {
-                // todo: document this better
-                // realign
-                debug_assert!(
-                    self.arguments.len() % self.current_alignment == 0,
-                    "arguments are not aligned?"
-                );
-
-                let resize_factor = alignment / self.current_alignment;
-
-                // Resize to new alignment
-                self.arguments
-                    .resize(self.arguments.len() * resize_factor, 0);
-
-                let argument_count = self.arguments.len() / self.current_alignment;
-                for i in (0..argument_count).rev() {
-                    let data = &self.arguments
-                        [i * self.current_alignment..(i + 1) * self.current_alignment];
-
-                    unsafe {
-                        let src = data.as_ptr();
-                        let dst = self.arguments.as_mut_ptr().add(i * alignment);
-                        std::ptr::copy_nonoverlapping(src, dst, self.current_alignment);
+        match alignment.cmp(&self.current_alignment) {
+            std::cmp::Ordering::Greater => {
+                if self.current_alignment > 0 {
+                    // todo: document this better
+                    // realign
+                    debug_assert!(
+                        self.arguments.len() % self.current_alignment == 0,
+                        "arguments are not aligned?"
+                    );
+    
+                    let resize_factor = alignment / self.current_alignment;
+    
+                    // Resize to new alignment
+                    self.arguments
+                        .resize(self.arguments.len() * resize_factor, 0);
+    
+                    let argument_count = self.arguments.len() / self.current_alignment;
+                    for i in (0..argument_count).rev() {
+                        let data = &self.arguments
+                            [i * self.current_alignment..(i + 1) * self.current_alignment];
+    
+                        unsafe {
+                            let src = data.as_ptr();
+                            let dst = self.arguments.as_mut_ptr().add(i * alignment);
+                            std::ptr::copy_nonoverlapping(src, dst, self.current_alignment);
+                        }
                     }
                 }
-            }
-            self.current_alignment = alignment;
-        } else if alignment < self.current_alignment {
-            self.arguments.put_slice(&bytes);
-            self.arguments.resize(self.arguments.len() + self.current_alignment - alignment, 0);
-            return;
+                self.current_alignment = alignment;
+                self.arguments.put_slice(bytes);
+            },
+            std::cmp::Ordering::Less => {
+                self.arguments.put_slice(bytes);
+                self.arguments.resize(self.arguments.len() + self.current_alignment - alignment, 0);
+            },
+            std::cmp::Ordering::Equal => {
+                self.arguments.put_slice(bytes);
+            },
         }
-        self.arguments.put_slice(&bytes);
-
     }
 }
+
+pub type DispatchFunction = fn(&[u8], &[Span]) -> CommandDispatchResult;
 
 pub type CommandResult = result::Result<(), String>;
 

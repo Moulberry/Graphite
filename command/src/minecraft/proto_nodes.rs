@@ -4,7 +4,7 @@ use std::{collections::HashMap, result};
 
 use thiserror::Error;
 
-use crate::types::{CommandDispatchResult, Span};
+use crate::types::DispatchFunction;
 
 use super::parsers::MinecraftParser;
 use super::parsers::NumericParser;
@@ -100,7 +100,7 @@ pub struct MinecraftDispatchNode {
     pub aliases: BTreeMap<&'static str, &'static str>,
     pub numeric_parser: Option<MinecraftArgumentNode<NumericParser>>,
     pub string_parser: Option<MinecraftArgumentNode<StringParser>>,
-    pub executor: Option<fn(&[u8], &[Span]) -> CommandDispatchResult>,
+    pub executor: Option<DispatchFunction>,
 }
 
 impl Debug for MinecraftDispatchNode {
@@ -249,6 +249,7 @@ fn dispatch_node_with_string_parser(dispatch: MinecraftDispatchNode) -> Minecraf
 
 #[cfg(test)]
 fn dispatch_node_with_executor() -> MinecraftDispatchNode {
+    use crate::types::{Span, CommandDispatchResult};
     fn hello(_: &[u8], _: &[Span]) -> CommandDispatchResult { CommandDispatchResult::Success(Ok(())) }
 
     MinecraftDispatchNode {

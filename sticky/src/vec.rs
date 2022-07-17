@@ -28,6 +28,10 @@ impl<T: Unsticky> StickyVec<T> {
         self.len
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     pub fn insert(&mut self, t: T) {
         debug_assert!(self.buckets.len() >= self.next);
 
@@ -244,9 +248,8 @@ impl<T: Unsticky> StickyVec<T> {
             // Iterate through buckets
             let bucket = &self.buckets[bucket_index];
 
-            for item_index in 0..bucket.len() {
-                // Iterate through items in bucket
-                let item = &bucket[item_index];
+            // Iterate through items in bucket
+            for item in bucket {
                 f(overall_index, item); // Call function
                 overall_index += 1;
             }
@@ -262,9 +265,8 @@ impl<T: Unsticky> StickyVec<T> {
             // Iterate through buckets
             let bucket = &mut self.buckets[bucket_index];
 
-            for item_index in 0..bucket.len() {
-                // Iterate through items in bucket
-                let item = &mut bucket[item_index];
+            // Iterate through items in bucket
+            for item in bucket {
                 f(overall_index, item); // Call function
                 overall_index += 1;
             }

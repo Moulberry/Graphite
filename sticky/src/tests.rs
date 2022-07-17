@@ -1,6 +1,6 @@
 use std::{
     rc::Rc,
-    sync::atomic::{AtomicU16, AtomicUsize, Ordering},
+    sync::atomic::{AtomicUsize, Ordering},
 };
 
 use crate::{unsticky::Unsticky, vec::StickyVec};

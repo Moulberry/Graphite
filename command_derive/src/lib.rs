@@ -252,7 +252,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     // Create endpoint dispatch node
-    let command_identifier_parse = format!("{}__parse", id.to_string());
+    let command_identifier_parse = format!("{}__parse", id);
     let command_identifier_parse: proc_macro2::TokenStream = command_identifier_parse.parse().unwrap();
     let mut dispatch_node = quote!(
         command::minecraft::MinecraftDispatchNode {
@@ -332,7 +332,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                     );
                 }
             },
-            BrigadierAttribute::Argument { span, modifiers } => {
+            BrigadierAttribute::Argument { span: _, modifiers } => {
                 attribute_argument_index += 1;
                 let function_arg_index = attribute_argument_count - attribute_argument_index;
                 let function_arg = &input.sig.arguments[function_arg_index];
@@ -416,8 +416,9 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
             #[repr(C)]
             struct Data(#parse_function_data_args);
     
+            debug_assert_eq!(spans.len(), #attribute_argument_count, "parse function should receive spans equal to argument count");
             debug_assert_eq!(data.len(), std::mem::size_of::<Data>(), "slice length doesn't match data size. something must have gone wrong with realignment");
-            let data: &Data = unsafe { std::mem::transmute(data as *const _ as *const ()) };
+            let data: &Data = unsafe { &*(data as *const _ as *const Data) };
 
             #parse_function_validate_args
     

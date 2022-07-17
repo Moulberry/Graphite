@@ -135,8 +135,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
             CommandNode::Root { children } => {
                 let flags = 0; // root type
                 let bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, flags);
-                let bytes = SizedArray::<VarInt>::write(bytes, children);
-                bytes
+                SizedArray::<VarInt>::write(bytes, children)
             }
             CommandNode::Literal {
                 children,
@@ -208,7 +207,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 1 + // flags
                 VarInt::get_write_size(children.len() as _) + // children size
                 VARINT_MAX * children.len() + // children
-                redirect.map_or(0, |to| VarInt::get_write_size(to)) + // redirect
+                redirect.map_or(0, VarInt::get_write_size) + // redirect
                 SizedString::<0>::get_write_size(name) // name
             }
             CommandNode::Argument {
@@ -222,7 +221,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 1 + // flags
                 VarInt::get_write_size(children.len() as _) + // children size
                 VARINT_MAX * children.len() + // children
-                redirect.map_or(0, |to| VarInt::get_write_size(to)) + // redirect
+                redirect.map_or(0, VarInt::get_write_size) + // redirect
                 (if suggestion.is_some() { 33 } else { 0 }) +
                 SizedString::<0>::get_write_size(name) + // name
                 CommandNodeParser::get_write_size(*parser) // parser
@@ -240,9 +239,9 @@ pub enum SuggestionType {
     SummonableEntities,
 }
 
-impl Into<&'static str> for SuggestionType {
-    fn into(self) -> &'static str {
-        match self {
+impl From<SuggestionType> for &'static str {
+    fn from(suggestion: SuggestionType) -> Self {
+        match suggestion {
             SuggestionType::AskServer => "minecraft:ask_server",
             SuggestionType::AllRecipes => "minecraft:all_recipes",
             SuggestionType::AvailableSounds => "minecraft:available_sounds",
@@ -387,9 +386,9 @@ pub enum CommandNodeParser {
     UUID,
 }
 
-impl Into<u8> for CommandNodeParser {
-    fn into(self) -> u8 {
-        unsafe { std::mem::transmute(std::mem::discriminant(&self)) }
+impl From<CommandNodeParser> for u8 {
+    fn from(parser: CommandNodeParser) -> Self {
+        unsafe { std::mem::transmute(std::mem::discriminant(&parser)) }
     }
 }
 
