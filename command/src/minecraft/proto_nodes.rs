@@ -76,7 +76,7 @@ impl MinecraftRootDispatchNode {
         // Try to merge aliases
         if self.aliases.is_empty() {
             self.aliases = other.aliases;
-        } else if other.aliases.is_empty() {
+        } else if !other.aliases.is_empty() {
             for new_alias in other.aliases {
                 if let Some(existing_alias) = self.aliases.get(new_alias.0) {
                     // Check if value is the same
@@ -169,7 +169,7 @@ impl MinecraftDispatchNode {
         // Try to merge aliases
         if self.aliases.is_empty() {
             self.aliases = node.aliases;
-        } else if node.aliases.is_empty() {
+        } else if !node.aliases.is_empty() {
             for new_alias in node.aliases {
                 if let Some(existing_alias) = self.aliases.get(new_alias.0) {
                     // Check if value is the same
@@ -197,194 +197,199 @@ pub struct MinecraftArgumentNode<P: MinecraftParser> {
 // Tests
 
 #[cfg(test)]
-fn empty_root() -> MinecraftRootDispatchNode {
-    MinecraftRootDispatchNode {
-        literals: HashMap::new(),
-        aliases: HashMap::new(),
+mod tests {
+    use std::collections::{HashMap, BTreeMap};
+
+    use crate::minecraft::{NumericParser, StringParser, MergeError};
+
+    use super::{MinecraftRootDispatchNode, MinecraftDispatchNode, MinecraftArgumentNode};
+
+    fn empty_root() -> MinecraftRootDispatchNode {
+        MinecraftRootDispatchNode {
+            literals: HashMap::new(),
+            aliases: HashMap::new(),
+        }
     }
-}
-
-#[cfg(test)]
-fn empty_dispatch_node() -> MinecraftDispatchNode {
-    MinecraftDispatchNode {
-        literals: BTreeMap::new(),
-        aliases: BTreeMap::new(),
-        numeric_parser: None,
-        string_parser: None,
-        executor: None,
+    
+    fn empty_dispatch_node() -> MinecraftDispatchNode {
+        MinecraftDispatchNode {
+            literals: BTreeMap::new(),
+            aliases: BTreeMap::new(),
+            numeric_parser: None,
+            string_parser: None,
+            executor: None,
+        }
     }
-}
-
-#[cfg(test)]
-fn dispatch_node_with_numeric_parser<'a>(dispatch: MinecraftDispatchNode) -> MinecraftDispatchNode {
-    let numeric_parser = MinecraftArgumentNode {
-        name: "argument",
-        parse: NumericParser::U8 { min: u8::MIN, max: u8::MAX },
-        dispatch_node: Box::from(dispatch),
-    };
-    MinecraftDispatchNode {
-        literals: BTreeMap::new(),
-        aliases: BTreeMap::new(),
-        numeric_parser: Some(numeric_parser),
-        string_parser: None,
-        executor: None,
+    
+    fn dispatch_node_with_numeric_parser<'a>(dispatch: MinecraftDispatchNode) -> MinecraftDispatchNode {
+        let numeric_parser = MinecraftArgumentNode {
+            name: "argument",
+            parse: NumericParser::U8 { min: u8::MIN, max: u8::MAX },
+            dispatch_node: Box::from(dispatch),
+        };
+        MinecraftDispatchNode {
+            literals: BTreeMap::new(),
+            aliases: BTreeMap::new(),
+            numeric_parser: Some(numeric_parser),
+            string_parser: None,
+            executor: None,
+        }
     }
-}
-
-#[cfg(test)]
-fn dispatch_node_with_string_parser(dispatch: MinecraftDispatchNode) -> MinecraftDispatchNode {
-    let string_parser = MinecraftArgumentNode {
-        name: "argument",
-        parse: StringParser::Word,
-        dispatch_node: Box::from(dispatch),
-    };
-    MinecraftDispatchNode {
-        literals: BTreeMap::new(),
-        aliases: BTreeMap::new(),
-        numeric_parser: None,
-        string_parser: Some(string_parser),
-        executor: None,
+    
+    fn dispatch_node_with_string_parser(dispatch: MinecraftDispatchNode) -> MinecraftDispatchNode {
+        let string_parser = MinecraftArgumentNode {
+            name: "argument",
+            parse: StringParser::Word,
+            dispatch_node: Box::from(dispatch),
+        };
+        MinecraftDispatchNode {
+            literals: BTreeMap::new(),
+            aliases: BTreeMap::new(),
+            numeric_parser: None,
+            string_parser: Some(string_parser),
+            executor: None,
+        }
     }
-}
-
-#[cfg(test)]
-fn dispatch_node_with_executor() -> MinecraftDispatchNode {
-    use crate::types::{Span, CommandDispatchResult};
-    fn hello(_: &[u8], _: &[Span]) -> CommandDispatchResult { CommandDispatchResult::Success(Ok(())) }
-
-    MinecraftDispatchNode {
-        literals: BTreeMap::new(),
-        aliases: BTreeMap::new(),
-        numeric_parser: None,
-        string_parser: None,
-        executor: Some(hello),
+    
+    fn dispatch_node_with_executor() -> MinecraftDispatchNode {
+        use crate::types::{Span, CommandDispatchResult};
+        fn hello(_: &[u8], _: &[Span]) -> CommandDispatchResult { CommandDispatchResult::Success(Ok(())) }
+    
+        MinecraftDispatchNode {
+            literals: BTreeMap::new(),
+            aliases: BTreeMap::new(),
+            numeric_parser: None,
+            string_parser: None,
+            executor: Some(hello),
+        }
     }
-}
 
-#[test]
-fn simple_merge() {
-    let mut root = empty_root();
+    #[test]
+    fn simple_merge() {
+        let mut root = empty_root();
 
-    let dispatch = dispatch_node_with_executor();
-    assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
-    assert_eq!(root.literals.len(), 1);
-}
+        let dispatch = dispatch_node_with_executor();
+        assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
+        assert_eq!(root.literals.len(), 1);
+    }
 
-#[test]
-fn merge_alias() {
-    let mut root = empty_root();
+    #[test]
+    fn merge_alias() {
+        let mut root = empty_root();
 
-    let dispatch = dispatch_node_with_executor();
-    assert_eq!(
-        root.merge_named(dispatch, "hello", vec!["hello1", "hello2"]),
-        Ok(())
-    );
+        let dispatch = dispatch_node_with_executor();
+        assert_eq!(
+            root.merge_named(dispatch, "hello", vec!["hello1", "hello2"]),
+            Ok(())
+        );
 
-    assert_eq!(root.literals.len(), 1);
-    assert_eq!(root.aliases.len(), 2);
+        assert_eq!(root.literals.len(), 1);
+        assert_eq!(root.aliases.len(), 2);
 
-    let dispatch = dispatch_node_with_executor();
-    assert_eq!(root.merge_named(dispatch, "bye", vec!["bye1", "bye2"]), Ok(()));
+        let dispatch = dispatch_node_with_executor();
+        assert_eq!(root.merge_named(dispatch, "bye", vec!["bye1", "bye2"]), Ok(()));
 
-    assert_eq!(root.literals.len(), 2);
-    assert_eq!(root.aliases.len(), 4);
-}
+        assert_eq!(root.literals.len(), 2);
+        assert_eq!(root.aliases.len(), 4);
+    }
 
-#[test]
-fn merge_empty() {
-    let mut root = empty_root();
+    #[test]
+    fn merge_empty() {
+        let mut root = empty_root();
 
-    let dispatch = empty_dispatch_node();
-    assert_eq!(
-        root.merge_named(dispatch, "hello", vec!["hello1", "hello2"]),
-        Ok(())
-    );
+        let dispatch = empty_dispatch_node();
+        assert_eq!(
+            root.merge_named(dispatch, "hello", vec!["hello1", "hello2"]),
+            Ok(())
+        );
 
-    let dispatch = empty_dispatch_node();
-    assert_eq!(
-        root.merge_named(dispatch, "hello", vec!["hello1", "hello2"]),
-        Ok(())
-    );
+        let dispatch = empty_dispatch_node();
+        assert_eq!(
+            root.merge_named(dispatch, "hello", vec!["hello1", "hello2"]),
+            Ok(())
+        );
 
-    assert_eq!(root.literals.len(), 1);
-    assert_eq!(root.aliases.len(), 2);
-}
+        assert_eq!(root.literals.len(), 1);
+        assert_eq!(root.aliases.len(), 2);
+    }
 
-#[test]
-fn merge_separate_parsers() {
-    let mut root = empty_root();
+    #[test]
+    fn merge_separate_parsers() {
+        let mut root = empty_root();
 
-    // Merge a numeric parser
-    let dispatch = dispatch_node_with_numeric_parser(dispatch_node_with_executor());
-    assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
+        // Merge a numeric parser
+        let dispatch = dispatch_node_with_numeric_parser(dispatch_node_with_executor());
+        assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
 
-    // Merge a string parser
-    let dispatch = dispatch_node_with_string_parser(dispatch_node_with_executor());
-    assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
+        // Merge a string parser
+        let dispatch = dispatch_node_with_string_parser(dispatch_node_with_executor());
+        assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
 
-    assert_eq!(root.literals.len(), 1);
+        assert_eq!(root.literals.len(), 1);
 
-    let literal = root.literals.iter().next().unwrap();
-    assert_eq!(*literal.0, "hello");
+        let literal = root.literals.iter().next().unwrap();
+        assert_eq!(*literal.0, "hello");
 
-    assert!(literal.1.numeric_parser.is_some());
-    assert!(literal.1.string_parser.is_some());
-}
+        assert!(literal.1.numeric_parser.is_some());
+        assert!(literal.1.string_parser.is_some());
+    }
 
-#[test]
-fn merge_incompatible_parsers() {
-    let mut root = empty_root();
+    #[test]
+    fn merge_incompatible_parsers() {
+        let mut root = empty_root();
 
-    // Merge a numeric parser
-    let dispatch = dispatch_node_with_numeric_parser(dispatch_node_with_executor());
-    assert_eq!(root.merge_named(dispatch.clone(), "hello", vec![]), Ok(()));
-    assert_eq!(root.literals.len(), 1);
+        // Merge a numeric parser
+        let dispatch = dispatch_node_with_numeric_parser(dispatch_node_with_executor());
+        assert_eq!(root.merge_named(dispatch.clone(), "hello", vec![]), Ok(()));
+        assert_eq!(root.literals.len(), 1);
 
-    assert_eq!(
-        root.merge_named(dispatch, "hello", vec![]),
-        Err(MergeError::DuplicateExecutor)
-    );
-}
+        assert_eq!(
+            root.merge_named(dispatch, "hello", vec![]),
+            Err(MergeError::DuplicateExecutor)
+        );
+    }
 
-#[test]
-fn merge_compatible_parsers() {
-    let mut root = empty_root();
+    #[test]
+    fn merge_compatible_parsers() {
+        let mut root = empty_root();
 
-    // Merge a numeric parser
-    let dispatch = dispatch_node_with_numeric_parser(empty_dispatch_node());
-    assert_eq!(root.merge_named(dispatch.clone(), "hello", vec![]), Ok(()));
-    assert_eq!(root.literals.len(), 1);
+        // Merge a numeric parser
+        let dispatch = dispatch_node_with_numeric_parser(empty_dispatch_node());
+        assert_eq!(root.merge_named(dispatch.clone(), "hello", vec![]), Ok(()));
+        assert_eq!(root.literals.len(), 1);
 
-    assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
-}
+        assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
+    }
 
-#[test]
-fn duplicate_executor_merge() {
-    let mut root = empty_root();
+    #[test]
+    fn duplicate_executor_merge() {
+        let mut root = empty_root();
 
-    let dispatch = dispatch_node_with_executor();
-    assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
+        let dispatch = dispatch_node_with_executor();
+        assert_eq!(root.merge_named(dispatch, "hello", vec![]), Ok(()));
 
-    let dispatch = dispatch_node_with_executor();
-    assert_eq!(
-        root.merge_named(dispatch, "hello", vec![]),
-        Err(MergeError::DuplicateExecutor)
-    );
-}
+        let dispatch = dispatch_node_with_executor();
+        assert_eq!(
+            root.merge_named(dispatch, "hello", vec![]),
+            Err(MergeError::DuplicateExecutor)
+        );
+    }
 
-#[test]
-fn duplicate_alias_merge() {
-    let mut root = empty_root();
+    #[test]
+    fn duplicate_alias_merge() {
+        let mut root = empty_root();
 
-    let dispatch = dispatch_node_with_executor();
-    assert_eq!(
-        root.merge_named(dispatch, "hello", vec!["hello1", "special"]),
-        Ok(())
-    );
+        let dispatch = dispatch_node_with_executor();
+        assert_eq!(
+            root.merge_named(dispatch, "hello", vec!["hello1", "special"]),
+            Ok(())
+        );
 
-    let dispatch = dispatch_node_with_executor();
-    assert_eq!(
-        root.merge_named(dispatch, "world", vec!["world1", "special"]),
-        Err(MergeError::DuplicateAlias)
-    );
+        let dispatch = dispatch_node_with_executor();
+        assert_eq!(
+            root.merge_named(dispatch, "world", vec!["world1", "special"]),
+            Err(MergeError::DuplicateAlias)
+        );
+    }
+
 }

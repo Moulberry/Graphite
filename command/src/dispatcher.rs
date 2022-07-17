@@ -142,3 +142,146 @@ impl ArgumentNode {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::{HashMap, BTreeMap};
+
+    use maplit::hashmap;
+
+    use crate::dispatcher::{ArgumentNode, DispatchNode, RootDispatchNode};
+    use crate::types::{SpannedWord, CommandParseResult, Span, CommandDispatchResult};
+    use crate::types::ParseState;
+
+    #[test]
+    pub fn dispatch_with_parse() {
+        static mut DISPATCH_EXECUTED: bool = false;
+
+        fn hello_world(data: &[u8], spans: &[Span]) -> CommandDispatchResult {
+            #[repr(C)]
+            struct Data(u8, &'static str, u16);
+    
+            debug_assert_eq!(spans.len(), 3);
+            debug_assert_eq!(data.len(), std::mem::size_of::<Data>());
+            let data: &Data = unsafe { &*(data as *const _ as *const Data) };
+    
+            assert_eq!(data.0, 100);
+            assert_eq!(data.1, "my_string");
+            assert_eq!(data.2, 8372);
+            unsafe { DISPATCH_EXECUTED = true };
+
+            CommandDispatchResult::Success(Ok(()))
+        }
+
+        let root = RootDispatchNode {
+            literals: hashmap!(
+                "hello" => DispatchNode {
+                    literals: BTreeMap::new(),
+                    aliases: BTreeMap::new(),
+                    parsers: vec![
+                        ArgumentNode {
+                            parse: parse_u8,
+                            dispatch_node: DispatchNode {
+                                literals: BTreeMap::new(),
+                                aliases: BTreeMap::new(),
+                                parsers: vec![
+                                    ArgumentNode {
+                                        parse: parse_str,
+                                        dispatch_node: DispatchNode {
+                                            literals: BTreeMap::new(),
+                                            aliases: BTreeMap::new(),
+                                            parsers: vec![
+                                                ArgumentNode {
+                                                    parse: parse_u16,
+                                                    dispatch_node: DispatchNode {
+                                                        literals: BTreeMap::new(),
+                                                        aliases: BTreeMap::new(),
+                                                        parsers: vec![],
+                                                        executor: Some(hello_world)
+                                                    }
+                                                }
+                                            ],
+                                            executor: None,
+                                        }
+                                    }
+                                ],
+                                executor: None,
+                            }
+                        }
+                    ],
+                    executor: None,
+                }
+            ),
+            aliases: HashMap::new(),
+        };
+
+        root.dispatch("hello 100 my_string 8372");
+
+        assert!(unsafe { DISPATCH_EXECUTED });
+    }
+
+    #[test]
+    pub fn dispatch_with_context() {
+        static mut DISPATCH_EXECUTED: bool = false;
+
+        struct MyStruct(u32);
+
+        fn my_command(data: &[u8], spans: &[Span]) -> CommandDispatchResult {
+            #[repr(C)]
+            struct Data(&'static MyStruct);
+    
+            debug_assert_eq!(spans.len(), 1);
+            debug_assert_eq!(data.len(), std::mem::size_of::<Data>());
+            let data: &Data = unsafe { &*(data as *const _ as *const Data) };
+    
+            assert_eq!(data.0 .0, 873183);
+            unsafe { DISPATCH_EXECUTED = true };
+
+            CommandDispatchResult::Success(Ok(()))
+        }
+
+        let root = RootDispatchNode {
+            literals: hashmap!(
+                "execute" => DispatchNode {
+                    literals: BTreeMap::new(),
+                    aliases: BTreeMap::new(),
+                    parsers: vec![],
+                    executor: Some(my_command)
+                }
+            ),
+            aliases: HashMap::new(),
+        };
+
+        let my_struct = MyStruct(873183);
+        root.dispatch_with_context("execute", &my_struct);
+
+        assert!(unsafe { DISPATCH_EXECUTED });
+    }
+
+    // Parser functions
+
+    fn parse_u8(input: SpannedWord, state: &mut ParseState) -> CommandParseResult {
+        match input.word.parse::<u8>() {
+            Ok(parsed) => {
+                state.push_arg(parsed, input.span);
+                CommandParseResult::Ok
+            },
+            Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse u8".into(), continue_parsing: true }
+        }
+    }
+
+    fn parse_u16(input: SpannedWord, state: &mut ParseState) -> CommandParseResult {
+        match input.word.parse::<u16>() {
+            Ok(parsed) => {
+                state.push_arg(parsed, input.span);
+                CommandParseResult::Ok
+            },
+            Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse u8".into(), continue_parsing: true }
+        }
+    }
+
+    fn parse_str(input: SpannedWord, state: &mut ParseState) -> CommandParseResult {
+        state.push_str(input.word, input.span);
+        CommandParseResult::Ok
+    }
+}
