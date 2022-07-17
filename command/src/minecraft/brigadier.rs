@@ -29,32 +29,40 @@ pub fn create_dispatcher_and_brigadier_packet(
         // Insert dispatch node (graphite)
         literals.insert(*literal_name, child_dispatch_node);
 
+        // Push graphite -> brigadier mapping for aliases
+        graphite_alias_map.insert(literal_name, child_command_node.clone());
+
         // Push command node (brigadier)
         let brigadier_index = command_nodes.len() as i32;
         children.push(brigadier_index);
         command_nodes.push(child_command_node);
-
-        // Push graphite -> brigadier mapping for aliases
-        graphite_alias_map.insert(literal_name, brigadier_index);
     }
 
     // Process aliases
     for (alias_from, alias_to) in &root.aliases {
         // Get brigadier index
-        let brigadier_index = graphite_alias_map.get(alias_to).unwrap();
+        let alias_for = graphite_alias_map.remove(alias_to).unwrap();
 
-        // Create alias node (brigadier)
-        let command_node = CommandNode::Literal {
-            children: vec![*brigadier_index],
-            is_executable: false,
-            redirect: None,
-            name: alias_from,
-        };
+        match alias_for {
+            // todo: use a redirect instead of cloning the node
+            // for some reason redirect was causing the client to 
+            // reject the brigadier packet
+            CommandNode::Literal { children: node_children, is_executable, redirect, name: _ } => {
+                // Create alias node (brigadier)
+                let command_node = CommandNode::Literal {
+                    children: node_children,
+                    is_executable,
+                    redirect,
+                    name: alias_from,
+                };
 
-        // Push alias node (brigadier)
-        let brigadier_index = command_nodes.len() as i32;
-        children.push(brigadier_index);
-        command_nodes.push(command_node);
+                // Push alias node (brigadier)
+                let brigadier_index = command_nodes.len() as i32;
+                children.push(brigadier_index);
+                command_nodes.push(command_node);
+            },
+            _ => unreachable!()
+        }        
     }
 
     // Create root dispatch node (graphite)
@@ -115,32 +123,40 @@ fn process_dispatch_node(
         // Insert dispatch node (graphite)
         literals.insert(*literal_name, child_dispatch_node);
 
+        // Push graphite -> brigadier mapping for aliases
+        graphite_alias_map.insert(literal_name, child_command_node.clone());
+
         // Push command node (brigadier)
         let brigadier_index = command_nodes.len() as i32;
         children.push(brigadier_index);
         command_nodes.push(child_command_node);
-
-        // Push graphite -> brigadier mapping for aliases
-        graphite_alias_map.insert(literal_name, brigadier_index);
     }
 
     // Process aliases
     for (alias_from, alias_to) in &dispatch.aliases {
         // Get brigadier index
-        let brigadier_index = graphite_alias_map.get(alias_to).unwrap();
+        let alias_for = graphite_alias_map.remove(alias_to).unwrap();
 
-        // Create alias node (brigadier)
-        let command_node = CommandNode::Literal {
-            children: vec![*brigadier_index],
-            is_executable: false,
-            redirect: None,
-            name: alias_from,
-        };
+        match alias_for {
+            // todo: use a redirect instead of cloning the node
+            // for some reason redirect was causing the client to 
+            // reject the brigadier packet
+            CommandNode::Literal { children: node_children, is_executable, redirect, name: _ } => {
+                // Create alias node (brigadier)
+                let command_node = CommandNode::Literal {
+                    children: node_children,
+                    is_executable,
+                    redirect,
+                    name: alias_from,
+                };
 
-        // Push alias node (brigadier)
-        let brigadier_index = command_nodes.len() as i32;
-        children.push(brigadier_index);
-        command_nodes.push(command_node);
+                // Push alias node (brigadier)
+                let brigadier_index = command_nodes.len() as i32;
+                children.push(brigadier_index);
+                command_nodes.push(command_node);
+            },
+            _ => unreachable!()
+        }  
     }
 
     let mut parsers = Vec::new();

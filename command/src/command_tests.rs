@@ -2,7 +2,9 @@ use std::collections::{HashMap, BTreeMap};
 
 use maplit::hashmap;
 
-use crate::dispatcher::{ArgumentNode, DispatchNode, ParseState, RootDispatchNode};
+use crate::dispatcher::{ArgumentNode, DispatchNode, RootDispatchNode};
+use crate::types::{SpannedWord, CommandParseResult};
+use crate::types::ParseState;
 
 #[test]
 pub fn dispatch_with_parse() {
@@ -103,19 +105,27 @@ pub fn dispatch_with_context() {
 
 // Parser functions
 
-fn parse_u8(input: &str, state: &mut ParseState) -> anyhow::Result<()> {
-    let parsed: u8 = input.parse()?;
-    state.push_arg(parsed);
-    Ok(())
+fn parse_u8(input: SpannedWord, state: &mut ParseState) -> CommandParseResult {
+    match input.word.parse::<u8>() {
+        Ok(parsed) => {
+            state.push_arg(parsed, input.span);
+            CommandParseResult::Ok
+        },
+        Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse u8".into(), continue_parsing: true }
+    }
 }
 
-fn parse_u16(input: &str, state: &mut ParseState) -> anyhow::Result<()> {
-    let parsed: u16 = input.parse()?;
-    state.push_arg(parsed);
-    Ok(())
+fn parse_u16(input: SpannedWord, state: &mut ParseState) -> CommandParseResult {
+    match input.word.parse::<u16>() {
+        Ok(parsed) => {
+            state.push_arg(parsed, input.span);
+            CommandParseResult::Ok
+        },
+        Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse u8".into(), continue_parsing: true }
+    }
 }
 
-fn parse_str(input: &str, state: &mut ParseState) -> anyhow::Result<()> {
-    state.push_str(input);
-    Ok(())
+fn parse_str(input: SpannedWord, state: &mut ParseState) -> CommandParseResult {
+    state.push_str(input.word, input.span);
+    CommandParseResult::Ok
 }

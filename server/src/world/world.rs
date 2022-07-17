@@ -287,29 +287,7 @@ impl<W: WorldService> World<W> {
 
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)?;
 
-        let mut nodes = Vec::new();
-        nodes.push(CommandNode::Root { children: vec![1] });
-        nodes.push(CommandNode::Literal {
-            children: vec![2],
-            is_executable: false,
-            redirect: None,
-            name: "myfirstcommand",
-        });
-        nodes.push(CommandNode::Argument {
-            children: vec![],
-            is_executable: true,
-            redirect: None,
-            name: "myfirstargument",
-            suggestion: None,
-            parser: CommandNodeParser::IntRange,
-        });
-
-        let commands_packet = Commands {
-            nodes,
-            root_index: 0,
-        };
-
-        net::packet_helper::write_packet(&mut proto_player.write_buffer, &commands_packet)?;
+        net::packet_helper::write_packet(&mut proto_player.write_buffer, &self.get_universe().command_packet)?;
 
         Ok(())
     }

@@ -5,7 +5,6 @@ use protocol::{
             self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
             MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction,
         },
-        server,
     },
     types::{HandAction, MoveAction},
 };
@@ -131,6 +130,14 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         if packet.id == self.current_keep_alive {
             self.current_keep_alive = 0;
         }
+
+        Ok(())
+    }
+
+    fn handle_chat_command(&mut self, packet: client::ChatCommand) -> anyhow::Result<()> {
+        let result = self.get_world_mut().get_universe().root_dispatch_node.dispatch(packet.command);
+        
+        println!("got command dispatch result: {:?}", result);
 
         Ok(())
     }

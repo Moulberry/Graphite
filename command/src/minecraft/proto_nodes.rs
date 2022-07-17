@@ -2,8 +2,9 @@ use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::{collections::HashMap, result};
 
-use maplit::hashmap;
 use thiserror::Error;
+
+use crate::types::{CommandDispatchResult, Span};
 
 use super::parsers::MinecraftParser;
 use super::parsers::NumericParser;
@@ -23,8 +24,8 @@ pub enum MergeError {
 
 #[derive(Debug)]
 pub struct MinecraftRootDispatchNode {
-    pub(crate) literals: HashMap<&'static str, MinecraftDispatchNode>,
-    pub(crate) aliases: HashMap<&'static str, &'static str>,
+    pub literals: HashMap<&'static str, MinecraftDispatchNode>,
+    pub aliases: HashMap<&'static str, &'static str>,
 }
 
 impl MinecraftRootDispatchNode {
@@ -43,7 +44,7 @@ impl MinecraftRootDispatchNode {
 
         // Create root dispatch node
         let other = MinecraftRootDispatchNode {
-            literals: hashmap! {
+            literals: maplit::hashmap! {
                 name => dispatch
             },
             aliases: aliases_map,
@@ -53,7 +54,7 @@ impl MinecraftRootDispatchNode {
         self.merge(other)
     }
 
-    pub(crate) fn merge(
+    pub fn merge(
         &mut self,
         other: MinecraftRootDispatchNode,
     ) -> result::Result<(), MergeError> {
@@ -94,12 +95,12 @@ impl MinecraftRootDispatchNode {
 }
 
 #[derive(Clone)]
-pub(crate) struct MinecraftDispatchNode {
-    pub(crate) literals: BTreeMap<&'static str, MinecraftDispatchNode>,
-    pub(crate) aliases: BTreeMap<&'static str, &'static str>,
-    pub(crate) numeric_parser: Option<MinecraftArgumentNode<NumericParser>>,
-    pub(crate) string_parser: Option<MinecraftArgumentNode<StringParser>>,
-    pub(crate) executor: Option<fn(&[u8])>,
+pub struct MinecraftDispatchNode {
+    pub literals: BTreeMap<&'static str, MinecraftDispatchNode>,
+    pub aliases: BTreeMap<&'static str, &'static str>,
+    pub numeric_parser: Option<MinecraftArgumentNode<NumericParser>>,
+    pub string_parser: Option<MinecraftArgumentNode<StringParser>>,
+    pub executor: Option<fn(&[u8], &[Span]) -> CommandDispatchResult>,
 }
 
 impl Debug for MinecraftDispatchNode {
@@ -187,10 +188,10 @@ impl MinecraftDispatchNode {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct MinecraftArgumentNode<P: MinecraftParser> {
-    pub(crate) name: &'static str,
-    pub(crate) parse: P,
-    pub(crate) dispatch_node: Box<MinecraftDispatchNode>,
+pub struct MinecraftArgumentNode<P: MinecraftParser> {
+    pub name: &'static str,
+    pub parse: P,
+    pub dispatch_node: Box<MinecraftDispatchNode>,
 }
 
 // Tests
@@ -218,7 +219,7 @@ fn empty_dispatch_node() -> MinecraftDispatchNode {
 fn dispatch_node_with_numeric_parser<'a>(dispatch: MinecraftDispatchNode) -> MinecraftDispatchNode {
     let numeric_parser = MinecraftArgumentNode {
         name: "argument",
-        parse: NumericParser::U8,
+        parse: NumericParser::U8 { min: u8::MIN, max: u8::MAX },
         dispatch_node: Box::from(dispatch),
     };
     MinecraftDispatchNode {
@@ -248,7 +249,7 @@ fn dispatch_node_with_string_parser(dispatch: MinecraftDispatchNode) -> Minecraf
 
 #[cfg(test)]
 fn dispatch_node_with_executor() -> MinecraftDispatchNode {
-    fn hello(_: &[u8]) {}
+    fn hello(_: &[u8], _: &[Span]) -> CommandDispatchResult { CommandDispatchResult::Success(Ok(())) }
 
     MinecraftDispatchNode {
         literals: BTreeMap::new(),

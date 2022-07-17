@@ -1,11 +1,8 @@
-use std::collections::{HashMap, BTreeMap};
-
-use command_derive::brigadier;
-
-use crate::minecraft::MinecraftArgumentNode;
-
 pub mod dispatcher;
 pub mod minecraft;
+pub mod types;
+
+pub use command_derive::*;
 
 #[cfg(test)]
 mod command_tests;
@@ -51,17 +48,6 @@ fn main2() {
 
 //#[brigadier_autoregister]
 fn main() {
-    
-    #[brigadier("hello", {})]
-    fn my_function(number: u8) {
-        println!("number: {}", number);
-    }
-
-    let (dispatcher, packet) = minecraft::create_dispatcher_and_brigadier_packet(my_function);
-
-    println!("{:?}", packet);
-    dispatcher.dispatch("hello 10") // outputs: "number: 10"
-
     /*#[brigadier("hello {} subcommand {}")]
     fn my_function2(number: u8, my_param: u8) {
         println!("number: {}", number);

@@ -4,10 +4,10 @@ use bytemuck::NoUninit;
 use protocol::types::{CommandNodeParser, StringParserMode};
 use thiserror::Error;
 
-use crate::dispatcher::ParseState;
+use crate::types::{ParseState, SpannedWord, CommandParseResult};
 
-pub(crate) trait MinecraftParser {
-    fn get_parse_func(&self) -> fn(&str, &mut ParseState) -> anyhow::Result<()>;
+pub trait MinecraftParser {
+    fn get_parse_func(&self) -> fn(SpannedWord, &mut ParseState) -> CommandParseResult;
     fn get_brigadier_parser(&self) -> CommandNodeParser;
     fn is_equal(&self, other: Self) -> bool;
 }
@@ -16,27 +16,27 @@ pub(crate) trait MinecraftParser {
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum NumericParser {
-    U8,
-    U16,
+    U8 { min: u8, max: u8 },
+    U16 { min: u16, max: u16 },
 }
 
 impl MinecraftParser for NumericParser {
-    fn get_parse_func(&self) -> fn(&str, &mut ParseState) -> anyhow::Result<()> {
+    fn get_parse_func(&self) -> fn(SpannedWord, &mut ParseState) -> CommandParseResult {
         match self {
-            NumericParser::U8 => parse_from_string::<u8>,
-            NumericParser::U16 => parse_from_string::<u16>,
+            NumericParser::U8 { min: _, max: _} => parse_from_string::<u8>,
+            NumericParser::U16 { min: _, max: _} => parse_from_string::<u16>,
         }
     }
 
     fn get_brigadier_parser(&self) -> CommandNodeParser {
         match self {
-            NumericParser::U8 => CommandNodeParser::Integer {
-                min: Some(u8::MIN as _),
-                max: Some(u8::MAX as _),
+            NumericParser::U8 { min, max} => CommandNodeParser::Integer {
+                min: Some(*min as _),
+                max: Some(*max as _),
             },
-            NumericParser::U16 => CommandNodeParser::Integer {
-                min: Some(u16::MIN as _),
-                max: Some(u16::MAX as _),
+            NumericParser::U16 { min, max} => CommandNodeParser::Integer {
+                min: Some(*min as _),
+                max: Some(*max as _),
             },
         }
     }
@@ -48,18 +48,18 @@ impl MinecraftParser for NumericParser {
 
 #[derive(Debug, Error)]
 #[error("failed to parse from string")]
-struct ParseFromStringError;
+pub struct ParseFromStringError;
 
-fn parse_from_string<T: FromStr + NoUninit>(
-    input: &str,
-    state: &mut ParseState,
-) -> anyhow::Result<()> {
-    match input.parse::<T>() {
+fn parse_from_string<T: FromStr + Ord + NoUninit>(
+    input: SpannedWord,
+    state: &mut ParseState
+) -> CommandParseResult {
+    match input.word.parse::<T>() {
         Ok(parsed) => {
-            state.push_arg(parsed);
-            Ok(())
-        }
-        Err(_) => Err(ParseFromStringError.into()),
+            state.push_arg(parsed, input.span);
+            CommandParseResult::Ok
+        },
+        Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse from string".into(), continue_parsing: true }
     }
 }
 
@@ -71,7 +71,7 @@ pub enum StringParser {
 }
 
 impl MinecraftParser for StringParser {
-    fn get_parse_func(&self) -> fn(&str, &mut ParseState) -> anyhow::Result<()> {
+    fn get_parse_func(&self) -> fn(SpannedWord, &mut ParseState) -> CommandParseResult {
         match self {
             StringParser::Word => parse_word,
         }
@@ -90,7 +90,7 @@ impl MinecraftParser for StringParser {
     }
 }
 
-fn parse_word(input: &str, state: &mut ParseState) -> anyhow::Result<()> {
-    state.push_str(input);
-    Ok(())
+fn parse_word(input: SpannedWord, state: &mut ParseState) -> CommandParseResult {
+    state.push_str(input.word, input.span);
+    CommandParseResult::Ok
 }

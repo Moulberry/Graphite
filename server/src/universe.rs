@@ -1,4 +1,5 @@
 use anyhow::bail;
+use command::dispatcher::RootDispatchNode;
 use net::network_buffer::WriteBuffer;
 use net::network_handler::{
     ConnectionSlab, NetworkManagerService, NewConnectionAccepter, UninitializedConnection,
@@ -6,7 +7,7 @@ use net::network_handler::{
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::{sync::mpsc::Sender, time::Duration};
 
-use protocol::play::server::CustomPayload;
+use protocol::play::server::{CustomPayload, Commands};
 
 use crate::player::player_connection::{ConnectionReference, PlayerConnection};
 use crate::player::proto_player::ProtoPlayer;
@@ -40,6 +41,8 @@ pub struct Universe<U: UniverseService> {
     pub service: U,
     player_receiver: Receiver<UninitializedConnection>,
     entity_id_counter: i32,
+    pub root_dispatch_node: RootDispatchNode,
+    pub command_packet: Commands
 }
 
 // graphite universe impl
@@ -116,7 +119,7 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
 }
 
 pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send + 'static>(
-    service_func: F,
+    service_func: F, root_dispatch_node: RootDispatchNode, command_packet: Commands,
 ) -> Sender<UninitializedConnection> {
     let (rx, tx) = mpsc::channel::<UninitializedConnection>();
 
@@ -126,6 +129,8 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
             service,
             player_receiver: tx,
             entity_id_counter: 0,
+            root_dispatch_node,
+            command_packet
         };
 
         U::initialize(&universe);

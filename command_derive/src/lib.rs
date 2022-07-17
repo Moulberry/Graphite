@@ -2,14 +2,16 @@ use std::result;
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
+use quote::{ToTokens, quote};
 use syn::{
     braced, parenthesized,
     parse::{Parse, ParseStream},
     parse_macro_input,
     punctuated::Punctuated,
-    token, LitStr, Token,
+    token, LitStr, Token, spanned::Spanned, bracketed, ReturnType,
 };
-use thiserror::Error;
+
+// Parse types for #[brigadier]
 
 struct SimpleArg {
     pub ident: syn::Ident,
@@ -29,6 +31,7 @@ impl Parse for SimpleArg {
 struct CommandSignature {
     pub ident: syn::Ident,
     pub arguments: Punctuated<SimpleArg, Token![,]>,
+    pub output: ReturnType
 }
 
 impl Parse for CommandSignature {
@@ -39,26 +42,24 @@ impl Parse for CommandSignature {
         let content;
         parenthesized!(content in input);
 
-        let arguments = Punctuated::parse_terminated(&content)?;
-
-        Ok(Self { ident, arguments })
+        Ok(Self {
+            ident,
+            arguments: Punctuated::parse_terminated(&content)?,
+            output: input.parse()?
+        })
     }
 }
 
 struct CommandFn {
     pub sig: CommandSignature,
-    pub block: syn::Block,
+    pub _block: syn::Block,
 }
-
-#[derive(Debug, Error)]
-#[error("you did an oopsie")]
-struct MyError;
 
 impl Parse for CommandFn {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
             sig: input.parse()?,
-            block: input.parse()?,
+            _block: input.parse()?,
         })
     }
 }
@@ -70,7 +71,7 @@ enum BrigadierAttribute {
     },
     Argument {
         span: Span,
-        modifiers: Punctuated<syn::Expr, Token![:]>,
+        modifiers: Punctuated<syn::Expr, Token![;]>,
     },
 }
 
@@ -86,9 +87,28 @@ impl Parse for BrigadierAttribute {
                 modifiers: Punctuated::parse_terminated(&content)?, // todo: be more specific than syn::Expr
             })
         } else {
-            let string: LitStr = input.parse()?;
+            let aliases = if input.peek(token::Bracket) {
+                let content;
+                bracketed!(content in input);
+
+                // Parse punctuated sequence of LitStr
+                let punctuated: Punctuated<LitStr, Token![,]> = Punctuated::parse_terminated(&content)?;
+                
+                // Create alias vec
+                let mut aliases = Vec::with_capacity(punctuated.len());
+                for alias in punctuated {
+                    aliases.push(alias);
+                }
+
+                aliases
+            } else {
+                // Single LitStr, create mono vec
+                let string: LitStr = input.parse()?;
+                vec![string]
+            };
+
             Ok(Self::Literal {
-                aliases: vec![string],
+                aliases,
             })
         }
     }
@@ -106,6 +126,8 @@ impl Parse for BrigadierAttributes {
     }
 }
 
+// Macros for error reporting
+
 macro_rules! check_result {
     ($span:expr, $command_identifier:expr => $($arg:tt)*) => {
         match $($arg)* {
@@ -118,12 +140,12 @@ macro_rules! check_result {
 }
 
 macro_rules! throw_error {
-    ($span:expr, $command_identifier:expr => $($arg:tt)*) => {
+    ($span:expr, $command_identifier:expr => $($arg:tt)*) => {{
         // Create a dummy root to suppress unrelated errors
         // about the root not existing
         let id = $command_identifier;
         let dummy_root = quote::quote!(
-            let #id = minecraft::MinecraftRootDispatchNode {
+            let #id = command::minecraft::MinecraftRootDispatchNode {
                 literals: HashMap::new(),
                 aliases: HashMap::new()
             };
@@ -133,39 +155,58 @@ macro_rules! throw_error {
         let msg = format!("brigadier: {}", $($arg)*);
         let error = quote::quote_spanned!($span => compile_error!(#msg););
 
+        // Emit tokens
         let mut tokens = TokenStream::new();
         tokens.extend::<TokenStream>(error.into());
         tokens.extend::<TokenStream>(dummy_root.into());
-        println!("{:?}", tokens);
         return tokens;
-    };
+    }};
 }
 
 #[proc_macro_attribute]
 pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
-    println!("attr: \"{}\"", attr.to_string());
-    println!("item: \"{}\"", item.to_string());
-
     let cloned_item = item.clone();
     let input = parse_macro_input!(cloned_item as CommandFn);
-    let command_identifier = input.sig.ident;
-
-    let function_argument_count = input.sig.arguments.len();
-
     let attributes = parse_macro_input!(attr as BrigadierAttributes);
 
+    let id = input.sig.ident;
+    let function_argument_count = input.sig.arguments.len();
+
+    // Validate command signature
+    if matches!(input.sig.output, ReturnType::Default) {
+        // Create a dummy root to suppress unrelated errors
+        // about the root not existing
+        let dummy_root = quote::quote!(
+            let #id = command::minecraft::MinecraftRootDispatchNode {
+                literals: HashMap::new(),
+                aliases: HashMap::new()
+            };
+        );
+
+        // Create compile error with span
+        let error = quote::quote!(compile_error!("brigadier: command function must have return type of `CommandResult`"););
+
+        // Emit tokens
+        let mut tokens = TokenStream::new();
+        tokens.extend::<TokenStream>(error.into());
+        tokens.extend::<TokenStream>(dummy_root.into());
+        return tokens;
+    }
+
     // Validate attributes
+    let mut attribute_literal_count = 0;
     let mut attribute_argument_count = 0;
     for attribute in &attributes.attributes {
         match attribute {
             BrigadierAttribute::Literal { aliases } => {
+                attribute_literal_count += 1;
                 for litstr in aliases {
                     let value = litstr.value();
-                    check_result!(litstr.span(), command_identifier => check_literal(&value));
+                    check_result!(litstr.span(), id => check_literal(&value));
                 }
             },
             BrigadierAttribute::Argument { span: _, modifiers: _ } => {
-                attribute_argument_count += 1
+                attribute_argument_count += 1;
             }
         }
     }
@@ -196,7 +237,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                     BrigadierAttribute::Argument { span, modifiers: _ } => {
                         index += 1;
                         if index > function_argument_count {
-                            throw_error!(span, command_identifier => error_msg);
+                            throw_error!(span, id => error_msg);
                         }
                     }
                 }
@@ -206,68 +247,182 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         } else {
             // Put error message on function parameter span
             let farg = &input.sig.arguments[attribute_argument_count];
-            throw_error!(farg.ident.span(), command_identifier => error_msg);
+            throw_error!(farg.ident.span(), id => error_msg);
         }
     }
 
-    let command_identifier_parse = format!("{}__parse", command_identifier.to_string());
-    let command_identifier_parse: proc_macro2::TokenStream = command_identifier_parse.parse().unwrap();
-
     // Create endpoint dispatch node
-    let dispatch_node = quote::quote!(
-        minecraft::MinecraftDispatchNode {
-            literals: BTreeMap::new(),
-            aliases: BTreeMap::new(),
+    let command_identifier_parse = format!("{}__parse", id.to_string());
+    let command_identifier_parse: proc_macro2::TokenStream = command_identifier_parse.parse().unwrap();
+    let mut dispatch_node = quote!(
+        command::minecraft::MinecraftDispatchNode {
+            literals: std::collections::BTreeMap::new(),
+            aliases: std::collections::BTreeMap::new(),
             numeric_parser: None,
             string_parser: None,
             executor: Some(#command_identifier_parse),
         }
     );
 
+    let mut parse_function_data_args = quote!();
+    let mut parse_function_data_args_deconstruct = quote!();
+    let mut parse_function_validate_args = quote!();
+
     // Build actual dispatch node based on attribute arguments
-    for attribute in attributes.attributes {
+    let mut attribute_literal_index = 0;
+    let mut attribute_argument_index = 0;
+    for attribute in attributes.attributes.iter().rev() {
         match attribute {
             BrigadierAttribute::Literal { aliases } => {
-                
+                attribute_literal_index += 1;
+                let use_root = attribute_literal_index >= attribute_literal_count;
+
+                let name = aliases[0].value();
+
+                // Create alias map
+                let mut aliases_tokens = if use_root {
+                    let capacity = aliases.len() - 1;
+                    quote!(let mut map = std::collections::HashMap::with_capacity(#capacity);)
+                } else {
+                    quote!(let mut map = std::collections::BTreeMap::new();)
+                };
+
+                if aliases.len() > 1 {
+                    for alias in &aliases[1..] {
+                        let alias_value = alias.value();
+                        aliases_tokens = quote!(
+                            #aliases_tokens
+                            map.insert(#alias_value, #name);
+                        )
+                    }
+                }
+
+                if use_root {
+                    // Update the dispatch node, using a MinecraftRootDispatchNode
+                    dispatch_node = quote!(
+                        let #id = command::minecraft::MinecraftRootDispatchNode {
+                            literals: {
+                                let mut map = std::collections::HashMap::with_capacity(1);
+                                map.insert(#name, #dispatch_node);
+                                map
+                            },
+                            aliases: {
+                                #aliases_tokens
+                                map
+                            }
+                        };
+                    );
+                } else {
+                    // Update the dispatch node, using a MinecraftDispatchNode
+                    dispatch_node = quote!(
+                        command::minecraft::MinecraftDispatchNode {
+                            literals: {
+                                let mut map = std::collections::BTreeMap::new();
+                                map.insert(#name, #dispatch_node);
+                                map
+                            },
+                            aliases: {
+                                #aliases_tokens
+                                map
+                            },
+                            numeric_parser: None,
+                            string_parser: None,
+                            executor: None,
+                        }
+                    );
+                }
             },
-            BrigadierAttribute::Argument { span: _, modifiers: _ } => {
-                
+            BrigadierAttribute::Argument { span, modifiers } => {
+                attribute_argument_index += 1;
+                let function_arg_index = attribute_argument_count - attribute_argument_index;
+                let function_arg = &input.sig.arguments[function_arg_index];
+                let function_arg_ident = &function_arg.ident;
+                let ty = &function_arg.ty;
+
+                let parser_num;
+                let parser_expr;
+                let parser_validate;
+
+                let deconstruct_index = proc_macro2::Literal::usize_unsuffixed(function_arg_index);
+
+                match ty {
+                    syn::Type::Path(type_path) => {
+                        let path_segments = &type_path.path.segments; 
+                        let last_segment_ident = &path_segments[path_segments.len() - 1].ident;
+                        let ident_str: &str = &last_segment_ident.to_string();
+
+                        parse_function_data_args = quote! (
+                            #type_path,
+                            #parse_function_data_args
+                        );
+
+                        match ident_str {
+                            "u8" => {
+                                (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
+                                    process_num_arg(quote!(u8), quote!(U8), deconstruct_index.clone(), modifiers));
+                            },
+                            "u16" => {
+                                (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
+                                    process_num_arg(quote!(u16), quote!(U16), deconstruct_index.clone(), modifiers))
+                            },
+                            _ => throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")
+                        }
+                    }
+                    _ => throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")
+                }
+
+                parse_function_data_args_deconstruct = quote! (
+                    data.#deconstruct_index,
+                    #parse_function_data_args_deconstruct
+                );
+                parse_function_validate_args.extend(parser_validate);
+
+                let parser_node = quote!(
+                    Some(command::minecraft::MinecraftArgumentNode {
+                        name: stringify!(#function_arg_ident),
+                        parse: #parser_expr,
+                        dispatch_node: Box::from(#dispatch_node),
+                    })
+                );
+
+                if parser_num {
+                    dispatch_node = quote!(
+                        command::minecraft::MinecraftDispatchNode {
+                            literals: std::collections::BTreeMap::new(),
+                            aliases: std::collections::BTreeMap::new(),
+                            numeric_parser: #parser_node,
+                            string_parser: None,
+                            executor: None,
+                        }
+                    )
+                } else {
+                    dispatch_node = quote!(
+                        command::minecraft::MinecraftDispatchNode {
+                            literals: std::collections::BTreeMap::new(),
+                            aliases: std::collections::BTreeMap::new(),
+                            numeric_parser: None,
+                            string_parser: #parser_node,
+                            executor: None,
+                        }
+                    )
+                }
             }
         }
     }
 
     // Create parse function (raw bytes => arguments => command function)
-    let parse_function = quote::quote!(
-        fn #command_identifier_parse(data: &[u8]) {
+    let parse_function = quote!(
+        fn #command_identifier_parse(data: &[u8], spans: &[command::types::Span]) -> command::types::CommandDispatchResult {
             #[repr(C)]
-            struct Data(u8);
+            struct Data(#parse_function_data_args);
     
-            debug_assert_eq!(data.len(), std::mem::size_of::<Data>());
+            debug_assert_eq!(data.len(), std::mem::size_of::<Data>(), "slice length doesn't match data size. something must have gone wrong with realignment");
             let data: &Data = unsafe { std::mem::transmute(data as *const _ as *const ()) };
-    
-            #command_identifier(data.0);
-        }
-    );
 
-    let dispatch_node = quote::quote!(
-        let #command_identifier = minecraft::MinecraftRootDispatchNode {
-            literals: {
-                let mut map = HashMap::with_capacity(1);
-                map.insert("hello", minecraft::MinecraftDispatchNode {
-                    literals: BTreeMap::new(),
-                    aliases: BTreeMap::new(),
-                    numeric_parser: Some(MinecraftArgumentNode {
-                        name: "number",
-                        parse: minecraft::NumericParser::U8,
-                        dispatch_node: Box::from(#dispatch_node),
-                    }),
-                    string_parser: None,
-                    executor: None,
-                });
-                map
-            },
-            aliases: HashMap::new()
-        };
+            #parse_function_validate_args
+    
+            command::types::CommandDispatchResult::Success(#id(#parse_function_data_args_deconstruct))
+        }
     );
 
     let mut tokens = TokenStream::new();
@@ -277,7 +432,51 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     tokens
 }
 
-fn check_literal(literal: &str) -> result::Result<(), &str> {
+fn process_num_arg(raw_typ: proc_macro2::TokenStream, parser_typ: proc_macro2::TokenStream,
+            deconstruct_index: proc_macro2::Literal, modifiers: &Punctuated<syn::Expr, token::Semi>)
+            -> result::Result<(bool, proc_macro2::TokenStream, proc_macro2::TokenStream), &'static str> {
+    let mut min_expr = quote!(#raw_typ::MIN);
+    let mut max_expr = quote!(#raw_typ::MAX);
+    for modifier in modifiers {
+        match modifier {
+            syn::Expr::Range(range) => {
+                if let Some(from) = &range.from {
+                    min_expr = from.to_token_stream();
+                }
+                if let Some(to) = &range.to {
+                    max_expr = to.to_token_stream();
+                }
+            },
+            _ => return Err("invalid modifier for integer"),
+        }
+    }
+    Ok((
+        true,
+        quote!(
+            command::minecraft::NumericParser::#parser_typ {
+                min: #min_expr,
+                max: #max_expr
+            }
+        ),
+        quote!(
+            if data.#deconstruct_index < #min_expr {
+                return command::types::CommandDispatchResult::ParseError {
+                    span: spans[#deconstruct_index],
+                    errmsg: "argument was less than min".into(),
+                    continue_parsing: false
+                };
+            } else if data.#deconstruct_index > #max_expr {
+                return command::types::CommandDispatchResult::ParseError {
+                    span: spans[#deconstruct_index],
+                    errmsg: "argument was greater than max".into(),
+                    continue_parsing: false
+                };
+            }
+        )
+    ))
+}
+
+fn check_literal(literal: &str) -> result::Result<(), &'static str> {
     for char in literal.chars() {
         if char == ' ' {
             return Err("literal cannot contain a space")

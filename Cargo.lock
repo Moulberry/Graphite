@@ -351,6 +351,7 @@ dependencies = [
  "anyhow",
  "binary",
  "bytes",
+ "command",
  "io-uring",
  "net",
  "protocol",

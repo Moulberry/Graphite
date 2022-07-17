@@ -17,3 +17,4 @@ binary = { path = "../binary" }
 net = { path = "../net" }
 protocol = { path = "../protocol" }
 sticky = { path = "../sticky" }
+command = { path = "../command" }

@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use command::brigadier;
+use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
@@ -40,18 +42,30 @@ impl ConciergeService for MyConciergeImpl {
         player_connection: UninitializedConnection,
         _: &concierge::ConciergeConnection<Self>,
     ) {
+        #[brigadier("hello", {10..2000}, {})]
+        fn my_function(number: u16, numer2: u8) -> CommandResult {
+            println!("number: {}", number);
+            println!("numer2: {}", numer2);
+            Ok(())
+        }
+
+        let (dispatcher, packet) = command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
+
         let universe = server::universe::create_and_start(|| MyUniverseService {
             the_world: World::new(MyWorldService {
                 players: PlayerVec::new(),
             }),
-        });
+        }, dispatcher, packet);
         universe.send(player_connection).unwrap();
     }
 }
 
 fn main() {
+    //println!("{:?}", packet);
+    //dispatcher.dispatch("hello 800 10");
+    
     // server::command::dispatcher::dispatch("hello 100 whatever_we_want 7174");
-    //Concierge::bind("127.0.0.1:25565", MyConciergeImpl).unwrap();
+    Concierge::bind("127.0.0.1:25565", MyConciergeImpl).unwrap();
 }
 
 // universe
