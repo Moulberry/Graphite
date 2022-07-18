@@ -12,9 +12,11 @@ slab = "0.4.6"
 queues = "1.1.0"
 io-uring = { version = "0.5.2", features = ["unstable"] }
 quartz_nbt = "0.2.6"
+bytemuck = "1.10.0"
 
 binary = { path = "../binary" }
 net = { path = "../net" }
 protocol = { path = "../protocol" }
 sticky = { path = "../sticky" }
 command = { path = "../command" }
+text_component = { path = "../text_component" }

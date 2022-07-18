@@ -3,6 +3,7 @@ use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
+use server::player::generic::GenericPlayer;
 use server::player::player_vec::PlayerVec;
 use server::player::proto_player::ProtoPlayer;
 use server::player::PlayerService;
@@ -41,9 +42,10 @@ impl ConciergeService for MyConciergeImpl {
         _: &concierge::ConciergeConnection<Self>,
     ) {
         #[brigadier("hello", {10..2000}, {})]
-        fn my_function(number: u16, numer2: u8) -> CommandResult {
+        fn my_function(player: &mut dyn GenericPlayer, number: u16, numer2: u8) -> CommandResult {
             println!("number: {}", number);
             println!("numer2: {}", numer2);
+            player.send_message(&"Hello from my_function".into());
             Ok(())
         }
 
@@ -61,7 +63,7 @@ impl ConciergeService for MyConciergeImpl {
 fn main() {
     //println!("{:?}", packet);
     //dispatcher.dispatch("hello 800 10");
-    
+
     // server::command::dispatcher::dispatch("hello 100 whatever_we_want 7174");
     Concierge::bind("127.0.0.1:25565", MyConciergeImpl).unwrap();
 }
@@ -146,7 +148,9 @@ impl WorldService for MyWorldService {
 
 // player
 
-struct MyPlayerService {}
+struct MyPlayerService {
+
+}
 
 impl PlayerService for MyPlayerService {
     type UniverseServiceType = MyUniverseService;

@@ -13,6 +13,7 @@ use syn::{
 
 // Parse types for #[brigadier]
 
+#[derive(Debug)]
 struct SimpleArg {
     pub ident: syn::Ident,
     pub ty: syn::Type,
@@ -161,6 +162,31 @@ macro_rules! throw_error {
         tokens.extend::<TokenStream>(dummy_root.into());
         return tokens;
     }};
+    ($command_identifier:expr => $($arg:tt)*) => {{
+        // Create a dummy root to suppress unrelated errors
+        // about the root not existing
+        let id = $command_identifier;
+        let dummy_root = quote::quote!(
+            let #id = command::minecraft::MinecraftRootDispatchNode {
+                literals: HashMap::new(),
+                aliases: HashMap::new()
+            };
+        );
+
+        // Create compile error with span
+        let msg = format!("brigadier: {}", $($arg)*);
+        let error = quote::quote!(compile_error!(#msg););
+
+        // Emit tokens
+        let mut tokens = TokenStream::new();
+        tokens.extend::<TokenStream>(error.into());
+        tokens.extend::<TokenStream>(dummy_root.into());
+        return tokens;
+    }};
+}
+
+fn get_last_ident_of_path(path: &syn::Path) -> syn::Ident {
+    path.segments[path.segments.len() - 1].ident.clone()
 }
 
 #[proc_macro_attribute]
@@ -170,27 +196,44 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attributes = parse_macro_input!(attr as BrigadierAttributes);
 
     let id = input.sig.ident;
-    let function_argument_count = input.sig.arguments.len();
+
+    // Validate first argument
+    let has_correct_first_argument = if input.sig.arguments.len() == 0 {
+        false
+    } else {
+        let first_argument_ty = &input.sig.arguments[0].ty;
+
+        match first_argument_ty {
+            syn::Type::Reference(ref_ty) => {
+                match &*ref_ty.elem {
+                    syn::Type::TraitObject(trait_obj) => {
+                        if trait_obj.dyn_token.is_none() {
+                            false
+                        } else {
+                            match &trait_obj.bounds[0] {
+                                syn::TypeParamBound::Trait(trait_ty) => {
+                                    let last = get_last_ident_of_path(&trait_ty.path);
+                                    last.to_string() == "GenericPlayer"
+                                },
+                                _ => false,
+                            }
+                        }
+                    }
+                    _ => false
+                }
+            },
+            _ => false
+        }
+    };
+    if !has_correct_first_argument {
+        throw_error!(id => "first argument of command function must be of type `&mut dyn GenericPlayer`");
+    }
+
+    let function_argument_count = input.sig.arguments.len() - 1;
 
     // Validate command signature
     if matches!(input.sig.output, ReturnType::Default) {
-        // Create a dummy root to suppress unrelated errors
-        // about the root not existing
-        let dummy_root = quote::quote!(
-            let #id = command::minecraft::MinecraftRootDispatchNode {
-                literals: HashMap::new(),
-                aliases: HashMap::new()
-            };
-        );
-
-        // Create compile error with span
-        let error = quote::quote!(compile_error!("brigadier: command function must have return type of `CommandResult`"););
-
-        // Emit tokens
-        let mut tokens = TokenStream::new();
-        tokens.extend::<TokenStream>(error.into());
-        tokens.extend::<TokenStream>(dummy_root.into());
-        return tokens;
+        throw_error!(id => "command function must have return type of `CommandResult`");
     }
 
     // Validate attributes
@@ -246,7 +289,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
             unreachable!()
         } else {
             // Put error message on function parameter span
-            let farg = &input.sig.arguments[attribute_argument_count];
+            let farg = &input.sig.arguments[attribute_argument_count + 1];
             throw_error!(farg.ident.span(), id => error_msg);
         }
     }
@@ -335,7 +378,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
             BrigadierAttribute::Argument { span: _, modifiers } => {
                 attribute_argument_index += 1;
                 let function_arg_index = attribute_argument_count - attribute_argument_index;
-                let function_arg = &input.sig.arguments[function_arg_index];
+                let function_arg = &input.sig.arguments[function_arg_index + 1];
                 let function_arg_ident = &function_arg.ident;
                 let ty = &function_arg.ty;
 
@@ -343,7 +386,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let parser_expr;
                 let parser_validate;
 
-                let deconstruct_index = proc_macro2::Literal::usize_unsuffixed(function_arg_index);
+                let deconstruct_index = proc_macro2::Literal::usize_unsuffixed(function_arg_index + 1);
 
                 match ty {
                     syn::Type::Path(type_path) => {
@@ -414,15 +457,15 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parse_function = quote!(
         fn #command_identifier_parse(data: &[u8], spans: &[command::types::Span]) -> command::types::CommandDispatchResult {
             #[repr(C)]
-            struct Data(#parse_function_data_args);
+            struct Data(*mut dyn GenericPlayer, #parse_function_data_args);
     
-            debug_assert_eq!(spans.len(), #attribute_argument_count, "parse function should receive spans equal to argument count");
+            debug_assert_eq!(spans.len() - 1, #attribute_argument_count, "parse function should receive spans equal to argument count");
             debug_assert_eq!(data.len(), std::mem::size_of::<Data>(), "slice length doesn't match data size. something must have gone wrong with realignment");
             let data: &Data = unsafe { &*(data as *const _ as *const Data) };
 
             #parse_function_validate_args
     
-            command::types::CommandDispatchResult::Success(#id(#parse_function_data_args_deconstruct))
+            command::types::CommandDispatchResult::Success(#id(unsafe { std::mem::transmute(data.0) }, #parse_function_data_args_deconstruct))
         }
     );
 

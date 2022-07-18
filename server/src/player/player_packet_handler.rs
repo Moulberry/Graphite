@@ -1,16 +1,18 @@
 use anyhow::bail;
+use bytemuck::NoUninit;
+use command::dispatcher::RootDispatchNode;
 use protocol::{
     play::{
         client::{
             self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
             MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction,
-        },
+        }, server,
     },
     types::{HandAction, MoveAction},
 };
 use queues::IsQueue;
 
-use super::{Player, PlayerService};
+use super::{Player, PlayerService, generic::GenericPlayer};
 
 impl<P: PlayerService> client::PacketHandler for Player<P> {
     const DEBUG: bool = true;
@@ -135,9 +137,18 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
     }
 
     fn handle_chat_command(&mut self, packet: client::ChatCommand) -> anyhow::Result<()> {
-        let result = self.get_world_mut().get_universe().root_dispatch_node.dispatch(packet.command);
-        
-        println!("got command dispatch result: {:?}", result);
+        let dispatch = &mut self.get_world_mut().get_universe().root_dispatch_node;
+
+        // 32-bit support :)
+        #[derive(Clone, Copy)]
+        struct Dyn(usize, usize);
+        unsafe impl NoUninit for Dyn {}
+
+        let vtable: Dyn = unsafe { std::mem::transmute(self.as_dynamic()) };
+
+        let result = dispatch.dispatch_with_context_move(packet.command, vtable);
+
+        self.send_message(format!("{:?}", result));
 
         Ok(())
     }

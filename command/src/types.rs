@@ -1,4 +1,4 @@
-use std::result;
+use std::{result, alloc::Layout};
 
 use bytemuck::NoUninit;
 use bytes::BufMut;
@@ -16,9 +16,10 @@ pub struct SpannedWord<'a> {
 }
 
 pub  struct ParseState<'a> {
-    pub(crate) current_alignment: usize,
-    pub(crate) arguments: Vec<u8>,
-    pub(crate) argument_spans: Vec<Span>,
+    finalized: bool,
+    argument_layout: Layout,
+    arguments: Vec<u8>,
+    argument_spans: Vec<Span>,
     pub(crate) words: Vec<SpannedWord<'a>>,
     pub(crate) cursor: usize,
     pub(crate) full_span: Span
@@ -53,13 +54,33 @@ impl<'a> ParseState<'a> {
         }
 
         Self {
-            current_alignment: 0,
+            finalized: false,
+            argument_layout: unsafe { Layout::from_size_align_unchecked(0, 1) },
             arguments: Vec::new(),
             argument_spans: Vec::new(),
             words,
             cursor: 0,
             full_span: Span { start: 0, end }
         }
+    }
+
+    pub(crate) fn get_arguments(&mut self) -> (&[u8], &[Span]) {
+        debug_assert!(!self.finalized);
+        self.finalized = true;
+
+        // Get size and align of layout
+        let len = self.argument_layout.size();
+        let align = self.argument_layout.align();
+        debug_assert_eq!(len, self.arguments.len(), "layout length must match data length");
+
+        // Compute padding (code from Layout::padding_needed_for)
+        let padding = len.wrapping_add(align).wrapping_sub(1) & !align.wrapping_sub(1);
+        let padding = padding.wrapping_sub(len);
+
+        // Extend arguments with padding
+        self.arguments.resize(len + padding, 0);
+
+        (self.arguments.as_slice(), self.argument_spans.as_slice())
     }
 
     pub(crate) fn cursor(&self) -> usize {
@@ -98,57 +119,24 @@ impl<'a> ParseState<'a> {
     }
 
     pub(crate) fn push_ref<T>(&mut self, arg: &T, span: Span) {
-        let raw_reference: u64 = unsafe { std::mem::transmute(arg) };
+        let raw_reference: usize = unsafe { std::mem::transmute(arg) };
         self.push_arg(raw_reference, span);
     }
 
     pub(crate) fn push_arg<T: NoUninit>(&mut self, arg: T, span: Span) {
-        let alignment = std::mem::align_of_val(&arg);
-        let bytes: &[u8] = bytemuck::bytes_of(&arg);
-        self.argument_spans.push(span);
-        self.push_bytes(bytes, alignment)
-    }
+        // Get layout for argument
+        let arg_layout = Layout::new::<T>();
 
-    fn push_bytes(&mut self, bytes: &[u8], alignment: usize) {
-        match alignment.cmp(&self.current_alignment) {
-            std::cmp::Ordering::Greater => {
-                if self.current_alignment > 0 {
-                    // todo: document this better
-                    // realign
-                    debug_assert!(
-                        self.arguments.len() % self.current_alignment == 0,
-                        "arguments are not aligned?"
-                    );
-    
-                    let resize_factor = alignment / self.current_alignment;
-    
-                    // Resize to new alignment
-                    self.arguments
-                        .resize(self.arguments.len() * resize_factor, 0);
-    
-                    let argument_count = self.arguments.len() / self.current_alignment;
-                    for i in (0..argument_count).rev() {
-                        let data = &self.arguments
-                            [i * self.current_alignment..(i + 1) * self.current_alignment];
-    
-                        unsafe {
-                            let src = data.as_ptr();
-                            let dst = self.arguments.as_mut_ptr().add(i * alignment);
-                            std::ptr::copy_nonoverlapping(src, dst, self.current_alignment);
-                        }
-                    }
-                }
-                self.current_alignment = alignment;
-                self.arguments.put_slice(bytes);
-            },
-            std::cmp::Ordering::Less => {
-                self.arguments.put_slice(bytes);
-                self.arguments.resize(self.arguments.len() + self.current_alignment - alignment, 0);
-            },
-            std::cmp::Ordering::Equal => {
-                self.arguments.put_slice(bytes);
-            },
-        }
+        // Update layout
+        let (new_layout, offset) = self.argument_layout.extend(arg_layout).unwrap();
+        self.argument_layout = new_layout;
+        self.arguments.resize(offset, 0);
+
+        // Put bytes and span
+        let bytes: &[u8] = bytemuck::bytes_of(&arg);
+        debug_assert_eq!(arg_layout.size(), bytes.len());
+        self.arguments.put_slice(bytes);
+        self.argument_spans.push(span);
     }
 }
 

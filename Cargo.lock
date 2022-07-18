@@ -350,6 +350,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "binary",
+ "bytemuck",
  "bytes",
  "command",
  "io-uring",
@@ -360,6 +361,7 @@ dependencies = [
  "rand",
  "slab",
  "sticky",
+ "text_component",
  "thiserror",
 ]
 
@@ -383,6 +385,10 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "text_component"
+version = "0.1.0"
 
 [[package]]
 name = "thiserror"

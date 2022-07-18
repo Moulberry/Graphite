@@ -8,5 +8,6 @@ members = [
     "example_server",
     "sticky",
     "command",
-    "command_derive"
+    "command_derive",
+    "text_component"
 ]

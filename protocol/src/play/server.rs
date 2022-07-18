@@ -13,7 +13,8 @@ identify_packets! {
     LevelChunkWithLight<'_> = 0x21,
     Login<'_> = 0x25,
     SetPlayerPosition = 0x39,
-    SetChunkCacheCenter = 0x4b
+    SetChunkCacheCenter = 0x4b,
+    SystemChat<'_> = 0x62
 }
 
 // Commands
@@ -106,3 +107,11 @@ slice_serializable_composite! {
     chunk_x: i32 as VarInt,
     chunk_z: i32 as VarInt
 }
+
+// System Chat
+slice_serializable_composite! {
+    SystemChat<'a>,
+    message: &'a str as SizedString,
+    overlay: bool as Single
+}
+

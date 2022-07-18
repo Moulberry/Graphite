@@ -143,7 +143,7 @@ impl<W: WorldService> World<W> {
             chunk_x: chunk_view_position.x,
             chunk_z: chunk_view_position.z,
         };
-        player.write_packet(&update_view_position_packet)?;
+        player.write_packet(&update_view_position_packet);
 
         Ok(chunk_view_position)
     }

@@ -1,5 +1,7 @@
 use std::collections::{HashMap, BTreeMap};
 
+use bytemuck::NoUninit;
+
 use crate::types::{ParseState, SpannedWord, CommandDispatchResult, CommandParseResult, DispatchFunction};
 
 // Node implemenatations
@@ -15,9 +17,15 @@ impl RootDispatchNode {
         self.dispatch_parse_state(parse_state)
     }
 
-    pub fn dispatch_with_context<T>(&self, input: &str, context: &T) -> CommandDispatchResult {
+    pub fn dispatch_with_context_ref<T>(&self, input: &str, context: &T) -> CommandDispatchResult {
         let mut parse_state = ParseState::new(input);
         parse_state.push_ref(context, parse_state.full_span);
+        self.dispatch_parse_state(parse_state)
+    }
+
+    pub fn dispatch_with_context_move<T: NoUninit>(&self, input: &str, context: T) -> CommandDispatchResult {
+        let mut parse_state = ParseState::new(input);
+        parse_state.push_arg(context, parse_state.full_span);
         self.dispatch_parse_state(parse_state)
     }
 
@@ -109,7 +117,8 @@ impl DispatchNode {
 
             if let Some(executor) = self.executor {
                 // This node is an executor, lets execute!
-                executor(remaining.arguments.as_slice(), remaining.argument_spans.as_slice())
+                let (arguments, spans) = remaining.get_arguments();
+                executor(arguments, spans)
             } else {
                 // Node isn't an executor, input *should* have had more remaining
                 CommandDispatchResult::IncompleteCommand
@@ -253,7 +262,7 @@ mod tests {
         };
 
         let my_struct = MyStruct(873183);
-        root.dispatch_with_context("execute", &my_struct);
+        root.dispatch_with_context_ref("execute", &my_struct);
 
         assert!(unsafe { DISPATCH_EXECUTED });
     }

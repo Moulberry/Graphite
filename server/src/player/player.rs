@@ -14,6 +14,7 @@ use protocol::{
 use queues::Buffer;
 use rand::RngCore;
 use sticky::Unsticky;
+use text_component::TextComponent;
 
 use crate::{
     position::{Position, Vec3f},
@@ -23,7 +24,7 @@ use crate::{
 
 use super::{
     player_connection::ConnectionReference, player_settings::PlayerSettings,
-    proto_player::ProtoPlayer,
+    proto_player::ProtoPlayer, generic::GenericPlayer,
 };
 
 // user defined player service trait
@@ -50,6 +51,7 @@ pub struct Player<P: PlayerService> {
 
     connection: ConnectionReference<P::UniverseServiceType>,
     pub(crate) write_buffer: WriteBuffer,
+    disconnected: bool,
 
     world: *mut World<P::WorldServiceType>,
     entity_id: EntityId,
@@ -83,6 +85,7 @@ impl<P: PlayerService> Player<P> {
 
             connection,
             write_buffer: WriteBuffer::new(),
+            disconnected: false,
 
             world,
             entity_id,
@@ -109,7 +112,15 @@ impl<P: PlayerService> Player<P> {
         unsafe { self.world.as_mut().unwrap() }
     }
 
+    pub fn as_dynamic(&mut self) -> &mut dyn GenericPlayer {
+        self
+    }
+
     pub(crate) fn tick(&mut self) -> anyhow::Result<()> {
+        if self.disconnected {
+            bail!("player has been disconnected");
+        }
+
         // Check teleport timer
         if self.teleport_id_timer > 0 {
             self.teleport_id_timer += 1;
@@ -129,7 +140,7 @@ impl<P: PlayerService> Player<P> {
 
             self.write_packet(&server::KeepAlive {
                 id: self.current_keep_alive,
-            })?;
+            });
         }
 
         // Update position
@@ -157,7 +168,7 @@ impl<P: PlayerService> Player<P> {
 
         if rotation_changed || coord_changed {
             self.chunk_view_position = self.get_world().update_view_position(self, to)?;
-
+            
             self.position = to;
             self.last_position = to;
         }
@@ -165,11 +176,21 @@ impl<P: PlayerService> Player<P> {
         Ok(())
     }
 
-    pub(crate) fn write_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<()>
+    pub fn send_message<T: Into<TextComponent>>(&mut self, message: T) {
+        self.write_packet(&server::SystemChat {
+            message: message.into().to_json(),
+            overlay: false,
+        })
+    }
+
+    pub(crate) fn write_packet<'a, T>(&mut self, packet: &'a T)
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
-        packet_helper::write_packet(&mut self.write_buffer, packet)
+        if packet_helper::write_packet(&mut self.write_buffer, packet).is_err() {
+            // Packet was too big
+            self.disconnect();
+        }
     }
 
     pub(crate) fn handle_packets(player: *mut Player<P>) -> anyhow::Result<u32> {
@@ -206,11 +227,14 @@ impl<P: PlayerService> Player<P> {
 
     pub(crate) fn handle_disconnect(player: *mut Player<P>) {
         unsafe {
-            let player: &mut Player<P> = player.as_mut().unwrap();
+            let player: &mut Player<P> = &mut *player;
             player.connection.forget();
+            player.disconnect();
         }
+    }
 
-        // todo: remove self from PlayerList containing this
+    pub(crate) fn disconnect(&mut self) {
+        self.disconnected = true;
         // todo: notify world/universe of disconnect
         todo!();
     }
