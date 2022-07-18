@@ -144,11 +144,10 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         struct Dyn(usize, usize);
         unsafe impl NoUninit for Dyn {}
 
-        let vtable: Dyn = unsafe { std::mem::transmute(self.as_dynamic()) };
+        let dynamic: Dyn = unsafe { std::mem::transmute(self.as_dynamic()) };
+        let result = dispatch.dispatch_with_context_move(packet.command, dynamic);
 
-        let result = dispatch.dispatch_with_context_move(packet.command, vtable);
-
-        self.send_message(format!("{:?}", result));
+        self.send_message(&format!("{:?}", result).into());
 
         Ok(())
     }

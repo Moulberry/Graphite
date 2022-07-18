@@ -5,6 +5,7 @@ use super::{Player, PlayerService};
 
 pub trait DynamicPlayer {
     fn send_message(&mut self, message: &TextComponent);
+    fn disconnect(&mut self);
 }
 
 impl<P: PlayerService> DynamicPlayer for Player<P> {
@@ -15,5 +16,9 @@ impl<P: PlayerService> DynamicPlayer for Player<P> {
             message: message.to_json(),
             overlay: false,
         })
+    }
+
+    fn disconnect(&mut self) {
+        self.disconnected = true;
     }
 }

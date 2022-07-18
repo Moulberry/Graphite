@@ -213,7 +213,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                             match &trait_obj.bounds[0] {
                                 syn::TypeParamBound::Trait(trait_ty) => {
                                     let last = get_last_ident_of_path(&trait_ty.path);
-                                    last.to_string() == "GenericPlayer"
+                                    last.to_string() == "DynamicPlayer"
                                 },
                                 _ => false,
                             }
@@ -226,7 +226,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
     if !has_correct_first_argument {
-        throw_error!(id => "first argument of command function must be of type `&mut dyn GenericPlayer`");
+        throw_error!(id => "first argument of command function must be of type `&mut dyn DynamicPlayer`");
     }
 
     let function_argument_count = input.sig.arguments.len() - 1;
@@ -457,7 +457,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parse_function = quote!(
         fn #command_identifier_parse(data: &[u8], spans: &[command::types::Span]) -> command::types::CommandDispatchResult {
             #[repr(C)]
-            struct Data(*mut dyn GenericPlayer, #parse_function_data_args);
+            struct Data(*mut dyn DynamicPlayer, #parse_function_data_args);
     
             debug_assert_eq!(spans.len() - 1, #attribute_argument_count, "parse function should receive spans equal to argument count");
             debug_assert_eq!(data.len(), std::mem::size_of::<Data>(), "slice length doesn't match data size. something must have gone wrong with realignment");

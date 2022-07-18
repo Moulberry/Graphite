@@ -51,7 +51,7 @@ pub struct Player<P: PlayerService> {
 
     connection: ConnectionReference<P::UniverseServiceType>,
     pub(crate) write_buffer: WriteBuffer,
-    disconnected: bool,
+    pub(crate) disconnected: bool,
 
     world: *mut World<P::WorldServiceType>,
     entity_id: EntityId,
@@ -176,13 +176,6 @@ impl<P: PlayerService> Player<P> {
         Ok(())
     }
 
-    pub fn send_message<T: Into<TextComponent>>(&mut self, message: T) {
-        self.write_packet(&server::SystemChat {
-            message: message.into().to_json(),
-            overlay: false,
-        })
-    }
-
     pub(crate) fn write_packet<'a, T>(&mut self, packet: &'a T)
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
@@ -232,19 +225,12 @@ impl<P: PlayerService> Player<P> {
             player.disconnect();
         }
     }
-
-    pub(crate) fn disconnect(&mut self) {
-        self.disconnected = true;
-        // todo: notify world/universe of disconnect
-        todo!();
-    }
 }
 
 unsafe impl<P: PlayerService> Unsticky for Player<P> {
     type UnstuckType = (ProtoPlayer<P::UniverseServiceType>, P);
 
     fn update_pointer(&mut self, _: usize) {
-        // todo: use index to be able to remove self from sticky
         let ptr: *mut Player<P> = self;
         self.connection.update_player_pointer(ptr);
     }

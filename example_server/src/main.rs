@@ -3,7 +3,7 @@ use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
-use server::player::generic::GenericPlayer;
+use server::player::generic::DynamicPlayer;
 use server::player::player_vec::PlayerVec;
 use server::player::proto_player::ProtoPlayer;
 use server::player::PlayerService;
@@ -42,7 +42,7 @@ impl ConciergeService for MyConciergeImpl {
         _: &concierge::ConciergeConnection<Self>,
     ) {
         #[brigadier("hello", {10..2000}, {})]
-        fn my_function(player: &mut dyn GenericPlayer, number: u16, numer2: u8) -> CommandResult {
+        fn my_function(player: &mut dyn DynamicPlayer, number: u16, numer2: u8) -> CommandResult {
             println!("number: {}", number);
             println!("numer2: {}", numer2);
             player.send_message(&"Hello from my_function".into());
