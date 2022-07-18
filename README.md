@@ -12,15 +12,15 @@
 
 # Subprojects
 
-- `example_server`: example server using various Graphite components
-- `server`: the minecraft server. entities, chunks, players, all that good stuff
-- `concierge`: component that accepts new connections, handles status and login. Can be used to create proxies, servers, etc.
-- `protocol`: the minecraft protocol
-- `net`: networking components and utilities
-- `binary`: zero-copy serialization
-- `command`: command dispatch and low-level creation
-- `command_derive`: attribute macro to easily create commands
-- `sticky`: collection(s) that guarantee the memory-location of its contents
+- `example_server`: Example server using various Graphite components
+- `server`: The minecraft server. Entities, chunks, players, all that good stuff
+- `concierge`: Component that accepts new connections, handles status and login. Can be used to create proxies, servers, etc.
+- `protocol`: The minecraft protocol
+- `net`: Networking components and utilities
+- `binary`: Zero-copy serialization
+- `command`: Command dispatch and low-level creation
+- `command_derive`: Attribute macro to easily create commands
+- `sticky`: Collection(s) that guarantee the memory-location of its contents
 
 # Warning
 
