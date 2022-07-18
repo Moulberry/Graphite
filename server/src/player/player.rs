@@ -24,7 +24,7 @@ use crate::{
 
 use super::{
     player_connection::ConnectionReference, player_settings::PlayerSettings,
-    proto_player::ProtoPlayer, generic::GenericPlayer,
+    proto_player::ProtoPlayer, generic::DynamicPlayer,
 };
 
 // user defined player service trait
@@ -112,7 +112,7 @@ impl<P: PlayerService> Player<P> {
         unsafe { self.world.as_mut().unwrap() }
     }
 
-    pub fn as_dynamic(&mut self) -> &mut dyn GenericPlayer {
+    pub fn as_dynamic(&mut self) -> &mut dyn DynamicPlayer {
         self
     }
 

@@ -12,7 +12,7 @@ use protocol::{
 };
 use queues::IsQueue;
 
-use super::{Player, PlayerService, generic::GenericPlayer};
+use super::{Player, PlayerService, generic::DynamicPlayer};
 
 impl<P: PlayerService> client::PacketHandler for Player<P> {
     const DEBUG: bool = true;
