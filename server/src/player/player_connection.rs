@@ -10,8 +10,8 @@ use super::player::{Player, PlayerService};
 #[derive(Debug)]
 pub struct ConnectionReference<U: UniverseService> {
     closed: bool,
-    connection_slab: *mut ConnectionSlab<Universe<U>>,
     connection_index: u16,
+    connection_slab: *mut ConnectionSlab<Universe<U>>,
 }
 
 impl<U: UniverseService> ConnectionReference<U> {

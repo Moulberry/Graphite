@@ -147,8 +147,8 @@ macro_rules! throw_error {
         let id = $command_identifier;
         let dummy_root = quote::quote!(
             let #id = command::minecraft::MinecraftRootDispatchNode {
-                literals: HashMap::new(),
-                aliases: HashMap::new()
+                literals: std::collections::HashMap::new(),
+                aliases: std::collections::HashMap::new()
             };
         );
 
@@ -168,8 +168,8 @@ macro_rules! throw_error {
         let id = $command_identifier;
         let dummy_root = quote::quote!(
             let #id = command::minecraft::MinecraftRootDispatchNode {
-                literals: HashMap::new(),
-                aliases: HashMap::new()
+                literals: std::collections::HashMap::new(),
+                aliases: std::collections::HashMap::new()
             };
         );
 
@@ -185,9 +185,31 @@ macro_rules! throw_error {
     }};
 }
 
-fn get_last_ident_of_path(path: &syn::Path) -> syn::Ident {
-    path.segments[path.segments.len() - 1].ident.clone()
+fn check_player_type_and_get_generic(type_path: &syn::TypePath) -> Option<syn::Type> {
+    let segments = &type_path.path.segments;
+    let last = &segments[segments.len() - 1];
+    if last.ident.to_string() == "Player" {
+        let arguments = &last.arguments;
+        match arguments {
+            syn::PathArguments::AngleBracketed(generic_args) => {
+                let generic_args = &generic_args.args;
+                if generic_args.len() == 1 {
+                    let generic_arg = &generic_args[0];
+                    match generic_arg {
+                        syn::GenericArgument::Type(generic_type) => {
+                            return Some(generic_type.clone());
+                        },
+                        _ => return None
+                    }
+                }
+            }
+            _ => return None
+        }
+    }
+    None
 }
+
+
 
 #[proc_macro_attribute]
 pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -196,6 +218,8 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attributes = parse_macro_input!(attr as BrigadierAttributes);
 
     let id = input.sig.ident;
+
+    let mut generic_player_types = vec![];
 
     // Validate first argument
     let has_correct_first_argument = if input.sig.arguments.len() == 0 {
@@ -206,17 +230,12 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         match first_argument_ty {
             syn::Type::Reference(ref_ty) => {
                 match &*ref_ty.elem {
-                    syn::Type::TraitObject(trait_obj) => {
-                        if trait_obj.dyn_token.is_none() {
-                            false
+                    syn::Type::Path(type_path) => {
+                        if let Some(generic_type) = check_player_type_and_get_generic(type_path) {
+                            generic_player_types.push(generic_type);
+                            true
                         } else {
-                            match &trait_obj.bounds[0] {
-                                syn::TypeParamBound::Trait(trait_ty) => {
-                                    let last = get_last_ident_of_path(&trait_ty.path);
-                                    last.to_string() == "DynamicPlayer"
-                                },
-                                _ => false,
-                            }
+                            false
                         }
                     }
                     _ => false
@@ -226,7 +245,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
     if !has_correct_first_argument {
-        throw_error!(id => "first argument of command function must be of type `&mut dyn DynamicPlayer`");
+        throw_error!(id => "first argument of command function must be of type `&mut Player<?>`");
     }
 
     let function_argument_count = input.sig.arguments.len() - 1;
@@ -343,7 +362,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                 if use_root {
                     // Update the dispatch node, using a MinecraftRootDispatchNode
                     dispatch_node = quote!(
-                        let #id = command::minecraft::MinecraftRootDispatchNode {
+                        let mut #id = command::minecraft::MinecraftRootDispatchNode {
                             literals: {
                                 let mut map = std::collections::HashMap::with_capacity(1);
                                 map.insert(#name, #dispatch_node);
@@ -386,7 +405,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let parser_expr;
                 let parser_validate;
 
-                let deconstruct_index = proc_macro2::Literal::usize_unsuffixed(function_arg_index + 1);
+                let deconstruct_index = proc_macro2::Literal::usize_unsuffixed(function_arg_index + 2);
 
                 match ty {
                     syn::Type::Path(type_path) => {
@@ -453,19 +472,45 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     }
 
+    let mut player_type_match_variants = quote!();
+    let mut player_type_match_inner = quote!();
+
+    for (index, player_type) in generic_player_types.iter().enumerate() {
+        let player_ty_identifier = format!("player_type_{}", index);
+        let player_ty_identifier: proc_macro2::TokenStream = player_ty_identifier.parse().unwrap();
+
+        player_type_match_variants = quote!(
+            #player_type_match_variants
+            let #player_ty_identifier = std::any::TypeId::of::<#player_type>();
+        );
+
+        player_type_match_inner = quote!(
+            #player_type_match_inner
+            #player_ty_identifier => {
+                command::types::CommandDispatchResult::Success(#id(unsafe { &mut *(std::mem::transmute::<*mut (), *mut Player<#player_type>>(data.0) )}, #parse_function_data_args_deconstruct))
+            }
+        );
+    }
+
     // Create parse function (raw bytes => arguments => command function)
     let parse_function = quote!(
         fn #command_identifier_parse(data: &[u8], spans: &[command::types::Span]) -> command::types::CommandDispatchResult {
             #[repr(C)]
-            struct Data(*mut dyn DynamicPlayer, #parse_function_data_args);
+            struct Data(*mut (), std::any::TypeId, #parse_function_data_args);
     
-            debug_assert_eq!(spans.len() - 1, #attribute_argument_count, "parse function should receive spans equal to argument count");
+            debug_assert_eq!(spans.len() - 2, #attribute_argument_count, "parse function should receive spans equal to argument count");
             debug_assert_eq!(data.len(), std::mem::size_of::<Data>(), "slice length doesn't match data size. something must have gone wrong with realignment");
             let data: &Data = unsafe { &*(data as *const _ as *const Data) };
 
             #parse_function_validate_args
-    
-            command::types::CommandDispatchResult::Success(#id(unsafe { std::mem::transmute(data.0) }, #parse_function_data_args_deconstruct))
+
+            #player_type_match_variants
+            match data.1 {
+                #player_type_match_inner
+                _ => {
+                    panic!("Unknown player type executed command `{}`", stringify!(#id));
+                }
+            }
         }
     );
 

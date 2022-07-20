@@ -1,6 +1,6 @@
 use sticky::Unsticky;
 
-use crate::{error::UninitializedError, position::Position, world::World};
+use crate::{error::UninitializedError, world::World, entity::position::Position};
 
 use super::{
     player::{Player, PlayerService},

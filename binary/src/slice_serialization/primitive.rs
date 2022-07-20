@@ -50,9 +50,12 @@ macro_rules! for_primitive {
 }
 
 for_primitive!(u16, BigEndian, from_be_bytes, to_be_bytes);
-for_primitive!(u64, BigEndian, from_be_bytes, to_be_bytes);
-for_primitive!(u128, BigEndian, from_be_bytes, to_be_bytes);
+for_primitive!(i16, BigEndian, from_be_bytes, to_be_bytes);
+for_primitive!(u32, BigEndian, from_be_bytes, to_be_bytes);
 for_primitive!(i32, BigEndian, from_be_bytes, to_be_bytes);
+for_primitive!(u64, BigEndian, from_be_bytes, to_be_bytes);
 for_primitive!(i64, BigEndian, from_be_bytes, to_be_bytes);
+for_primitive!(u128, BigEndian, from_be_bytes, to_be_bytes);
+for_primitive!(i128, BigEndian, from_be_bytes, to_be_bytes);
 for_primitive!(f32, BigEndian, from_be_bytes, to_be_bytes);
 for_primitive!(f64, BigEndian, from_be_bytes, to_be_bytes);

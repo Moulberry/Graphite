@@ -14,22 +14,10 @@ pub struct RootDispatchNode {
 impl RootDispatchNode {
     pub fn dispatch(&self, input: &str) -> CommandDispatchResult {
         let parse_state = ParseState::new(input);
-        self.dispatch_parse_state(parse_state)
+        self.dispatch_with(parse_state)
     }
 
-    pub fn dispatch_with_context_ref<T>(&self, input: &str, context: &T) -> CommandDispatchResult {
-        let mut parse_state = ParseState::new(input);
-        parse_state.push_ref(context, parse_state.full_span);
-        self.dispatch_parse_state(parse_state)
-    }
-
-    pub fn dispatch_with_context_move<T: NoUninit>(&self, input: &str, context: T) -> CommandDispatchResult {
-        let mut parse_state = ParseState::new(input);
-        parse_state.push_arg(context, parse_state.full_span);
-        self.dispatch_parse_state(parse_state)
-    }
-
-    fn dispatch_parse_state(&self, mut parse_state: ParseState) -> CommandDispatchResult {
+    pub fn dispatch_with(&self, mut parse_state: ParseState) -> CommandDispatchResult {
         if let Some(spanned_word) = parse_state.pop_input() {
             if let Some(aliased) = self.aliases.get(spanned_word.word) {
                 // Aliased literal
@@ -262,7 +250,9 @@ mod tests {
         };
 
         let my_struct = MyStruct(873183);
-        root.dispatch_with_context_ref("execute", &my_struct);
+        let mut parse_state = ParseState::new("execute");
+        parse_state.push_ref(&my_struct, parse_state.full_span);
+        root.dispatch_with(parse_state);
 
         assert!(unsafe { DISPATCH_EXECUTED });
     }

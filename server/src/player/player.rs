@@ -1,3 +1,4 @@
+use legion::*;
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
 use net::{
@@ -17,27 +18,26 @@ use sticky::Unsticky;
 use text_component::TextComponent;
 
 use crate::{
-    position::{Position, Vec3f},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, World, WorldService},
+    world::{ChunkViewPosition, World, WorldService, chunk::Chunk}, entity::{position::{Position, Vec3f}, components::Viewable},
 };
 
 use super::{
     player_connection::ConnectionReference, player_settings::PlayerSettings,
-    proto_player::ProtoPlayer, generic::DynamicPlayer,
+    proto_player::ProtoPlayer,
 };
 
 // user defined player service trait
 
 pub trait PlayerService
 where
-    Self: Sized,
+    Self: Sized + 'static,
 {
     /// This will cause packets to be written immediately when packets are received
     /// If this is false, the server will instead wait for the tick
     ///
     /// Benefit: reduce latency by ~25ms (on average) for some interactions
-    /// Drawback: two write operations could potentially strain the server
+    /// Drawback: 2x write operations which could potentially strain the server
     const FAST_PACKET_RESPONSE: bool = true;
 
     type UniverseServiceType: UniverseService;
@@ -112,14 +112,22 @@ impl<P: PlayerService> Player<P> {
         unsafe { self.world.as_mut().unwrap() }
     }
 
-    pub fn as_dynamic(&mut self) -> &mut dyn DynamicPlayer {
-        self
-    }
-
     pub(crate) fn tick(&mut self) -> anyhow::Result<()> {
         if self.disconnected {
             bail!("player has been disconnected");
         }
+
+        // Get viewable packets
+        let chunk_x = self.chunk_view_position.x as i32;
+        let chunk_z = self.chunk_view_position.z as i32;
+        let view_distance = P::WorldServiceType::VIEW_DISTANCE as i32;
+        for x in (chunk_x-view_distance).max(0)..(chunk_x+view_distance+1).min(P::WorldServiceType::CHUNKS_X as _) {
+            for z in (chunk_z-view_distance).max(0)..(chunk_z+view_distance+1).min(P::WorldServiceType::CHUNKS_Z as _) {
+                let chunk = &self.get_world().chunks[x as usize][z as usize];
+                self.write_buffer.copy_from(chunk.viewable_buffer.get_written());
+            }    
+        }
+
 
         // Check teleport timer
         if self.teleport_id_timer > 0 {
@@ -174,6 +182,19 @@ impl<P: PlayerService> Player<P> {
         }
 
         Ok(())
+    }
+
+    pub fn send_message<T: Into<TextComponent>>(&mut self, message: T) {
+        // self.service.whatever;
+
+        self.write_packet(&server::SystemChat {
+            message: message.into().to_json(),
+            overlay: false,
+        })
+    }
+
+    pub fn disconnect(&mut self) {
+        self.disconnected = true;
     }
 
     pub(crate) fn write_packet<'a, T>(&mut self, packet: &'a T)

@@ -1,5 +1,8 @@
 const MIN_SIZE: usize = 1024;
+
+#[derive(Clone, Debug)]
 pub struct WriteBuffer {
+    min_size: usize,
     vec: Vec<u8>,
     write_index: usize,
     shrink_counter: usize,
@@ -10,6 +13,7 @@ pub struct WriteBuffer {
 impl Default for WriteBuffer {
     fn default() -> Self {
         Self {
+            min_size: MIN_SIZE,
             vec: Vec::with_capacity(MIN_SIZE),
             write_index: 0,
             current_requested_capacity: 0,
@@ -22,6 +26,18 @@ impl Default for WriteBuffer {
 // todo: add tests for this type
 
 impl WriteBuffer {
+    pub fn with_min_capacity(min_capacity: usize) -> WriteBuffer {
+        Self {
+            min_size: min_capacity,
+            vec: Vec::with_capacity(min_capacity),
+            write_index: 0,
+            current_requested_capacity: 0,
+            max_requested_capacity: 0,
+            shrink_counter: 0,
+        }
+    }
+
+    // todo: remove this function and make every invocation specify the min capacity
     pub fn new() -> WriteBuffer {
         Default::default()
     }
@@ -60,6 +76,15 @@ impl WriteBuffer {
             let ptr = self.vec.as_mut_ptr().add(self.write_index);
             std::slice::from_raw_parts_mut(ptr, capacity)
         }
+    }
+
+    pub fn copy_from(&mut self, bytes: &[u8]) {
+        if bytes.len() == 0 {
+            return;
+        }
+
+        self.get_unwritten(bytes.len()).copy_from_slice(bytes);
+        unsafe { self.advance(bytes.len()); }
     }
 
     /// This function should be used after successfully writing some data with `get_unwritten`

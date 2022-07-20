@@ -1,7 +1,6 @@
 use crate::{
-    position::Position,
     universe::{EntityId, UniverseService},
-    world::World,
+    world::World, entity::position::Position,
 };
 use net::{
     network_buffer::WriteBuffer,
@@ -15,13 +14,13 @@ use super::{
 // Proto player
 
 pub struct ProtoPlayer<U: UniverseService> {
+    connection: ConnectionReference<U>,
     pub hardcore: bool,
 
     pub(crate) write_buffer: WriteBuffer,
     pub(crate) entity_id: EntityId,
     // username
     // uuid
-    connection: ConnectionReference<U>,
 }
 
 impl<U: UniverseService> ProtoPlayer<U> {

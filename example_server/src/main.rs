@@ -1,15 +1,21 @@
+use std::any::Any;
+
 use command::brigadier;
 use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
+use net::network_buffer::WriteBuffer;
 use net::network_handler::UninitializedConnection;
-use server::player::generic::DynamicPlayer;
+use server::entity::components::Spinalla;
+use server::entity::components::TestEntity;
+use server::entity::components::Viewable;
+use server::entity::position::Coordinate;
+use server::entity::position::Position;
+use server::entity::position::Rotation;
+use server::player::Player;
 use server::player::player_vec::PlayerVec;
 use server::player::proto_player::ProtoPlayer;
 use server::player::PlayerService;
-use server::position::Coordinate;
-use server::position::Position;
-use server::position::Rotation;
 use server::universe::Universe;
 use server::universe::UniverseService;
 use server::world::World;
@@ -42,12 +48,53 @@ impl ConciergeService for MyConciergeImpl {
         _: &concierge::ConciergeConnection<Self>,
     ) {
         #[brigadier("hello", {10..2000}, {})]
-        fn my_function(player: &mut dyn DynamicPlayer, number: u16, numer2: u8) -> CommandResult {
+        fn my_function(player: &mut Player<MyPlayerService>, number: u16, numer2: u8) -> CommandResult {
             println!("number: {}", number);
             println!("numer2: {}", numer2);
-            player.send_message(&"Hello from my_function".into());
+            player.send_message("Hello from my_function");
             Ok(())
         }
+
+        // Options
+        // 1. Take a direct Player<MyPlayerService>
+        // 2. Make the function "generic", and use `brigadier_player_types` to specify the service types
+        // ---2 generates (in surrogate function)
+        /*
+        let __player_id_0 = std::any::TypeId::of::<XYZ>();
+        let __player_id_1 = std::any::TypeId::of::<ABC>();
+        match __player_id {
+            __player_id_0 => {
+                my_function(player as &mut Player<XYZ>, ...);
+            }
+            __player_id_1 => {
+                my_function(player as &mut Player<ABC>, ...);
+            }
+        }
+        */
+        
+        #[brigadier("entity_test", {})]
+        fn entity_test(player: &mut Player<MyPlayerService>, entity_type: u8) -> CommandResult {
+            player.send_message("Hello from MyPlayerService");
+
+            let mut entity = (Viewable { coord: Coordinate {
+                x: player.position.coord.x,
+                y: player.position.coord.y,
+                z: player.position.coord.z
+            }, buffer: std::ptr::null_mut(), create_buffer: WriteBuffer::with_min_capacity(64), destroy_buffer: WriteBuffer::with_min_capacity(64) }, TestEntity {
+                spawned: false,
+                entity_type: entity_type as _
+            }, Spinalla {
+                rotation: Rotation {
+                    yaw: 0.0,
+                    pitch: 0.0
+                }
+            });
+            player.get_world_mut().push_entity(entity);
+
+            Ok(())
+        }
+
+        my_function.merge(entity_test).unwrap();
 
         let (dispatcher, packet) = command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
@@ -121,7 +168,7 @@ impl WorldService for MyWorldService {
                 Position {
                     coord: Coordinate {
                         x: 32.0,
-                        y: 500.0,
+                        y: 400.0,
                         z: 32.0,
                     },
                     rot: Rotation {
@@ -137,7 +184,7 @@ impl WorldService for MyWorldService {
         world.service.players.initialize(world);
     }
 
-    fn tick(world: &mut World<Self>) {
+    unsafe fn tick(world: &mut World<Self>) {
         world.service.players.tick();
     }
 

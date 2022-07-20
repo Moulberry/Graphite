@@ -1,20 +1,43 @@
 use binary::slice_serialization::*;
 
 use crate::identify_packets;
-use crate::types::CommandNode;
+use crate::types::{CommandNode, ByteRotation, QuantizedShort};
 use crate::IdentifiedPacket;
 use num_enum::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
+    AddEntity = 0x00,
     Commands = 0x0f,
     CustomPayload<'_> = 0x16,
     KeepAlive = 0x20,
     LevelChunkWithLight<'_> = 0x21,
     Login<'_> = 0x25,
+    RemoveEntities = 0x3b,
     SetPlayerPosition = 0x39,
+    RotateHead = 0x3f,
     SetChunkCacheCenter = 0x4b,
-    SystemChat<'_> = 0x62
+    SystemChat<'_> = 0x62,
+    TeleportEntity = 0x66
+}
+
+// Add Entity
+
+slice_serializable_composite! {
+    AddEntity,
+    id: i32 as VarInt,
+    uuid: u128 as BigEndian,
+    entity_type: i32 as VarInt,
+    x: f64 as BigEndian,
+    y: f64 as BigEndian,
+    z: f64 as BigEndian,
+    yaw: f32 as ByteRotation,
+    pitch: f32 as ByteRotation,
+    head_yaw: f32 as ByteRotation,
+    data: i32 as VarInt, // nice naming mojang
+    x_vel: f32 as QuantizedShort,
+    y_vel: f32 as QuantizedShort,
+    z_vel: f32 as QuantizedShort,
 }
 
 // Commands
@@ -88,6 +111,12 @@ slice_serializable_composite! {
     has_death_location: bool as Single // must be false
 }
 
+// Remove Entities
+slice_serializable_composite! {
+    RemoveEntities,
+    entities: Vec<i32> as SizedArray<VarInt>
+}
+
 // Player Position
 slice_serializable_composite! {
     SetPlayerPosition,
@@ -99,6 +128,13 @@ slice_serializable_composite! {
     relative_arguments: u8 as Single,
     id: i32 as VarInt,
     dismount_vehicle: bool as Single
+}
+
+// Rotate Head
+slice_serializable_composite! {
+    RotateHead,
+    entity_id: i32 as VarInt,
+    head_yaw: f32 as ByteRotation
 }
 
 // Set Chunk Cache Center
@@ -113,5 +149,17 @@ slice_serializable_composite! {
     SystemChat<'a>,
     message: &'a str as SizedString,
     overlay: bool as Single
+}
+
+// Teleport Entity
+slice_serializable_composite! {
+    TeleportEntity,
+    entity_id: i32 as VarInt,
+    x: f64 as BigEndian,
+    y: f64 as BigEndian,
+    z: f64 as BigEndian,
+    yaw: f32 as ByteRotation,
+    pitch: f32 as ByteRotation,
+    on_ground: bool as Single
 }
 

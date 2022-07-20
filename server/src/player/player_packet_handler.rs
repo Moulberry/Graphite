@@ -1,21 +1,20 @@
 use anyhow::bail;
-use bytemuck::NoUninit;
-use command::dispatcher::RootDispatchNode;
+use command::types::ParseState;
 use protocol::{
     play::{
         client::{
             self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
             MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction,
-        }, server,
+        },
     },
     types::{HandAction, MoveAction},
 };
 use queues::IsQueue;
 
-use super::{Player, PlayerService, generic::DynamicPlayer};
+use super::{Player, PlayerService};
 
 impl<P: PlayerService> client::PacketHandler for Player<P> {
-    const DEBUG: bool = true;
+    const DEBUG: bool = false;
 
     fn handle_move_player_pos_rot(&mut self, packet: MovePlayerPosRot) -> anyhow::Result<()> {
         if self.waiting_teleportation_id.size() > 0 {
@@ -137,17 +136,16 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
     }
 
     fn handle_chat_command(&mut self, packet: client::ChatCommand) -> anyhow::Result<()> {
+        // let generic: &mut GenericPlayer = self as &mut GenericPlayer;
+
         let dispatch = &mut self.get_world_mut().get_universe().root_dispatch_node;
 
-        // 32-bit support :)
-        #[derive(Clone, Copy)]
-        struct Dyn(usize, usize);
-        unsafe impl NoUninit for Dyn {}
+        let mut parse_state = ParseState::new(packet.command);
+        parse_state.push_ref(self, parse_state.full_span);
+        parse_state.push_arg(unsafe { std::mem::transmute::<std::any::TypeId, u64>(std::any::Any::type_id(self)) }, parse_state.full_span);
+        let result = dispatch.dispatch_with(parse_state);
 
-        let dynamic: Dyn = unsafe { std::mem::transmute(self.as_dynamic()) };
-        let result = dispatch.dispatch_with_context_move(packet.command, dynamic);
-
-        self.send_message(&format!("{:?}", result).into());
+        self.send_message(format!("{:?}", result));
 
         Ok(())
     }

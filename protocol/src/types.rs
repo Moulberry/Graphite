@@ -57,6 +57,58 @@ pub enum Direction {
     East,
 }
 
+// Byte Rotation
+
+pub enum ByteRotation {}
+
+impl SliceSerializable<'_, f32> for ByteRotation {
+    type RefType = f32;
+
+    fn maybe_deref(t: &f32) -> Self::RefType {
+        *t
+    }
+
+    fn read(bytes: &mut &[u8]) -> anyhow::Result<f32> {
+        let byte = <Single as SliceSerializable<i8>>::read(bytes)?;
+        Ok(byte as f32 * 360.0 / 256.0)
+    }
+
+    unsafe fn write(bytes: &mut [u8], data: f32) -> &mut [u8] {
+        let byte = (data * 256.0 / 360.0).to_int_unchecked::<i8>();
+        <Single as SliceSerializable<i8>>::write(bytes, byte)
+    }
+
+    fn get_write_size(_: f32) -> usize {
+        1
+    }
+}
+
+// Quantized Short
+
+pub enum QuantizedShort {}
+
+impl SliceSerializable<'_, f32> for QuantizedShort {
+    type RefType = f32;
+
+    fn maybe_deref(t: &f32) -> Self::RefType {
+        *t
+    }
+
+    fn read(bytes: &mut &[u8]) -> anyhow::Result<f32> {
+        let short = <BigEndian as SliceSerializable<i16>>::read(bytes)?;
+        Ok(short as f32 * 8000.0)
+    }
+
+    unsafe fn write(bytes: &mut [u8], data: f32) -> &mut [u8] {
+        let short = (data / 8000.0) as i16;
+        <BigEndian as SliceSerializable<i16>>::write(bytes, short)
+    }
+
+    fn get_write_size(_: f32) -> usize {
+        2
+    }
+}
+
 // Block Position
 
 #[derive(Debug, Copy, Clone)]

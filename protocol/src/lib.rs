@@ -57,7 +57,8 @@ macro_rules! identify_packets {
                         )*
                     }
                 } else {
-                    anyhow::bail!("unknown packet_id 0x{:x}", packet_id)
+                    Ok(())
+                    // anyhow::bail!("unknown packet_id 0x{:x}", packet_id)
                 }
             }
         }

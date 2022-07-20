@@ -15,8 +15,7 @@ use crate::player::proto_player::ProtoPlayer;
 // user defined universe service trait
 
 pub trait UniverseService
-where
-    Self: Sized,
+where Self: Sized + 'static
 {
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>);
     fn initialize(universe: &Universe<Self>);
@@ -42,7 +41,7 @@ pub struct Universe<U: UniverseService> {
     player_receiver: Receiver<UninitializedConnection>,
     entity_id_counter: i32,
     pub root_dispatch_node: RootDispatchNode,
-    pub command_packet: Commands
+    pub command_packet: Commands,
 }
 
 // graphite universe impl
@@ -133,9 +132,9 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
             command_packet
         };
 
-        U::initialize(&universe);
-
-        let _ = net::network_handler::start(universe, None);
+        let _ = net::network_handler::start_with_init(universe, None, |network_manager| {
+            U::initialize(&network_manager.service);
+        }).unwrap();
     });
 
     rx

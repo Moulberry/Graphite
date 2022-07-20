@@ -22,11 +22,11 @@ pub  struct ParseState<'a> {
     argument_spans: Vec<Span>,
     pub(crate) words: Vec<SpannedWord<'a>>,
     pub(crate) cursor: usize,
-    pub(crate) full_span: Span
+    pub full_span: Span
 }
 
 impl<'a> ParseState<'a> {
-    pub(crate) fn new(input: &'a str) -> Self {
+    pub fn new(input: &'a str) -> Self {
         let mut words = Vec::new();
         let mut start = 0;
         let mut end = 0;
@@ -113,17 +113,17 @@ impl<'a> ParseState<'a> {
         debug_assert!(self.cursor <= self.words.len());
     }
 
-    pub(crate) fn push_str(&mut self, arg: &str, span: Span) {
+    pub fn push_str(&mut self, arg: &str, span: Span) {
         let raw_slice: u128 = unsafe { std::mem::transmute(arg) };
         self.push_arg(raw_slice, span);
     }
 
-    pub(crate) fn push_ref<T>(&mut self, arg: &T, span: Span) {
+    pub fn push_ref<T>(&mut self, arg: &T, span: Span) {
         let raw_reference: usize = unsafe { std::mem::transmute(arg) };
         self.push_arg(raw_reference, span);
     }
 
-    pub(crate) fn push_arg<T: NoUninit>(&mut self, arg: T, span: Span) {
+    pub fn push_arg<T: NoUninit>(&mut self, arg: T, span: Span) {
         // Get layout for argument
         let arg_layout = Layout::new::<T>();
 

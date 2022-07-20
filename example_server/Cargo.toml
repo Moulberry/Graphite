@@ -8,3 +8,4 @@ server = { path = "../server" }
 net = { path = "../net" }
 concierge = { path = "../concierge" }
 command = { path = "../command" }
+protocol = { path = "../protocol" }

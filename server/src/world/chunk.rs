@@ -2,6 +2,7 @@ use binary::{
     slice_serializable_composite,
     slice_serialization::{BigEndian, GreedyBlob, SliceSerializable},
 };
+use legion::Entity;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::play::server::{self, ChunkBlockData, ChunkLightData};
 
@@ -10,9 +11,18 @@ use super::{chunk_section::ChunkSection, paletted_container::PalettedContainer};
 pub struct Chunk {
     cached_block_data: WriteBuffer,
     cached_light_data: WriteBuffer,
+    pub(crate) viewable_buffer: WriteBuffer,
+    pub(crate) entities: Vec<Entity>
 }
 
 impl Chunk {
+    pub const SECTION_BLOCK_WIDTH: f32 = 16.0;
+
+    #[inline(always)]
+    pub fn to_chunk_coordinate(f: f32) -> i32 {
+        (f / Chunk::SECTION_BLOCK_WIDTH).floor() as i32
+    }
+
     pub fn new(empty: bool) -> Self {
         let mut chunk_data = WriteBuffer::new();
         for i in 0..24 {
@@ -60,6 +70,8 @@ impl Chunk {
         Self {
             cached_block_data,
             cached_light_data,
+            viewable_buffer: WriteBuffer::new(),
+            entities: Vec::new()
         }
     }
 
@@ -78,6 +90,15 @@ impl Chunk {
 
         let packet_id = server::PacketId::LevelChunkWithLight as u8;
         net::packet_helper::write_custom_packet(write_buffer, packet_id, &composite)
+    }
+
+    pub(crate) fn clear_entity_refs(&mut self) {
+        let old_len = self.entities.len();
+        self.entities.clear();
+
+        if old_len < self.entities.capacity() / 2 {
+            self.entities.shrink_to(old_len);
+        }
     }
 }
 

@@ -13,6 +13,7 @@ queues = "1.1.0"
 io-uring = { version = "0.5.2", features = ["unstable"] }
 quartz_nbt = "0.2.6"
 bytemuck = "1.10.0"
+legion = { version = "0.4.0", default-features = false }
 
 binary = { path = "../binary" }
 net = { path = "../net" }
@@ -20,3 +21,11 @@ protocol = { path = "../protocol" }
 sticky = { path = "../sticky" }
 command = { path = "../command" }
 text_component = { path = "../text_component" }
+
+[dev-dependencies]
+quickcheck = "1.0.3"
+criterion = "0.3.6"
+
+[[bench]]
+name = "chunk_view_diff"
+harness = false
