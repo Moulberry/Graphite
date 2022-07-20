@@ -2,14 +2,20 @@ use binary::slice_serialization::SliceSerializable;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::{IdentifiedPacket, play::server};
 
+use crate::world::chunk::Chunk;
+
 use super::position::{Coordinate, Rotation};
 
 #[derive(Clone, Debug)]
 pub struct Viewable {
     pub coord: Coordinate,
-    pub buffer: *mut WriteBuffer,
-    pub create_buffer: WriteBuffer,
-    pub destroy_buffer: WriteBuffer,
+    pub(crate) index_in_chunk_entity_slab: usize,
+    pub(crate) initialized: bool,
+    pub(crate) last_chunk_x: i32,
+    pub(crate) last_chunk_z: i32,
+    pub(crate) buffer: *mut WriteBuffer,
+    pub(crate) create_buffer: WriteBuffer,
+    pub(crate) destroy_buffer: WriteBuffer,
 }
 
 // Don't worry about it
@@ -17,6 +23,19 @@ unsafe impl Send for Viewable {}
 unsafe impl Sync for Viewable {}
 
 impl Viewable {
+    pub fn new(coord: Coordinate) -> Self {
+        Self {
+            index_in_chunk_entity_slab: 0,
+            initialized: false,
+            last_chunk_x: Chunk::to_chunk_coordinate(coord.x),
+            last_chunk_z: Chunk::to_chunk_coordinate(coord.z),
+            coord,
+            buffer: std::ptr::null_mut(),
+            create_buffer: WriteBuffer::with_min_capacity(64),
+            destroy_buffer: WriteBuffer::with_min_capacity(64),
+        }
+    }
+
     // Update packets
     pub fn write_viewable_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<bool>
     where
@@ -62,5 +81,6 @@ pub struct TestEntity {
 
 
 pub struct Spinalla {
-    pub rotation: Rotation
+    pub rotation: Rotation,
+    pub reverse: bool
 }

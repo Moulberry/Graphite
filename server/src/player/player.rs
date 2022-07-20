@@ -19,7 +19,7 @@ use text_component::TextComponent;
 
 use crate::{
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, World, WorldService, chunk::Chunk}, entity::{position::{Position, Vec3f}, components::Viewable},
+    world::{ChunkViewPosition, World, WorldService}, entity::{position::{Position, Vec3f}},
 };
 
 use super::{
@@ -117,17 +117,20 @@ impl<P: PlayerService> Player<P> {
             bail!("player has been disconnected");
         }
 
-        // Get viewable packets
+        // Get spot packets
         let chunk_x = self.chunk_view_position.x as i32;
         let chunk_z = self.chunk_view_position.z as i32;
-        let view_distance = P::WorldServiceType::VIEW_DISTANCE as i32;
+        let current_chunk = &self.get_world().chunks[chunk_x as usize][chunk_z as usize];
+        self.write_buffer.copy_from(current_chunk.spot_buffer.get_written());
+
+        // Get viewable packets
+        let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
         for x in (chunk_x-view_distance).max(0)..(chunk_x+view_distance+1).min(P::WorldServiceType::CHUNKS_X as _) {
             for z in (chunk_z-view_distance).max(0)..(chunk_z+view_distance+1).min(P::WorldServiceType::CHUNKS_Z as _) {
                 let chunk = &self.get_world().chunks[x as usize][z as usize];
                 self.write_buffer.copy_from(chunk.viewable_buffer.get_written());
             }    
         }
-
 
         // Check teleport timer
         if self.teleport_id_timer > 0 {
@@ -175,7 +178,7 @@ impl<P: PlayerService> Player<P> {
         let coord_changed = distance_sq > 0.0001;
 
         if rotation_changed || coord_changed {
-            self.chunk_view_position = self.get_world().update_view_position(self, to)?;
+            self.chunk_view_position = self.get_world_mut().update_view_position(self, to)?;
             
             self.position = to;
             self.last_position = to;
@@ -247,6 +250,8 @@ impl<P: PlayerService> Player<P> {
         }
     }
 }
+
+// todo: decrease chunk playercount when dropped
 
 unsafe impl<P: PlayerService> Unsticky for Player<P> {
     type UnstuckType = (ProtoPlayer<P::UniverseServiceType>, P);

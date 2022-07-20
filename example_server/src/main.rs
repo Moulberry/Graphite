@@ -76,14 +76,15 @@ impl ConciergeService for MyConciergeImpl {
         fn entity_test(player: &mut Player<MyPlayerService>, entity_type: u8) -> CommandResult {
             player.send_message("Hello from MyPlayerService");
 
-            let mut entity = (Viewable { coord: Coordinate {
+            let entity = (Viewable::new(Coordinate {
                 x: player.position.coord.x,
                 y: player.position.coord.y,
                 z: player.position.coord.z
-            }, buffer: std::ptr::null_mut(), create_buffer: WriteBuffer::with_min_capacity(64), destroy_buffer: WriteBuffer::with_min_capacity(64) }, TestEntity {
+            }), TestEntity {
                 spawned: false,
                 entity_type: entity_type as _
             }, Spinalla {
+                reverse: false,
                 rotation: Rotation {
                     yaw: 0.0,
                     pitch: 0.0
@@ -151,6 +152,8 @@ impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
     const CHUNKS_X: usize = 6;
     const CHUNKS_Z: usize = 6;
+    const CHUNK_VIEW_DISTANCE: u8 = 8;
+    const ENTITY_VIEW_DISTANCE: u8 = 1;
 
     fn handle_player_join(
         world: &mut World<Self>,

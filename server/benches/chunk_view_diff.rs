@@ -42,7 +42,6 @@ fn chunk_view_diff_naive(c: &mut Criterion) {
     }
 }
 
-
 fn chunk_view_diff(c: &mut Criterion) {
     for input in INPUTS {
         c.bench_function(&format!("chunk_view_diff {}", input.0), |b| b.iter(|| {
@@ -57,5 +56,5 @@ fn chunk_view_diff(c: &mut Criterion) {
     }
 }
 
-criterion_group!(benches, chunk_view_diff, chunk_view_diff_naive);
+criterion_group!(benches, chunk_view_diff, /*chunk_view_diff_naive*/);
 criterion_main!(benches);
