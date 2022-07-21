@@ -84,7 +84,9 @@ impl WriteBuffer {
         }
 
         self.get_unwritten(bytes.len()).copy_from_slice(bytes);
-        unsafe { self.advance(bytes.len()); }
+        unsafe {
+            self.advance(bytes.len());
+        }
     }
 
     /// This function should be used after successfully writing some data with `get_unwritten`

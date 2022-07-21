@@ -2,13 +2,14 @@ use std::result;
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use quote::{ToTokens, quote};
+use quote::{quote, ToTokens};
 use syn::{
-    braced, parenthesized,
+    braced, bracketed, parenthesized,
     parse::{Parse, ParseStream},
     parse_macro_input,
     punctuated::Punctuated,
-    token, LitStr, Token, spanned::Spanned, bracketed, ReturnType,
+    spanned::Spanned,
+    token, LitStr, ReturnType, Token,
 };
 
 // Parse types for #[brigadier]
@@ -32,7 +33,7 @@ impl Parse for SimpleArg {
 struct CommandSignature {
     pub ident: syn::Ident,
     pub arguments: Punctuated<SimpleArg, Token![,]>,
-    pub output: ReturnType
+    pub output: ReturnType,
 }
 
 impl Parse for CommandSignature {
@@ -46,7 +47,7 @@ impl Parse for CommandSignature {
         Ok(Self {
             ident,
             arguments: Punctuated::parse_terminated(&content)?,
-            output: input.parse()?
+            output: input.parse()?,
         })
     }
 }
@@ -93,8 +94,9 @@ impl Parse for BrigadierAttribute {
                 bracketed!(content in input);
 
                 // Parse punctuated sequence of LitStr
-                let punctuated: Punctuated<LitStr, Token![,]> = Punctuated::parse_terminated(&content)?;
-                
+                let punctuated: Punctuated<LitStr, Token![,]> =
+                    Punctuated::parse_terminated(&content)?;
+
                 // Create alias vec
                 let mut aliases = Vec::with_capacity(punctuated.len());
                 for alias in punctuated {
@@ -108,9 +110,7 @@ impl Parse for BrigadierAttribute {
                 vec![string]
             };
 
-            Ok(Self::Literal {
-                aliases,
-            })
+            Ok(Self::Literal { aliases })
         }
     }
 }
@@ -198,18 +198,16 @@ fn check_player_type_and_get_generic(type_path: &syn::TypePath) -> Option<syn::T
                     match generic_arg {
                         syn::GenericArgument::Type(generic_type) => {
                             return Some(generic_type.clone());
-                        },
-                        _ => return None
+                        }
+                        _ => return None,
                     }
                 }
             }
-            _ => return None
+            _ => return None,
         }
     }
     None
 }
-
-
 
 #[proc_macro_attribute]
 pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -228,20 +226,18 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         let first_argument_ty = &input.sig.arguments[0].ty;
 
         match first_argument_ty {
-            syn::Type::Reference(ref_ty) => {
-                match &*ref_ty.elem {
-                    syn::Type::Path(type_path) => {
-                        if let Some(generic_type) = check_player_type_and_get_generic(type_path) {
-                            generic_player_types.push(generic_type);
-                            true
-                        } else {
-                            false
-                        }
+            syn::Type::Reference(ref_ty) => match &*ref_ty.elem {
+                syn::Type::Path(type_path) => {
+                    if let Some(generic_type) = check_player_type_and_get_generic(type_path) {
+                        generic_player_types.push(generic_type);
+                        true
+                    } else {
+                        false
                     }
-                    _ => false
                 }
+                _ => false,
             },
-            _ => false
+            _ => false,
         }
     };
     if !has_correct_first_argument {
@@ -266,8 +262,11 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                     let value = litstr.value();
                     check_result!(litstr.span(), id => check_literal(&value));
                 }
-            },
-            BrigadierAttribute::Argument { span: _, modifiers: _ } => {
+            }
+            BrigadierAttribute::Argument {
+                span: _,
+                modifiers: _,
+            } => {
                 attribute_argument_count += 1;
             }
         }
@@ -287,7 +286,10 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
             format!("are {} function arguments", function_argument_count)
         };
 
-        let error_msg = format!("{}, but there {}",attribute_count_description, function_count_description);
+        let error_msg = format!(
+            "{}, but there {}",
+            attribute_count_description, function_count_description
+        );
 
         if attribute_argument_count > function_argument_count {
             // Find attribute span to put error message on
@@ -315,7 +317,8 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Create endpoint dispatch node
     let command_identifier_parse = format!("{}__parse", id);
-    let command_identifier_parse: proc_macro2::TokenStream = command_identifier_parse.parse().unwrap();
+    let command_identifier_parse: proc_macro2::TokenStream =
+        command_identifier_parse.parse().unwrap();
     let mut dispatch_node = quote!(
         command::minecraft::MinecraftDispatchNode {
             literals: std::collections::BTreeMap::new(),
@@ -393,7 +396,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                         }
                     );
                 }
-            },
+            }
             BrigadierAttribute::Argument { span: _, modifiers } => {
                 attribute_argument_index += 1;
                 let function_arg_index = attribute_argument_count - attribute_argument_index;
@@ -405,11 +408,12 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let parser_expr;
                 let parser_validate;
 
-                let deconstruct_index = proc_macro2::Literal::usize_unsuffixed(function_arg_index + 2);
+                let deconstruct_index =
+                    proc_macro2::Literal::usize_unsuffixed(function_arg_index + 2);
 
                 match ty {
                     syn::Type::Path(type_path) => {
-                        let path_segments = &type_path.path.segments; 
+                        let path_segments = &type_path.path.segments;
                         let last_segment_ident = &path_segments[path_segments.len() - 1].ident;
                         let ident_str: &str = &last_segment_ident.to_string();
 
@@ -422,15 +426,19 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                             "u8" => {
                                 (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
                                     process_num_arg(quote!(u8), quote!(U8), deconstruct_index.clone(), modifiers));
-                            },
+                            }
                             "u16" => {
                                 (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
                                     process_num_arg(quote!(u16), quote!(U16), deconstruct_index.clone(), modifiers))
-                            },
-                            _ => throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")
+                            }
+                            _ => {
+                                throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")
+                            }
                         }
                     }
-                    _ => throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")
+                    _ => {
+                        throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")
+                    }
                 }
 
                 parse_function_data_args_deconstruct = quote! (
@@ -497,7 +505,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         fn #command_identifier_parse(data: &[u8], spans: &[command::types::Span]) -> command::types::CommandDispatchResult {
             #[repr(C)]
             struct Data(*mut (), std::any::TypeId, #parse_function_data_args);
-    
+
             debug_assert_eq!(spans.len() - 2, #attribute_argument_count, "parse function should receive spans equal to argument count");
             debug_assert_eq!(data.len(), std::mem::size_of::<Data>(), "slice length doesn't match data size. something must have gone wrong with realignment");
             let data: &Data = unsafe { &*(data as *const _ as *const Data) };
@@ -521,9 +529,12 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     tokens
 }
 
-fn process_num_arg(raw_typ: proc_macro2::TokenStream, parser_typ: proc_macro2::TokenStream,
-            deconstruct_index: proc_macro2::Literal, modifiers: &Punctuated<syn::Expr, token::Semi>)
-            -> result::Result<(bool, proc_macro2::TokenStream, proc_macro2::TokenStream), &'static str> {
+fn process_num_arg(
+    raw_typ: proc_macro2::TokenStream,
+    parser_typ: proc_macro2::TokenStream,
+    deconstruct_index: proc_macro2::Literal,
+    modifiers: &Punctuated<syn::Expr, token::Semi>,
+) -> result::Result<(bool, proc_macro2::TokenStream, proc_macro2::TokenStream), &'static str> {
     let mut min_expr = quote!(#raw_typ::MIN);
     let mut max_expr = quote!(#raw_typ::MAX);
     for modifier in modifiers {
@@ -535,7 +546,7 @@ fn process_num_arg(raw_typ: proc_macro2::TokenStream, parser_typ: proc_macro2::T
                 if let Some(to) = &range.to {
                     max_expr = to.to_token_stream();
                 }
-            },
+            }
             _ => return Err("invalid modifier for integer"),
         }
     }
@@ -561,14 +572,14 @@ fn process_num_arg(raw_typ: proc_macro2::TokenStream, parser_typ: proc_macro2::T
                     continue_parsing: false
                 };
             }
-        )
+        ),
     ))
 }
 
 fn check_literal(literal: &str) -> result::Result<(), &'static str> {
     for char in literal.chars() {
         if char == ' ' {
-            return Err("literal cannot contain a space")
+            return Err("literal cannot contain a space");
         }
     }
     Ok(())

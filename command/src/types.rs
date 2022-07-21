@@ -1,4 +1,4 @@
-use std::{result, alloc::Layout};
+use std::{alloc::Layout, result};
 
 use bytemuck::NoUninit;
 use bytes::BufMut;
@@ -12,17 +12,17 @@ pub struct Span {
 #[derive(Debug, Clone, Copy)]
 pub struct SpannedWord<'a> {
     pub span: Span,
-    pub word: &'a str
+    pub word: &'a str,
 }
 
-pub  struct ParseState<'a> {
+pub struct ParseState<'a> {
     finalized: bool,
     argument_layout: Layout,
     arguments: Vec<u8>,
     argument_spans: Vec<Span>,
     pub(crate) words: Vec<SpannedWord<'a>>,
     pub(crate) cursor: usize,
-    pub full_span: Span
+    pub full_span: Span,
 }
 
 impl<'a> ParseState<'a> {
@@ -34,9 +34,10 @@ impl<'a> ParseState<'a> {
         for (index, char) in input.chars().enumerate() {
             if char.is_whitespace() {
                 if in_word {
-                    words.push(
-                        SpannedWord { span: Span { start, end }, word: &input[start..=end] }
-                    )
+                    words.push(SpannedWord {
+                        span: Span { start, end },
+                        word: &input[start..=end],
+                    })
                 }
                 in_word = false;
             } else {
@@ -48,9 +49,10 @@ impl<'a> ParseState<'a> {
             }
         }
         if in_word {
-            words.push(
-                SpannedWord { span: Span { start, end }, word: &input[start..=end] }
-            )
+            words.push(SpannedWord {
+                span: Span { start, end },
+                word: &input[start..=end],
+            })
         }
 
         Self {
@@ -60,7 +62,7 @@ impl<'a> ParseState<'a> {
             argument_spans: Vec::new(),
             words,
             cursor: 0,
-            full_span: Span { start: 0, end }
+            full_span: Span { start: 0, end },
         }
     }
 
@@ -71,7 +73,11 @@ impl<'a> ParseState<'a> {
         // Get size and align of layout
         let len = self.argument_layout.size();
         let align = self.argument_layout.align();
-        debug_assert_eq!(len, self.arguments.len(), "layout length must match data length");
+        debug_assert_eq!(
+            len,
+            self.arguments.len(),
+            "layout length must match data length"
+        );
 
         // Compute padding (code from Layout::padding_needed_for)
         let padding = len.wrapping_add(align).wrapping_sub(1) & !align.wrapping_sub(1);
@@ -150,7 +156,7 @@ pub enum CommandParseResult {
     Err {
         span: Span,
         errmsg: String,
-        continue_parsing: bool
+        continue_parsing: bool,
     },
 }
 
@@ -160,9 +166,9 @@ pub enum CommandDispatchResult {
     ParseError {
         span: Span,
         errmsg: String,
-        continue_parsing: bool
+        continue_parsing: bool,
     },
     UnknownCommand,
     IncompleteCommand,
-    TooManyArguments
+    TooManyArguments,
 }

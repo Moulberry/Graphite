@@ -1,4 +1,4 @@
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 
 use protocol::{play::server, types::CommandNode};
 
@@ -45,9 +45,14 @@ pub fn create_dispatcher_and_brigadier_packet(
 
         match alias_for {
             // todo: use a redirect instead of cloning the node
-            // for some reason redirect was causing the client to 
+            // for some reason redirect was causing the client to
             // reject the brigadier packet
-            CommandNode::Literal { children: node_children, is_executable, redirect, name: _ } => {
+            CommandNode::Literal {
+                children: node_children,
+                is_executable,
+                redirect,
+                name: _,
+            } => {
                 // Create alias node (brigadier)
                 let command_node = CommandNode::Literal {
                     children: node_children,
@@ -60,9 +65,9 @@ pub fn create_dispatcher_and_brigadier_packet(
                 let brigadier_index = command_nodes.len() as i32;
                 children.push(brigadier_index);
                 command_nodes.push(command_node);
-            },
-            _ => unreachable!()
-        }        
+            }
+            _ => unreachable!(),
+        }
     }
 
     // Create root dispatch node (graphite)
@@ -139,9 +144,14 @@ fn process_dispatch_node(
 
         match alias_for {
             // todo: use a redirect instead of cloning the node
-            // for some reason redirect was causing the client to 
+            // for some reason redirect was causing the client to
             // reject the brigadier packet
-            CommandNode::Literal { children: node_children, is_executable, redirect, name: _ } => {
+            CommandNode::Literal {
+                children: node_children,
+                is_executable,
+                redirect,
+                name: _,
+            } => {
                 // Create alias node (brigadier)
                 let command_node = CommandNode::Literal {
                     children: node_children,
@@ -154,9 +164,9 @@ fn process_dispatch_node(
                 let brigadier_index = command_nodes.len() as i32;
                 children.push(brigadier_index);
                 command_nodes.push(command_node);
-            },
-            _ => unreachable!()
-        }  
+            }
+            _ => unreachable!(),
+        }
     }
 
     let mut parsers = Vec::new();

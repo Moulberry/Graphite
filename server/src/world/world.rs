@@ -1,18 +1,20 @@
 use anyhow::bail;
-use legion::*;
-use legion::storage::IntoComponentSource;
 use bytes::BufMut;
+use legion::storage::IntoComponentSource;
+use legion::*;
 use net::network_buffer::WriteBuffer;
-use protocol::{
-    play::server::{
-        ChunkBlockData, ChunkLightData, LevelChunkWithLight, Login, SetChunkCacheCenter,
-        SetPlayerPosition, AddEntity, RemoveEntities, TeleportEntity, RotateHead,
-    },
+use protocol::play::server::{
+    AddEntity, ChunkBlockData, ChunkLightData, LevelChunkWithLight, Login, RemoveEntities,
+    RotateHead, SetChunkCacheCenter, SetPlayerPosition, TeleportEntity,
 };
 
 use crate::{
+    entity::{
+        components::{Spinalla, TestEntity, Viewable},
+        position::Position,
+    },
     player::{proto_player::ProtoPlayer, Player, PlayerService},
-    universe::{Universe, UniverseService}, entity::{position::Position, components::{Viewable, TestEntity, Spinalla}},
+    universe::{Universe, UniverseService},
 };
 
 use super::chunk::Chunk;
@@ -154,8 +156,11 @@ impl<W: WorldService> World<W> {
                     if chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _ {
                         // Remove from old entity list
                         if !was_out_of_bounds {
-                            let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
-                            let id_in_list = old_chunk.entities.remove(viewable.index_in_chunk_entity_slab);
+                            let old_chunk =
+                                &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
+                            let id_in_list = old_chunk
+                                .entities
+                                .remove(viewable.index_in_chunk_entity_slab);
                             debug_assert_eq!(id_in_list, *id);
                         }
 
@@ -167,21 +172,34 @@ impl<W: WorldService> World<W> {
                         viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
 
                         if was_out_of_bounds {
-                            chunk.viewable_buffer.copy_from(viewable.create_buffer.get_written());
+                            chunk
+                                .viewable_buffer
+                                .copy_from(viewable.create_buffer.get_written());
                         } else {
                             let create_bytes = viewable.create_buffer.get_written();
                             let destroy_bytes = viewable.destroy_buffer.get_written();
 
                             let self_chunks_ptrs = &mut self.chunks as *mut Vec<Vec<Chunk>>;
 
-                            super::chunk_view_diff::for_each_diff_with_min_max((delta_x, delta_z), W::ENTITY_VIEW_DISTANCE, |x, z| {
-                                let chunk = &mut self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
-                                chunk.copy_into_spot_buffer(create_bytes);
-                            }, |x, z| {
-                                let chunks = unsafe { &mut *self_chunks_ptrs };
-                                let chunk = &mut chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
-                                chunk.copy_into_spot_buffer(destroy_bytes);
-                            }, -old_chunk_x, -old_chunk_z, W::CHUNKS_X as i32 - 1 - old_chunk_x, W::CHUNKS_Z as i32 - 1 - old_chunk_z);
+                            super::chunk_view_diff::for_each_diff_with_min_max(
+                                (delta_x, delta_z),
+                                W::ENTITY_VIEW_DISTANCE,
+                                |x, z| {
+                                    let chunk = &mut self.chunks[(old_chunk_x + x) as usize]
+                                        [(old_chunk_z + z) as usize];
+                                    chunk.copy_into_spot_buffer(create_bytes);
+                                },
+                                |x, z| {
+                                    let chunks = unsafe { &mut *self_chunks_ptrs };
+                                    let chunk = &mut chunks[(old_chunk_x + x) as usize]
+                                        [(old_chunk_z + z) as usize];
+                                    chunk.copy_into_spot_buffer(destroy_bytes);
+                                },
+                                -old_chunk_x,
+                                -old_chunk_z,
+                                W::CHUNKS_X as i32 - 1 - old_chunk_x,
+                                W::CHUNKS_Z as i32 - 1 - old_chunk_z,
+                            );
                         }
 
                         return;
@@ -197,7 +215,9 @@ impl<W: WorldService> World<W> {
 
                     // Remove from old entity list
                     let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
-                    let id_in_list = old_chunk.entities.remove(viewable.index_in_chunk_entity_slab);
+                    let id_in_list = old_chunk
+                        .entities
+                        .remove(viewable.index_in_chunk_entity_slab);
                     debug_assert_eq!(id_in_list, *id);
                 }
                 viewable.buffer = std::ptr::null_mut();
@@ -227,7 +247,7 @@ impl<W: WorldService> World<W> {
                     viewable.write_create_packet(&add_entity_packet).unwrap();
 
                     let remove_packet = RemoveEntities {
-                        entities: vec![87123]
+                        entities: vec![87123],
                     };
                     viewable.write_destroy_packet(&remove_packet).unwrap();
 
@@ -260,7 +280,7 @@ impl<W: WorldService> World<W> {
             viewable.write_viewable_packet(&teleport).unwrap();
             let rotate_head = RotateHead {
                 entity_id: 87123,
-                head_yaw: spinalla.rotation.yaw
+                head_yaw: spinalla.rotation.yaw,
             };
             viewable.write_viewable_packet(&rotate_head).unwrap();
 
@@ -285,7 +305,9 @@ impl<W: WorldService> World<W> {
         }
 
         // Tick service (ticks players)
-        unsafe { W::tick(self); }
+        unsafe {
+            W::tick(self);
+        }
     }
 
     pub fn handle_player_join(&mut self, proto_player: ProtoPlayer<W::UniverseServiceType>) {
@@ -304,8 +326,10 @@ impl<W: WorldService> World<W> {
         let chunk_x = Chunk::to_chunk_coordinate(position.coord.x);
         let chunk_z = Chunk::to_chunk_coordinate(position.coord.z);
 
-        let out_of_bounds = chunk_x < 0 || chunk_x >= W::CHUNKS_X as _ ||
-                                 chunk_z < 0 || chunk_z >= W::CHUNKS_Z as _;
+        let out_of_bounds = chunk_x < 0
+            || chunk_x >= W::CHUNKS_X as _
+            || chunk_z < 0
+            || chunk_z >= W::CHUNKS_Z as _;
         let delta_x = chunk_x - old_chunk_x;
         let delta_z = chunk_z - old_chunk_z;
         let same_position = delta_x == 0 && delta_z == 0;
@@ -319,18 +343,19 @@ impl<W: WorldService> World<W> {
         };
 
         // Chunk
+        // todo: only send new chunks
         let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
-        for x in -view_distance..view_distance+1 {
+        for x in -view_distance..view_distance + 1 {
             let chunk_x = x as i32 + chunk_view_position.x as i32;
 
             if chunk_x >= 0 && chunk_x < W::CHUNKS_X as _ {
-                let chunk_list = &self.chunks[chunk_x as usize];
+                let chunk_list = &mut self.chunks[chunk_x as usize];
 
-                for z in -view_distance..view_distance+1 {
+                for z in -view_distance..view_distance + 1 {
                     let chunk_z = z + chunk_view_position.z as i32;
 
                     if chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _ {
-                        let chunk = &chunk_list[chunk_z as usize];
+                        let chunk = &mut chunk_list[chunk_z as usize];
                         chunk.write(&mut player.write_buffer, chunk_x, chunk_z)?;
                     } else {
                         self.empty_chunk
@@ -338,7 +363,8 @@ impl<W: WorldService> World<W> {
                     }
                 }
             } else {
-                for z in -view_distance..view_distance+1 {
+                for z in -view_distance..view_distance + 1 {
+                    // todo: only need to send chunks 1 out, not all in render distance
                     let chunk_z = z + chunk_view_position.z as i32;
                     self.empty_chunk
                         .write(&mut player.write_buffer, chunk_x, chunk_z)?;
@@ -347,29 +373,37 @@ impl<W: WorldService> World<W> {
         }
 
         let mut temp_destroy_buffer = WriteBuffer::new(); // todo: don't use a temp buffer
-        super::chunk_view_diff::for_each_diff_with_min_max((delta_x, delta_z), W::ENTITY_VIEW_DISTANCE, |x, z| {
-            let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
-            let mut query = <&Viewable>::query();
-            chunk.entities.iter().for_each(|(_, id)| {
-                player.send_message("trying to create an entity!");
-                if let Ok(viewable) = query.get(&self.entities, *id) {
-                    player.send_message("was able to use key!");
-                    player.write_buffer.copy_from(viewable.create_buffer.get_written());
-                }
-            });
-        }, |x, z| {
-            let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
-            let mut query = <&Viewable>::query();
-            chunk.entities.iter().for_each(|(_, id)| {
-                if let Ok(viewable) = query.get(&self.entities, *id) {
-                    temp_destroy_buffer.copy_from(viewable.destroy_buffer.get_written());
-                }
-            });
-        }, -old_chunk_x, -old_chunk_z, W::CHUNKS_X as i32 - 1 - old_chunk_x, W::CHUNKS_Z as i32 - 1 - old_chunk_z);
-        if temp_destroy_buffer.get_written().len() > 0 {
-            player.send_message("entity was destroyed!");
-        }
-        player.write_buffer.copy_from(temp_destroy_buffer.get_written());
+        super::chunk_view_diff::for_each_diff_with_min_max(
+            (delta_x, delta_z),
+            W::ENTITY_VIEW_DISTANCE,
+            |x, z| {
+                let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
+                let mut query = <&Viewable>::query();
+                chunk.entities.iter().for_each(|(_, id)| {
+                    if let Ok(viewable) = query.get(&self.entities, *id) {
+                        player
+                            .write_buffer
+                            .copy_from(viewable.create_buffer.get_written());
+                    }
+                });
+            },
+            |x, z| {
+                let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
+                let mut query = <&Viewable>::query();
+                chunk.entities.iter().for_each(|(_, id)| {
+                    if let Ok(viewable) = query.get(&self.entities, *id) {
+                        temp_destroy_buffer.copy_from(viewable.destroy_buffer.get_written());
+                    }
+                });
+            },
+            -old_chunk_x,
+            -old_chunk_z,
+            W::CHUNKS_X as i32 - 1 - old_chunk_x,
+            W::CHUNKS_Z as i32 - 1 - old_chunk_z,
+        );
+        player
+            .write_buffer
+            .copy_from(temp_destroy_buffer.get_written());
         std::mem::drop(temp_destroy_buffer);
 
         // Create entities in (x, z)
@@ -389,8 +423,10 @@ impl<W: WorldService> World<W> {
         player.write_packet(&update_view_position_packet);
 
         // Decrease the player count of the old chunk
-        let old_chunk_out_of_bounds = old_chunk_x < 0 || old_chunk_x >= W::CHUNKS_X as _ ||
-                old_chunk_z < 0 || old_chunk_z >= W::CHUNKS_Z as _;
+        let old_chunk_out_of_bounds = old_chunk_x < 0
+            || old_chunk_x >= W::CHUNKS_X as _
+            || old_chunk_z < 0
+            || old_chunk_z >= W::CHUNKS_Z as _;
         if !old_chunk_out_of_bounds {
             let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
             old_chunk.player_count -= 1;
@@ -428,10 +464,16 @@ impl<W: WorldService> World<W> {
         let chunk_x = Chunk::to_chunk_coordinate(position.coord.x);
         let chunk_z = Chunk::to_chunk_coordinate(position.coord.z);
 
-        let out_of_bounds = chunk_x < 0 || chunk_x >= W::CHUNKS_X as _ ||
-                                 chunk_z < 0 || chunk_z >= W::CHUNKS_Z as _;
+        let out_of_bounds = chunk_x < 0
+            || chunk_x >= W::CHUNKS_X as _
+            || chunk_z < 0
+            || chunk_z >= W::CHUNKS_Z as _;
         if out_of_bounds {
-            bail!("position (chunk_x: {}, chunk_z: {}) was out of bounds for this world", chunk_x, chunk_z);
+            bail!(
+                "position (chunk_x: {}, chunk_z: {}) was out of bounds for this world",
+                chunk_x,
+                chunk_z
+            );
         }
 
         let chunk_view_position = ChunkViewPosition {
@@ -441,17 +483,17 @@ impl<W: WorldService> World<W> {
 
         // Chunk
         let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
-        for x in -view_distance..view_distance+1 {
+        for x in -view_distance..view_distance + 1 {
             let chunk_x = x + chunk_view_position.x as i32;
 
             if chunk_x >= 0 && chunk_x < W::CHUNKS_X as _ {
-                let chunk_list = &self.chunks[chunk_x as usize];
+                let chunk_list = &mut self.chunks[chunk_x as usize];
 
-                for z in -view_distance..view_distance+1 {
+                for z in -view_distance..view_distance + 1 {
                     let chunk_z = z + chunk_view_position.z as i32;
 
                     if chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _ {
-                        let chunk = &chunk_list[chunk_z as usize];
+                        let chunk = &mut chunk_list[chunk_z as usize];
                         chunk.write(&mut proto_player.write_buffer, chunk_x, chunk_z)?;
                     } else {
                         self.empty_chunk
@@ -459,7 +501,7 @@ impl<W: WorldService> World<W> {
                     }
                 }
             } else {
-                for z in -view_distance..view_distance+1 {
+                for z in -view_distance..view_distance + 1 {
                     let chunk_z = z + chunk_view_position.z as i32;
                     self.empty_chunk
                         .write(&mut proto_player.write_buffer, chunk_x, chunk_z)?;
@@ -514,8 +556,6 @@ impl<W: WorldService> World<W> {
         .unwrap();
         binary.shrink_to_fit();
 
-        println!("codec bytes: {}", binary.len());
-
         let join_game_packet = Login {
             entity_id: proto_player.entity_id.as_i32(),
             is_hardcore: proto_player.hardcore,
@@ -538,7 +578,10 @@ impl<W: WorldService> World<W> {
 
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)?;
 
-        net::packet_helper::write_packet(&mut proto_player.write_buffer, &self.get_universe().command_packet)?;
+        net::packet_helper::write_packet(
+            &mut proto_player.write_buffer,
+            &self.get_universe().command_packet,
+        )?;
 
         Ok(())
     }

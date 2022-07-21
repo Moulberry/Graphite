@@ -7,7 +7,7 @@ use net::network_handler::{
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::{sync::mpsc::Sender, time::Duration};
 
-use protocol::play::server::{CustomPayload, Commands};
+use protocol::play::server::{Commands, CustomPayload};
 
 use crate::player::player_connection::{ConnectionReference, PlayerConnection};
 use crate::player::proto_player::ProtoPlayer;
@@ -15,7 +15,8 @@ use crate::player::proto_player::ProtoPlayer;
 // user defined universe service trait
 
 pub trait UniverseService
-where Self: Sized + 'static
+where
+    Self: Sized + 'static,
 {
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>);
     fn initialize(universe: &Universe<Self>);
@@ -118,7 +119,9 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
 }
 
 pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send + 'static>(
-    service_func: F, root_dispatch_node: RootDispatchNode, command_packet: Commands,
+    service_func: F,
+    root_dispatch_node: RootDispatchNode,
+    command_packet: Commands,
 ) -> Sender<UninitializedConnection> {
     let (rx, tx) = mpsc::channel::<UninitializedConnection>();
 
@@ -129,12 +132,13 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
             player_receiver: tx,
             entity_id_counter: 0,
             root_dispatch_node,
-            command_packet
+            command_packet,
         };
 
         let _ = net::network_handler::start_with_init(universe, None, |network_manager| {
             U::initialize(&network_manager.service);
-        }).unwrap();
+        })
+        .unwrap();
     });
 
     rx

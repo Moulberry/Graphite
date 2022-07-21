@@ -12,7 +12,7 @@ where
 {
     let ref_type = T::maybe_deref(serializable);
 
-    let expected_size = T::get_write_size(ref_type);
+    let expected_size = T::get_write_size(ref_type.clone());
 
     // allocate necessary bytes
     let bytes = write_buffer.get_unwritten(expected_size);

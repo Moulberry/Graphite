@@ -1,6 +1,6 @@
 pub enum TextComponent {
     Static(&'static str),
-    Owned(String)
+    Owned(String),
 }
 
 impl TextComponent {

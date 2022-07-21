@@ -1,15 +1,12 @@
-use legion::*;
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
+use legion::*;
 use net::{
     network_buffer::WriteBuffer,
     packet_helper::{self, PacketReadResult},
 };
 use protocol::{
-    play::{
-        client::PacketHandler,
-        server,
-    },
+    play::{client::PacketHandler, server},
     IdentifiedPacket,
 };
 use queues::Buffer;
@@ -18,8 +15,9 @@ use sticky::Unsticky;
 use text_component::TextComponent;
 
 use crate::{
+    entity::position::{Position, Vec3f},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, World, WorldService}, entity::{position::{Position, Vec3f}},
+    world::{ChunkViewPosition, World, WorldService},
 };
 
 use super::{
@@ -121,15 +119,21 @@ impl<P: PlayerService> Player<P> {
         let chunk_x = self.chunk_view_position.x as i32;
         let chunk_z = self.chunk_view_position.z as i32;
         let current_chunk = &self.get_world().chunks[chunk_x as usize][chunk_z as usize];
-        self.write_buffer.copy_from(current_chunk.spot_buffer.get_written());
+        self.write_buffer
+            .copy_from(current_chunk.spot_buffer.get_written());
 
         // Get viewable packets
         let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
-        for x in (chunk_x-view_distance).max(0)..(chunk_x+view_distance+1).min(P::WorldServiceType::CHUNKS_X as _) {
-            for z in (chunk_z-view_distance).max(0)..(chunk_z+view_distance+1).min(P::WorldServiceType::CHUNKS_Z as _) {
+        for x in (chunk_x - view_distance).max(0)
+            ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
+        {
+            for z in (chunk_z - view_distance).max(0)
+                ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
+            {
                 let chunk = &self.get_world().chunks[x as usize][z as usize];
-                self.write_buffer.copy_from(chunk.viewable_buffer.get_written());
-            }    
+                self.write_buffer
+                    .copy_from(chunk.viewable_buffer.get_written());
+            }
         }
 
         // Check teleport timer
@@ -179,7 +183,7 @@ impl<P: PlayerService> Player<P> {
 
         if rotation_changed || coord_changed {
             self.chunk_view_position = self.get_world_mut().update_view_position(self, to)?;
-            
+
             self.position = to;
             self.last_position = to;
         }

@@ -93,7 +93,8 @@ impl AcceptCount {
 }
 
 #[allow(type_alias_bounds)]
-pub type ConnectionSlab<N: NetworkManagerService + ?Sized> = Slab<(Connection<N>, N::ConnectionServiceType)>;
+pub type ConnectionSlab<N: NetworkManagerService + ?Sized> =
+    Slab<(Connection<N>, N::ConnectionServiceType)>;
 #[allow(type_alias_bounds)]
 type FnConnectionRedirect<N: NetworkManagerService> =
     Box<dyn FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType)>;
@@ -359,8 +360,11 @@ pub fn start<T: NetworkManagerService>(service: T, addr: Option<&str>) -> anyhow
     start_with_init(service, addr, |_| {})
 }
 
-pub fn start_with_init<T: NetworkManagerService>(service: T, addr: Option<&str>,
-            initialize: impl Fn(&NetworkManager<T>)) -> anyhow::Result<()> {
+pub fn start_with_init<T: NetworkManagerService>(
+    service: T,
+    addr: Option<&str>,
+    initialize: impl Fn(&NetworkManager<T>),
+) -> anyhow::Result<()> {
     let mut network_manager = NetworkManager::new(service)?;
     initialize(&network_manager);
     network_manager.start(addr)?;

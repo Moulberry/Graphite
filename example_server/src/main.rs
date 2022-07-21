@@ -12,9 +12,9 @@ use server::entity::components::Viewable;
 use server::entity::position::Coordinate;
 use server::entity::position::Position;
 use server::entity::position::Rotation;
-use server::player::Player;
 use server::player::player_vec::PlayerVec;
 use server::player::proto_player::ProtoPlayer;
+use server::player::Player;
 use server::player::PlayerService;
 use server::universe::Universe;
 use server::universe::UniverseService;
@@ -48,7 +48,11 @@ impl ConciergeService for MyConciergeImpl {
         _: &concierge::ConciergeConnection<Self>,
     ) {
         #[brigadier("hello", {10..2000}, {})]
-        fn my_function(player: &mut Player<MyPlayerService>, number: u16, numer2: u8) -> CommandResult {
+        fn my_function(
+            player: &mut Player<MyPlayerService>,
+            number: u16,
+            numer2: u8,
+        ) -> CommandResult {
             println!("number: {}", number);
             println!("numer2: {}", numer2);
             player.send_message("Hello from my_function");
@@ -71,25 +75,29 @@ impl ConciergeService for MyConciergeImpl {
             }
         }
         */
-        
+
         #[brigadier("entity_test", {})]
         fn entity_test(player: &mut Player<MyPlayerService>, entity_type: u8) -> CommandResult {
             player.send_message("Hello from MyPlayerService");
 
-            let entity = (Viewable::new(Coordinate {
-                x: player.position.coord.x,
-                y: player.position.coord.y,
-                z: player.position.coord.z
-            }), TestEntity {
-                spawned: false,
-                entity_type: entity_type as _
-            }, Spinalla {
-                reverse: false,
-                rotation: Rotation {
-                    yaw: 0.0,
-                    pitch: 0.0
-                }
-            });
+            let entity = (
+                Viewable::new(Coordinate {
+                    x: player.position.coord.x,
+                    y: player.position.coord.y,
+                    z: player.position.coord.z,
+                }),
+                TestEntity {
+                    spawned: false,
+                    entity_type: entity_type as _,
+                },
+                Spinalla {
+                    reverse: false,
+                    rotation: Rotation {
+                        yaw: 0.0,
+                        pitch: 0.0,
+                    },
+                },
+            );
             player.get_world_mut().push_entity(entity);
 
             Ok(())
@@ -97,13 +105,18 @@ impl ConciergeService for MyConciergeImpl {
 
         my_function.merge(entity_test).unwrap();
 
-        let (dispatcher, packet) = command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
+        let (dispatcher, packet) =
+            command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
-        let universe = server::universe::create_and_start(|| MyUniverseService {
-            the_world: World::new(MyWorldService {
-                players: PlayerVec::new(),
-            }),
-        }, dispatcher, packet);
+        let universe = server::universe::create_and_start(
+            || MyUniverseService {
+                the_world: World::new(MyWorldService {
+                    players: PlayerVec::new(),
+                }),
+            },
+            dispatcher,
+            packet,
+        );
         universe.send(player_connection).unwrap();
     }
 }
@@ -198,9 +211,7 @@ impl WorldService for MyWorldService {
 
 // player
 
-struct MyPlayerService {
-
-}
+struct MyPlayerService {}
 
 impl PlayerService for MyPlayerService {
     type UniverseServiceType = MyUniverseService;

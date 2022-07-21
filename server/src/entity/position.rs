@@ -36,7 +36,10 @@ pub struct Rotation {
 
 impl Rotation {
     pub fn is_diff_u8(self, other: Rotation) -> bool {
-        self.yaw as u8 != other.yaw as u8 || self.pitch as u8 != other.pitch as u8
+        unsafe {
+            self.yaw.to_int_unchecked::<u8>() != other.yaw.to_int_unchecked::<u8>()
+                || self.pitch.to_int_unchecked::<u8>() != other.pitch.to_int_unchecked::<u8>()
+        }
     }
 }
 

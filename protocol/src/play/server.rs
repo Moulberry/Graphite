@@ -1,7 +1,7 @@
 use binary::slice_serialization::*;
 
 use crate::identify_packets;
-use crate::types::{CommandNode, ByteRotation, QuantizedShort};
+use crate::types::{ByteRotation, CommandNode, QuantizedShort};
 use crate::IdentifiedPacket;
 use num_enum::TryFromPrimitive;
 
@@ -162,4 +162,3 @@ slice_serializable_composite! {
     pitch: f32 as ByteRotation,
     on_ground: bool as Single
 }
-

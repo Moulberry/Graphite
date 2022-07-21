@@ -1,10 +1,9 @@
 use crate::{
+    entity::position::Position,
     universe::{EntityId, UniverseService},
-    world::World, entity::position::Position,
+    world::World,
 };
-use net::{
-    network_buffer::WriteBuffer,
-};
+use net::network_buffer::WriteBuffer;
 
 use super::{
     player::{Player, PlayerService},

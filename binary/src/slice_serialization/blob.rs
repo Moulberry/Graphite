@@ -44,7 +44,6 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
             return Err(BinaryReadError::NotEnoughRemainingBytes.into());
         }
 
-        // Validate utf-8
         let (blob_bytes, rest_bytes) = bytes.split_at(blob_size);
         *bytes = rest_bytes;
 

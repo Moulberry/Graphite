@@ -1,11 +1,9 @@
 use anyhow::bail;
 use command::types::ParseState;
 use protocol::{
-    play::{
-        client::{
-            self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
-            MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction,
-        },
+    play::client::{
+        self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
+        MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction,
     },
     types::{HandAction, MoveAction},
 };
@@ -99,7 +97,19 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
 
     fn handle_player_hand_action(&mut self, packet: PlayerHandAction) -> anyhow::Result<()> {
         match packet.action {
-            HandAction::StartDestroyBlock => (),
+            HandAction::StartDestroyBlock => {
+                let pos = packet.block_pos;
+                
+                // todo: move to function in world. remove magic 16s
+                // todo: validate chunk_x/chunk_z is positive
+                let chunk_x = (pos.x / 16) as usize;
+                let section_x = (pos.x % 16) as u8;
+                let chunk_z = (pos.z / 16) as usize;
+                let section_z = (pos.z % 16) as u8;
+                
+                let chunk = &mut self.get_world_mut().chunks[chunk_x][chunk_z];
+                chunk.set_block(section_x, pos.y as usize, section_z, 0); 
+            }
             HandAction::AbortDestroyBlock => (),
             HandAction::StopDestroyBlock => (),
             HandAction::DropAllItems => (),
@@ -142,7 +152,10 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
 
         let mut parse_state = ParseState::new(packet.command);
         parse_state.push_ref(self, parse_state.full_span);
-        parse_state.push_arg(unsafe { std::mem::transmute::<std::any::TypeId, u64>(std::any::Any::type_id(self)) }, parse_state.full_span);
+        parse_state.push_arg(
+            unsafe { std::mem::transmute::<std::any::TypeId, u64>(std::any::Any::type_id(self)) },
+            parse_state.full_span,
+        );
         let result = dispatch.dispatch_with(parse_state);
 
         self.send_message(format!("{:?}", result));

@@ -1,6 +1,6 @@
 use binary::slice_serialization::SliceSerializable;
 use net::{network_buffer::WriteBuffer, packet_helper};
-use protocol::{IdentifiedPacket, play::server};
+use protocol::{play::server, IdentifiedPacket};
 
 use crate::world::chunk::Chunk;
 
@@ -39,7 +39,7 @@ impl Viewable {
     // Update packets
     pub fn write_viewable_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<bool>
     where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a
+        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
         if let Some(buffer) = unsafe { self.buffer.as_mut() } {
             packet_helper::write_packet(buffer, packet)?;
@@ -56,7 +56,7 @@ impl Viewable {
 
     pub fn write_create_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<()>
     where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a
+        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
         packet_helper::write_packet(&mut self.create_buffer, packet)
     }
@@ -68,7 +68,7 @@ impl Viewable {
 
     pub fn write_destroy_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<()>
     where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a
+        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
         packet_helper::write_packet(&mut self.destroy_buffer, packet)
     }
@@ -76,11 +76,10 @@ impl Viewable {
 
 pub struct TestEntity {
     pub spawned: bool,
-    pub entity_type: i32
+    pub entity_type: i32,
 }
-
 
 pub struct Spinalla {
     pub rotation: Rotation,
-    pub reverse: bool
+    pub reverse: bool,
 }

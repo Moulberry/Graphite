@@ -69,13 +69,13 @@ impl SliceSerializable<'_, f32> for ByteRotation {
     }
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<f32> {
-        let byte = <Single as SliceSerializable<i8>>::read(bytes)?;
+        let byte = <Single as SliceSerializable<u8>>::read(bytes)?;
         Ok(byte as f32 * 360.0 / 256.0)
     }
 
     unsafe fn write(bytes: &mut [u8], data: f32) -> &mut [u8] {
-        let byte = (data * 256.0 / 360.0).to_int_unchecked::<i8>();
-        <Single as SliceSerializable<i8>>::write(bytes, byte)
+        let byte = (data * 256.0 / 360.0).to_int_unchecked::<u8>();
+        <Single as SliceSerializable<u8>>::write(bytes, byte)
     }
 
     fn get_write_size(_: f32) -> usize {
@@ -113,9 +113,9 @@ impl SliceSerializable<'_, f32> for QuantizedShort {
 
 #[derive(Debug, Copy, Clone)]
 pub struct BlockPosition {
-    x: i32,
-    y: i16,
-    z: i32,
+    pub x: i32,
+    pub y: i16,
+    pub z: i32,
 }
 
 impl SliceSerializable<'_> for BlockPosition {

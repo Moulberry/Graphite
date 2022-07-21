@@ -1,8 +1,10 @@
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 
 use bytemuck::NoUninit;
 
-use crate::types::{ParseState, SpannedWord, CommandDispatchResult, CommandParseResult, DispatchFunction};
+use crate::types::{
+    CommandDispatchResult, CommandParseResult, DispatchFunction, ParseState, SpannedWord,
+};
 
 // Node implemenatations
 
@@ -76,7 +78,11 @@ impl DispatchNode {
 
                     let parse_result = arg.parse(next_word, remaining);
                     match parse_result {
-                        CommandDispatchResult::ParseError { span: _, errmsg: _, continue_parsing } => {
+                        CommandDispatchResult::ParseError {
+                            span: _,
+                            errmsg: _,
+                            continue_parsing,
+                        } => {
                             if continue_parsing {
                                 if result.is_none() {
                                     result = Some(parse_result);
@@ -84,8 +90,8 @@ impl DispatchNode {
                             } else {
                                 return parse_result;
                             }
-                        },
-                        _ => return parse_result
+                        }
+                        _ => return parse_result,
                     }
 
                     // Parse failed, try next parser
@@ -131,10 +137,18 @@ impl ArgumentNode {
             CommandParseResult::Ok => {
                 // Parse succeeded, continue dispatching
                 self.dispatch_node.dispatch(remaining)
-            },
-            CommandParseResult::Err { span, errmsg, continue_parsing } => {
+            }
+            CommandParseResult::Err {
+                span,
+                errmsg,
+                continue_parsing,
+            } => {
                 // Parse failed, bubble up ParseError
-                CommandDispatchResult::ParseError { span, errmsg, continue_parsing }
+                CommandDispatchResult::ParseError {
+                    span,
+                    errmsg,
+                    continue_parsing,
+                }
             }
         }
     }
@@ -142,13 +156,13 @@ impl ArgumentNode {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, BTreeMap};
+    use std::collections::{BTreeMap, HashMap};
 
     use maplit::hashmap;
 
     use crate::dispatcher::{ArgumentNode, DispatchNode, RootDispatchNode};
-    use crate::types::{SpannedWord, CommandParseResult, Span, CommandDispatchResult};
     use crate::types::ParseState;
+    use crate::types::{CommandDispatchResult, CommandParseResult, Span, SpannedWord};
 
     #[test]
     pub fn dispatch_with_parse() {
@@ -157,11 +171,11 @@ mod tests {
         fn hello_world(data: &[u8], spans: &[Span]) -> CommandDispatchResult {
             #[repr(C)]
             struct Data(u8, &'static str, u16);
-    
+
             debug_assert_eq!(spans.len(), 3);
             debug_assert_eq!(data.len(), std::mem::size_of::<Data>());
             let data: &Data = unsafe { &*(data as *const _ as *const Data) };
-    
+
             assert_eq!(data.0, 100);
             assert_eq!(data.1, "my_string");
             assert_eq!(data.2, 8372);
@@ -226,11 +240,11 @@ mod tests {
         fn my_command(data: &[u8], spans: &[Span]) -> CommandDispatchResult {
             #[repr(C)]
             struct Data(&'static MyStruct);
-    
+
             debug_assert_eq!(spans.len(), 1);
             debug_assert_eq!(data.len(), std::mem::size_of::<Data>());
             let data: &Data = unsafe { &*(data as *const _ as *const Data) };
-    
+
             assert_eq!(data.0 .0, 873183);
             unsafe { DISPATCH_EXECUTED = true };
 
@@ -264,8 +278,12 @@ mod tests {
             Ok(parsed) => {
                 state.push_arg(parsed, input.span);
                 CommandParseResult::Ok
+            }
+            Err(_) => CommandParseResult::Err {
+                span: input.span,
+                errmsg: "failed to parse u8".into(),
+                continue_parsing: true,
             },
-            Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse u8".into(), continue_parsing: true }
         }
     }
 
@@ -274,8 +292,12 @@ mod tests {
             Ok(parsed) => {
                 state.push_arg(parsed, input.span);
                 CommandParseResult::Ok
+            }
+            Err(_) => CommandParseResult::Err {
+                span: input.span,
+                errmsg: "failed to parse u8".into(),
+                continue_parsing: true,
             },
-            Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse u8".into(), continue_parsing: true }
         }
     }
 

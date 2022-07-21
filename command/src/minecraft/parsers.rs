@@ -4,7 +4,7 @@ use bytemuck::NoUninit;
 use protocol::types::{CommandNodeParser, StringParserMode};
 use thiserror::Error;
 
-use crate::types::{ParseState, SpannedWord, CommandParseResult};
+use crate::types::{CommandParseResult, ParseState, SpannedWord};
 
 pub trait MinecraftParser {
     fn get_parse_func(&self) -> fn(SpannedWord, &mut ParseState) -> CommandParseResult;
@@ -23,18 +23,18 @@ pub enum NumericParser {
 impl MinecraftParser for NumericParser {
     fn get_parse_func(&self) -> fn(SpannedWord, &mut ParseState) -> CommandParseResult {
         match self {
-            NumericParser::U8 { min: _, max: _} => parse_from_string::<u8>,
-            NumericParser::U16 { min: _, max: _} => parse_from_string::<u16>,
+            NumericParser::U8 { min: _, max: _ } => parse_from_string::<u8>,
+            NumericParser::U16 { min: _, max: _ } => parse_from_string::<u16>,
         }
     }
 
     fn get_brigadier_parser(&self) -> CommandNodeParser {
         match self {
-            NumericParser::U8 { min, max} => CommandNodeParser::Integer {
+            NumericParser::U8 { min, max } => CommandNodeParser::Integer {
                 min: Some(*min as _),
                 max: Some(*max as _),
             },
-            NumericParser::U16 { min, max} => CommandNodeParser::Integer {
+            NumericParser::U16 { min, max } => CommandNodeParser::Integer {
                 min: Some(*min as _),
                 max: Some(*max as _),
             },
@@ -52,14 +52,18 @@ pub struct ParseFromStringError;
 
 fn parse_from_string<T: FromStr + Ord + NoUninit>(
     input: SpannedWord,
-    state: &mut ParseState
+    state: &mut ParseState,
 ) -> CommandParseResult {
     match input.word.parse::<T>() {
         Ok(parsed) => {
             state.push_arg(parsed, input.span);
             CommandParseResult::Ok
+        }
+        Err(_) => CommandParseResult::Err {
+            span: input.span,
+            errmsg: "failed to parse from string".into(),
+            continue_parsing: true,
         },
-        Err(_) => CommandParseResult::Err { span: input.span, errmsg: "failed to parse from string".into(), continue_parsing: true }
     }
 }
 

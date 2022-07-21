@@ -34,7 +34,7 @@ impl MinecraftRootDispatchNode {
         &mut self,
         dispatch: MinecraftDispatchNode,
         name: &'static str,
-        aliases: Vec<&'static str>
+        aliases: Vec<&'static str>,
     ) -> result::Result<(), MergeError> {
         // Create alias map
         let mut aliases_map = HashMap::new();
@@ -54,10 +54,7 @@ impl MinecraftRootDispatchNode {
         self.merge(other)
     }
 
-    pub fn merge(
-        &mut self,
-        other: MinecraftRootDispatchNode,
-    ) -> result::Result<(), MergeError> {
+    pub fn merge(&mut self, other: MinecraftRootDispatchNode) -> result::Result<(), MergeError> {
         // Try to merge literals
         if self.literals.is_empty() {
             self.literals = other.literals;
@@ -198,11 +195,11 @@ pub struct MinecraftArgumentNode<P: MinecraftParser> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, BTreeMap};
+    use std::collections::{BTreeMap, HashMap};
 
-    use crate::minecraft::{NumericParser, StringParser, MergeError};
+    use crate::minecraft::{MergeError, NumericParser, StringParser};
 
-    use super::{MinecraftRootDispatchNode, MinecraftDispatchNode, MinecraftArgumentNode};
+    use super::{MinecraftArgumentNode, MinecraftDispatchNode, MinecraftRootDispatchNode};
 
     fn empty_root() -> MinecraftRootDispatchNode {
         MinecraftRootDispatchNode {
@@ -210,7 +207,7 @@ mod tests {
             aliases: HashMap::new(),
         }
     }
-    
+
     fn empty_dispatch_node() -> MinecraftDispatchNode {
         MinecraftDispatchNode {
             literals: BTreeMap::new(),
@@ -220,11 +217,16 @@ mod tests {
             executor: None,
         }
     }
-    
-    fn dispatch_node_with_numeric_parser<'a>(dispatch: MinecraftDispatchNode) -> MinecraftDispatchNode {
+
+    fn dispatch_node_with_numeric_parser<'a>(
+        dispatch: MinecraftDispatchNode,
+    ) -> MinecraftDispatchNode {
         let numeric_parser = MinecraftArgumentNode {
             name: "argument",
-            parse: NumericParser::U8 { min: u8::MIN, max: u8::MAX },
+            parse: NumericParser::U8 {
+                min: u8::MIN,
+                max: u8::MAX,
+            },
             dispatch_node: Box::from(dispatch),
         };
         MinecraftDispatchNode {
@@ -235,7 +237,7 @@ mod tests {
             executor: None,
         }
     }
-    
+
     fn dispatch_node_with_string_parser(dispatch: MinecraftDispatchNode) -> MinecraftDispatchNode {
         let string_parser = MinecraftArgumentNode {
             name: "argument",
@@ -250,11 +252,13 @@ mod tests {
             executor: None,
         }
     }
-    
+
     fn dispatch_node_with_executor() -> MinecraftDispatchNode {
-        use crate::types::{Span, CommandDispatchResult};
-        fn hello(_: &[u8], _: &[Span]) -> CommandDispatchResult { CommandDispatchResult::Success(Ok(())) }
-    
+        use crate::types::{CommandDispatchResult, Span};
+        fn hello(_: &[u8], _: &[Span]) -> CommandDispatchResult {
+            CommandDispatchResult::Success(Ok(()))
+        }
+
         MinecraftDispatchNode {
             literals: BTreeMap::new(),
             aliases: BTreeMap::new(),
@@ -287,7 +291,10 @@ mod tests {
         assert_eq!(root.aliases.len(), 2);
 
         let dispatch = dispatch_node_with_executor();
-        assert_eq!(root.merge_named(dispatch, "bye", vec!["bye1", "bye2"]), Ok(()));
+        assert_eq!(
+            root.merge_named(dispatch, "bye", vec!["bye1", "bye2"]),
+            Ok(())
+        );
 
         assert_eq!(root.literals.len(), 2);
         assert_eq!(root.aliases.len(), 4);
@@ -391,5 +398,4 @@ mod tests {
             Err(MergeError::DuplicateAlias)
         );
     }
-
 }

@@ -14,6 +14,8 @@ io-uring = { version = "0.5.2", features = ["unstable"] }
 quartz_nbt = "0.2.6"
 bytemuck = "1.10.0"
 legion = { version = "0.4.0", default-features = false }
+num = "0.4.0"
+heapless = "0.7.15"
 
 binary = { path = "../binary" }
 net = { path = "../net" }
