@@ -1,10 +1,8 @@
-use std::borrow::Cow;
-
+use bevy_ecs::entity::Entity;
 use binary::{
     slice_serializable_composite,
     slice_serialization::{BigEndian, GreedyBlob, SliceSerializable},
 };
-use legion::Entity;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::play::server::{self, ChunkBlockData, ChunkLightData};
 use slab::Slab;

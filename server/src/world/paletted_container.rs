@@ -42,11 +42,9 @@ where
         debug_assert!(y < SIDE_LEN as _);
         debug_assert!(z < SIDE_LEN as _);
 
-        println!("indexed: {},{},{}", x, y, z);
-
         y as usize * SIDE_LEN * SIDE_LEN +
         z as usize * SIDE_LEN +
-        (15 - x) as usize
+        (15 - x) as usize // 15 - x because minecraft expects the data in big endian form
     }
 
     pub fn filled(value: T) -> Self {

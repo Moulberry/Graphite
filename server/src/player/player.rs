@@ -1,6 +1,5 @@
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
-use legion::*;
 use net::{
     network_buffer::WriteBuffer,
     packet_helper::{self, PacketReadResult},
@@ -40,6 +39,9 @@ where
 
     type UniverseServiceType: UniverseService;
     type WorldServiceType: WorldService<UniverseServiceType = Self::UniverseServiceType>;
+
+    // type InventoryHandlerType: InventoryHandler;
+    // fn get_inventory_handler(player: &mut Player<Self>) -> &mut Self::InventoryHandlerType;
 }
 
 // graphite player
@@ -119,8 +121,7 @@ impl<P: PlayerService> Player<P> {
         let chunk_x = self.chunk_view_position.x as i32;
         let chunk_z = self.chunk_view_position.z as i32;
         let current_chunk = &self.get_world().chunks[chunk_x as usize][chunk_z as usize];
-        self.write_buffer
-            .copy_from(current_chunk.spot_buffer.get_written());
+        self.write_buffer.copy_from(current_chunk.spot_buffer.get_written());
 
         // Get viewable packets
         let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
@@ -131,8 +132,8 @@ impl<P: PlayerService> Player<P> {
                 ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
             {
                 let chunk = &self.get_world().chunks[x as usize][z as usize];
-                self.write_buffer
-                    .copy_from(chunk.viewable_buffer.get_written());
+
+                self.write_buffer.copy_from(chunk.viewable_buffer.get_written());
             }
         }
 

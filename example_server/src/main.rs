@@ -1,14 +1,15 @@
-use std::any::Any;
-
+use bevy_ecs::prelude::Bundle;
+use bevy_ecs::world::EntityRef;
 use command::brigadier;
 use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_buffer::WriteBuffer;
 use net::network_handler::UninitializedConnection;
+use protocol::play::server::RemoveEntities;
+use rand::Rng;
 use server::entity::components::Spinalla;
-use server::entity::components::TestEntity;
-use server::entity::components::Viewable;
+use server::entity::components::BasicEntity;
 use server::entity::position::Coordinate;
 use server::entity::position::Position;
 use server::entity::position::Rotation;
@@ -80,25 +81,31 @@ impl ConciergeService for MyConciergeImpl {
         fn entity_test(player: &mut Player<MyPlayerService>, entity_type: u8) -> CommandResult {
             player.send_message("Hello from MyPlayerService");
 
-            let entity = (
-                Viewable::new(Coordinate {
+
+            for i in 0..1000 {
+                let entity_id = player.get_world_mut().get_universe().new_entity_id();
+
+                let test_entity = BasicEntity {
+                    entity_id,
+                    entity_type: entity_type as _,
+                };
+    
+                let entity = (
+                    Spinalla {
+                        direction: (rand::thread_rng().gen_range(-1.0..1.0), rand::thread_rng().gen_range(-1.0..1.0)),
+                        rotation: Rotation {
+                            yaw: 0.0,
+                            pitch: 0.0,
+                        },
+                    },
+                );
+    
+                player.get_world_mut().push_entity(entity, Coordinate {
                     x: player.position.coord.x,
                     y: player.position.coord.y,
                     z: player.position.coord.z,
-                }),
-                TestEntity {
-                    spawned: false,
-                    entity_type: entity_type as _,
-                },
-                Spinalla {
-                    reverse: false,
-                    rotation: Rotation {
-                        yaw: 0.0,
-                        pitch: 0.0,
-                    },
-                },
-            );
-            player.get_world_mut().push_entity(entity);
+                }, test_entity);
+            }
 
             Ok(())
         }
@@ -161,6 +168,7 @@ impl UniverseService for MyUniverseService {
 struct MyWorldService {
     players: PlayerVec<MyPlayerService>,
 }
+
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
     const CHUNKS_X: usize = 6;

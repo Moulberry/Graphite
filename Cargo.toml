@@ -9,5 +9,6 @@ members = [
     "sticky",
     "command",
     "command_derive",
-    "text_component"
+    "text_component",
+    "minecraft_constants"
 ]

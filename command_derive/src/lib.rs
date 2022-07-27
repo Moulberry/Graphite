@@ -348,6 +348,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let mut aliases_tokens = if use_root {
                     let capacity = aliases.len() - 1;
                     quote!(let mut map = std::collections::HashMap::with_capacity(#capacity);)
+                    //quote!(let mut map = std::collections::HashMap::with_capacity_and_hasher(#capacity, ahash::AHasher::default());)
                 } else {
                     quote!(let mut map = std::collections::BTreeMap::new();)
                 };
@@ -430,6 +431,10 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                             "u16" => {
                                 (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
                                     process_num_arg(quote!(u16), quote!(U16), deconstruct_index.clone(), modifiers))
+                            }
+                            "u64" => {
+                                (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
+                                    process_num_arg(quote!(u64), quote!(U64), deconstruct_index.clone(), modifiers))
                             }
                             _ => {
                                 throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")

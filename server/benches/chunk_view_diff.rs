@@ -1,4 +1,10 @@
+use std::{any::TypeId, collections::hash_map::DefaultHasher, hash::{Hash, Hasher}};
+
+use command::{brigadier, types::{CommandResult, ParseState}};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use minecraft_constants::block::Block;
+use rand::RngCore;
+use server::{player::{Player, proto_player::ProtoPlayer, player_vec::PlayerVec, PlayerService}, world::{World, WorldService}, universe::{UniverseService, Universe}};
 
 // Naive implementation of `chunk_view_diff`, for reference
 fn for_each_diff_naive<F1, F2>(
@@ -84,9 +90,147 @@ fn chunk_view_diff(c: &mut Criterion) {
     }
 }
 
+fn command_dispatch(c: &mut Criterion) {
+    #[brigadier("hello", {})]
+    fn my_function(
+        _player: &mut Player<MyPlayerService>,
+        number: u64,
+    ) -> CommandResult {
+        black_box(number);
+        Ok(())
+    }
+
+    let (dispatcher, _) =
+            command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
+
+    /*c.bench_function("command_dispatch: ParseState", |b| {
+        b.iter(|| {
+            let parse_state = ParseState::new("hello 8372836593");
+            black_box(parse_state);
+        });
+    });
+
+    c.bench_function("command_dispatch: Initial State", |b| {
+        b.iter(|| {
+            let mut parse_state = ParseState::new("hello 8372836593");
+            parse_state.push_arg(0, parse_state.full_span);
+            parse_state.push_arg(
+                unsafe { std::mem::transmute::<TypeId, u64>(TypeId::of::<MyPlayerService>()) },
+                parse_state.full_span,
+            );
+            black_box(parse_state);
+        });
+    });
+
+    c.bench_function("command_dispatch: Invalid Command", |b| {
+        b.iter(|| {
+            let mut parse_state = ParseState::new("invalid 8372836593");
+            parse_state.push_arg(0, parse_state.full_span);
+            parse_state.push_arg(
+                unsafe { std::mem::transmute::<TypeId, u64>(TypeId::of::<MyPlayerService>()) },
+                parse_state.full_span,
+            );
+
+            let result = dispatcher.dispatch_with(parse_state);
+
+            black_box(result);
+        })
+    });*/
+
+    /*c.bench_function("command_dispatch", |b| {
+        b.iter(|| {
+            let mut parse_state = ParseState::new("hello 8372836593");
+            parse_state.push_arg(0, parse_state.full_span);
+            parse_state.push_arg(
+                unsafe { std::mem::transmute::<TypeId, u64>(TypeId::of::<MyPlayerService>()) },
+                parse_state.full_span,
+            );
+
+            let result = dispatcher.dispatch_with(parse_state);
+
+            black_box(result);
+        })
+    });*/
+    
+    c.bench_function("one", |b| {
+        b.iter(|| {
+            let r = (rand::thread_rng().next_u32() % 20000) as u16;
+            let block: &Block = r.try_into().unwrap();
+            black_box(block);
+        })
+    });
+
+    c.bench_function("three", |b| {
+        b.iter(|| {
+            let r = (rand::thread_rng().next_u32() % 20000) as u16;
+            let block: &Block = r.try_into().unwrap();
+            let state_id: u16 = block.into();
+            black_box(state_id);
+        })
+    });
+}
+
 criterion_group!(
     name = benches;
     config = Criterion::default().sample_size(1000);
-    targets = chunk_view_diff /*chunk_view_diff_naive*/
+    targets = command_dispatch /*chunk_view_diff_naive*/
 );
 criterion_main!(benches);
+
+struct MyUniverseService {
+    the_world: World<MyWorldService>,
+}
+
+impl UniverseService for MyUniverseService {
+    fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {
+    }
+
+    fn initialize(universe: &Universe<Self>) {
+    }
+
+    fn tick(universe: &mut Universe<Self>) {
+    }
+
+    fn get_player_count(universe: &Universe<Self>) -> usize {
+        0
+    }
+}
+
+struct MyWorldService {
+    players: PlayerVec<MyPlayerService>,
+}
+
+impl WorldService for MyWorldService {
+    type UniverseServiceType = MyUniverseService;
+    const CHUNKS_X: usize = 6;
+    const CHUNKS_Z: usize = 6;
+    const CHUNK_VIEW_DISTANCE: u8 = 8;
+    const ENTITY_VIEW_DISTANCE: u8 = 1;
+
+    fn handle_player_join(
+        world: &mut World<Self>,
+        mut proto_player: ProtoPlayer<Self::UniverseServiceType>,
+    ) {
+    }
+
+    fn initialize(world: &World<Self>) {
+        world.service.players.initialize(world);
+    }
+
+    unsafe fn tick(world: &mut World<Self>) {
+        world.service.players.tick();
+    }
+
+    fn get_player_count(world: &World<Self>) -> usize {
+        world.service.players.len()
+    }
+}
+
+// player
+
+struct MyPlayerService {}
+
+impl PlayerService for MyPlayerService {
+    type UniverseServiceType = MyUniverseService;
+    type WorldServiceType = MyWorldService;
+}

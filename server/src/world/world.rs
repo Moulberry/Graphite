@@ -1,17 +1,16 @@
+use std::{collections::HashMap, time::Instant};
+
 use anyhow::bail;
-use bytes::BufMut;
-use legion::storage::IntoComponentSource;
-use legion::*;
+use bevy_ecs::{prelude::*, world::EntityRef};
 use net::network_buffer::WriteBuffer;
 use protocol::play::server::{
-    AddEntity, ChunkBlockData, ChunkLightData, LevelChunkWithLight, Login, RemoveEntities,
-    RotateHead, SetChunkCacheCenter, SetPlayerPosition, TeleportEntity,
+    Login, SetChunkCacheCenter, SetPlayerPosition, TeleportEntity, RotateHead,
 };
 
 use crate::{
     entity::{
-        components::{Spinalla, TestEntity, Viewable},
-        position::Position,
+        components::{Spinalla, BasicEntity, Viewable, EntitySpawnDefinition},
+        position::{Position, Coordinate},
     },
     player::{proto_player::ProtoPlayer, Player, PlayerService},
     universe::{Universe, UniverseService},
@@ -49,7 +48,7 @@ where
 pub struct World<W: WorldService + ?Sized> {
     universe: *mut Universe<W::UniverseServiceType>,
     pub(crate) chunks: Vec<Vec<Chunk>>,
-    pub(crate) entities: legion::World,
+    pub(crate) entities: bevy_ecs::world::World,
     empty_chunk: Chunk,
     pub service: W,
 }
@@ -98,49 +97,70 @@ impl<W: WorldService> World<W> {
         W::initialize(self);
     }
 
-    pub fn push_entity<T>(&mut self, components: T)
-    where
-        Option<T>: IntoComponentSource,
-    {
-        self.entities.push(components);
+    pub fn push_entity<T: Bundle>(&mut self, components: T, position: Coordinate,
+            mut spawn_def: impl EntitySpawnDefinition) {
+        let fn_create = spawn_def.get_spawn_function();
+        let destroy_buf = spawn_def.get_despawn_buffer();
+
+        // Compute chunk coordinates
+        let chunk_x = Chunk::to_chunk_coordinate(position.x);
+        let chunk_z = Chunk::to_chunk_coordinate(position.z);
+
+        // Debug checks that the chunk is in bounds
+        debug_assert!(chunk_x >= 0, "position must be in-bounds");
+        debug_assert!(chunk_z >= 0, "position must be in-bounds");
+        debug_assert!(chunk_x < W::CHUNKS_X as _, "position must be in-bounds");
+        debug_assert!(chunk_z < W::CHUNKS_Z as _, "position must be in-bounds");
+
+        // Get the chunk
+        let chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
+        
+        // Spawn the entity in the bevy-ecs world
+        let mut entity = self.entities.spawn();
+
+        // Initialize viewable
+        let mut viewable = Viewable::new(position, chunk_x, chunk_z, fn_create, destroy_buf);
+        let id = entity.id();
+        viewable.index_in_chunk_entity_slab = chunk.entities.insert(id);
+        viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
+        viewable.last_chunk_x = chunk_x;
+        viewable.last_chunk_z = chunk_z;
+
+        // Construct entity using components
+        entity
+            .insert_bundle(components)
+            .insert(viewable);
+
+        // Allow the spawn definition to add components
+        spawn_def.add_components(&mut entity);
+        
+        // todo: why do we have to do this... can't we just convert EntityMut into EntityRef...
+        // bevy.. please... im begging you
+        // https://github.com/bevyengine/bevy/issues/5459
+        let entity_ref = self.entities.entity(id);
+
+        // Spawn the entity for players in the view distance of the chunk
+        (fn_create)(&mut chunk.viewable_buffer, entity_ref);
     }
 
     pub fn tick(&mut self) {
-        // Clear viewable buffers
-        for chunk_list in &mut self.chunks {
-            for chunk in chunk_list {
-                chunk.viewable_buffer.reset();
-                chunk.viewable_buffer.tick_and_maybe_shrink();
-                chunk.spot_buffer.reset();
-                chunk.spot_buffer.tick_and_maybe_shrink();
-            }
-        }
+        let start = Instant::now();
 
         // Update viewable buffer for entities
-        let mut query = <(Entity, &mut Viewable)>::query();
-        query.for_each_mut(&mut self.entities, |(id, viewable)| {
+
+        // todo: this might have shit performance because we iterate over every entity
+        // and then have to do a second map lookup, as opposed to just being able to iterate
+        // over the EntityRefs. If this is actually how you're supposed to write this using
+        // bevy-ecs I would be very surprised but the library is so incredibly obtuse that it
+        // makes it impossible to figure out how to efficiently do things
+        self.entities.query::<Entity>().for_each(&self.entities, |id| {
+            let entity_ref = self.entities.entity(id);
+
+            let mut viewable = unsafe { entity_ref.get_unchecked_mut::<Viewable>(0, 0) }
+                .expect("all entities must have viewable");
+    
             let chunk_x = Chunk::to_chunk_coordinate(viewable.coord.x);
             let chunk_z = Chunk::to_chunk_coordinate(viewable.coord.z);
-
-            if !viewable.initialized {
-                if chunk_x >= 0 && chunk_x < W::CHUNKS_X as _ {
-                    if chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _ {
-                        let chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
-
-                        // Update chunk entity list
-                        viewable.index_in_chunk_entity_slab = chunk.entities.insert(*id);
-
-                        // Update viewable entity's buffer ptr
-                        viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
-
-                        // Initialize
-                        viewable.initialized = true;
-                        viewable.last_chunk_x = chunk_x;
-                        viewable.last_chunk_z = chunk_z;
-                    }
-                }
-                return;
-            }
 
             if viewable.last_chunk_x != chunk_x || viewable.last_chunk_z != chunk_z {
                 let delta_x = chunk_x - viewable.last_chunk_x;
@@ -161,22 +181,24 @@ impl<W: WorldService> World<W> {
                             let id_in_list = old_chunk
                                 .entities
                                 .remove(viewable.index_in_chunk_entity_slab);
-                            debug_assert_eq!(id_in_list, *id);
+                            debug_assert_eq!(id_in_list, id);
                         }
 
                         // Update chunk entity list
                         let chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
-                        viewable.index_in_chunk_entity_slab = chunk.entities.insert(*id);
+                        viewable.index_in_chunk_entity_slab = chunk.entities.insert(id);
 
                         // Update viewable entity's buffer ptr
                         viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
 
                         if was_out_of_bounds {
-                            chunk
-                                .viewable_buffer
-                                .copy_from(viewable.create_buffer.get_written());
+                            (viewable.fn_create)(&mut chunk.viewable_buffer, entity_ref);
                         } else {
-                            let create_bytes = viewable.create_buffer.get_written();
+                            // todo: maybe cache this write buffer?
+                            let mut write_buffer = WriteBuffer::with_min_capacity(64);
+
+                            (viewable.fn_create)(&mut write_buffer, entity_ref);
+                            let create_bytes = write_buffer.get_written();
                             let destroy_bytes = viewable.destroy_buffer.get_written();
 
                             let self_chunks_ptrs = &mut self.chunks as *mut Vec<Vec<Chunk>>;
@@ -218,58 +240,36 @@ impl<W: WorldService> World<W> {
                     let id_in_list = old_chunk
                         .entities
                         .remove(viewable.index_in_chunk_entity_slab);
-                    debug_assert_eq!(id_in_list, *id);
+                    debug_assert_eq!(id_in_list, id);
                 }
                 viewable.buffer = std::ptr::null_mut();
             }
         });
 
         // Update entities
-        let mut query = <(&mut Viewable, &mut TestEntity)>::query();
-        for (viewable, test_entity) in query.iter_mut(&mut self.entities) {
-            if !test_entity.spawned {
-                let add_entity_packet = AddEntity {
-                    id: 87123,
-                    uuid: 128371283,
-                    entity_type: test_entity.entity_type,
-                    x: viewable.coord.x as _,
-                    y: viewable.coord.y as _,
-                    z: viewable.coord.z as _,
-                    yaw: 0.0,
-                    pitch: 0.0,
-                    head_yaw: 0.0,
-                    data: 0,
-                    x_vel: 0.0,
-                    y_vel: 0.0,
-                    z_vel: 0.0,
-                };
-                if viewable.write_viewable_packet(&add_entity_packet).unwrap() {
-                    viewable.write_create_packet(&add_entity_packet).unwrap();
+        // todo: call system::tick
 
-                    let remove_packet = RemoveEntities {
-                        entities: vec![87123],
-                    };
-                    viewable.write_destroy_packet(&remove_packet).unwrap();
-
-                    test_entity.spawned = true;
-                }
+        // todo: move to system
+        self.entities.query::<(&mut Viewable, &mut Spinalla, &BasicEntity)>()
+                .for_each_mut(&mut self.entities, |(mut viewable, mut spinalla, test_entity)| {
+            if viewable.coord.x > 96.0 {
+                spinalla.direction.0 = -spinalla.direction.0;
+            } else if viewable.coord.x < 0.0 {
+                spinalla.direction.0 = -spinalla.direction.0;
             }
-        }
-
-        let mut query = <(&mut Viewable, &mut Spinalla)>::query();
-        for (viewable, spinalla) in query.iter_mut(&mut self.entities) {
-            if viewable.coord.x > 100.0 {
-                spinalla.reverse = true;
-            } else if viewable.coord.x < -10.0 {
-                spinalla.reverse = false;
+            if viewable.coord.z > 96.0 {
+                spinalla.direction.1 = -spinalla.direction.1;
+            } else if viewable.coord.z < 0.0 {
+                spinalla.direction.1 = -spinalla.direction.1;
             }
 
-            viewable.coord.x += if !spinalla.reverse { 0.3 } else { -0.3 };
-            spinalla.rotation.yaw += 1.0;
+            viewable.coord.x += spinalla.direction.0 * 0.5;
+            viewable.coord.z += spinalla.direction.1 * 0.5;
+            spinalla.rotation.yaw += 10.0;
             spinalla.rotation.yaw %= 360.0;
 
             let teleport = TeleportEntity {
-                entity_id: 87123,
+                entity_id: test_entity.entity_id.as_i32(),
                 x: viewable.coord.x as _,
                 y: viewable.coord.y as _,
                 z: viewable.coord.z as _,
@@ -278,36 +278,31 @@ impl<W: WorldService> World<W> {
                 on_ground: true,
             };
             viewable.write_viewable_packet(&teleport).unwrap();
+
             let rotate_head = RotateHead {
-                entity_id: 87123,
+                entity_id: test_entity.entity_id.as_i32(),
                 head_yaw: spinalla.rotation.yaw,
             };
             viewable.write_viewable_packet(&rotate_head).unwrap();
-
-            let add_entity_packet = AddEntity {
-                id: 87123,
-                uuid: 128371283,
-                entity_type: 70,
-                x: viewable.coord.x as _,
-                y: viewable.coord.y as _,
-                z: viewable.coord.z as _,
-                yaw: 0.0,
-                pitch: 0.0,
-                head_yaw: 0.0,
-                data: 0,
-                x_vel: 0.0,
-                y_vel: 0.0,
-                z_vel: 0.0,
-            };
-
-            viewable.clear_create_packets();
-            viewable.write_create_packet(&add_entity_packet).unwrap();
-        }
+        });
 
         // Tick service (ticks players)
         unsafe {
             W::tick(self);
         }
+
+        // Clear viewable buffers
+        for chunk_list in &mut self.chunks {
+            for chunk in chunk_list {
+                chunk.viewable_buffer.reset();
+                chunk.viewable_buffer.tick_and_maybe_shrink();
+                chunk.spot_buffer.reset();
+                chunk.spot_buffer.tick_and_maybe_shrink();
+            }
+        }
+
+        let stop = Instant::now();
+        println!("Took: {:?}", stop.duration_since(start));
     }
 
     pub fn handle_player_join(&mut self, proto_player: ProtoPlayer<W::UniverseServiceType>) {
@@ -378,22 +373,24 @@ impl<W: WorldService> World<W> {
             W::ENTITY_VIEW_DISTANCE,
             |x, z| {
                 let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
-                let mut query = <&Viewable>::query();
                 chunk.entities.iter().for_each(|(_, id)| {
-                    if let Ok(viewable) = query.get(&self.entities, *id) {
-                        player
-                            .write_buffer
-                            .copy_from(viewable.create_buffer.get_written());
-                    }
+                    let entity = self.entities.entity(*id);
+
+                    let viewable = entity.get::<Viewable>()
+                        .expect("entity in chunk-list must be viewable");
+
+                    (viewable.fn_create)(&mut player.write_buffer, entity);
                 });
             },
             |x, z| {
                 let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
-                let mut query = <&Viewable>::query();
                 chunk.entities.iter().for_each(|(_, id)| {
-                    if let Ok(viewable) = query.get(&self.entities, *id) {
-                        temp_destroy_buffer.copy_from(viewable.destroy_buffer.get_written());
-                    }
+                    let entity = self.entities.entity(*id);
+
+                    let viewable = entity.get::<Viewable>()
+                        .expect("entity in chunk-list must be viewable");
+
+                    temp_destroy_buffer.copy_from(viewable.destroy_buffer.get_written());
                 });
             },
             -old_chunk_x,

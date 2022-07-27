@@ -18,6 +18,7 @@ pub trait MinecraftParser {
 pub enum NumericParser {
     U8 { min: u8, max: u8 },
     U16 { min: u16, max: u16 },
+    U64 { min: u64, max: u64 },
 }
 
 impl MinecraftParser for NumericParser {
@@ -25,6 +26,7 @@ impl MinecraftParser for NumericParser {
         match self {
             NumericParser::U8 { min: _, max: _ } => parse_from_string::<u8>,
             NumericParser::U16 { min: _, max: _ } => parse_from_string::<u16>,
+            NumericParser::U64 { min: _, max: _ } => parse_from_string::<u64>,
         }
     }
 
@@ -35,6 +37,10 @@ impl MinecraftParser for NumericParser {
                 max: Some(*max as _),
             },
             NumericParser::U16 { min, max } => CommandNodeParser::Integer {
+                min: Some(*min as _),
+                max: Some(*max as _),
+            },
+            NumericParser::U64 { min, max } => CommandNodeParser::Integer {
                 min: Some(*min as _),
                 max: Some(*max as _),
             },

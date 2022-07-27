@@ -1,0 +1,3 @@
+[submodule "minecraft_constants/minecraft-data"]
+	path = minecraft_constants/minecraft-data
+	url = https://github.com/PrismarineJS/minecraft-data
