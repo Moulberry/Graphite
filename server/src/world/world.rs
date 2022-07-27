@@ -90,7 +90,11 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn initialize(&self, universe: &Universe<W::UniverseServiceType>) {
-        // todo: justify this as being sound
+        // Justification:
+        // If the universe pointer is null, this struct is in an undefined state
+        // Therefore, any reference that previously existed to this struct
+        // is invalid, so converting the immutable reference to a mutable one
+        // should be sound here
         unsafe {
             let self_mut: *mut World<W> = self as *const _ as *mut _;
             let self_mut_ref: &mut World<W> = self_mut.as_mut().unwrap();

@@ -7,7 +7,7 @@ mod common;
 // Checks to see that the player received the joining packets
 #[test]
 fn player_join() {
-    let (_, mut conn) = common::mock_universe_and_player();
+    let (_, mut conn) = common::create_universe_and_player();
 
     // Login -- Can't read NBT yet
     conn.skip_outgoing();
@@ -53,7 +53,7 @@ fn player_join() {
 //  2. Player receives RemoveEntity on the 2nd tick
 #[test]
 fn spawn_entity_close() {
-    let (mut universe, mut conn) = common::mock_universe_and_player();
+    let (mut universe, mut conn) = common::create_universe_and_player();
 
     // Skip joining packets
     conn.skip_all_outgoing();
@@ -101,7 +101,7 @@ fn spawn_entity_close() {
 //  2. Player *DOES* receive AddEntity on the 2nd tick
 #[test]
 fn spawn_entity_far() {
-    let (mut universe, mut conn) = common::mock_universe_and_player();
+    let (mut universe, mut conn) = common::create_universe_and_player();
 
     // Skip joining packets
     conn.skip_all_outgoing();

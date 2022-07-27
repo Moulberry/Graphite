@@ -4,15 +4,14 @@ use server::{universe::{UniverseService, Universe}, world::{WorldService, World}
 
 use super::FakePlayerConnection;
 
-
-pub fn mock_universe_and_player() -> (Pin<Box<Universe<DummyUniverseService>>>, Pin<Box<FakePlayerConnection>>) {
-    let mut universe = mock_universe();
+pub fn create_universe_and_player() -> (Pin<Box<Universe<DummyUniverseService>>>, Pin<Box<FakePlayerConnection>>) {
+    let mut universe = create_universe();
     let mut conn = Box::from(FakePlayerConnection::new());
     universe.handle_player_connect(conn.as_mut());
     (universe, Pin::from(conn))
 }
 
-pub fn mock_universe() -> Pin<Box<Universe<DummyUniverseService>>> {
+pub fn create_universe() -> Pin<Box<Universe<DummyUniverseService>>> {
     let service = DummyUniverseService {
         the_world: World::new(DummyWorldService {
             players: PlayerVec::new(),
