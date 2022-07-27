@@ -35,6 +35,10 @@ impl EntityId {
     pub fn as_i32(&self) -> i32 {
         self.0
     }
+
+    pub(crate) fn clone(&self) -> EntityId {
+        Self(self.0)
+    }
 }
 
 pub struct Universe<U: UniverseService> {

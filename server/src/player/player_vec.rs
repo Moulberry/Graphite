@@ -27,6 +27,7 @@ impl<P: PlayerService> PlayerVec<P> {
     }
 
     pub fn initialize(&self, world: &World<P::WorldServiceType>) {
+        // Justification:
         // If the world pointer is null, this struct is in an undefined state
         // Therefore, any reference that previously existed to this struct
         // is invalid, so converting the immutable reference to a mutable one

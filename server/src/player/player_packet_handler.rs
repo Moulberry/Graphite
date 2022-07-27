@@ -80,7 +80,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         match packet.channel {
             "minecraft:brand" => {
                 if packet.data.len() > 128 {
-                    bail!("brand must have <128 bytes");
+                    bail!("too many bytes in brand payload");
                 }
                 self.settings.set_brand(std::str::from_utf8(packet.data)?);
             }
@@ -142,7 +142,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
     }
 
     fn handle_chat_command(&mut self, packet: client::ChatCommand) -> anyhow::Result<()> {
-        // let generic: &mut GenericPlayer = self as &mut GenericPlayer;
+        // todo: finalize this functionality, add comments
 
         let dispatch = &mut self.get_world_mut().get_universe().root_dispatch_node;
 

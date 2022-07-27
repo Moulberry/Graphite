@@ -53,44 +53,19 @@ impl ChunkSection {
 
     fn perform_copy(&mut self) {
         unsafe {
+            // Copy block_palette
             const BLOCK_LAYOUT: Layout = Layout::new::<BlockPalettedContainer>();
             let new_block_palette = std::alloc::alloc(BLOCK_LAYOUT) as *mut _;
             std::ptr::copy_nonoverlapping(self.block_palette, new_block_palette, 1);
             self.block_palette = new_block_palette;
 
+            // Copy biome_palette
             const BIOME_LAYOUT: Layout = Layout::new::<BiomePalettedContainer>();
             let new_biome_palette = std::alloc::alloc(BIOME_LAYOUT) as *mut _;
             std::ptr::copy_nonoverlapping(self.biome_palette, new_biome_palette, 1);
             self.biome_palette = new_biome_palette;
         }
         self.copy_on_write = false;
-    }
-}
-
-impl<'a> SliceSerializable<'a> for ChunkSection {
-    type RefType = &'a Self;
-
-    fn maybe_deref(t: &'a Self) -> Self::RefType {
-        t
-    }
-
-    fn read(_: &mut &[u8]) -> anyhow::Result<Self> {
-        unimplemented!();
-    }
-
-    unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &'a Self) -> &'b mut [u8] {
-        bytes = <BigEndian as SliceSerializable<'_, u16>>::write(bytes, data.non_air_blocks);
-        bytes = <BlockPalettedContainer as SliceSerializable>::write(bytes, &*data.block_palette);
-        bytes = <BiomePalettedContainer as SliceSerializable>::write(bytes, &*data.biome_palette);
-        bytes
-    }
-
-    fn get_write_size(data: &'a Self) -> usize {
-        <BigEndian as SliceSerializable<'_, u16>>::get_write_size(data.non_air_blocks) +
-        unsafe {
-            <BlockPalettedContainer as SliceSerializable>::get_write_size(&*data.block_palette) +
-            <BiomePalettedContainer as SliceSerializable>::get_write_size(&*data.biome_palette)
-        }
     }
 }
 
@@ -116,6 +91,34 @@ impl ChunkSection {
             copy_on_write: false,
             block_palette: Box::into_raw(Box::from(block_palette)),
             biome_palette: Box::into_raw(Box::from(biome_palette)),
+        }
+    }
+}
+
+
+impl<'a> SliceSerializable<'a> for ChunkSection {
+    type RefType = &'a Self;
+
+    fn maybe_deref(t: &'a Self) -> Self::RefType {
+        t
+    }
+
+    fn read(_: &mut &[u8]) -> anyhow::Result<Self> {
+        unimplemented!();
+    }
+
+    unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &'a Self) -> &'b mut [u8] {
+        bytes = <BigEndian as SliceSerializable<'_, u16>>::write(bytes, data.non_air_blocks);
+        bytes = <BlockPalettedContainer as SliceSerializable>::write(bytes, &*data.block_palette);
+        bytes = <BiomePalettedContainer as SliceSerializable>::write(bytes, &*data.biome_palette);
+        bytes
+    }
+
+    fn get_write_size(data: &'a Self) -> usize {
+        <BigEndian as SliceSerializable<'_, u16>>::get_write_size(data.non_air_blocks) +
+        unsafe {
+            <BlockPalettedContainer as SliceSerializable>::get_write_size(&*data.block_palette) +
+            <BiomePalettedContainer as SliceSerializable>::get_write_size(&*data.biome_palette)
         }
     }
 }

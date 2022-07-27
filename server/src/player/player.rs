@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
 use net::{
@@ -24,7 +26,7 @@ use super::{
     proto_player::ProtoPlayer,
 };
 
-// user defined player service trait
+// User defined player service trait
 
 pub trait PlayerService
 where
@@ -33,7 +35,7 @@ where
     /// This will cause packets to be written immediately when packets are received
     /// If this is false, the server will instead wait for the tick
     ///
-    /// Benefit: reduce latency by ~25ms (on average) for some interactions
+    /// Benefit: reduce latency by 50ms for 25% of players
     /// Drawback: 2x write operations which could potentially strain the server
     const FAST_PACKET_RESPONSE: bool = true;
 
@@ -47,9 +49,10 @@ where
 // graphite player
 
 pub struct Player<P: PlayerService> {
-    pub service: P,
+    moved_into_proto: bool,
+    pub service: ManuallyDrop<P>,
+    connection: ManuallyDrop<ConnectionReference<P::UniverseServiceType>>,
 
-    connection: ConnectionReference<P::UniverseServiceType>,
     pub(crate) write_buffer: WriteBuffer,
     pub(crate) disconnected: bool,
 
@@ -81,9 +84,10 @@ impl<P: PlayerService> Player<P> {
         connection: ConnectionReference<P::UniverseServiceType>,
     ) -> Self {
         Self {
-            service,
+            moved_into_proto: false,
+            service: ManuallyDrop::new(service),
+            connection: ManuallyDrop::new(connection),
 
-            connection,
             write_buffer: WriteBuffer::new(),
             disconnected: false,
 
@@ -196,8 +200,6 @@ impl<P: PlayerService> Player<P> {
     }
 
     pub fn send_message<T: Into<TextComponent>>(&mut self, message: T) {
-        // self.service.whatever;
-
         self.write_packet(&server::SystemChat {
             message: message.into().to_json(),
             overlay: false,
@@ -259,8 +261,21 @@ impl<P: PlayerService> Player<P> {
     }
 }
 
-// todo: decrease chunk playercount when dropped
-// hold-up: can't impl Drop for Player due to partial move used below
+impl<P: PlayerService> Drop for Player<P> {
+    fn drop(&mut self) {
+        if !self.moved_into_proto {
+            unsafe {
+                ManuallyDrop::drop(&mut self.connection);
+                ManuallyDrop::drop(&mut self.service);
+            }
+        }
+
+        // Safety: we are dropping the player
+        unsafe {
+            self.get_world_mut().decrease_player_count_in_chunk(self.chunk_view_position);
+        }
+    }
+}
 
 unsafe impl<P: PlayerService> Unsticky for Player<P> {
     type UnstuckType = (ProtoPlayer<P::UniverseServiceType>, P);
@@ -270,10 +285,22 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
         self.connection.update_player_pointer(ptr);
     }
 
-    fn unstick(self) -> Self::UnstuckType {
+    fn unstick(mut self) -> Self::UnstuckType {
+        self.moved_into_proto = true; // Prevent calling drop on connection and service
+
+        // Safety: `self.moved_into_proto = true` means that the following values
+        // will not be dropped, so its safe to take them
+        let connection = unsafe {
+            ManuallyDrop::take(&mut self.connection)
+        };
+        let service = unsafe {
+            ManuallyDrop::take(&mut self.service)
+        };
+
+        // Return the ProtoPlayer and Service as a tuple
         (
-            ProtoPlayer::new(self.connection, self.entity_id),
-            self.service,
+            ProtoPlayer::new(connection, self.entity_id.clone()),
+            service,
         )
     }
 }

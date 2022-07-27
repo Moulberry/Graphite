@@ -19,11 +19,8 @@ impl<U: UniverseService> ConnectionReference<U> {
         self.get_connection_mut().1.update_player_pointer(player);
     }
 
-    // todo: can we not duplicate this twice?
-    // holdup: i literally don't know
     fn get_connection(&self) -> &(Connection<Universe<U>>, PlayerConnection<U>) {
         debug_assert!(!self.closed);
-
         unsafe {
             (&mut *self.connection_slab)
                 .get(self.connection_index as _)
@@ -33,7 +30,6 @@ impl<U: UniverseService> ConnectionReference<U> {
 
     fn get_connection_mut(&mut self) -> &mut (Connection<Universe<U>>, PlayerConnection<U>) {
         debug_assert!(!self.closed);
-
         unsafe {
             (&mut *self.connection_slab)
                 .get_mut(self.connection_index as _)
@@ -71,13 +67,12 @@ impl<U: UniverseService> ConnectionReference<U> {
     }
 }
 
+// Causes the connection to close when the ConnectionReference is dropped
 impl<U: UniverseService> Drop for ConnectionReference<U> {
     fn drop(&mut self) {
         if !self.closed {
             let (connection, player_connection) = self.get_connection_mut();
-
-            player_connection.clear_player_pointer();
-            player_connection.mark_closed();
+            player_connection.teardown();
             connection.request_close();
         }
     }
@@ -92,13 +87,14 @@ pub struct PlayerConnection<U: UniverseService> {
     player_process_packet: Option<fn(*mut ()) -> anyhow::Result<u32>>,
     player_process_disconnect: Option<fn(*mut ())>,
 }
+
 impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
     const BUFFER_SIZE: u32 = 4_194_304;
     type NetworkManagerServiceType = Universe<U>;
 
     fn on_receive(
         &mut self,
-        connection: &mut Connection<Self::NetworkManagerServiceType>,
+        _: &mut Connection<Self::NetworkManagerServiceType>,
     ) -> anyhow::Result<u32> {
         debug_assert!(
             !self.is_closing,
@@ -106,21 +102,26 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
         );
 
         if let Some(handle_packet) = self.player_process_packet {
+            // Call handle_packet on player, via fn ptr
             handle_packet(self.player_ptr)
         } else {
-            Ok(connection.read_bytes().len() as u32)
+            panic!("data was read from connection, but player wasn't created");
         }
     }
 
     fn close(mut self) {
-        if !self.is_closing {
-            self.is_closing = true;
+        debug_assert!(
+            !self.is_closing,
+            "tried to close connection twice"
+        );
 
-            if let Some(handle_disconnect) = self.player_process_disconnect {
-                handle_disconnect(self.player_ptr);
-            } else {
-                panic!("connection was closed by remote while belonging to a protoplayer, this should never happen");
-            }
+        self.is_closing = true;
+
+        if let Some(handle_disconnect) = self.player_process_disconnect {
+            // Call handle_disconnect on player, via fn ptr
+            handle_disconnect(self.player_ptr);
+        } else {
+            panic!("connection was closed by remote, but player wasn't created");
         }
     }
 }
@@ -136,24 +137,28 @@ impl<U: UniverseService> PlayerConnection<U> {
         }
     }
 
-    pub(crate) fn mark_closed(&mut self) {
+    pub(crate) fn teardown(&mut self) {
         self.is_closing = true;
+        self.player_process_packet = None;
+        self.player_process_disconnect = None;
     }
 
     pub(crate) fn update_player_pointer<T: PlayerService>(&mut self, player: *mut Player<T>) {
-        debug_assert!(!self.is_closing);
+        debug_assert!(
+            !self.is_closing,
+            "tried to update connection, but the connection was already closed"
+        );
 
+        // Set ptr to player object
         self.player_ptr = player as *mut ();
 
+        // Set ptr to process_packet function
         let process_packet_ptr = Player::<T>::handle_packets as *const ();
         self.player_process_packet = Some(unsafe { std::mem::transmute(process_packet_ptr) });
 
+        // Set ptr to process_disconnection function
         let process_disconnect_ptr = Player::<T>::handle_disconnect as *const ();
         self.player_process_disconnect =
             Some(unsafe { std::mem::transmute(process_disconnect_ptr) });
-    }
-
-    pub(crate) fn clear_player_pointer(&mut self) {
-        self.player_process_packet = None;
     }
 }

@@ -288,46 +288,41 @@ impl<W: WorldService> World<W> {
         W::handle_player_join(self, proto_player);
     }
 
+    /// # Safety
+    /// This method must only be called by `Player::Drop`
+    pub(crate) unsafe fn decrease_player_count_in_chunk(&mut self, position: ChunkViewPosition) {
+        let old_chunk = &mut self.chunks[position.x][position.z];
+        old_chunk.player_count -= 1;
+    }
+
     pub(crate) fn update_view_position<P: PlayerService>(
         &mut self,
         player: &mut Player<P>,
         position: Position,
     ) -> anyhow::Result<ChunkViewPosition> {
-        // todo: send new chunks & entities
-
         let old_chunk_x = player.chunk_view_position.x as i32;
         let old_chunk_z = player.chunk_view_position.z as i32;
         let chunk_x = Chunk::to_chunk_coordinate(position.coord.x);
         let chunk_z = Chunk::to_chunk_coordinate(position.coord.z);
 
-        let out_of_bounds = chunk_x < 0
-            || chunk_x >= W::CHUNKS_X as _
-            || chunk_z < 0
-            || chunk_z >= W::CHUNKS_Z as _;
-        let delta_x = chunk_x - old_chunk_x;
-        let delta_z = chunk_z - old_chunk_z;
-        let same_position = delta_x == 0 && delta_z == 0;
+        let same_position = chunk_x == old_chunk_x && chunk_z == old_chunk_z;
+        let out_of_bounds = !Self::chunk_coords_in_bounds(chunk_x, chunk_z);
         if same_position || out_of_bounds {
             return Ok(player.chunk_view_position);
         }
-
-        let chunk_view_position = ChunkViewPosition {
-            x: chunk_x as usize,
-            z: chunk_z as usize,
-        };
 
         // Chunk
         // todo: only send new chunks
         // holdup: currently using this behaviour for testing, to be able to see the server chunk state
         let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
         for x in -view_distance..view_distance + 1 {
-            let chunk_x = x as i32 + chunk_view_position.x as i32;
+            let chunk_x = x as i32 + chunk_x;
 
             if chunk_x >= 0 && chunk_x < W::CHUNKS_X as _ {
                 let chunk_list = &mut self.chunks[chunk_x as usize];
 
                 for z in -view_distance..view_distance + 1 {
-                    let chunk_z = z + chunk_view_position.z as i32;
+                    let chunk_z = z + chunk_z;
 
                     if chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _ {
                         let chunk = &mut chunk_list[chunk_z as usize];
@@ -340,7 +335,7 @@ impl<W: WorldService> World<W> {
             } else {
                 for z in -view_distance..view_distance + 1 {
                     // todo: only need to send chunks 1 out, not all in render distance
-                    let chunk_z = z + chunk_view_position.z as i32;
+                    let chunk_z = z + chunk_z;
                     self.empty_chunk
                         .write(&mut player.write_buffer, chunk_x, chunk_z)?;
                 }
@@ -389,26 +384,23 @@ impl<W: WorldService> World<W> {
 
         // Update view position
         let update_view_position_packet = SetChunkCacheCenter {
-            chunk_x: chunk_view_position.x as _,
-            chunk_z: chunk_view_position.z as _,
+            chunk_x,
+            chunk_z,
         };
         player.write_packet(&update_view_position_packet);
 
         // Decrease the player count of the old chunk
-        let old_chunk_out_of_bounds = old_chunk_x < 0
-            || old_chunk_x >= W::CHUNKS_X as _
-            || old_chunk_z < 0
-            || old_chunk_z >= W::CHUNKS_Z as _;
-        if !old_chunk_out_of_bounds {
-            let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
-            old_chunk.player_count -= 1;
-        }
+        let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
+        old_chunk.player_count -= 1;
 
         // Increase the player count in the new chunk
         let spawning_chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
         spawning_chunk.player_count += 1;
 
-        Ok(chunk_view_position)
+        Ok(ChunkViewPosition {
+            x: chunk_x as usize,
+            z: chunk_z as usize,
+        })
     }
 
     pub(crate) fn initialize_view_position(

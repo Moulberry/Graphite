@@ -19,8 +19,6 @@ pub struct Viewable {
     pub(crate) buffer: *mut WriteBuffer,
 
     pub(crate) fn_create: FnPacket,
-    //pub(crate) fn_destroy: FnPacket,
-
     pub(crate) destroy_buffer: WriteBuffer,
 }
 
@@ -38,9 +36,6 @@ impl Viewable {
             buffer: std::ptr::null_mut(),
 
             fn_create,
-            //fn_destroy,
-
-            // create_buffer: WriteBuffer::with_min_capacity(64),
             destroy_buffer,
         }
     }
@@ -57,30 +52,12 @@ impl Viewable {
             Ok(false)
         }
     }
+}
 
-    // Create packets
-    /*pub fn clear_create_packets(&mut self) {
-        self.create_buffer.reset();
-    }
-
-    pub fn write_create_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<()>
-    where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
-    {
-        packet_helper::write_packet(&mut self.create_buffer, packet)
-    }
-
-    // Destroy packets
-    pub fn clear_destroy_packets(&mut self) {
-        self.destroy_buffer.reset();
-    }
-
-    pub fn write_destroy_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<()>
-    where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
-    {
-        packet_helper::write_packet(&mut self.destroy_buffer, packet)
-    }*/
+pub trait EntitySpawnDefinition {
+    fn get_spawn_function(&mut self) -> FnPacket;
+    fn get_despawn_buffer(&mut self) -> WriteBuffer;
+    fn add_components(self, entity: &mut EntityMut);
 }
 
 pub struct EntityIdHolder(EntityId);
@@ -140,10 +117,4 @@ impl BasicEntity {
         };
         net::packet_helper::write_packet(write_buffer, &add_entity_packet).unwrap();
     }
-}
-
-pub trait EntitySpawnDefinition {
-    fn get_spawn_function(&mut self) -> FnPacket;
-    fn get_despawn_buffer(&mut self) -> WriteBuffer;
-    fn add_components(self, entity: &mut EntityMut);
 }
