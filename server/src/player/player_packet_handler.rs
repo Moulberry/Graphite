@@ -25,8 +25,6 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         self.client_position.rot.yaw = packet.yaw;
         self.client_position.rot.pitch = packet.pitch;
 
-        // todo: check for moving too fast
-
         Ok(())
     }
 
@@ -38,8 +36,6 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         self.client_position.coord.x = packet.x as _;
         self.client_position.coord.y = packet.y as _;
         self.client_position.coord.z = packet.z as _;
-
-        // todo: check for moving too fast
 
         Ok(())
     }
@@ -101,7 +97,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
                 let pos = packet.block_pos;
                 
                 // todo: move to function in world. remove magic 16s
-                // todo: validate chunk_x/chunk_z is positive
+                // todo: validate chunk_x/chunk_z is in-bounds
                 let chunk_x = (pos.x / 16) as usize;
                 let section_x = (pos.x % 16) as u8;
                 let chunk_z = (pos.z / 16) as usize;

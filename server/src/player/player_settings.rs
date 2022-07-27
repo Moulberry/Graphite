@@ -3,17 +3,13 @@ use protocol::{
     types::{ArmPosition, ChatVisibility},
 };
 
-// todo: use the ClientInformation packet instead of this struct
-// will require parsing the language into a String in order to
-// prevent allocation on client settings load
-
 pub struct PlayerSettings {
     pub language: String,
     pub brand: String,
     pub view_distance: u8,
     pub chat_visibility: ChatVisibility,
     pub chat_colors: bool,
-    pub model_customization: i8, // todo: bitset
+    pub model_customization: i8,
     pub arm_position: ArmPosition,
     pub text_filtering_enabled: bool,
     pub show_on_server_list: bool,

@@ -65,6 +65,8 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn new(service: W) -> Self {
+        // todo: these are default chunks, eventually this ctor should take
+        // a list of chunks, or something equivalent
         let mut chunks = Vec::with_capacity(W::CHUNKS_X);
         for _ in 0..W::CHUNKS_X {
             let mut chunks_z = Vec::with_capacity(W::CHUNKS_Z);
@@ -105,10 +107,7 @@ impl<W: WorldService> World<W> {
         let chunk_z = Chunk::to_chunk_coordinate(position.z);
 
         // Debug checks that the chunk is in bounds
-        debug_assert!(chunk_x >= 0, "position must be in-bounds");
-        debug_assert!(chunk_z >= 0, "position must be in-bounds");
-        debug_assert!(chunk_x < W::CHUNKS_X as _, "position must be in-bounds");
-        debug_assert!(chunk_z < W::CHUNKS_Z as _, "position must be in-bounds");
+        Self::assert_chunk_coords_in_bounds(chunk_x, chunk_z);
 
         // Get the chunk
         let chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
@@ -142,103 +141,8 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn tick(&mut self) {
-        // Update viewable buffer for entities
-
-        // todo: this might have shit performance because we iterate over every entity
-        // and then have to do a second map lookup, as opposed to just being able to iterate
-        // over the EntityRefs. If this is actually how you're supposed to write this using
-        // bevy-ecs I would be very surprised but the library is so incredibly obtuse that it
-        // makes it impossible to figure out how to efficiently do things
-        self.entities.query::<Entity>().for_each(&self.entities, |id| {
-            let entity_ref = self.entities.entity(id);
-
-            let mut viewable = unsafe { entity_ref.get_unchecked_mut::<Viewable>(0, 0) }
-                .expect("all entities must have viewable");
-    
-            let chunk_x = Chunk::to_chunk_coordinate(viewable.coord.x);
-            let chunk_z = Chunk::to_chunk_coordinate(viewable.coord.z);
-
-            if viewable.last_chunk_x != chunk_x || viewable.last_chunk_z != chunk_z {
-                let delta_x = chunk_x - viewable.last_chunk_x;
-                let delta_z = chunk_z - viewable.last_chunk_z;
-                let old_chunk_x = viewable.last_chunk_x;
-                let old_chunk_z = viewable.last_chunk_z;
-                viewable.last_chunk_x = chunk_x;
-                viewable.last_chunk_z = chunk_z;
-
-                let was_out_of_bounds = viewable.buffer.is_null();
-
-                if Self::chunk_coords_in_bounds(chunk_x, chunk_z) {
-                    // Remove from old entity list
-                    if !was_out_of_bounds {
-                        let old_chunk =
-                            &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
-                        let id_in_list = old_chunk
-                            .entities
-                            .remove(viewable.index_in_chunk_entity_slab);
-                        debug_assert_eq!(id_in_list, id);
-                    }
-
-                    // Update chunk entity list
-                    let chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
-                    viewable.index_in_chunk_entity_slab = chunk.entities.insert(id);
-
-                    // Update viewable entity's buffer ptr
-                    viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
-
-                    if was_out_of_bounds {
-                        (viewable.fn_create)(&mut chunk.viewable_buffer, entity_ref);
-                    } else {
-                        // todo: maybe cache this write buffer?
-                        let mut write_buffer = WriteBuffer::with_min_capacity(64);
-
-                        (viewable.fn_create)(&mut write_buffer, entity_ref);
-                        let create_bytes = write_buffer.get_written();
-                        let destroy_bytes = viewable.destroy_buffer.get_written();
-
-                        let self_chunks_ptrs = &mut self.chunks as *mut Vec<Vec<Chunk>>;
-
-                        super::chunk_view_diff::for_each_diff_with_min_max(
-                            (delta_x, delta_z),
-                            W::ENTITY_VIEW_DISTANCE,
-                            |x, z| {
-                                let chunk = &mut self.chunks[(old_chunk_x + x) as usize]
-                                    [(old_chunk_z + z) as usize];
-                                chunk.copy_into_spot_buffer(create_bytes);
-                            },
-                            |x, z| {
-                                let chunks = unsafe { &mut *self_chunks_ptrs };
-                                let chunk = &mut chunks[(old_chunk_x + x) as usize]
-                                    [(old_chunk_z + z) as usize];
-                                chunk.copy_into_spot_buffer(destroy_bytes);
-                            },
-                            -old_chunk_x,
-                            -old_chunk_z,
-                            W::CHUNKS_X as i32 - 1 - old_chunk_x,
-                            W::CHUNKS_Z as i32 - 1 - old_chunk_z,
-                        );
-                    }
-
-                    return;
-                }
-
-                // Entity entered out-of-bounds chunks
-                if !was_out_of_bounds {
-                    let buffer = unsafe { &mut *viewable.buffer };
-
-                    // Send destroy packets to all viewers
-                    buffer.copy_from(viewable.destroy_buffer.get_written());
-
-                    // Remove from old entity list
-                    let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
-                    let id_in_list = old_chunk
-                        .entities
-                        .remove(viewable.index_in_chunk_entity_slab);
-                    debug_assert_eq!(id_in_list, id);
-                }
-                viewable.buffer = std::ptr::null_mut();
-            }
-        });
+        // Update viewable state for entities
+        self.update_viewable_entities();
 
         // Update entities
         // todo: call system::tick
@@ -292,6 +196,94 @@ impl<W: WorldService> World<W> {
         }
     }
 
+    fn update_viewable_entities(&mut self) {
+        // todo: this might have shit performance because we iterate over every entity
+        // and then have to do a second map lookup, as opposed to just being able to iterate
+        // over the EntityRefs. If this is actually how you're supposed to write this using
+        // bevy-ecs I would be very surprised but the library is so incredibly obtuse that it
+        // makes it impossible to figure out how to efficiently do things
+        self.entities.query::<Entity>().for_each(&self.entities, |id| {
+            let entity_ref = self.entities.entity(id);
+
+            let mut viewable = unsafe { entity_ref.get_unchecked_mut::<Viewable>(0, 0) }
+                .expect("all entities must have viewable");
+    
+            let chunk_x = Chunk::to_chunk_coordinate(viewable.coord.x);
+            let chunk_z = Chunk::to_chunk_coordinate(viewable.coord.z);
+
+            if viewable.last_chunk_x != chunk_x || viewable.last_chunk_z != chunk_z {
+                let old_chunk_x = viewable.last_chunk_x;
+                let old_chunk_z = viewable.last_chunk_z;
+                viewable.last_chunk_x = chunk_x;
+                viewable.last_chunk_z = chunk_z;
+
+                let was_out_of_bounds = viewable.buffer.is_null();
+
+                if Self::chunk_coords_in_bounds(chunk_x, chunk_z) {
+                    // Remove from old entity list
+                    if !was_out_of_bounds {
+                        let old_chunk =
+                            &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
+                        let id_in_list = old_chunk
+                            .entities
+                            .remove(viewable.index_in_chunk_entity_slab);
+                        debug_assert_eq!(id_in_list, id);
+                    }
+
+                    // Update chunk entity list
+                    let chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
+                    viewable.index_in_chunk_entity_slab = chunk.entities.insert(id);
+
+                    // Update viewable entity's buffer ptr
+                    viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
+
+                    if was_out_of_bounds {
+                        (viewable.fn_create)(&mut chunk.viewable_buffer, entity_ref);
+                    } else {
+                        // todo: maybe cache this write buffer?
+                        let mut write_buffer = WriteBuffer::with_min_capacity(64);
+
+                        (viewable.fn_create)(&mut write_buffer, entity_ref);
+                        let create_bytes = write_buffer.get_written();
+                        let destroy_bytes = viewable.destroy_buffer.get_written();
+
+                        // Find chunk differences and write create/destroy packets
+                        super::chunk_view_diff::for_each_diff_chunks(
+                            (old_chunk_x, old_chunk_z), 
+                            (chunk_x, chunk_z),
+                            W::ENTITY_VIEW_DISTANCE, &mut self.chunks,
+                            |chunk| {
+                                chunk.copy_into_spot_buffer(create_bytes);
+                            },
+                            |chunk| {
+                                chunk.copy_into_spot_buffer(destroy_bytes);
+                            }, 
+                            W::CHUNKS_X, W::CHUNKS_Z
+                        );
+                    }
+
+                    return;
+                }
+
+                // Entity entered out-of-bounds chunks
+                if !was_out_of_bounds {
+                    let buffer = unsafe { &mut *viewable.buffer };
+
+                    // Send destroy packets to all viewers
+                    buffer.copy_from(viewable.destroy_buffer.get_written());
+
+                    // Remove from old entity list
+                    let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
+                    let id_in_list = old_chunk
+                        .entities
+                        .remove(viewable.index_in_chunk_entity_slab);
+                    debug_assert_eq!(id_in_list, id);
+                }
+                viewable.buffer = std::ptr::null_mut();
+            }
+        });
+    }
+
     pub fn handle_player_join(&mut self, proto_player: ProtoPlayer<W::UniverseServiceType>) {
         W::handle_player_join(self, proto_player);
     }
@@ -326,6 +318,7 @@ impl<W: WorldService> World<W> {
 
         // Chunk
         // todo: only send new chunks
+        // holdup: currently using this behaviour for testing, to be able to see the server chunk state
         let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
         for x in -view_distance..view_distance + 1 {
             let chunk_x = x as i32 + chunk_view_position.x as i32;
@@ -354,50 +347,45 @@ impl<W: WorldService> World<W> {
             }
         }
 
-        let mut temp_destroy_buffer = WriteBuffer::new(); // todo: don't use a temp buffer
-        super::chunk_view_diff::for_each_diff_with_min_max(
-            (delta_x, delta_z),
-            W::ENTITY_VIEW_DISTANCE,
-            |x, z| {
-                let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
-                chunk.entities.iter().for_each(|(_, id)| {
-                    let entity = self.entities.entity(*id);
+        // Safety: closures just need to perform a single write call,
+        // they don't rely on the previous state of the closure
+        let player_write_buffer_ptr: *mut WriteBuffer = &mut player.write_buffer as *mut _;
 
+        // Write create packets for now-visible entities and
+        // destroy packets for no-longer-visible entities
+        super::chunk_view_diff::for_each_diff_chunks(
+            (old_chunk_x, old_chunk_z),
+            (chunk_x, chunk_z),
+            W::ENTITY_VIEW_DISTANCE,
+            &mut self.chunks,
+            |chunk| {
+                // Get all entities in chunk
+                chunk.entities.iter().for_each(|(_, id)| {
+                    // Get viewable component
+                    let entity = self.entities.entity(*id);
                     let viewable = entity.get::<Viewable>()
                         .expect("entity in chunk-list must be viewable");
 
+                    // Use viewable to write create packet into player's buffer
                     (viewable.fn_create)(&mut player.write_buffer, entity);
                 });
             },
-            |x, z| {
-                let chunk = &self.chunks[(old_chunk_x + x) as usize][(old_chunk_z + z) as usize];
+            |chunk| {
+                // Get all entities in chunk
                 chunk.entities.iter().for_each(|(_, id)| {
+                    // Get viewable component
                     let entity = self.entities.entity(*id);
-
                     let viewable = entity.get::<Viewable>()
                         .expect("entity in chunk-list must be viewable");
-
-                    temp_destroy_buffer.copy_from(viewable.destroy_buffer.get_written());
+                    
+                    // Use viewable to write destroy packet into player's buffer
+                    let write_buffer = unsafe { &mut *player_write_buffer_ptr };
+                    write_buffer.copy_from(viewable.destroy_buffer.get_written());
                 });
             },
-            -old_chunk_x,
-            -old_chunk_z,
-            W::CHUNKS_X as i32 - 1 - old_chunk_x,
-            W::CHUNKS_Z as i32 - 1 - old_chunk_z,
+            W::CHUNKS_X, W::CHUNKS_Z
         );
-        player
-            .write_buffer
-            .copy_from(temp_destroy_buffer.get_written());
-        std::mem::drop(temp_destroy_buffer);
-
-        // Create entities in (x, z)
-        /*let chunk = &self.chunks[chunk_view_position.x][chunk_view_position.z];
-        let mut query = <&Viewable>::query();
-        chunk.entities.iter().for_each(|id| {
-            if let Ok(viewable) = query.get(&self.entities, *id) {
-                player.write_buffer.copy_from(viewable.create_buffer.get_written());
-            }
-        });*/
+        std::mem::drop(player_write_buffer_ptr); // Shouldn't be used after this point
 
         // Update view position
         let update_view_position_packet = SetChunkCacheCenter {
@@ -573,5 +561,13 @@ impl<W: WorldService> World<W> {
     #[inline(always)]
     fn chunk_coords_in_bounds(chunk_x: i32, chunk_z: i32) -> bool {
         chunk_x >= 0 && chunk_x < W::CHUNKS_X as _ && chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _
+    }
+
+    #[inline(always)]
+    fn assert_chunk_coords_in_bounds(chunk_x: i32, chunk_z: i32) {
+        debug_assert!(chunk_x >= 0, "position must be in-bounds");
+        debug_assert!(chunk_z >= 0, "position must be in-bounds");
+        debug_assert!(chunk_x < W::CHUNKS_X as _, "position must be in-bounds");
+        debug_assert!(chunk_z < W::CHUNKS_Z as _, "position must be in-bounds");
     }
 }

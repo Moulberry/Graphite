@@ -182,6 +182,9 @@ impl<P: PlayerService> Player<P> {
         let rotation_changed = self.client_position.rot.is_diff_u8(self.last_position.rot);
         let coord_changed = distance_sq > 0.0001;
 
+        // todo: check for moving too fast
+        // holdup: don't have server velocity
+
         if rotation_changed || coord_changed {
             self.chunk_view_position = self.get_world_mut().update_view_position(self, to)?;
 
@@ -257,6 +260,7 @@ impl<P: PlayerService> Player<P> {
 }
 
 // todo: decrease chunk playercount when dropped
+// hold-up: can't impl Drop for Player due to partial move used below
 
 unsafe impl<P: PlayerService> Unsticky for Player<P> {
     type UnstuckType = (ProtoPlayer<P::UniverseServiceType>, P);

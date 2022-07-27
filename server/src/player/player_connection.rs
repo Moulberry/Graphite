@@ -20,13 +20,12 @@ impl<U: UniverseService> ConnectionReference<U> {
     }
 
     // todo: can we not duplicate this twice?
+    // holdup: i literally don't know
     fn get_connection(&self) -> &(Connection<Universe<U>>, PlayerConnection<U>) {
         debug_assert!(!self.closed);
 
         unsafe {
-            let connection_slab: &mut ConnectionSlab<Universe<U>> =
-                self.connection_slab.as_mut().unwrap();
-            connection_slab
+            (&mut *self.connection_slab)
                 .get(self.connection_index as _)
                 .expect("connection should have notified us of it being invalid")
         }
@@ -36,9 +35,7 @@ impl<U: UniverseService> ConnectionReference<U> {
         debug_assert!(!self.closed);
 
         unsafe {
-            let connection_slab: &mut ConnectionSlab<Universe<U>> =
-                self.connection_slab.as_mut().unwrap();
-            connection_slab
+            (&mut *self.connection_slab)
                 .get_mut(self.connection_index as _)
                 .expect("connection should have notified us of it being invalid")
         }

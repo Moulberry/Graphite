@@ -44,11 +44,16 @@ impl<U: UniverseService> ProtoPlayer<U> {
 
         // todo: dont send all these packets if the player is in the same world
         // i.e. the player had it's PlayerService changed
+        // holdup: implementing dimension ids to be able to differentiate worlds
 
+        // todo: if new, send join game
         world.write_game_join_packet(&mut self)?;
         world
             .get_universe()
             .write_brand_packet(&mut self.write_buffer)?;
+
+        // todo: if dim changed, send dimension changed
+        // todo: else, don't send
 
         let view_position = world.initialize_view_position(&mut self, position)?;
 

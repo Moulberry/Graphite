@@ -1,0 +1,18 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 17dda42bbfd8242c7c841a3b82ba1aeedeb36f34e352800aeb8b4a3bed6cd501 # shrinks to delta_x = 0, delta_y = 4, min_x = -1, min_z = -1, max_x = 0, max_z = 0, view_distance = 2
+cc 1a5dfd4242b3a202690b28f6406625a43e268f5313e2912afec9750c788e912a # shrinks to delta_x = 4, delta_z = 0, min_x = -1, min_z = -1, max_x = 0, max_z = 0, view_distance = 2
+cc 9d948cfac9896b1996844c7afc0c3d42f96a664c18cfc072e34b86e5f142f965 # shrinks to delta_x = -3, delta_z = 0, min_x = 0, min_z = -1, max_x = 0, max_z = 0, view_distance = 2
+cc f5259821154cd7ae11ff0d4657a085b595e6421ff5192eaffcdd506f8c14e3c9 # shrinks to delta_x = 3, delta_z = 0, min_x = -1, min_z = -1, max_x = 2, max_z = 0, view_distance = 1
+cc ff1a000ab81ce350d7b25b669ca34f5cca5861c2c452773866cb4bcd1d432f9a # shrinks to delta_x = -1, delta_z = 0, min_x = -1, min_z = -1, max_x = 2, max_z = 0, view_distance = 1
+cc 7eaec2cfe8b098147fbff3f8ea5e83da7b4186b28cf182cf0abe4024d13c924e # shrinks to delta_x = -1, delta_y = 0, view_distance = 0
+cc a8173cf4cc9af8214aa175874afdf0aba7507cfc8785d73745139a30bce9e945 # shrinks to delta_x = 1, delta_z = 0, min_x = -1, min_z = 0, max_x = 0, max_z = 0, view_distance = 1
+cc 89f3f8735cd4c56d4849b7a287a445a848744da8d2db3dc030d762db81b50840 # shrinks to delta_x = 1, delta_y = 0, view_distance = 0
+cc b56fe956b30b09d24a5a1b21f12d9c35f3ad9b95a16d084d0d102f9eb59abb84 # shrinks to delta_x = 1, delta_z = 0, min_x = -1, min_z = 0, max_x = 4, max_z = 0, view_distance = 1
+cc fe88d23750721b5960fa3a56296786e71fc561b5e197b7a865f7fac8d1fbbf80 # shrinks to delta_x = 0, delta_z = -1, min_x = 0, min_z = -1, max_x = 0, max_z = 4, view_distance = 1
+cc 7e7254a27b4778260d6b66393cf5a1935a8522fcf3cfecbf5a1eeb4d67ed0aa9 # shrinks to delta_x = 0, delta_z = -1, min_x = -1, min_z = -3, max_x = 0, max_z = 0, view_distance = 1
+cc 96b5d092ab502054d454a8086c694d0156555db3939657b26b4ae6a904cb70f9 # shrinks to delta_x = 0, delta_z = 1, min_x = -1, min_z = -1, max_x = 0, max_z = 5, view_distance = 1

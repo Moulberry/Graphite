@@ -67,9 +67,13 @@ where
                 true
             },
             Self::Array(array) => {
-                // todo: don't do this
-                // this will panic if 16 block types exist
-                array.set(Self::get_index(x, y, z), new_value)
+                match array.set(Self::get_index(x, y, z), new_value) {
+                    ArraySetResult::Changed => return true,
+                    ArraySetResult::Unchanged => return false,
+                    ArraySetResult::OutOfSpace => {
+                        todo!("switch to direct");
+                    },
+                }
             },
             Self::Direct(_) => todo!(),
         }
@@ -102,19 +106,34 @@ where
     }
 }
 
+enum ArraySetResult {
+    Changed,
+    Unchanged,
+    OutOfSpace
+}
+
 impl<T, const HALF_CAP: usize> ArrayContainer<T, HALF_CAP>
 where
     T: Copy + Eq + num::Unsigned
 {
-    fn set(&mut self, index: usize, new_value: T) -> bool {
+    fn set(&mut self, index: usize, new_value: T) -> ArraySetResult {
         for (palette_index, value) in self.indices.iter().enumerate() {
             if *value == new_value {
-                return self.set_to_palette(index, palette_index);
+                if self.set_to_palette(index, palette_index) {
+                    return ArraySetResult::Changed;
+                } else {
+                    return ArraySetResult::Unchanged;
+                }
             }
         }
 
-        self.set_new(index, new_value);
-        true
+        if self.indices.len() < self.indices.capacity() {
+            let _ = self.indices.push(new_value);
+            self.set_to_palette(index, self.indices.len() - 1);
+            ArraySetResult::Changed
+        } else {
+            ArraySetResult::OutOfSpace
+        }
     }
 
     fn set_new(&mut self, index: usize, new_value: T) {

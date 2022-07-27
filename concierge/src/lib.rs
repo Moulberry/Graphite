@@ -100,7 +100,7 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
                 self.handle_status(&mut bytes, connection, write_buffer)
             }
             ConnectionState::Login => {
-                // todo: add reference to login protocol
+                // Login: https://wiki.vg/Protocol#Login
                 self.handle_login(&mut bytes, write_buffer)
             }
         }

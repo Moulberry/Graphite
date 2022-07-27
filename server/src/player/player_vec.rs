@@ -27,7 +27,10 @@ impl<P: PlayerService> PlayerVec<P> {
     }
 
     pub fn initialize(&self, world: &World<P::WorldServiceType>) {
-        // todo: justify this
+        // If the world pointer is null, this struct is in an undefined state
+        // Therefore, any reference that previously existed to this struct
+        // is invalid, so converting the immutable reference to a mutable one
+        // should be sound here
         unsafe {
             let self_mut: *mut PlayerVec<P> = self as *const _ as *mut _;
             let self_mut_ref: &mut PlayerVec<P> = self_mut.as_mut().unwrap();

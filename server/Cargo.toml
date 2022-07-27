@@ -26,7 +26,7 @@ text_component = { path = "../text_component" }
 minecraft_constants = { path = "../minecraft_constants" }
 
 [dev-dependencies]
-quickcheck = "1.0.3"
+proptest = "1.0.0"
 criterion = "0.3.6"
 minecraft_constants = { path = "../minecraft_constants" }
 
