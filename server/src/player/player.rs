@@ -22,7 +22,7 @@ use crate::{
 };
 
 use super::{
-    player_connection::ConnectionReference, player_settings::PlayerSettings,
+    player_connection::{AbstractConnectionReference}, player_settings::PlayerSettings,
     proto_player::ProtoPlayer,
 };
 
@@ -46,12 +46,14 @@ where
     // fn get_inventory_handler(player: &mut Player<Self>) -> &mut Self::InventoryHandlerType;
 }
 
-// graphite player
+#[allow(type_alias_bounds)] // Justification: used as a shortcut to avoid monsterous type
+type ConnectionReferenceType<P: PlayerService> = <P::UniverseServiceType as UniverseService>::ConnectionReferenceType;
 
+// graphite player
 pub struct Player<P: PlayerService> {
     moved_into_proto: bool,
     pub service: ManuallyDrop<P>,
-    connection: ManuallyDrop<ConnectionReference<P::UniverseServiceType>>,
+    connection: ManuallyDrop<ConnectionReferenceType<P>>,
 
     pub(crate) write_buffer: WriteBuffer,
     pub(crate) disconnected: bool,
@@ -81,7 +83,7 @@ impl<P: PlayerService> Player<P> {
         entity_id: EntityId,
         position: Position,
         view_position: ChunkViewPosition,
-        connection: ConnectionReference<P::UniverseServiceType>,
+        connection: ConnectionReferenceType<P>,
     ) -> Self {
         Self {
             moved_into_proto: false,
@@ -220,7 +222,7 @@ impl<P: PlayerService> Player<P> {
         }
     }
 
-    pub(crate) fn handle_packets(player: *mut Player<P>) -> anyhow::Result<u32> {
+    pub fn handle_packets(player: *mut Player<P>) -> anyhow::Result<u32> {
         // Read all the bytes
         let mut bytes = unsafe { player.as_ref().unwrap() }.connection.read_bytes();
 

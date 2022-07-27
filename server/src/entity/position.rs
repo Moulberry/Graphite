@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 // Coordinate (x, y, z)
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Coordinate {
     pub x: f32,
     pub y: f32,
@@ -28,7 +28,7 @@ impl Vec3f for Coordinate {
 
 // Rotation (yaw, pitch)
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Rotation {
     pub yaw: f32,
     pub pitch: f32,
@@ -45,7 +45,7 @@ impl Rotation {
 
 // Position (x, y, z, yaw, pitch)
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub struct Position {
     pub coord: Coordinate,
     pub rot: Rotation,

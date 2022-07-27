@@ -144,17 +144,17 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
     fn handle_chat_command(&mut self, packet: client::ChatCommand) -> anyhow::Result<()> {
         // todo: finalize this functionality, add comments
 
-        let dispatch = &mut self.get_world_mut().get_universe().root_dispatch_node;
+        if let Some(dispatch) = &mut self.get_world_mut().get_universe().root_dispatch_node {
+            let mut parse_state = ParseState::new(packet.command);
+            parse_state.push_ref(self, parse_state.full_span);
+            parse_state.push_arg(
+                unsafe { std::mem::transmute::<std::any::TypeId, u64>(std::any::Any::type_id(self)) },
+                parse_state.full_span,
+            );
+            let result = dispatch.dispatch_with(parse_state);
 
-        let mut parse_state = ParseState::new(packet.command);
-        parse_state.push_ref(self, parse_state.full_span);
-        parse_state.push_arg(
-            unsafe { std::mem::transmute::<std::any::TypeId, u64>(std::any::Any::type_id(self)) },
-            parse_state.full_span,
-        );
-        let result = dispatch.dispatch_with(parse_state);
-
-        self.send_message(format!("{:?}", result));
+            self.send_message(format!("{:?}", result));
+        }
 
         Ok(())
     }

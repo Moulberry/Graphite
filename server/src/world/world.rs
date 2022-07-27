@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use anyhow::bail;
-use bevy_ecs::prelude::*;
+use bevy_ecs::{prelude::*, world::EntityMut};
 use net::network_buffer::WriteBuffer;
 use protocol::play::server::{
     Login, SetChunkCacheCenter, SetPlayerPosition, TeleportEntity, RotateHead,
@@ -11,7 +13,7 @@ use crate::{
         position::{Position, Coordinate},
     },
     player::{proto_player::ProtoPlayer, Player, PlayerService},
-    universe::{Universe, UniverseService},
+    universe::{Universe, UniverseService, EntityId},
 };
 
 use super::chunk::Chunk;
@@ -47,6 +49,7 @@ pub struct World<W: WorldService + ?Sized> {
     universe: *mut Universe<W::UniverseServiceType>,
     pub(crate) chunks: Vec<Vec<Chunk>>,
     pub(crate) entities: bevy_ecs::world::World,
+    pub(crate) entity_map: HashMap<EntityId, bevy_ecs::entity::Entity>,
     empty_chunk: Chunk,
     pub service: W,
 }
@@ -81,6 +84,7 @@ impl<W: WorldService> World<W> {
             universe: std::ptr::null_mut(),
             chunks,
             entities: Default::default(),
+            entity_map: Default::default(),
             empty_chunk: Chunk::new(true),
         }
     }
@@ -97,8 +101,16 @@ impl<W: WorldService> World<W> {
         W::initialize(self);
     }
 
+    pub fn get_entity_mut(&mut self, entity_id: EntityId) -> Option<EntityMut> {
+        if let Some(entity) = self.entity_map.get(&entity_id) {
+            self.entities.get_entity_mut(*entity)
+        } else {
+            None
+        }
+    }
+
     pub fn push_entity<T: Bundle>(&mut self, components: T, position: Coordinate,
-            mut spawn_def: impl EntitySpawnDefinition) {
+            mut spawn_def: impl EntitySpawnDefinition, entity_id: EntityId) {
         let fn_create = spawn_def.get_spawn_function();
         let destroy_buf = spawn_def.get_despawn_buffer();
 
@@ -111,13 +123,16 @@ impl<W: WorldService> World<W> {
 
         // Get the chunk
         let chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
-        
+
         // Spawn the entity in the bevy-ecs world
         let mut entity = self.entities.spawn();
 
+        // Map the Graphite EntityId to Bevy Entity
+        let id = entity.id();
+        self.entity_map.insert(entity_id, id);
+
         // Initialize viewable
         let mut viewable = Viewable::new(position, chunk_x, chunk_z, fn_create, destroy_buf);
-        let id = entity.id();
         viewable.index_in_chunk_entity_slab = chunk.entities.insert(id);
         viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
         viewable.last_chunk_x = chunk_x;
@@ -542,10 +557,12 @@ impl<W: WorldService> World<W> {
 
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)?;
 
-        net::packet_helper::write_packet(
-            &mut proto_player.write_buffer,
-            &self.get_universe().command_packet,
-        )?;
+        if let Some(command_packet) = &self.get_universe().command_packet {
+            net::packet_helper::write_packet(
+                &mut proto_player.write_buffer,
+                command_packet,
+            )?;
+        }
 
         Ok(())
     }

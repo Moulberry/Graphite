@@ -69,7 +69,17 @@ impl<T: Unsticky> StickyVec<T> {
         }
     }
 
-    pub fn get(&mut self, index: usize) -> &mut T {
+    pub fn get(&self, index: usize) -> &T {
+        assert!(index < self.len);
+
+        let bucket_index = Self::get_bucket_index(index);
+        let bucket = &self.buckets[bucket_index];
+
+        let index_in_bucket = index + 8 - bucket.capacity();
+        &bucket[index_in_bucket]
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> &mut T {
         assert!(index < self.len);
 
         let bucket_index = Self::get_bucket_index(index);

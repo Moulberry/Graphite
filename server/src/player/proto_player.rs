@@ -6,14 +6,13 @@ use crate::{
 use net::network_buffer::WriteBuffer;
 
 use super::{
-    player::{Player, PlayerService},
-    player_connection::ConnectionReference,
+    player::{Player, PlayerService}, player_connection::AbstractConnectionReference,
 };
 
 // Proto player
 
 pub struct ProtoPlayer<U: UniverseService> {
-    connection: ConnectionReference<U>,
+    connection: U::ConnectionReferenceType,
     pub hardcore: bool,
 
     pub(crate) write_buffer: WriteBuffer,
@@ -23,7 +22,7 @@ pub struct ProtoPlayer<U: UniverseService> {
 }
 
 impl<U: UniverseService> ProtoPlayer<U> {
-    pub fn new(connection: ConnectionReference<U>, entity_id: EntityId) -> Self {
+    pub fn new(connection: U::ConnectionReferenceType, entity_id: EntityId) -> Self {
         Self {
             hardcore: false,
 

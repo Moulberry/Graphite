@@ -6,6 +6,23 @@ use crate::universe::{Universe, UniverseService};
 
 use super::player::{Player, PlayerService};
 
+pub trait AbstractConnectionReference<U: UniverseService> {
+    fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>);
+
+    fn read_bytes(&self) -> &[u8];
+    fn write_bytes(&mut self, bytes: &[u8]);
+
+    fn new_from_connection(connection_slab: &mut ConnectionSlab<Universe<U>>, connection_index: u16) -> Self;
+
+    /// # Safety
+    /// This method should only be called if it is known that
+    /// the connection pointed to has been closed as well
+    ///
+    /// If this is not the case, calling this method may result in
+    /// the connection living forever
+    unsafe fn forget(&mut self);
+}
+
 // Connection reference
 #[derive(Debug)]
 pub struct ConnectionReference<U: UniverseService> {
@@ -15,10 +32,6 @@ pub struct ConnectionReference<U: UniverseService> {
 }
 
 impl<U: UniverseService> ConnectionReference<U> {
-    pub(crate) fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
-        self.get_connection_mut().1.update_player_pointer(player);
-    }
-
     fn get_connection(&self) -> &(Connection<Universe<U>>, PlayerConnection<U>) {
         debug_assert!(!self.closed);
         unsafe {
@@ -36,8 +49,10 @@ impl<U: UniverseService> ConnectionReference<U> {
                 .expect("connection should have notified us of it being invalid")
         }
     }
+}
 
-    pub(crate) fn new(
+impl<U: UniverseService> AbstractConnectionReference<U> for ConnectionReference<U> {
+    fn new_from_connection(
         connection_slab: &mut ConnectionSlab<Universe<U>>,
         connection_index: u16,
     ) -> Self {
@@ -48,21 +63,19 @@ impl<U: UniverseService> ConnectionReference<U> {
         }
     }
 
-    /// # Safety
-    /// This method should only be called if it is known that
-    /// the connection pointed to has been closed as well
-    ///
-    /// If this is not the case, calling this method may result in
-    /// the connection living forever
-    pub(crate) unsafe fn forget(&mut self) {
+    fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
+        self.get_connection_mut().1.update_player_pointer(player);
+    }
+
+    unsafe fn forget(&mut self) {
         self.closed = true;
     }
 
-    pub(crate) fn read_bytes(&self) -> &[u8] {
+    fn read_bytes(&self) -> &[u8] {
         self.get_connection().0.read_bytes()
     }
 
-    pub(crate) fn write_bytes(&mut self, bytes: &[u8]) {
+    fn write_bytes(&mut self, bytes: &[u8]) {
         self.get_connection_mut().0.write(bytes);
     }
 }

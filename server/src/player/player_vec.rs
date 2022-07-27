@@ -44,6 +44,10 @@ impl<P: PlayerService> PlayerVec<P> {
         unsafe { self.world.as_mut() }.ok_or_else(|| UninitializedError.into())
     }
 
+    pub fn get_by_index(&self, index: usize) -> &Player<P> {
+        self.players.get(index)
+    }
+
     pub fn add(
         &mut self,
         proto_player: ProtoPlayer<P::UniverseServiceType>,

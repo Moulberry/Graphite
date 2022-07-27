@@ -9,6 +9,7 @@ use server::entity::components::BasicEntity;
 use server::entity::position::Coordinate;
 use server::entity::position::Position;
 use server::entity::position::Rotation;
+use server::player::player_connection::ConnectionReference;
 use server::player::player_vec::PlayerVec;
 use server::player::proto_player::ProtoPlayer;
 use server::player::Player;
@@ -82,7 +83,7 @@ impl ConciergeService for MyConciergeImpl {
                 let entity_id = player.get_world_mut().get_universe().new_entity_id();
 
                 let test_entity = BasicEntity {
-                    entity_id,
+                    entity_id: entity_id.clone(),
                     entity_type: entity_type as _,
                 };
     
@@ -100,7 +101,7 @@ impl ConciergeService for MyConciergeImpl {
                     x: player.position.coord.x,
                     y: player.position.coord.y,
                     z: player.position.coord.z,
-                }, test_entity);
+                }, test_entity, entity_id);
             }
 
             Ok(())
@@ -111,14 +112,13 @@ impl ConciergeService for MyConciergeImpl {
         let (dispatcher, packet) =
             command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
-        let universe = server::universe::create_and_start(
+        let universe = Universe::create_and_start(
             || MyUniverseService {
                 the_world: World::new(MyWorldService {
                     players: PlayerVec::new(),
                 }),
             },
-            dispatcher,
-            packet,
+            Some((dispatcher, packet)),
         );
         universe.send(player_connection).unwrap();
     }
@@ -139,6 +139,8 @@ struct MyUniverseService {
 }
 
 impl UniverseService for MyUniverseService {
+    type ConnectionReferenceType = ConnectionReference<Self>;
+
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {
         universe.service.the_world.handle_player_join(proto_player);
     }

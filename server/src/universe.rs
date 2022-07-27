@@ -9,7 +9,7 @@ use std::{sync::mpsc::Sender, time::Duration};
 
 use protocol::play::server::{Commands, CustomPayload};
 
-use crate::player::player_connection::{ConnectionReference, PlayerConnection};
+use crate::player::player_connection::{PlayerConnection, AbstractConnectionReference};
 use crate::player::proto_player::ProtoPlayer;
 
 // user defined universe service trait
@@ -18,6 +18,9 @@ pub trait UniverseService
 where
     Self: Sized + 'static,
 {
+    // todo: use default associated type of `ConnectionReference<Self>`
+    type ConnectionReferenceType: AbstractConnectionReference<Self>;
+
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>);
     fn initialize(universe: &Universe<Self>);
 
@@ -27,7 +30,7 @@ where
 
 // graphite universe
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 #[repr(transparent)]
 pub struct EntityId(i32);
 
@@ -45,14 +48,14 @@ pub struct Universe<U: UniverseService> {
     pub service: U,
     player_receiver: Receiver<UninitializedConnection>,
     entity_id_counter: i32,
-    pub root_dispatch_node: RootDispatchNode,
-    pub command_packet: Commands,
+    pub(crate) root_dispatch_node: Option<RootDispatchNode>,
+    pub(crate) command_packet: Option<Commands>,
 }
 
 // graphite universe impl
 
 impl<U: UniverseService> Universe<U> {
-    fn handle_player_connect(&mut self, connection_ref: ConnectionReference<U>) {
+    pub fn handle_player_connect(&mut self, connection_ref: U::ConnectionReferenceType) {
         let proto_player = ProtoPlayer::new(connection_ref, self.new_entity_id());
         U::handle_player_join(self, proto_player);
     }
@@ -93,18 +96,17 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
         loop {
             match self.player_receiver.try_recv() {
                 Ok(connection) => {
-                    println!("got new connection!");
                     let connection_index = accepter.accept_and_get_index(
                         connection,
                         PlayerConnection::new(),
                         connections,
                     )?;
-                    let connection_ref = ConnectionReference::new(connections, connection_index);
+                    let connection_ref =
+                        U::ConnectionReferenceType::new_from_connection(connections, connection_index);
                     self.handle_player_connect(connection_ref);
                 }
                 Err(err) if err == TryRecvError::Disconnected => {
                     if U::get_player_count(self) == 0 {
-                        println!("emptying universe!!!");
                         bail!("empty universe");
                     } else {
                         break;
@@ -122,29 +124,49 @@ impl<U: UniverseService> NetworkManagerService for Universe<U> {
     }
 }
 
-pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send + 'static>(
-    service_func: F,
-    root_dispatch_node: RootDispatchNode,
-    command_packet: Commands,
-) -> Sender<UninitializedConnection> {
-    let (rx, tx) = mpsc::channel::<UninitializedConnection>();
+impl<U: UniverseService> Universe<U> {
+    pub fn create_dummy(service: U) -> Universe<U> {
+        let (_, rx) = mpsc::channel::<UninitializedConnection>();
 
-    std::thread::spawn(|| {
-        let service = service_func();
         let universe = Universe {
             service,
-            player_receiver: tx,
+            player_receiver: rx,
             entity_id_counter: 0,
-            root_dispatch_node,
-            command_packet,
+            root_dispatch_node: None,
+            command_packet: None,
         };
+        universe
+    }
 
-        net::network_handler::start_with_init(universe, None, |network_manager| {
-            U::initialize(&network_manager.service);
-        }).unwrap();
-    });
+    pub fn create_and_start<F: FnOnce() -> U + std::marker::Send + 'static>(
+        service_func: F,
+        commands: Option<(RootDispatchNode, Commands)>
+    ) -> Sender<UninitializedConnection> {
+        let (tx, rx) = mpsc::channel::<UninitializedConnection>();
 
-    rx
+        std::thread::spawn(|| {
+            let (root_dispatch_node, command_packet) = if let Some(commands) = commands {
+                (Some(commands.0), Some(commands.1))
+            } else {
+                (None, None)
+            };
+
+            let service = service_func();
+            let universe = Universe {
+                service,
+                player_receiver: rx,
+                entity_id_counter: 0,
+                root_dispatch_node,
+                command_packet,
+            };
+
+            net::network_handler::start_with_init(universe, None, |network_manager| {
+                U::initialize(&network_manager.service);
+            }).unwrap();
+        });
+
+        tx
+    }
 }
 
 // fn send_initial_packets_for_testing(connection: &mut Connection<Universe>) {
