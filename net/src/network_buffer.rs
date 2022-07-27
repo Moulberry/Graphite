@@ -1,4 +1,4 @@
-const MIN_SIZE: usize = 1024;
+const DEFAULT_MIN_SIZE: usize = 1024;
 
 #[derive(Clone, Debug)]
 pub struct WriteBuffer {
@@ -13,8 +13,8 @@ pub struct WriteBuffer {
 impl Default for WriteBuffer {
     fn default() -> Self {
         Self {
-            min_size: MIN_SIZE,
-            vec: Vec::with_capacity(MIN_SIZE),
+            min_size: DEFAULT_MIN_SIZE,
+            vec: Vec::with_capacity(DEFAULT_MIN_SIZE),
             write_index: 0,
             current_requested_capacity: 0,
             max_requested_capacity: 0,
@@ -54,7 +54,7 @@ impl WriteBuffer {
             self.shrink_counter = 0;
 
             self.vec.shrink_to(self.max_requested_capacity);
-            self.max_requested_capacity = MIN_SIZE;
+            self.max_requested_capacity = self.min_size;
         }
     }
 
@@ -84,7 +84,7 @@ impl WriteBuffer {
     }
 
     pub fn copy_from(&mut self, bytes: &[u8]) {
-        if bytes.len() == 0 {
+        if bytes.is_empty() {
             return;
         }
 

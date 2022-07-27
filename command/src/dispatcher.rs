@@ -1,7 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
 
-use bytemuck::NoUninit;
-
 use crate::types::{
     CommandDispatchResult, CommandParseResult, DispatchFunction, ParseState, SpannedWord,
 };

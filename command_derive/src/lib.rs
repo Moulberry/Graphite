@@ -188,7 +188,7 @@ macro_rules! throw_error {
 fn check_player_type_and_get_generic(type_path: &syn::TypePath) -> Option<syn::Type> {
     let segments = &type_path.path.segments;
     let last = &segments[segments.len() - 1];
-    if last.ident.to_string() == "Player" {
+    if last.ident == "Player" {
         let arguments = &last.arguments;
         match arguments {
             syn::PathArguments::AngleBracketed(generic_args) => {
@@ -220,7 +220,7 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut generic_player_types = vec![];
 
     // Validate first argument
-    let has_correct_first_argument = if input.sig.arguments.len() == 0 {
+    let has_correct_first_argument = if input.sig.arguments.is_empty() {
         false
     } else {
         let first_argument_ty = &input.sig.arguments[0].ty;

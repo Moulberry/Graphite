@@ -1,12 +1,8 @@
-use bevy_ecs::prelude::Bundle;
-use bevy_ecs::world::EntityRef;
 use command::brigadier;
 use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
-use net::network_buffer::WriteBuffer;
 use net::network_handler::UninitializedConnection;
-use protocol::play::server::RemoveEntities;
 use rand::Rng;
 use server::entity::components::Spinalla;
 use server::entity::components::BasicEntity;
@@ -82,7 +78,7 @@ impl ConciergeService for MyConciergeImpl {
             player.send_message("Hello from MyPlayerService");
 
 
-            for i in 0..1000 {
+            for _ in 0..1000 {
                 let entity_id = player.get_world_mut().get_universe().new_entity_id();
 
                 let test_entity = BasicEntity {

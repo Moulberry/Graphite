@@ -1,4 +1,5 @@
 use std::{collections::HashMap, io::Write};
+use std::fmt::Write as _;
 
 use anyhow::bail;
 use convert_case::{Case, Casing};
@@ -58,12 +59,9 @@ pub fn write_block_states() -> anyhow::Result<()> {
     let mut parameter_writer: ParameterWriter = Default::default();
     for block in &blocks {
         for parameter in &block.states {
-            match parameter {
-                BlockParameter::Enum { name, num_values, values } => {
-                    assert_eq!(*num_values, values.len());
-                    parameter_writer.define_parameter(name, values).unwrap();
-                },
-                _ => {}
+            if let BlockParameter::Enum { name, num_values, values } = parameter {
+                assert_eq!(*num_values, values.len());
+                parameter_writer.define_parameter(name, values)?;
             }
         }
     }
@@ -100,7 +98,7 @@ pub fn write_block_states() -> anyhow::Result<()> {
     write_buffer.push_str("\t\tOk(&BLOCK_LUT[id as usize])\n");
     write_buffer.push_str("\t}\n");
     write_buffer.push_str("}\n");
-    write_buffer.push_str(&format!("const BLOCK_LUT: [Block; {}] = [\n", state_count));
+    writeln!(write_buffer, "const BLOCK_LUT: [Block; {}] = [", state_count)?;
     write_buffer.push_str(&state_lut);
     write_buffer.push_str("];");
     let mut f = crate::file_out("u16_to_block.rs");
@@ -146,7 +144,7 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
         u16_from_block_def: &mut String, parameters: &ParameterWriter, block: &Block) -> anyhow::Result<()> {
     let mut all_possible_parameters = Vec::new();
 
-    block_def.push_str("\t");
+    block_def.push('\t');
     block_def.push_str(&block.name.to_case(Case::Pascal));
 
     if block.states.is_empty() {
@@ -154,7 +152,7 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
 
         u16_from_block_def.push_str("\t\t\tBlock::");
         u16_from_block_def.push_str(&block.name.to_case(Case::Pascal));
-        u16_from_block_def.push_str(&format!(" => {},\n", block.min_state_id));
+        writeln!(u16_from_block_def, " => {},", block.min_state_id)?;
     } else {
         block_def.push_str(" {\n");
 
@@ -162,10 +160,10 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
             match state {
                 BlockParameter::Enum { name, num_values, values } => {
                     assert_eq!(*num_values, values.len());
-                    let parameter_name = parameters.get_parameter_name(name, &values);
+                    let parameter_name = parameters.get_parameter_name(name, values);
 
                     if *name == "type" {
-                        block_def.push_str(&format!("\t\tblock_type: {parameter_name},\n"));
+                        writeln!(block_def, "\t\tblock_type: {parameter_name},")?;
 
                         let mut named_values = Vec::new();
                         for value in values {
@@ -174,7 +172,7 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
                         }
                         all_possible_parameters.push(named_values);
                     } else {
-                        block_def.push_str(&format!("\t\t{name}: {parameter_name},\n"));
+                        writeln!(block_def, "\t\t{name}: {parameter_name},")?;
 
                         let mut named_values = Vec::new();
                         for value in values {
@@ -232,7 +230,7 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
                 for current in &all {
                     for possible_parameterization in &possible_parameterizations {
                         let mut current = current.clone();
-                        current.push_str(&possible_parameterization);
+                        current.push_str(possible_parameterization);
                         new_all.push(current)
                     }
                 }
@@ -250,18 +248,16 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
             let mut state_def = String::new();
             state_def.push_str("\tBlock::");
             state_def.push_str(&block.name.to_case(Case::Pascal));
-            state_def.push_str("{");
+            state_def.push('{');
             state_def.push_str(&one);
-            state_def.push_str("}");
+            state_def.push('}');
 
             // Push into LUT
             state_lut.push_str(&state_def);
             state_lut.push_str(",\n");
 
             // Push into From
-            u16_from_block_def.push_str("\t\t");
-            u16_from_block_def.push_str(&state_def);
-            u16_from_block_def.push_str(&format!(" => {},\n", index));
+            writeln!(u16_from_block_def, "\t\t{state_def} => {index},")?;
 
             index += 1;
         }
@@ -292,14 +288,14 @@ impl ParameterWriter {
             let alias = Self::resolve_clash(name, values)?;
             previous_aliases.push(values.clone());
             self.code.insert(alias.clone(), Self::codegen(values));
-            self.aliases.insert((name, values.clone()), alias.clone());
+            self.aliases.insert((name, values.clone()), alias);
             return Ok(());
         }
 
         if let Some(defined) = self.definitions.get(name) {
             if defined == values {
                 // Already defined, no need to do anything
-                return Ok(());
+                Ok(())
             } else {
                 // Already defined, but with different values... need to alias
 
@@ -309,24 +305,24 @@ impl ParameterWriter {
                 let previous_code = self.code.remove(name).unwrap();
                 let alias = Self::resolve_clash(name, defined)?;
                 self.code.insert(alias.clone(), previous_code);
-                self.aliases.insert((name, defined.clone()), alias.clone());
+                self.aliases.insert((name, defined.clone()), alias);
                 alias_values.push(defined.clone());
 
                 // Write new definition
                 let alias = Self::resolve_clash(name, values)?;
                 self.code.insert(alias.clone(), Self::codegen(values));
-                self.aliases.insert((name, values.clone()), alias.clone());
+                self.aliases.insert((name, values.clone()), alias);
                 alias_values.push(values.clone());
 
                 // Insert already aliased
                 self.already_aliased.insert(name, alias_values);
 
-                return Ok(());
+                Ok(())
             }
         } else {
             self.code.insert(String::from(name), Self::codegen(values));
             self.definitions.insert(name, values.clone());
-            return Ok(());
+            Ok(())
         }
     }
 
@@ -420,7 +416,7 @@ impl ParameterWriter {
         let mut code = String::new();
         code.push_str(" {\n");
         for value in values {
-            code.push_str("\t");
+            code.push('\t');
             code.push_str(&value.to_case(Case::Pascal));
             code.push_str(",\n");
         }
@@ -438,8 +434,8 @@ impl ParameterWriter {
         code
     }
 
-    fn get_parameter_name(&self, name: &'static str, values: &Vec<&'static str>) -> String {
-        if let Some(name) = self.aliases.get(&(name, values.clone())) {
+    fn get_parameter_name(&self, name: &'static str, values: &[&'static str]) -> String {
+        if let Some(name) = self.aliases.get(&(name, values.to_owned())) {
             name.clone()
         } else {
             name.to_case(Case::Pascal)

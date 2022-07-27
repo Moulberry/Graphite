@@ -15,6 +15,7 @@ where
     )
 }
 
+#[allow(clippy::too_many_arguments)] // Justification: grouping parameters into a new type would not improve readability
 #[inline(always)] // We want to be able to fold min_x, etc.
 pub fn for_each_diff_with_min_max<F1, F2>(
     delta: (i32, i32),
@@ -30,7 +31,7 @@ pub fn for_each_diff_with_min_max<F1, F2>(
     F2: FnMut(i32, i32),
 {
     debug_assert!(
-        1 <= view_distance && view_distance <= 16,
+        (1..=16).contains(&view_distance),
         "view distance must be between 1 and 16"
     );
 

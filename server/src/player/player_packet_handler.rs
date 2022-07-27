@@ -1,6 +1,5 @@
 use anyhow::bail;
 use command::types::ParseState;
-use minecraft_constants::block::Block;
 use protocol::{
     play::client::{
         self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,

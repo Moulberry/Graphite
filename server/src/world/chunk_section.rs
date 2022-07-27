@@ -1,4 +1,4 @@
-use std::{alloc::Layout, mem::MaybeUninit};
+use std::alloc::Layout;
 
 use binary::slice_serialization::{BigEndian, SliceSerializable};
 

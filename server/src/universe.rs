@@ -135,10 +135,9 @@ pub fn create_and_start<U: UniverseService, F: FnOnce() -> U + std::marker::Send
             command_packet,
         };
 
-        let _ = net::network_handler::start_with_init(universe, None, |network_manager| {
+        net::network_handler::start_with_init(universe, None, |network_manager| {
             U::initialize(&network_manager.service);
-        })
-        .unwrap();
+        }).unwrap();
     });
 
     rx

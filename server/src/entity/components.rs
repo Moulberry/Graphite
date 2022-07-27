@@ -2,9 +2,9 @@ use bevy_ecs::{world::{EntityRef, EntityMut}, prelude::Component};
 use binary::slice_serialization::SliceSerializable;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::{play::server::{self, RemoveEntities, AddEntity}, IdentifiedPacket};
-use rand::{RngCore, Rng};
+use rand::Rng;
 
-use crate::{world::chunk::Chunk, universe::EntityId};
+use crate::universe::EntityId;
 
 use super::position::{Coordinate, Rotation};
 

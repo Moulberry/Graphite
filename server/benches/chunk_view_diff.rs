@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 use std::{any::TypeId, collections::hash_map::DefaultHasher, hash::{Hash, Hasher}};
 
 use command::{brigadier, types::{CommandResult, ParseState}};

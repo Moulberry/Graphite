@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::fmt::Write as _;
 
 use convert_case::{Case, Casing};
 use serde_derive::Deserialize;
@@ -23,10 +24,10 @@ pub fn write_items() -> anyhow::Result<()> {
     write_buffer.push_str("pub enum Item {\n");
 
     for item in items {
-        write_buffer.push_str(&format!("\t{},\n", item.name.to_case(Case::Pascal)));
+        writeln!(write_buffer, "\t{},", item.name.to_case(Case::Pascal))?;
     }
 
-    write_buffer.push_str("}");
+    write_buffer.push('}');
 
     let mut f = crate::file_src("item.rs");
     f.write_all(write_buffer.as_bytes())?;

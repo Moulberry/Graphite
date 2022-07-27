@@ -1,4 +1,4 @@
-use binary::slice_serialization::{Single, SliceSerializable, VarInt, SizedBlob};
+use binary::slice_serialization::{Single, SliceSerializable, VarInt};
 
 const BLOCK_SIDE_LEN: usize = 16;
 const BLOCK_CAPACITY: usize = BLOCK_SIDE_LEN * BLOCK_SIDE_LEN * BLOCK_SIDE_LEN;
@@ -19,6 +19,7 @@ pub struct ArrayContainer<T, const HALF_CAP: usize> {
     contents: [u8; HALF_CAP],
 }
 
+#[allow(warnings)] // todo: when DirectContainer is used, this must be removed
 #[derive(Debug, Clone)]
 pub struct DirectContainer<T, const DIRECT_LEN: usize> {
     most_common_type: T,
@@ -75,13 +76,10 @@ where
     }
 
     pub fn fill(&mut self, new_value: T) -> bool {
-        match self {
-            Self::Single(value) => {
-                if *value == new_value {
-
-                }
-            },
-            _ => ()
+        if let Self::Single(value) = self {
+            if *value == new_value {
+                return false;
+            }
         }
         self.replace(Self::Single(new_value));
         true
@@ -181,7 +179,7 @@ where
                 bytes[..HALF_CAP].clone_from_slice(&array.contents);
                 &mut bytes[HALF_CAP..]
             }
-            Self::Direct(direct) => {
+            Self::Direct(_direct) => {
                 todo!();
             }
             /*Self::Direct { data } => {
