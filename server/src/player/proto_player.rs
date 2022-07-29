@@ -3,7 +3,8 @@ use crate::{
     universe::{EntityId, UniverseService},
     world::World,
 };
-use net::network_buffer::WriteBuffer;
+use net::{network_buffer::WriteBuffer, packet_helper};
+use protocol::{types::GameProfile, play::server::{PlayerInfo, PlayerInfoAddPlayer}};
 
 use super::{
     player::{Player, PlayerService}, player_connection::AbstractConnectionReference,
@@ -14,17 +15,17 @@ use super::{
 pub struct ProtoPlayer<U: UniverseService> {
     connection: U::ConnectionReferenceType,
     pub hardcore: bool,
+    pub profile: GameProfile,
 
     pub(crate) write_buffer: WriteBuffer,
     pub(crate) entity_id: EntityId,
-    // username
-    // uuid
 }
 
 impl<U: UniverseService> ProtoPlayer<U> {
-    pub fn new(connection: U::ConnectionReferenceType, entity_id: EntityId) -> Self {
+    pub fn new(connection: U::ConnectionReferenceType, profile: GameProfile, entity_id: EntityId) -> Self {
         Self {
             hardcore: false,
+            profile,
 
             write_buffer: WriteBuffer::new(),
             entity_id,
@@ -51,10 +52,23 @@ impl<U: UniverseService> ProtoPlayer<U> {
             .get_universe()
             .write_brand_packet(&mut self.write_buffer)?;
 
+        let add_player_info = PlayerInfo::AddPlayer {
+            values: vec![
+                PlayerInfoAddPlayer {
+                    profile: self.profile.clone(),
+                    gamemode: 1,
+                    ping: 69,
+                    display_name: Some("{\"text\": \"Ya Boi\"}"), 
+                    signature_data: None
+                }
+            ]
+        };
+        packet_helper::write_packet(&mut self.write_buffer, &add_player_info)?;
+
         // todo: if dim changed, send dimension changed
         // todo: else, don't send
 
-        let view_position = world.initialize_view_position(&mut self, position)?;
+        let view_position = world.initialize_view_position(&mut self, position)?; 
 
         // Write the necessary packets to the TCP stream
         self.connection.write_bytes(self.write_buffer.get_written());
@@ -62,6 +76,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
         let player = Player::new(
             service,
             world,
+            self.profile,
             self.entity_id,
             position,
             view_position,

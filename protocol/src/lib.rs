@@ -6,7 +6,7 @@ pub mod play;
 pub mod status;
 pub mod types;
 
-pub trait IdentifiedPacket<I: Debug> {
+pub trait IdentifiedPacket<I: Debug>: Debug {
     const ID: I;
     
     fn get_packet_id(&self) -> I;
@@ -91,25 +91,34 @@ macro_rules! identify_packets {
             }
 
             fn parse_and_handle(&mut self, mut bytes: &[u8]) -> anyhow::Result<()> {
-                let packet_id: u8 = binary::slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
+                let packet_id_byte: u8 = binary::slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
 
-                if let Ok(packet_id) = $enum_name::try_from(packet_id) {
+                if let Ok(packet_id) = $enum_name::try_from(packet_id_byte) {
                     match packet_id {
                         $(
                             $enum_name::$packet => {
-                                let packet = $packet::read_fully(&mut bytes)?;
-                                if Self::DEBUG {
-                                    println!("<= {:?}", packet);
-                                }
-                                paste::paste! {
-                                    self.[<handle_ $packet:snake>](packet)
+                                let packet_result = $packet::read_fully(&mut bytes);
+
+                                match packet_result {
+                                    Ok(packet) => {
+                                        if Self::DEBUG {
+                                            println!("<= {:?}", packet);
+                                        }
+                                        paste::paste! {
+                                            Ok(self.[<handle_ $packet:snake>](packet)?)
+                                        }
+                                    }
+                                    Err(err) => {
+                                        println!("Error while parsing packet: 0x{:x}", packet_id_byte);
+                                        Err(err)
+                                    }
                                 }
                             }
                         )*
                     }
                 } else {
                     Ok(())
-                    // anyhow::bail!("unknown packet_id 0x{:x}", packet_id)
+                    // anyhow::bail!("unknown packet_id 0x{:x}", packet_id_byte)
                 }
             }
         }

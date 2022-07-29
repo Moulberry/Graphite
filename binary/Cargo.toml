@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.57"
 thiserror = "1.0.31"
+macros = { path = "macros" }

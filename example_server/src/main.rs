@@ -4,6 +4,7 @@ use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
 use rand::Rng;
+use server::entity::components::PlayerNPC;
 use server::entity::components::Spinalla;
 use server::entity::components::BasicEntity;
 use server::entity::position::Coordinate;
@@ -26,7 +27,7 @@ impl ConciergeService for MyConciergeImpl {
         "{\
             \"version\": {
                 \"name\": \"1.19.1\",
-                \"protocol\": 1073741921
+                \"protocol\": 760
             },
             \"players\": {
                 \"max\": 0,
@@ -43,7 +44,7 @@ impl ConciergeService for MyConciergeImpl {
     fn accept_player(
         &mut self,
         player_connection: UninitializedConnection,
-        _: &concierge::ConciergeConnection<Self>,
+        mut concierge_connection: concierge::ConciergeConnection<Self>,
     ) {
         #[brigadier("hello", {10..2000}, {})]
         fn my_function(
@@ -78,7 +79,6 @@ impl ConciergeService for MyConciergeImpl {
         fn entity_test(player: &mut Player<MyPlayerService>, entity_type: u8) -> CommandResult {
             player.send_message("Hello from MyPlayerService");
 
-
             for _ in 0..1000 {
                 let entity_id = player.get_world_mut().get_universe().new_entity_id();
 
@@ -107,7 +107,36 @@ impl ConciergeService for MyConciergeImpl {
             Ok(())
         }
 
+        #[brigadier("spawn_player")]
+        fn spawn_player(player: &mut Player<MyPlayerService>) -> CommandResult {
+            let entity_id = player.get_world_mut().get_universe().new_entity_id();
+
+            let player_npc = PlayerNPC {
+                entity_id: entity_id.clone(),
+                uuid: rand::thread_rng().gen(),
+                username: "Friend".into()
+            };
+
+            let entity = (
+                Spinalla {
+                    direction: (rand::thread_rng().gen_range(-1.0..1.0), rand::thread_rng().gen_range(-1.0..1.0)),
+                    rotation: Rotation {
+                        yaw: 0.0,
+                        pitch: 0.0,
+                    },
+                },
+            );
+
+            player.get_world_mut().push_entity(entity, Coordinate {
+                x: player.position.coord.x,
+                y: player.position.coord.y,
+                z: player.position.coord.z,
+            }, player_npc, entity_id);
+            Ok(())
+        }
+
         my_function.merge(entity_test).unwrap();
+        my_function.merge(spawn_player).unwrap();
 
         let (dispatcher, packet) =
             command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
@@ -120,11 +149,58 @@ impl ConciergeService for MyConciergeImpl {
             },
             Some((dispatcher, packet)),
         );
-        universe.send(player_connection).unwrap();
+        let join_data = (
+            player_connection,
+            concierge_connection.game_profile.take().unwrap(),
+        );
+
+        universe.send(join_data).unwrap();
     }
 }
 
 fn main() {
+    /*use binary::slice_serialization::BigEndian;
+    use binary::slice_serialization::SizedString;
+    use binary::slice_serialization::SliceSerializable;
+
+    macros::slice_serializable!(
+        #[derive(Debug)]
+        pub enum Hello {
+            Xyz {
+                something: i32 as BigEndian
+            },
+            Abc {
+                something: i32 as BigEndian
+            }
+        }
+    );
+
+    macros::slice_serializable!(
+        #[derive(Debug)]
+        pub enum Hello<'b> {
+            Xyz {
+                blah: &'b str as SizedString,
+                something: i32 as BigEndian
+            },
+            Abc {
+                blah: &'b str as SizedString,
+                something: i32 as BigEndian
+            }
+        }
+    );
+
+    let abc = Hello::Abc {
+        blah: "HELLO",
+        something: 5
+    };
+
+    println!("Write size: {}", Hello::get_write_size(&abc));
+    let mut buf = [0; 128];
+    unsafe { Hello::write(&mut buf, &abc); }
+    println!("Buf: {:?}", buf);
+    let out = Hello::read(&mut &buf[..10]);
+    println!("out: {:?}", out);*/
+
     //println!("{:?}", packet);
     //dispatcher.dispatch("hello 800 10");
 
@@ -164,7 +240,7 @@ impl UniverseService for MyUniverseService {
 // SpectatingPlayer
 
 struct MyWorldService {
-    players: PlayerVec<MyPlayerService>,
+    players: PlayerVec<MyPlayerService>
 }
 
 impl WorldService for MyWorldService {

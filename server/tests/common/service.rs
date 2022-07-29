@@ -1,14 +1,22 @@
 use std::pin::Pin;
-
+use protocol::types::GameProfile;
 use server::{universe::{UniverseService, Universe}, world::{WorldService, World}, player::{player_vec::PlayerVec, PlayerService}, entity::position::{Position, Coordinate, Rotation}};
-
 use super::FakePlayerConnection;
 
 pub fn create_universe_and_player() -> (Pin<Box<Universe<DummyUniverseService>>>, Pin<Box<FakePlayerConnection>>) {
     let mut universe = create_universe();
+    let player = create_player(&mut universe);
+    (universe, player)
+}
+
+pub fn create_player(universe: &mut Universe<DummyUniverseService>) -> Pin<Box<FakePlayerConnection>> {
     let mut conn = Box::from(FakePlayerConnection::new());
-    universe.handle_player_connect(conn.as_mut());
-    (universe, Pin::from(conn))
+    universe.handle_player_connect(conn.as_mut(), GameProfile {
+        username: "Moulberry".into(),
+        uuid: 81723182,
+        properties: vec![]
+    });
+    Pin::from(conn)
 }
 
 pub fn create_universe() -> Pin<Box<Universe<DummyUniverseService>>> {

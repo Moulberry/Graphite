@@ -1,8 +1,5 @@
 use bevy_ecs::entity::Entity;
-use binary::{
-    slice_serializable_composite,
-    slice_serialization::{BigEndian, GreedyBlob, SliceSerializable},
-};
+use binary::slice_serialization::{slice_serializable, BigEndian, GreedyBlob};
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::play::server::{self, ChunkBlockData, ChunkLightData};
 use slab::Slab;
@@ -150,10 +147,11 @@ impl Chunk {
     }
 }
 
-slice_serializable_composite! {
-    DirectLevelChunkWithLight<'a>,
-    chunk_x: i32 as BigEndian,
-    chunk_z: i32 as BigEndian,
-    chunk_block_data: &'a [u8] as GreedyBlob,
-    chunk_light_data: &'a [u8] as GreedyBlob,
+slice_serializable! {
+    pub struct DirectLevelChunkWithLight<'a> {
+        pub chunk_x: i32 as BigEndian,
+        pub chunk_z: i32 as BigEndian,
+        pub chunk_block_data: &'a [u8] as GreedyBlob,
+        pub chunk_light_data: &'a [u8] as GreedyBlob,
+    }
 }

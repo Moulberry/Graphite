@@ -2,6 +2,7 @@ use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::IdentifiedPacket;
+use crate::types::SignatureData;
 use num_enum::TryFromPrimitive;
 
 identify_packets! {
@@ -9,16 +10,11 @@ identify_packets! {
     Hello<'_> = 0x00
 }
 
-slice_serializable_composite! {
-    LoginStartSignatureData<'a>,
-    timestamp: i64 as BigEndian,
-    public_key: &'a [u8] as SizedBlob,
-    signature: &'a [u8] as SizedBlob
-}
-
-slice_serializable_composite! {
-    Hello<'a>,
-    username: &'a str as SizedString<16>,
-    signature_data: Option<LoginStartSignatureData<'a>>,
-    uuid: Option<u128> as Option<BigEndian>
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Hello<'a> {
+        pub username: &'a str as SizedString<16>,
+        pub signature_data: Option<SignatureData<'a>>,
+        pub uuid: Option<u128> as Option<BigEndian>
+    }
 }

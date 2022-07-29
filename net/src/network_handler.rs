@@ -97,7 +97,7 @@ pub type ConnectionSlab<N: NetworkManagerService + ?Sized> =
     Slab<(Connection<N>, N::ConnectionServiceType)>;
 #[allow(type_alias_bounds)]
 type FnConnectionRedirect<N: NetworkManagerService> =
-    Box<dyn FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType)>;
+    Box<dyn FnMut(&mut N, UninitializedConnection, N::ConnectionServiceType)>;
 
 pub struct NewConnectionAccepter<N: NetworkManagerService> {
     network_manager: *const NetworkManager<N>,
@@ -213,7 +213,7 @@ impl<N: NetworkManagerService> Connection<N> {
 
     pub fn request_redirect(
         &mut self,
-        func: impl FnMut(&mut N, UninitializedConnection, &N::ConnectionServiceType) + 'static,
+        func: impl FnMut(&mut N, UninitializedConnection, N::ConnectionServiceType) + 'static,
     ) {
         if self.is_processing_read {
             self.connection_redirect = Some(Box::from(func));
@@ -300,10 +300,8 @@ impl<N: NetworkManagerService> Connection<N> {
         self.connection_redirect.take().unwrap()(
             network_service,
             unintialized,
-            &connection_service,
+            connection_service,
         );
-
-        connection_service.close();
     }
 }
 

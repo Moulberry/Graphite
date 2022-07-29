@@ -9,10 +9,12 @@ identify_packets! {
     Intention<'_> = 0x00
 }
 
-slice_serializable_composite! {
-    Intention<'a>,
-    protocol_version: i32 as VarInt,
-    host_name: &'a str as SizedString<256>,
-    port: u16 as BigEndian,
-    intention: i32 as VarInt
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Intention<'a> {
+        pub protocol_version: i32 as VarInt,
+        pub host_name: &'a str as SizedString<256>,
+        pub port: u16 as BigEndian,
+        pub intention: i32 as VarInt
+    }
 }

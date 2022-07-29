@@ -10,11 +10,14 @@ identify_packets! {
     PingRequest = 0x01
 }
 
-slice_serializable_composite! {
-    StatusRequest,
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct StatusRequest {}
 }
 
-slice_serializable_composite! {
-    PingRequest,
-    time: u64 as BigEndian
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PingRequest {
+        time: u64 as BigEndian
+    }
 }

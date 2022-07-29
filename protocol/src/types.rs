@@ -1,5 +1,5 @@
 use binary::slice_serialization::{
-    self, BigEndian, Single, SizedArray, SizedString, SliceSerializable, VarInt,
+    self, BigEndian, Single, SizedArray, SizedBlob, SizedString, SliceSerializable, VarInt, slice_serializable,
 };
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
@@ -55,6 +55,39 @@ pub enum Direction {
     South,
     West,
     East,
+}
+
+// Game Profile
+
+// Note: Currently the only property that is used by the vanilla
+// client is "textures", for the skin of the player
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct GameProfileProperty {
+        pub id: String as SizedString,
+        pub value: String as SizedString,
+        pub signature: Option<String> as Option<SizedString>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct GameProfile {
+        pub uuid: u128 as BigEndian,
+        pub username: String as SizedString<16>,
+        pub properties: Vec<GameProfileProperty> as SizedArray<GameProfileProperty>
+    }
+}
+
+// Signature Data
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SignatureData<'a> {
+        pub timestamp: i64 as BigEndian,
+        pub public_key: &'a [u8] as SizedBlob,
+        pub signature: &'a [u8] as SizedBlob
+    }
 }
 
 // Byte Rotation
@@ -206,7 +239,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                     VarInt::write(bytes, *redirect);
                 }
 
-                SizedString::<0>::write(bytes, name)
+                <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, name)
             }
             CommandNode::Argument {
                 children,
@@ -228,12 +261,12 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                     VarInt::write(bytes, *redirect);
                 }
 
-                bytes = SizedString::<0>::write(bytes, name);
+                bytes = <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, name);
 
                 bytes = CommandNodeParser::write(bytes, *parser);
 
                 if let Some(suggestion) = suggestion {
-                    SizedString::<0>::write(bytes, (*suggestion).into());
+                    <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, (*suggestion).into());
                 }
 
                 bytes
@@ -260,7 +293,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 VarInt::get_write_size(children.len() as _) + // children size
                 VARINT_MAX * children.len() + // children
                 redirect.map_or(0, VarInt::get_write_size) + // redirect
-                SizedString::<0>::get_write_size(name) // name
+                <SizedString<0> as SliceSerializable<'_, &'_ str>>::get_write_size(name) // name
             }
             CommandNode::Argument {
                 children,
@@ -275,7 +308,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 VARINT_MAX * children.len() + // children
                 redirect.map_or(0, VarInt::get_write_size) + // redirect
                 (if suggestion.is_some() { 33 } else { 0 }) +
-                SizedString::<0>::get_write_size(name) + // name
+                <SizedString<0> as SliceSerializable<'_, &'_ str>>::get_write_size(name) + // name
                 CommandNodeParser::get_write_size(*parser) // parser
             }
         }
@@ -486,9 +519,9 @@ impl SliceSerializable<'_> for CommandNodeParser {
                 <Single as SliceSerializable<'_, bool>>::write(bytes, allow_many)
             }
             CommandNodeParser::ResourceOrTag { registry } => {
-                SizedString::<0>::write(bytes, registry)
+                <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, registry)
             }
-            CommandNodeParser::Resource { registry } => SizedString::<0>::write(bytes, registry),
+            CommandNodeParser::Resource { registry } => <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, registry),
             _ => bytes,
         }
     }

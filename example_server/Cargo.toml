@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.57"
 bevy_ecs = "0.7.0"
 rand = "0.8.5"
 
@@ -12,3 +13,5 @@ net = { path = "../net" }
 concierge = { path = "../concierge" }
 command = { path = "../command" }
 protocol = { path = "../protocol" }
+
+binary = { path = "../binary" }

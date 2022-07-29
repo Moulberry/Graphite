@@ -220,6 +220,7 @@ name = "binary"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "macros",
  "thiserror",
 ]
 
@@ -567,7 +568,9 @@ checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
 name = "example_server"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy_ecs",
+ "binary",
  "command",
  "concierge",
  "net",
@@ -800,6 +803,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "macros"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

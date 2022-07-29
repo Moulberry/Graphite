@@ -25,7 +25,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> fo
     #[allow(clippy::needless_borrow)] // maybe_deref is needed for some types
     unsafe fn write<'b>(mut bytes: &'b mut [u8], option: &'a Option<T>) -> &'b mut [u8] {
         if let Some(inner) = option {
-            bytes = <Single as SliceSerializable<bool>>::write(bytes, true);
+            bytes[0] = 1;
             bytes = S::write(&mut bytes[1..], S::maybe_deref(&inner));
         } else {
             bytes[0] = 0;

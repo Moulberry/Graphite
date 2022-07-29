@@ -8,7 +8,7 @@ use net::{
 };
 use protocol::{
     play::{client::PacketHandler, server},
-    IdentifiedPacket,
+    IdentifiedPacket, types::GameProfile,
 };
 use queues::Buffer;
 use rand::RngCore;
@@ -59,7 +59,8 @@ pub struct Player<P: PlayerService> {
     pub(crate) disconnected: bool,
 
     world: *mut World<P::WorldServiceType>,
-    entity_id: EntityId,
+    pub profile: GameProfile,
+    pub(crate) entity_id: EntityId,
     pub settings: PlayerSettings,
 
     last_position: Position,
@@ -80,6 +81,7 @@ impl<P: PlayerService> Player<P> {
     pub(crate) fn new(
         service: P,
         world: &mut World<P::WorldServiceType>,
+        profile: GameProfile,
         entity_id: EntityId,
         position: Position,
         view_position: ChunkViewPosition,
@@ -94,6 +96,7 @@ impl<P: PlayerService> Player<P> {
             disconnected: false,
 
             world,
+            profile,
             entity_id,
             settings: PlayerSettings::new(),
 
@@ -122,6 +125,8 @@ impl<P: PlayerService> Player<P> {
         if self.disconnected {
             bail!("player has been disconnected");
         }
+
+        // set last chunk view position
 
         // Get spot packets
         let chunk_x = self.chunk_view_position.x as i32;
@@ -212,7 +217,7 @@ impl<P: PlayerService> Player<P> {
         self.disconnected = true;
     }
 
-    pub(crate) fn write_packet<'a, T>(&mut self, packet: &'a T)
+    pub fn write_packet<'a, T>(&mut self, packet: &'a T)
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
@@ -301,7 +306,7 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
 
         // Return the ProtoPlayer and Service as a tuple
         (
-            ProtoPlayer::new(connection, self.entity_id.clone()),
+            ProtoPlayer::new(connection, self.profile.clone(), self.entity_id.clone()),
             service,
         )
     }

@@ -122,6 +122,9 @@ impl<W: WorldService> World<W> {
         let chunk_x = Chunk::to_chunk_coordinate(position.x);
         let chunk_z = Chunk::to_chunk_coordinate(position.z);
 
+        // todo: return an error here instead of panicking,
+        // invalid bounds can be caused by a player rather than implementation
+        
         // Debug checks that the chunk is in bounds
         Self::assert_chunk_coords_in_bounds(chunk_x, chunk_z);
 
@@ -556,7 +559,7 @@ impl<W: WorldService> World<W> {
             enable_respawn_screen: false,
             is_debug: false,
             is_flat: false,
-            has_death_location: false,
+            death_location: None,
         };
 
         net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)?;
