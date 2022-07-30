@@ -46,7 +46,9 @@ impl WriteBuffer {
     }
 
     pub fn into_written(mut self) -> Vec<u8> {
-        unsafe { self.vec.set_len(self.write_index); }
+        unsafe {
+            self.vec.set_len(self.write_index);
+        }
         self.vec
     }
 

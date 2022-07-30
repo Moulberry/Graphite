@@ -297,11 +297,7 @@ impl<N: NetworkManagerService> Connection<N> {
             read_buffer: self.read_buffer,
         };
 
-        self.connection_redirect.take().unwrap()(
-            network_service,
-            unintialized,
-            connection_service,
-        );
+        self.connection_redirect.take().unwrap()(network_service, unintialized, connection_service);
     }
 }
 

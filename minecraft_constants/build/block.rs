@@ -1,5 +1,5 @@
-use std::{collections::HashMap, io::Write};
 use std::fmt::Write as _;
+use std::{collections::HashMap, io::Write};
 
 use anyhow::bail;
 use convert_case::{Case, Casing};
@@ -26,7 +26,7 @@ pub struct Block {
     min_state_id: u16,
     max_state_id: u16,
     states: Vec<BlockParameter>,
-    bounding_box: &'static str
+    bounding_box: &'static str,
 }
 
 #[derive(Deserialize, Debug)]
@@ -36,7 +36,7 @@ pub enum BlockParameter {
     Enum {
         name: &'static str,
         num_values: usize,
-        values: Vec<&'static str>
+        values: Vec<&'static str>,
     },
     #[serde(rename = "bool")]
     Bool {
@@ -47,7 +47,7 @@ pub enum BlockParameter {
     Int {
         name: &'static str,
         num_values: usize,
-        values: Vec<&'static str>
+        values: Vec<&'static str>,
     },
 }
 
@@ -59,7 +59,12 @@ pub fn write_block_states() -> anyhow::Result<()> {
     let mut parameter_writer: ParameterWriter = Default::default();
     for block in &blocks {
         for parameter in &block.states {
-            if let BlockParameter::Enum { name, num_values, values } = parameter {
+            if let BlockParameter::Enum {
+                name,
+                num_values,
+                values,
+            } = parameter
+            {
                 assert_eq!(*num_values, values.len());
                 parameter_writer.define_parameter(name, values)?;
             }
@@ -71,7 +76,13 @@ pub fn write_block_states() -> anyhow::Result<()> {
     let mut state_lut = String::new();
     let mut state_count = 0;
     for block in blocks {
-        write_block_state(&mut block_def, &mut state_lut, &mut u16_from_block_def, &parameter_writer, &block)?;
+        write_block_state(
+            &mut block_def,
+            &mut state_lut,
+            &mut u16_from_block_def,
+            &parameter_writer,
+            &block,
+        )?;
         state_count = block.max_state_id + 1;
     }
 
@@ -94,11 +105,16 @@ pub fn write_block_states() -> anyhow::Result<()> {
     write_buffer.push_str("impl TryFrom<u16> for &Block {\n");
     write_buffer.push_str("\ttype Error = NoSuchBlockError;");
     write_buffer.push_str("\tfn try_from(id: u16) -> Result<&'static Block, Self::Error> {\n");
-    write_buffer.push_str("\t\tif id >= BLOCK_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n");
+    write_buffer
+        .push_str("\t\tif id >= BLOCK_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n");
     write_buffer.push_str("\t\tOk(&BLOCK_LUT[id as usize])\n");
     write_buffer.push_str("\t}\n");
     write_buffer.push_str("}\n");
-    writeln!(write_buffer, "const BLOCK_LUT: [Block; {}] = [", state_count)?;
+    writeln!(
+        write_buffer,
+        "const BLOCK_LUT: [Block; {}] = [",
+        state_count
+    )?;
     write_buffer.push_str(&state_lut);
     write_buffer.push_str("];");
     let mut f = crate::file_out("u16_to_block.rs");
@@ -137,8 +153,13 @@ pub fn write_block_states() -> anyhow::Result<()> {
     }
 }*/
 
-fn write_block_state(block_def: &mut String, state_lut: &mut String,
-        u16_from_block_def: &mut String, parameters: &ParameterWriter, block: &Block) -> anyhow::Result<()> {
+fn write_block_state(
+    block_def: &mut String,
+    state_lut: &mut String,
+    u16_from_block_def: &mut String,
+    parameters: &ParameterWriter,
+    block: &Block,
+) -> anyhow::Result<()> {
     let mut all_possible_parameters = Vec::new();
 
     block_def.push('\t');
@@ -155,7 +176,11 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
 
         for state in &block.states {
             match state {
-                BlockParameter::Enum { name, num_values, values } => {
+                BlockParameter::Enum {
+                    name,
+                    num_values,
+                    values,
+                } => {
                     assert_eq!(*num_values, values.len());
                     let parameter_name = parameters.get_parameter_name(name, values);
 
@@ -178,8 +203,7 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
                         }
                         all_possible_parameters.push(named_values);
                     }
-
-                },
+                }
                 BlockParameter::Bool { name, num_values } => {
                     assert_eq!(*num_values, 2);
 
@@ -191,8 +215,12 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
                     block_def.push_str("\t\t");
                     block_def.push_str(name);
                     block_def.push_str(": bool,\n");
-                },
-                BlockParameter::Int { name, num_values, values } => {
+                }
+                BlockParameter::Int {
+                    name,
+                    num_values,
+                    values,
+                } => {
                     assert_eq!(*num_values, values.len());
 
                     block_def.push_str("\t\t");
@@ -205,7 +233,7 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
                         named_values.push(format!("{name}: {value},"));
                     }
                     all_possible_parameters.push(named_values);
-                },
+                }
             }
         }
         block_def.push_str("\t},\n");
@@ -235,8 +263,12 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
             all = new_all;
         }
 
-        assert_eq!(all.len() as u16, block.max_state_id - block.min_state_id + 1, 
-                "missing states, currently only have: {:?}", all);
+        assert_eq!(
+            all.len() as u16,
+            block.max_state_id - block.min_state_id + 1,
+            "missing states, currently only have: {:?}",
+            all
+        );
 
         let mut index = block.min_state_id;
         for one in all {
@@ -258,7 +290,6 @@ fn write_block_state(block_def: &mut String, state_lut: &mut String,
 
             index += 1;
         }
-
     }
 
     Ok(())
@@ -269,11 +300,15 @@ struct ParameterWriter {
     already_aliased: HashMap<&'static str, Vec<Vec<&'static str>>>,
     definitions: HashMap<&'static str, Vec<&'static str>>,
     aliases: HashMap<(&'static str, Vec<&'static str>), String>,
-    code: HashMap<String, String>
+    code: HashMap<String, String>,
 }
 
 impl ParameterWriter {
-    fn define_parameter(&mut self, name: &'static str, values: &Vec<&'static str>) -> anyhow::Result<()> {
+    fn define_parameter(
+        &mut self,
+        name: &'static str,
+        values: &Vec<&'static str>,
+    ) -> anyhow::Result<()> {
         if let Some(previous_aliases) = self.already_aliased.get_mut(name) {
             for previous_alias_value in previous_aliases.iter() {
                 if previous_alias_value == values {
@@ -281,7 +316,7 @@ impl ParameterWriter {
                     return Ok(());
                 }
             }
-            
+
             let alias = Self::resolve_clash(name, values)?;
             previous_aliases.push(values.clone());
             self.code.insert(alias.clone(), Self::codegen(values));
@@ -325,88 +360,78 @@ impl ParameterWriter {
 
     fn resolve_clash(name: &str, values: &Vec<&str>) -> anyhow::Result<String> {
         match name {
-            "facing" => {
-                match values.as_slice() {
-                    ["north", "east", "south", "west", "up", "down"] => return Ok(String::from("Facing")),
-                    ["down", "north", "south", "west", "east"] => return Ok(String::from("DirectionOrDown")),
-                    ["north", "south", "west", "east"] => return Ok(String::from("Direction")),
-                    _ => {}
+            "facing" => match values.as_slice() {
+                ["north", "east", "south", "west", "up", "down"] => {
+                    return Ok(String::from("Facing"))
                 }
+                ["down", "north", "south", "west", "east"] => {
+                    return Ok(String::from("DirectionOrDown"))
+                }
+                ["north", "south", "west", "east"] => return Ok(String::from("Direction")),
+                _ => {}
             },
-            "half" => {
-                match values.as_slice() {
-                    ["top", "bottom"] => return Ok(String::from("Half")),
-                    ["upper", "lower"] => return Ok(String::from("UpperOrLower")),
-                    _ => {}
-                }
+            "half" => match values.as_slice() {
+                ["top", "bottom"] => return Ok(String::from("Half")),
+                ["upper", "lower"] => return Ok(String::from("UpperOrLower")),
+                _ => {}
             },
-            "shape" => {
-                match values.as_slice() {
-                    ["north_south", "east_west", "ascending_east", "ascending_west", "ascending_north", "ascending_south", "south_east", "south_west", "north_west", "north_east"] => {
-                        return Ok(String::from("RailShape"))
-                    },
-                    ["north_south", "east_west", "ascending_east", "ascending_west", "ascending_north", "ascending_south"] => {
-                        return Ok(String::from("StraightRailShape"))
-                    },
-                    ["straight", "inner_left", "inner_right", "outer_left", "outer_right"] => {
-                        return Ok(String::from("StairShape"))
-                    }
-                    _ => {}
+            "shape" => match values.as_slice() {
+                ["north_south", "east_west", "ascending_east", "ascending_west", "ascending_north", "ascending_south", "south_east", "south_west", "north_west", "north_east"] => {
+                    return Ok(String::from("RailShape"))
                 }
+                ["north_south", "east_west", "ascending_east", "ascending_west", "ascending_north", "ascending_south"] => {
+                    return Ok(String::from("StraightRailShape"))
+                }
+                ["straight", "inner_left", "inner_right", "outer_left", "outer_right"] => {
+                    return Ok(String::from("StairShape"))
+                }
+                _ => {}
             },
-            "type" => {
-                match values.as_slice() {
-                    ["normal", "sticky"] => return Ok(String::from("PistonType")),
-                    ["single", "left", "right"] => return Ok(String::from("ChestType")),
-                    ["top", "bottom", "double"] => return Ok(String::from("SlabType")),
-                    _ => {}
-                }
+            "type" => match values.as_slice() {
+                ["normal", "sticky"] => return Ok(String::from("PistonType")),
+                ["single", "left", "right"] => return Ok(String::from("ChestType")),
+                ["top", "bottom", "double"] => return Ok(String::from("SlabType")),
+                _ => {}
             },
-            "axis" => {
-                match values.as_slice() {
-                    ["x", "y", "z"] => return Ok(String::from("Axis3D")),
-                    ["x", "z"] => return Ok(String::from("Axis2D")),
-                    _ => {}
-                }
+            "axis" => match values.as_slice() {
+                ["x", "y", "z"] => return Ok(String::from("Axis3D")),
+                ["x", "z"] => return Ok(String::from("Axis2D")),
+                _ => {}
             },
-            "mode" => {
-                match values.as_slice() {
-                    ["compare", "subtract"] => return Ok(String::from("ComparatorMode")),
-                    ["save", "load", "corner", "data"] => return Ok(String::from("StructureBlockMode")),
-                    _ => {}
+            "mode" => match values.as_slice() {
+                ["compare", "subtract"] => return Ok(String::from("ComparatorMode")),
+                ["save", "load", "corner", "data"] => {
+                    return Ok(String::from("StructureBlockMode"))
                 }
+                _ => {}
             },
-            "north" => {
-                match values.as_slice() {
-                    ["up", "side", "none"] => return Ok(String::from("WireConnection")),
-                    ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
-                    _ => {}
-                }
+            "north" => match values.as_slice() {
+                ["up", "side", "none"] => return Ok(String::from("WireConnection")),
+                ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
+                _ => {}
             },
-            "east" => {
-                match values.as_slice() {
-                    ["up", "side", "none"] => return Ok(String::from("WireConnection")),
-                    ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
-                    _ => {}
-                }
+            "east" => match values.as_slice() {
+                ["up", "side", "none"] => return Ok(String::from("WireConnection")),
+                ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
+                _ => {}
             },
-            "south" => {
-                match values.as_slice() {
-                    ["up", "side", "none"] => return Ok(String::from("WireConnection")),
-                    ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
-                    _ => {}
-                }
+            "south" => match values.as_slice() {
+                ["up", "side", "none"] => return Ok(String::from("WireConnection")),
+                ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
+                _ => {}
             },
-            "west" => {
-                match values.as_slice() {
-                    ["up", "side", "none"] => return Ok(String::from("WireConnection")),
-                    ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
-                    _ => {}
-                }
+            "west" => match values.as_slice() {
+                ["up", "side", "none"] => return Ok(String::from("WireConnection")),
+                ["none", "low", "tall"] => return Ok(String::from("WallConnection")),
+                _ => {}
             },
             _ => {}
         }
-        bail!("missing aliasing strategy for `{}` with values `{:?}`", name, values)
+        bail!(
+            "missing aliasing strategy for `{}` with values `{:?}`",
+            name,
+            values
+        )
     }
 
     fn codegen(values: &Vec<&'static str>) -> String {

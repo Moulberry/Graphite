@@ -1,9 +1,11 @@
-use binary::{slice_serialization::*};
+use binary::slice_serialization::*;
 
 use crate::identify_packets;
-use crate::types::{ByteRotation, CommandNode, QuantizedShort, BlockPosition, GameProfile, SignatureData};
+use crate::types::{
+    BlockPosition, ByteRotation, CommandNode, GameProfile, QuantizedShort, SignatureData,
+};
 use crate::IdentifiedPacket;
-use num_enum::{TryFromPrimitive};
+use num_enum::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
@@ -43,7 +45,6 @@ slice_serializable! {
         pub z_vel: f32 as QuantizedShort,
     }
 }
-
 
 // Add Player
 
@@ -152,9 +153,9 @@ slice_serializable! {
         pub profile: GameProfile,
         pub gamemode: u8 as Single,
         pub ping: i32 as VarInt,
-        pub display_name: Option<&'a str> as Option<SizedString>, 
+        pub display_name: Option<&'a str> as Option<SizedString>,
         pub signature_data: Option<SignatureData<'a>>
-    } 
+    }
 }
 
 slice_serializable! {
@@ -162,7 +163,7 @@ slice_serializable! {
     pub struct PlayerInfoUpdateGamemode {
         pub uuid: u128 as BigEndian,
         pub gamemode: u8 as Single
-    } 
+    }
 }
 
 slice_serializable! {
@@ -170,15 +171,15 @@ slice_serializable! {
     pub struct PlayerInfoUpdateLatency {
         pub uuid: u128 as BigEndian,
         pub ping: i32 as VarInt
-    } 
+    }
 }
 
 slice_serializable! {
     #[derive(Debug)]
     pub struct PlayerInfoDisplayName<'a> {
         pub uuid: u128 as BigEndian,
-        pub display_name: Option<&'a str> as Option<SizedString>, 
-    } 
+        pub display_name: Option<&'a str> as Option<SizedString>,
+    }
 }
 
 slice_serializable! {

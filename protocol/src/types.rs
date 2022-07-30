@@ -1,5 +1,6 @@
 use binary::slice_serialization::{
-    self, BigEndian, Single, SizedArray, SizedBlob, SizedString, SliceSerializable, VarInt, slice_serializable,
+    self, slice_serializable, BigEndian, Single, SizedArray, SizedBlob, SizedString,
+    SliceSerializable, VarInt,
 };
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
@@ -290,7 +291,10 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 bytes = CommandNodeParser::write(bytes, *parser);
 
                 if let Some(suggestion) = suggestion {
-                    <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, (*suggestion).into());
+                    <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(
+                        bytes,
+                        (*suggestion).into(),
+                    );
                 }
 
                 bytes
@@ -317,7 +321,8 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 VarInt::get_write_size(children.len() as _) + // children size
                 VARINT_MAX * children.len() + // children
                 redirect.map_or(0, VarInt::get_write_size) + // redirect
-                <SizedString<0> as SliceSerializable<'_, &'_ str>>::get_write_size(name) // name
+                <SizedString<0> as SliceSerializable<'_, &'_ str>>::get_write_size(name)
+                // name
             }
             CommandNode::Argument {
                 children,
@@ -545,7 +550,9 @@ impl SliceSerializable<'_> for CommandNodeParser {
             CommandNodeParser::ResourceOrTag { registry } => {
                 <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, registry)
             }
-            CommandNodeParser::Resource { registry } => <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, registry),
+            CommandNodeParser::Resource { registry } => {
+                <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, registry)
+            }
             _ => bytes,
         }
     }

@@ -7,8 +7,15 @@ use net::{
     packet_helper::{self, PacketReadResult},
 };
 use protocol::{
-    play::{client::PacketHandler, server::{self, PlayerInfoAddPlayer, PlayerInfo, AddPlayer, RemoveEntities, TeleportEntity, RotateHead}},
-    IdentifiedPacket, types::GameProfile,
+    play::{
+        client::PacketHandler,
+        server::{
+            self, AddPlayer, PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
+            TeleportEntity,
+        },
+    },
+    types::GameProfile,
+    IdentifiedPacket,
 };
 use queues::Buffer;
 use rand::RngCore;
@@ -18,11 +25,11 @@ use text_component::TextComponent;
 use crate::{
     entity::position::{Position, Vec3f},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, World, WorldService, TickPhase},
+    world::{ChunkViewPosition, TickPhase, World, WorldService},
 };
 
 use super::{
-    player_connection::{AbstractConnectionReference}, player_settings::PlayerSettings,
+    player_connection::AbstractConnectionReference, player_settings::PlayerSettings,
     proto_player::ProtoPlayer,
 };
 
@@ -47,7 +54,8 @@ where
 }
 
 #[allow(type_alias_bounds)] // Justification: used as a shortcut to avoid monsterous type
-type ConnectionReferenceType<P: PlayerService> = <P::UniverseServiceType as UniverseService>::ConnectionReferenceType;
+type ConnectionReferenceType<P: PlayerService> =
+    <P::UniverseServiceType as UniverseService>::ConnectionReferenceType;
 
 // graphite player
 pub struct Player<P: PlayerService> {
@@ -117,7 +125,7 @@ impl<P: PlayerService> Player<P> {
             waiting_teleportation_id: Buffer::new(20),
 
             current_keep_alive: 0,
-            keep_alive_timer: 0
+            keep_alive_timer: 0,
         }
     }
 
@@ -150,8 +158,10 @@ impl<P: PlayerService> Player<P> {
                     let bytes = chunk.viewable_buffer.get_written();
 
                     if x == chunk_x && z == chunk_z {
-                        self.write_buffer.copy_from(&bytes[..self.viewable_exclusion_range.start]);
-                        self.write_buffer.copy_from(&bytes[self.viewable_exclusion_range.end..]);
+                        self.write_buffer
+                            .copy_from(&bytes[..self.viewable_exclusion_range.start]);
+                        self.write_buffer
+                            .copy_from(&bytes[self.viewable_exclusion_range.end..]);
                         self.viewable_exclusion_range = 0..0;
                     } else {
                         self.write_buffer.copy_from(bytes);
@@ -172,7 +182,7 @@ impl<P: PlayerService> Player<P> {
             self.write_buffer.tick_and_maybe_shrink();
 
             // Return early -- code after here is for TickPhase::Update
-            return Ok(())
+            return Ok(());
         }
 
         // Check teleport timer
@@ -208,7 +218,8 @@ impl<P: PlayerService> Player<P> {
         // These packets are seen by those in render distance of this player,
         // but *NOT* this player. This is used for eg. movement
         if !self.viewable_self_exclusion_write_buffer.is_empty() {
-            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize][self.chunk_view_position.z as usize];
+            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
+                [self.chunk_view_position.z as usize];
             let write_to = &mut chunk.viewable_buffer;
 
             // Copy bytes into viewable buffer
@@ -222,14 +233,15 @@ impl<P: PlayerService> Player<P> {
             // Reset the write buffer
             self.viewable_self_exclusion_write_buffer.reset();
         }
-        self.viewable_self_exclusion_write_buffer.tick_and_maybe_shrink();
+        self.viewable_self_exclusion_write_buffer
+            .tick_and_maybe_shrink();
 
         Ok(())
     }
 
     fn handle_movement(&mut self, to: Position, _inform_client: bool) -> anyhow::Result<()> {
         let distance_sq = to.distance_sq(self.last_position);
-        let rotation_changed = self.client_position.rot.is_diff_u8(self.last_position.rot);
+        let _rotation_changed = self.client_position.rot.is_diff_u8(self.last_position.rot);
         let coord_changed = distance_sq > 0.0001;
 
         // todo: check for moving too fast
@@ -293,7 +305,8 @@ impl<P: PlayerService> Player<P> {
         let write_to = if exclude_self {
             &mut self.viewable_self_exclusion_write_buffer
         } else {
-            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize][self.chunk_view_position.z as usize];
+            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
+                [self.chunk_view_position.z as usize];
             &mut chunk.viewable_buffer
         };
 
@@ -312,22 +325,20 @@ impl<P: PlayerService> Player<P> {
 
         // Remove Player Info
         let remove_info_packet = PlayerInfo::RemovePlayer {
-            uuids: vec![self.profile.uuid]
+            uuids: vec![self.profile.uuid],
         };
         net::packet_helper::write_packet(write_buffer, &remove_info_packet).unwrap();
     }
 
     pub(crate) fn write_create_packet(&mut self, write_buffer: &mut WriteBuffer) {
         let packet = PlayerInfo::AddPlayer {
-            values: vec![
-                PlayerInfoAddPlayer {
-                    profile: self.profile.clone(),
-                    gamemode: 1, // todo: gamemode
-                    ping: 69, // todo: ping
-                    display_name: None, 
-                    signature_data: None
-                }
-            ]
+            values: vec![PlayerInfoAddPlayer {
+                profile: self.profile.clone(),
+                gamemode: 1, // todo: gamemode
+                ping: 69,    // todo: ping
+                display_name: None,
+                signature_data: None,
+            }],
         };
         net::packet_helper::write_packet(write_buffer, &packet).unwrap();
 
@@ -411,7 +422,8 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
         self.connection.update_player_pointer(ptr);
 
         let world = self.get_world_mut();
-        let chunk = &mut world.chunks[self.chunk_view_position.x as usize][self.chunk_view_position.z as usize];
+        let chunk = &mut world.chunks[self.chunk_view_position.x as usize]
+            [self.chunk_view_position.z as usize];
         if self.chunk_ref == usize::MAX {
             chunk.add_new_player(self);
         } else {
@@ -426,16 +438,12 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
 
         // Safety: `self.moved_into_proto = true` means that the following values
         // will not be dropped, so its safe to take them
-        let connection = unsafe {
-            ManuallyDrop::take(&mut self.connection)
-        };
-        let service = unsafe {
-            ManuallyDrop::take(&mut self.service)
-        };
+        let connection = unsafe { ManuallyDrop::take(&mut self.connection) };
+        let service = unsafe { ManuallyDrop::take(&mut self.service) };
 
         // Return the ProtoPlayer and Service as a tuple
         (
-            ProtoPlayer::new(connection, self.profile.clone(), self.entity_id.clone()),
+            ProtoPlayer::new(connection, self.profile.clone(), self.entity_id),
             service,
         )
     }

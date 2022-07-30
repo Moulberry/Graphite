@@ -60,10 +60,10 @@ slice_serializable! {
         pub signatures: Vec<Signature<'a>> as SizedArray<Signature<'_>>,
         pub signed: bool as Single,
         pub last_seen_messages: Vec<ReceivedMessage<'a>> as SizedArray<ReceivedMessage>,
-    
+
         // only set if the player didn't see the last message (eg. message is from someone they blocked)
         // the client still informs the server, for ordering reasons
-        pub last_received_message: Option<ReceivedMessage<'a>> 
+        pub last_received_message: Option<ReceivedMessage<'a>>
     }
 }
 

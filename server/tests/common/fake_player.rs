@@ -1,12 +1,19 @@
 use binary::slice_serialization::SliceSerializable;
-use net::{network_handler::ConnectionSlab, network_buffer::WriteBuffer, packet_helper::{self, PacketReadResult}};
-use protocol::{IdentifiedPacket, play};
+use net::{
+    network_buffer::WriteBuffer,
+    network_handler::ConnectionSlab,
+    packet_helper::{self, PacketReadResult},
+};
+use protocol::{play, IdentifiedPacket};
+use server::{
+    player::{player_connection::AbstractConnectionReference, Player, PlayerService},
+    universe::Universe,
+};
 use std::fmt::Debug;
-use server::{player::{player_connection::AbstractConnectionReference, Player, PlayerService}, universe::Universe};
 
 use crate::log;
 
-use super::{DummyUniverseService, DummyPlayerService};
+use super::{DummyPlayerService, DummyUniverseService};
 
 pub struct FakePlayerConnection {
     player: *mut Player<DummyPlayerService>,
@@ -31,16 +38,18 @@ impl FakePlayerConnection {
 
     pub fn assert_none_outgoing(&mut self) {
         let mut bytes = self.outgoing_bytes.get_written();
-        let packet_bytes = packet_helper::try_read_packet(&mut bytes)
-            .expect("invalid packet was sent to player");
+        let packet_bytes =
+            packet_helper::try_read_packet(&mut bytes).expect("invalid packet was sent to player");
         match packet_bytes {
             PacketReadResult::Complete(packet_bytes) => {
                 log!("Found packet with id: 0x{:x}", packet_bytes[0]);
-                panic!("\npacket assertion failed: expected no more packets,\n\tgot: {}\n",
-                    play::server::debug_print_packet(packet_bytes))
-            },
+                panic!(
+                    "\npacket assertion failed: expected no more packets,\n\tgot: {}\n",
+                    play::server::debug_print_packet(packet_bytes)
+                )
+            }
             PacketReadResult::Partial => panic!("packet was only partially written"),
-            PacketReadResult::Empty => {},
+            PacketReadResult::Empty => {}
         }
     }
 
@@ -53,8 +62,8 @@ impl FakePlayerConnection {
         let bytes = self.outgoing_bytes.get_written().to_owned();
         let mut bytes: &[u8] = &bytes;
 
-        let packet_bytes = packet_helper::try_read_packet(&mut bytes)
-            .expect("invalid packet was sent to player");
+        let packet_bytes =
+            packet_helper::try_read_packet(&mut bytes).expect("invalid packet was sent to player");
 
         // Remove the packet from the buffer
         self.outgoing_bytes.reset();
@@ -62,8 +71,12 @@ impl FakePlayerConnection {
 
         match packet_bytes {
             PacketReadResult::Complete(packet_bytes) => {
-                assert_eq!(packet_id, packet_bytes[0], "expected: 0x{:x}, found: 0x{:x}", packet_id, packet_bytes[0]);
-            },
+                assert_eq!(
+                    packet_id, packet_bytes[0],
+                    "expected: 0x{:x}, found: 0x{:x}",
+                    packet_id, packet_bytes[0]
+                );
+            }
             PacketReadResult::Partial => panic!("packet was only partially written"),
             PacketReadResult::Empty => panic!("expected a packet, but there was none"),
         }
@@ -72,13 +85,13 @@ impl FakePlayerConnection {
     pub fn assert_outgoing_as<'a, T, F>(&mut self, func: F)
     where
         T: Debug + SliceSerializable<'a, T> + IdentifiedPacket<play::server::PacketId> + 'a,
-        F: FnOnce(&mut T)
+        F: FnOnce(&mut T),
     {
         let bytes = self.outgoing_bytes.get_written().to_owned();
         let mut bytes: &[u8] = &bytes;
 
-        let packet_bytes = packet_helper::try_read_packet(&mut bytes)
-            .expect("invalid packet was sent to player");
+        let packet_bytes =
+            packet_helper::try_read_packet(&mut bytes).expect("invalid packet was sent to player");
 
         // Remove the packet from the buffer
         self.outgoing_bytes.reset();
@@ -88,7 +101,7 @@ impl FakePlayerConnection {
             PacketReadResult::Complete(mut packet_bytes) => {
                 log!("Found packet with id: 0x{:x}", packet_bytes[0]);
                 play::server::debug_handle_packet(&mut packet_bytes, func);
-            },
+            }
             PacketReadResult::Partial => panic!("packet was only partially written"),
             PacketReadResult::Empty => panic!("expected a packet, but there was none"),
         }
@@ -101,8 +114,8 @@ impl FakePlayerConnection {
         let bytes = self.outgoing_bytes.get_written().to_owned();
         let mut bytes: &[u8] = &bytes;
 
-        let packet_bytes = packet_helper::try_read_packet(&mut bytes)
-            .expect("invalid packet was sent to player");
+        let packet_bytes =
+            packet_helper::try_read_packet(&mut bytes).expect("invalid packet was sent to player");
 
         // Remove the packet from the buffer
         self.outgoing_bytes.reset();
@@ -121,10 +134,13 @@ impl FakePlayerConnection {
                 if packet_bytes == expected_bytes {
                     return; // Success!
                 } else {
-                    panic!("\npacket assertion failed!\n\texpected: {:?}\n\tgot: {}\n", packet,
-                    play::server::debug_print_packet(packet_bytes))
+                    panic!(
+                        "\npacket assertion failed!\n\texpected: {:?}\n\tgot: {}\n",
+                        packet,
+                        play::server::debug_print_packet(packet_bytes)
+                    )
                 }
-            },
+            }
             PacketReadResult::Partial => panic!("packet was only partially written"),
             PacketReadResult::Empty => panic!("expected a packet, but there was none"),
         }

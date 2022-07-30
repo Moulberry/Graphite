@@ -13,7 +13,10 @@ pub trait AbstractConnectionReference<U: UniverseService> {
     fn read_bytes(&self) -> &[u8];
     fn write_bytes(&mut self, bytes: &[u8]);
 
-    fn new_from_connection(connection_slab: &mut ConnectionSlab<Universe<U>>, connection_index: u16) -> Self;
+    fn new_from_connection(
+        connection_slab: &mut ConnectionSlab<Universe<U>>,
+        connection_index: u16,
+    ) -> Self;
 
     /// # Safety
     /// This method should only be called if it is known that
@@ -36,7 +39,7 @@ impl<U: UniverseService> ConnectionReference<U> {
     fn get_connection(&self) -> &(Connection<Universe<U>>, PlayerConnection<U>) {
         debug_assert!(!self.closed);
         unsafe {
-            (&mut *self.connection_slab)
+            (&*self.connection_slab)
                 .get(self.connection_index as _)
                 .expect("connection should have notified us of it being invalid")
         }
@@ -128,10 +131,7 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
     }
 
     fn close(mut self) {
-        debug_assert!(
-            !self.is_closing,
-            "tried to close connection twice"
-        );
+        debug_assert!(!self.is_closing, "tried to close connection twice");
 
         self.is_closing = true;
 

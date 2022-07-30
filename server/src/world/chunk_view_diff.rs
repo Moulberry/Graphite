@@ -1,6 +1,14 @@
-pub fn for_each_diff_chunks<T, F1, F2>(from: (i32, i32), to: (i32, i32), view_distance: u8, chunks: &mut Vec<Vec<T>>,
-        mut new_chunks: F1, mut old_chunks: F2, max_x: usize, max_z: usize)
-where
+#[allow(clippy::too_many_arguments)] // Justification: grouping parameters into a new type would not improve readability
+pub fn for_each_diff_chunks<T, F1, F2>(
+    from: (i32, i32),
+    to: (i32, i32),
+    view_distance: u8,
+    chunks: &mut Vec<Vec<T>>,
+    mut new_chunks: F1,
+    mut old_chunks: F2,
+    max_x: usize,
+    max_z: usize,
+) where
     F1: FnMut(&mut T),
     F2: FnMut(&mut T),
 {
@@ -10,9 +18,7 @@ where
     for_each_diff_with_min_max(
         (to.0 - from.0, to.1 - from.1),
         view_distance,
-        |x, z| {
-            new_chunks(&mut chunks[(from.0 + x) as usize][(from.1 + z) as usize])
-        },
+        |x, z| new_chunks(&mut chunks[(from.0 + x) as usize][(from.1 + z) as usize]),
         |x, z| {
             let chunks = unsafe { &mut *chunks_ptr };
             old_chunks(&mut chunks[(from.0 + x) as usize][(from.1 + z) as usize])
@@ -92,7 +98,8 @@ pub fn for_each_diff_with_min_max<F1, F2>(
         }
         // Call new chunks on every new chunk
         for x in (delta.0 - view_distance).max(min_x)..(delta.0 + view_distance).min(max_x) + 1 {
-            for z in (delta.1 - view_distance).max(min_z)..(delta.1 + view_distance).min(max_z) + 1 {
+            for z in (delta.1 - view_distance).max(min_z)..(delta.1 + view_distance).min(max_z) + 1
+            {
                 new_chunks(x, z);
             }
         }
@@ -177,27 +184,27 @@ mod tests {
             let delta_x = delta_x as i32;
             let delta_y = delta_y as i32;
             let view_distance = view_distance.min(1).max(16) as i32;
-    
+
             let delta = (delta_x, delta_y);
-    
+
             let mut expected_new_chunks = Vec::new();
             let mut expected_old_chunks = Vec::new();
-    
+
             for x in -view_distance..=view_distance {
                 for z in -view_distance..=view_distance {
                     let moved_coord = (x + delta.0, z + delta.1);
-    
+
                     if moved_coord.0 < -view_distance || moved_coord.0 > view_distance || moved_coord.1 < -view_distance || moved_coord.1 > view_distance {
                         expected_old_chunks.push((-x, -z));
                         expected_new_chunks.push((x + delta.0, z + delta.1));
                     }
                 }
             }
-    
+
             let success = Rc::new(AtomicBool::new(true));
             let success1 = success.clone();
             let success2 = success.clone();
-    
+
             for_each_diff(delta, view_distance as _, |x, z| {
                 if let Some(index) = expected_new_chunks.iter().position(|v| *v == (x, z)) {
                     expected_new_chunks.remove(index);
@@ -211,7 +218,7 @@ mod tests {
                     success2.store(false, Ordering::Relaxed);
                 }
             });
-    
+
             prop_assert_eq!(expected_new_chunks.len(), 0);
             prop_assert_eq!(expected_old_chunks.len(), 0);
             prop_assert!(success.load(Ordering::Relaxed));
@@ -223,14 +230,14 @@ mod tests {
         fn quickcheck_chunk_diff_with_min_max(delta_x in -4_i32..=4, delta_z in -4_i32..=4, min_x in -5_i32..=0, min_z in -5_i32..=0,
                 max_x in 0_i32..=5, max_z in 0_i32..=5, view_distance in 1_i32..8) {
             let delta = (delta_x, delta_z);
-    
+
             let mut expected_new_chunks = Vec::new();
             let mut expected_old_chunks = Vec::new();
-    
+
             for x in -view_distance..=view_distance {
                 for z in -view_distance..=view_distance {
                     let moved_coord = (x + delta.0, z + delta.1);
-    
+
                     if moved_coord.0 < -view_distance || moved_coord.0 > view_distance || moved_coord.1 < -view_distance || moved_coord.1 > view_distance {
                         if -x >= min_x as _ && -x <= max_x as _ && -z >= min_z as _ && -z <= max_z as _ {
                             expected_old_chunks.push((-x, -z));
@@ -241,11 +248,11 @@ mod tests {
                     }
                 }
             }
-    
+
             let success = Rc::new(AtomicBool::new(true));
             let success1 = success.clone();
             let success2 = success.clone();
-    
+
             for_each_diff_with_min_max(delta, view_distance as _, |x, z| {
                 if let Some(index) = expected_new_chunks.iter().position(|v| *v == (x, z)) {
                     expected_new_chunks.remove(index);
@@ -259,7 +266,7 @@ mod tests {
                     success2.store(false, Ordering::Relaxed);
                 }
             }, min_x as _, min_z as _, max_x as _, max_z as _);
-    
+
             prop_assert_eq!(expected_new_chunks.len(), 0);
             prop_assert_eq!(expected_old_chunks.len(), 0);
             prop_assert!(success.load(Ordering::Relaxed));

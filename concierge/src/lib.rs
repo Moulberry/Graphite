@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, time::Duration};
 
-use anyhow::{bail, anyhow};
+use anyhow::bail;
 use binary::slice_serialization;
 use binary::slice_serialization::SliceSerializable;
 use net::{
@@ -14,14 +14,15 @@ use net::{
 use protocol::{
     handshake::{self, client::Intention},
     login,
-    status::{self, client::PingRequest, server::StatusResponse}, types::{GameProfile, GameProfileProperty},
+    status::{self, client::PingRequest, server::StatusResponse},
+    types::{GameProfile, GameProfileProperty},
 };
 use rand::Rng;
 
 pub struct ConciergeConnection<T> {
     _phantom: PhantomData<T>,
     connection_state: ConnectionState,
-    pub game_profile: Option<GameProfile>
+    pub game_profile: Option<GameProfile>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -179,8 +180,8 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
             match packet_id {
                 login::client::PacketId::Hello => {
                     let login_start_packet = login::client::Hello::read_fully(bytes)?;
-                    
-                    let uuid = rand::thread_rng().gen();//login_start_packet.uuid.ok_or(anyhow!("invalid uuid"))?;
+
+                    let uuid = rand::thread_rng().gen(); //login_start_packet.uuid.ok_or(anyhow!("invalid uuid"))?;
 
                     println!("player joined with uuid: {:x}", uuid);
 
@@ -199,13 +200,13 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
 
                     // Write login success
                     let login_success_packet = login::server::LoginSuccess {
-                        profile: game_profile
+                        profile: game_profile,
                     };
                     net::packet_helper::write_packet(write_buffer, &login_success_packet)?;
 
                     // Set game profile
                     self.game_profile = Some(login_success_packet.profile);
-                    
+
                     Ok(true) // Consume the connection
                 }
             }

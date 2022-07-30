@@ -8,7 +8,7 @@ use super::paletted_container::{BiomePalettedContainer, BlockPalettedContainer};
 pub struct ChunkTemplate {
     non_air_blocks: u16,
     block_palette: BlockPalettedContainer,
-    biome_palette: BiomePalettedContainer
+    biome_palette: BiomePalettedContainer,
 }
 
 impl ChunkTemplate {
@@ -17,7 +17,7 @@ impl ChunkTemplate {
             non_air_blocks: self.non_air_blocks,
             copy_on_write: true,
             block_palette: &self.block_palette as *const _ as *mut _,
-            biome_palette: &self.biome_palette as *const _ as *mut _
+            biome_palette: &self.biome_palette as *const _ as *mut _,
         }
     }
 }
@@ -32,7 +32,7 @@ pub struct ChunkSection {
     // Serialized values
     non_air_blocks: u16,
     block_palette: *mut BlockPalettedContainer,
-    biome_palette: *mut BiomePalettedContainer
+    biome_palette: *mut BiomePalettedContainer,
 }
 
 impl ChunkSection {
@@ -95,7 +95,6 @@ impl ChunkSection {
     }
 }
 
-
 impl<'a> SliceSerializable<'a> for ChunkSection {
     type RefType = &'a Self;
 
@@ -115,10 +114,12 @@ impl<'a> SliceSerializable<'a> for ChunkSection {
     }
 
     fn get_write_size(data: &'a Self) -> usize {
-        <BigEndian as SliceSerializable<'_, u16>>::get_write_size(data.non_air_blocks) +
-        unsafe {
-            <BlockPalettedContainer as SliceSerializable>::get_write_size(&*data.block_palette) +
-            <BiomePalettedContainer as SliceSerializable>::get_write_size(&*data.biome_palette)
-        }
+        <BigEndian as SliceSerializable<'_, u16>>::get_write_size(data.non_air_blocks)
+            + unsafe {
+                <BlockPalettedContainer as SliceSerializable>::get_write_size(&*data.block_palette)
+                    + <BiomePalettedContainer as SliceSerializable>::get_write_size(
+                        &*data.biome_palette,
+                    )
+            }
     }
 }

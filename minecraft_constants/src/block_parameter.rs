@@ -4,54 +4,6 @@
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum PistonType {
-	Normal,
-	Sticky,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum WireConnection {
-	Up,
-	Side,
-	None,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum Attachment {
-	Floor,
-	Ceiling,
-	SingleWall,
-	DoubleWall,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum ComparatorMode {
-	Compare,
-	Subtract,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum ChestType {
-	Single,
-	Left,
-	Right,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum StructureBlockMode {
-	Save,
-	Load,
-	Corner,
-	Data,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
 pub enum RailShape {
 	NorthSouth,
 	EastWest,
@@ -67,29 +19,76 @@ pub enum RailShape {
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum DirectionOrDown {
-	Down,
-	North,
-	South,
-	West,
-	East,
+pub enum UpperOrLower {
+	Upper,
+	Lower,
 }
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum Orientation {
-	DownEast,
-	DownNorth,
-	DownSouth,
-	DownWest,
-	UpEast,
-	UpNorth,
-	UpSouth,
-	UpWest,
-	WestUp,
-	EastUp,
-	NorthUp,
-	SouthUp,
+pub enum Hinge {
+	Left,
+	Right,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum PistonType {
+	Normal,
+	Sticky,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum ChestType {
+	Single,
+	Left,
+	Right,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Part {
+	Head,
+	Foot,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Attachment {
+	Floor,
+	Ceiling,
+	SingleWall,
+	DoubleWall,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Half {
+	Top,
+	Bottom,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Face {
+	Floor,
+	Wall,
+	Ceiling,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Axis2D {
+	X,
+	Z,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum ComparatorMode {
+	Compare,
+	Subtract,
 }
 
 #[repr(u8)]
@@ -103,84 +102,12 @@ pub enum Direction {
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum Leaves {
-	None,
-	Small,
-	Large,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum Thickness {
-	TipMerge,
-	Tip,
-	Frustum,
-	Middle,
-	Base,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum VerticalDirection {
-	Up,
-	Down,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum Tilt {
-	None,
-	Unstable,
-	Partial,
-	Full,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum Axis2D {
-	X,
-	Z,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum Face {
-	Floor,
-	Wall,
-	Ceiling,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum SlabType {
-	Top,
-	Bottom,
-	Double,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum SculkSensorPhase {
-	Inactive,
-	Active,
-	Cooldown,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
 pub enum StairShape {
 	Straight,
 	InnerLeft,
 	InnerRight,
 	OuterLeft,
 	OuterRight,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum Part {
-	Head,
-	Foot,
 }
 
 #[repr(u8)]
@@ -206,6 +133,41 @@ pub enum Instrument {
 
 #[repr(u8)]
 #[derive(Debug)]
+pub enum Orientation {
+	DownEast,
+	DownNorth,
+	DownSouth,
+	DownWest,
+	UpEast,
+	UpNorth,
+	UpSouth,
+	UpWest,
+	WestUp,
+	EastUp,
+	NorthUp,
+	SouthUp,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum WireConnection {
+	Up,
+	Side,
+	None,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum DirectionOrDown {
+	Down,
+	North,
+	South,
+	West,
+	East,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
 pub enum StraightRailShape {
 	NorthSouth,
 	EastWest,
@@ -217,10 +179,10 @@ pub enum StraightRailShape {
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum Axis3D {
-	X,
-	Y,
-	Z,
+pub enum Leaves {
+	None,
+	Small,
+	Large,
 }
 
 #[repr(u8)]
@@ -236,20 +198,6 @@ pub enum Facing {
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum Half {
-	Top,
-	Bottom,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-pub enum Hinge {
-	Left,
-	Right,
-}
-
-#[repr(u8)]
-#[derive(Debug)]
 pub enum WallConnection {
 	None,
 	Low,
@@ -258,8 +206,60 @@ pub enum WallConnection {
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum UpperOrLower {
-	Upper,
-	Lower,
+pub enum StructureBlockMode {
+	Save,
+	Load,
+	Corner,
+	Data,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum SculkSensorPhase {
+	Inactive,
+	Active,
+	Cooldown,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Thickness {
+	TipMerge,
+	Tip,
+	Frustum,
+	Middle,
+	Base,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum SlabType {
+	Top,
+	Bottom,
+	Double,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Axis3D {
+	X,
+	Y,
+	Z,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum VerticalDirection {
+	Up,
+	Down,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Tilt {
+	None,
+	Unstable,
+	Partial,
+	Full,
 }
 

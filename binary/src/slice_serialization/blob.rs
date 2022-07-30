@@ -144,7 +144,9 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, String> for SizedString<MA
     type RefType = &'a String;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<String> {
-        Ok(String::from(<SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::read(bytes)?))
+        Ok(String::from(
+            <SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::read(bytes)?,
+        ))
     }
 
     fn get_write_size(data: &'a String) -> usize {
@@ -152,7 +154,7 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, String> for SizedString<MA
     }
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &'a String) -> &'b mut [u8] {
-        <SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::write(bytes, &data)
+        <SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::write(bytes, data)
     }
 
     #[inline(always)]

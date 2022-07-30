@@ -1,15 +1,18 @@
 use std::collections::HashSet;
 
-use proc_macro::{TokenStream};
-use quote::{quote, ToTokens, quote_spanned};
-use syn::{parse::Parse, parse_macro_input, Token, braced, punctuated::Punctuated, Attribute, spanned::Spanned};
+use proc_macro::TokenStream;
+use quote::{quote, quote_spanned, ToTokens};
+use syn::{
+    braced, parse::Parse, parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute,
+    Token,
+};
 
 #[derive(Debug)]
 struct FieldInput {
     pub vis: syn::Visibility,
     pub ident: syn::Ident,
     pub field_type: syn::Type,
-    pub serialize_type: Option<syn::Type>
+    pub serialize_type: Option<syn::Type>,
 }
 
 impl FieldInput {
@@ -40,7 +43,7 @@ impl Parse for FieldInput {
             vis,
             ident,
             field_type,
-            serialize_type
+            serialize_type,
         })
     }
 }
@@ -73,16 +76,15 @@ impl Parse for InputVariant {
         } else {
             None
         };
-    
+
         let braced;
         braced!(braced in input);
-        let punctuated: Punctuated<FieldInput, Token![,]> =
-                    Punctuated::parse_terminated(&braced)?;
+        let punctuated: Punctuated<FieldInput, Token![,]> = Punctuated::parse_terminated(&braced)?;
 
         Ok(Self {
             ident,
             lifetime,
-            fields: punctuated.into_iter().collect()
+            fields: punctuated.into_iter().collect(),
         })
     }
 }
@@ -92,7 +94,7 @@ impl ToTokens for InputVariant {
         let ident = &self.ident;
         let lifetime = self.lifetime.iter();
         let fields = &self.fields;
-        
+
         tokens.extend(quote!(
             #ident #(<#lifetime>)* {
                 #(#fields),*
@@ -117,10 +119,18 @@ impl InputVariant {
         quote!(#ident #(<#lifetime>)*)
     }
 
-    fn get_slice_serializable_impl(&self, lifetime: proc_macro2::TokenStream, prefix: proc_macro2::TokenStream) -> (proc_macro2::TokenStream, proc_macro2::TokenStream, proc_macro2::TokenStream) {
-        let mut get_write_size_impl: proc_macro2::TokenStream  = Default::default();
-        let mut write_impl: proc_macro2::TokenStream  = Default::default();
-        let mut read_impl: proc_macro2::TokenStream  = Default::default();
+    fn get_slice_serializable_impl(
+        &self,
+        lifetime: proc_macro2::TokenStream,
+        prefix: proc_macro2::TokenStream,
+    ) -> (
+        proc_macro2::TokenStream,
+        proc_macro2::TokenStream,
+        proc_macro2::TokenStream,
+    ) {
+        let mut get_write_size_impl: proc_macro2::TokenStream = Default::default();
+        let mut write_impl: proc_macro2::TokenStream = Default::default();
+        let mut read_impl: proc_macro2::TokenStream = Default::default();
 
         for field in &self.fields {
             let field_ident = &field.ident;
@@ -148,12 +158,10 @@ impl InputVariant {
                 )
             );
 
-            read_impl.extend(
-                quote_spanned!(
-                    serialize_type_span =>
-                    #field_ident: (#serializable_impl::read(bytes)?),
-                )
-            );
+            read_impl.extend(quote_spanned!(
+                serialize_type_span =>
+                #field_ident: (#serializable_impl::read(bytes)?),
+            ));
         }
 
         (read_impl, get_write_size_impl, write_impl)
@@ -172,21 +180,30 @@ enum Input {
         vis: syn::Visibility,
         ident: syn::Ident,
         lifetime: Option<syn::Lifetime>,
-        variants: Vec<InputVariant>
-    }
-
+        variants: Vec<InputVariant>,
+    },
 }
 
 impl Input {
     fn get_base_data(&self) -> proc_macro2::TokenStream {
         match self {
-            Input::Struct { attributes, vis, data } => {
+            Input::Struct {
+                attributes,
+                vis,
+                data,
+            } => {
                 quote!(
                     #(#attributes)*
                     #vis struct #data
                 )
-            },
-            Input::Enum { attributes, vis, ident, lifetime, variants } => {
+            }
+            Input::Enum {
+                attributes,
+                vis,
+                ident,
+                lifetime,
+                variants,
+            } => {
                 let lifetime = lifetime.iter();
                 quote!(
                     #(#attributes)*
@@ -194,46 +211,56 @@ impl Input {
                         #(#variants),*
                     }
                 )
-            },
+            }
         }
     }
 
     fn get_slice_serializable_impl(&self) -> proc_macro2::TokenStream {
         match self {
-            Input::Struct { attributes: _, vis: _, data } => {
+            Input::Struct {
+                attributes: _,
+                vis: _,
+                data,
+            } => {
                 let ident = data.get_ident_and_lifetime();
-                let (read_impl, get_write_size_impl, write_impl) =
-                    data.get_slice_serializable_impl(data.get_lifetime_or_default(), quote!(&object.));
+                let (read_impl, get_write_size_impl, write_impl) = data
+                    .get_slice_serializable_impl(data.get_lifetime_or_default(), quote!(&object.));
 
                 let lifetime = data.get_lifetime_or_default();
 
                 quote!(
                     impl <#lifetime> binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
                         type RefType = &#lifetime #ident;
-            
+
                         fn read(bytes: &mut &#lifetime [u8]) -> anyhow::Result<#ident> {
                             Ok(Self {
                                 #read_impl
                             })
                         }
-            
+
                         fn get_write_size(object: &#lifetime #ident) -> usize {
                             #get_write_size_impl
                             0
                         }
-            
+
                         unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &#lifetime #ident) -> &'bytes mut [u8] {
                             #write_impl
                             bytes
                         }
-            
+
                         fn maybe_deref(t: &#lifetime #ident) -> Self::RefType {
                             t
                         }
                     }
                 )
-            },
-            Input::Enum { attributes: _, vis: _, ident, lifetime, variants } => {
+            }
+            Input::Enum {
+                attributes: _,
+                vis: _,
+                ident,
+                lifetime,
+                variants,
+            } => {
                 // Check for duplicate variant names
                 let mut variant_names: HashSet<String> = HashSet::new();
                 for variant in variants {
@@ -245,9 +272,9 @@ impl Input {
                     }
                 }
 
-                let mut get_write_size_impl: proc_macro2::TokenStream  = Default::default();
-                let mut write_impl: proc_macro2::TokenStream  = Default::default();
-                let mut read_impl: proc_macro2::TokenStream  = Default::default();
+                let mut get_write_size_impl: proc_macro2::TokenStream = Default::default();
+                let mut write_impl: proc_macro2::TokenStream = Default::default();
+                let mut read_impl: proc_macro2::TokenStream = Default::default();
 
                 let lifetime_iter = lifetime.iter();
                 let ident = quote!(#ident #(<#lifetime_iter>)*);
@@ -258,8 +285,7 @@ impl Input {
                     quote!('a)
                 };
 
-                let mut index: u8 = 0;
-                for variant in variants {
+                for (index, variant) in variants.iter().enumerate() {
                     let ident = &variant.ident;
                     let (variant_read_impl, variant_get_write_size_impl, variant_write_impl) =
                         variant.get_slice_serializable_impl(lifetime.clone(), quote!());
@@ -270,24 +296,21 @@ impl Input {
                         enum_struct_fields.extend(quote!(#field_ident,));
                     }
 
-                    read_impl.extend(
-                        quote!(
-                            #index => {
-                                Ok(Self::#ident {
-                                    #variant_read_impl
-                                })
-                            }
-                        )
-                    );
+                    let index = index as u8;
+                    read_impl.extend(quote!(
+                        #index => {
+                            Ok(Self::#ident {
+                                #variant_read_impl
+                            })
+                        }
+                    ));
 
-                    get_write_size_impl.extend(
-                        quote!(
-                            Self::#ident { #enum_struct_fields } => {
-                                #variant_get_write_size_impl
-                                1
-                            }
-                        )
-                    );
+                    get_write_size_impl.extend(quote!(
+                        Self::#ident { #enum_struct_fields } => {
+                            #variant_get_write_size_impl
+                            1
+                        }
+                    ));
 
                     write_impl.extend(
                         quote!(
@@ -298,14 +321,12 @@ impl Input {
                             }
                         )
                     );
-
-                    index += 1;
                 }
 
                 quote!(
                     impl <#lifetime> binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
                         type RefType = &#lifetime #ident;
-            
+
                         fn read(bytes: &mut &#lifetime [u8]) -> anyhow::Result<#ident> {
                             let discriminant = <binary::slice_serialization::Single as binary::slice_serialization::SliceSerializable<u8>>::read(bytes)?;
                             match discriminant {
@@ -315,25 +336,25 @@ impl Input {
                                 }
                             }
                         }
-            
+
                         fn get_write_size(object: &#lifetime #ident) -> usize {
                             match object {
                                 #get_write_size_impl
                             }
                         }
-            
+
                         unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &#lifetime #ident) -> &'bytes mut [u8] {
                             match object {
                                 #write_impl
                             }
                         }
-            
+
                         fn maybe_deref(t: &#lifetime #ident) -> Self::RefType {
                             t
                         }
                     }
                 )
-            },
+            }
         }
     }
 }
@@ -346,7 +367,7 @@ impl Parse for Input {
         if input.peek(Token![enum]) {
             let _: Token![enum] = input.parse()?;
             let ident = input.parse()?;
-    
+
             let lifetime = if input.peek(Token![<]) {
                 let _: Token![<] = input.parse()?;
                 let lifetime = input.parse()?;
@@ -359,23 +380,23 @@ impl Parse for Input {
             let braced;
             braced!(braced in input);
             let punctuated: Punctuated<InputVariant, Token![,]> =
-                        Punctuated::parse_terminated(&braced)?;
+                Punctuated::parse_terminated(&braced)?;
 
             Ok(Self::Enum {
                 attributes,
                 vis,
                 ident,
                 lifetime,
-                variants: punctuated.into_iter().collect()
+                variants: punctuated.into_iter().collect(),
             })
         } else {
             let _: Token![struct] = input.parse()?;
             let data = input.parse()?;
-    
+
             Ok(Self::Struct {
                 attributes,
                 vis,
-                data
+                data,
             })
         }
     }
@@ -391,5 +412,6 @@ pub fn slice_serializable(input: TokenStream) -> TokenStream {
     quote!(
         #base_data
         #serialize_impl
-    ).into()
+    )
+    .into()
 }

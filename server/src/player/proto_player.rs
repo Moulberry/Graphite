@@ -4,10 +4,14 @@ use crate::{
     world::World,
 };
 use net::{network_buffer::WriteBuffer, packet_helper};
-use protocol::{types::GameProfile, play::server::{PlayerInfo, PlayerInfoAddPlayer}};
+use protocol::{
+    play::server::{PlayerInfo, PlayerInfoAddPlayer},
+    types::GameProfile,
+};
 
 use super::{
-    player::{Player, PlayerService}, player_connection::AbstractConnectionReference,
+    player::{Player, PlayerService},
+    player_connection::AbstractConnectionReference,
 };
 
 // Proto player
@@ -22,7 +26,11 @@ pub struct ProtoPlayer<U: UniverseService> {
 }
 
 impl<U: UniverseService> ProtoPlayer<U> {
-    pub fn new(connection: U::ConnectionReferenceType, profile: GameProfile, entity_id: EntityId) -> Self {
+    pub fn new(
+        connection: U::ConnectionReferenceType,
+        profile: GameProfile,
+        entity_id: EntityId,
+    ) -> Self {
         Self {
             hardcore: false,
             profile,
@@ -54,22 +62,20 @@ impl<U: UniverseService> ProtoPlayer<U> {
 
         // Send player info
         let add_player_info = PlayerInfo::AddPlayer {
-            values: vec![
-                PlayerInfoAddPlayer {
-                    profile: self.profile.clone(),
-                    gamemode: 1,
-                    ping: 0,
-                    display_name: None, 
-                    signature_data: None
-                }
-            ]
+            values: vec![PlayerInfoAddPlayer {
+                profile: self.profile.clone(),
+                gamemode: 1,
+                ping: 0,
+                display_name: None,
+                signature_data: None,
+            }],
         };
         packet_helper::write_packet(&mut self.write_buffer, &add_player_info)?;
 
         // todo: if dim changed, send dimension changed
         // todo: else, don't send
 
-        let view_position = world.initialize_view_position(&mut self, position)?; 
+        let view_position = world.initialize_view_position(&mut self, position)?;
 
         // Write the necessary packets to the TCP stream
         self.connection.write_bytes(self.write_buffer.get_written());

@@ -8,7 +8,7 @@ pub mod types;
 
 pub trait IdentifiedPacket<I: Debug>: Debug {
     const ID: I;
-    
+
     fn get_packet_id(&self) -> I;
     fn get_packet_id_as_u8(&self) -> u8;
 }

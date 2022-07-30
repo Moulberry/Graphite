@@ -12,8 +12,8 @@ mod varint;
 pub use varint::VarInt;
 
 mod blob;
-pub use blob::NBTBlob;
 pub use blob::GreedyBlob;
+pub use blob::NBTBlob;
 pub use blob::SizedBlob;
 pub use blob::SizedString;
 

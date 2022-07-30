@@ -4,16 +4,19 @@ use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::play::server::{self, ChunkBlockData, ChunkLightData};
 use slab::Slab;
 
-use crate::player::{PlayerService, Player};
+use crate::player::{Player, PlayerService};
 
-use super::{chunk_section::ChunkSection, paletted_container::{BlockPalettedContainer, BiomePalettedContainer}};
+use super::{
+    chunk_section::ChunkSection,
+    paletted_container::{BiomePalettedContainer, BlockPalettedContainer},
+};
 
 pub struct PlayerReference {
     pub uuid: u128,
     pub player: *mut (),
     pub fn_write: fn(*mut (), &[u8]),
     pub fn_create: fn(*mut (), &mut WriteBuffer),
-    pub destroy_buffer: Box<[u8]>
+    pub destroy_buffer: Box<[u8]>,
 }
 
 pub struct Chunk {
@@ -33,7 +36,8 @@ impl Chunk {
     pub const SECTION_BLOCK_WIDTH_I: usize = 16;
 
     const INVALID_NO_ENTRY: &'static str = "player's chunk_ref is invalid - no entry for reference";
-    const INVALID_OTHER_PLAYER: &'static str = "player's chunk_ref is invalid - entry was for another player";
+    const INVALID_OTHER_PLAYER: &'static str =
+        "player's chunk_ref is invalid - entry was for another player";
 
     #[inline(always)]
     pub fn to_chunk_coordinate(f: f32) -> i32 {
@@ -61,7 +65,9 @@ impl Chunk {
     pub(crate) fn remove_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
         let ref_index = player.chunk_ref;
 
-        let removed = self.player_refs.try_remove(ref_index)
+        let removed = self
+            .player_refs
+            .try_remove(ref_index)
             .expect(Self::INVALID_NO_ENTRY);
         if removed.uuid != player.profile.uuid {
             panic!("{}", Self::INVALID_OTHER_PLAYER)
@@ -70,10 +76,16 @@ impl Chunk {
         self.viewable_buffer.copy_from(&removed.destroy_buffer);
     }
 
-    pub(crate) fn move_player<T: PlayerService>(&mut self, player: &mut Player<T>, other_chunk: &mut Chunk) {
+    pub(crate) fn move_player<T: PlayerService>(
+        &mut self,
+        player: &mut Player<T>,
+        other_chunk: &mut Chunk,
+    ) {
         let ref_index = player.chunk_ref;
 
-        let removed = self.player_refs.try_remove(ref_index)
+        let removed = self
+            .player_refs
+            .try_remove(ref_index)
             .expect(Self::INVALID_NO_ENTRY);
         if removed.uuid != player.profile.uuid {
             panic!("{}", Self::INVALID_OTHER_PLAYER)
@@ -84,8 +96,10 @@ impl Chunk {
 
     pub(crate) fn update_player_pointer<T: PlayerService>(&mut self, player: &mut Player<T>) {
         let ref_index = player.chunk_ref;
-        
-        let reference = self.player_refs.get_mut(ref_index)
+
+        let reference = self
+            .player_refs
+            .get_mut(ref_index)
             .expect(Self::INVALID_NO_ENTRY);
         if reference.uuid != player.profile.uuid {
             panic!("{}", Self::INVALID_OTHER_PLAYER)
@@ -96,16 +110,18 @@ impl Chunk {
 
     pub(crate) fn add_new_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
         // Safety: write_create_packet doesn't touch `viewable_self_exclusion_write_buffer`
-        let exclusion_write_buffer = unsafe { &mut *(&mut player.viewable_self_exclusion_write_buffer as *mut _) };
+        let exclusion_write_buffer =
+            unsafe { &mut *(&mut player.viewable_self_exclusion_write_buffer as *mut _) };
         player.write_create_packet(exclusion_write_buffer);
-        
+
         // Get ptr to write_packet_bytes function
         let write_packet_bytes = Player::<T>::write_packet_bytes as *const ();
         let fn_write: fn(*mut (), &[u8]) = unsafe { std::mem::transmute(write_packet_bytes) };
 
         // Get ptr to write_create_packet function
         let write_create_packet = Player::<T>::write_create_packet as *const ();
-        let fn_create: fn(*mut (), &mut WriteBuffer) = unsafe { std::mem::transmute(write_create_packet) };
+        let fn_create: fn(*mut (), &mut WriteBuffer) =
+            unsafe { std::mem::transmute(write_create_packet) };
 
         let mut destroy_buffer = WriteBuffer::new();
         player.write_destroy_packet(&mut destroy_buffer);
@@ -129,7 +145,7 @@ impl Chunk {
                 let chunk_section = ChunkSection::new(
                     16 * 16 * 16,
                     BlockPalettedContainer::filled(1),
-                    BiomePalettedContainer::filled(1)
+                    BiomePalettedContainer::filled(1),
                 );
 
                 block_sections.push(chunk_section);
@@ -137,7 +153,7 @@ impl Chunk {
                 let chunk_section = ChunkSection::new(
                     0,
                     BlockPalettedContainer::filled(0),
-                    BiomePalettedContainer::filled(1)
+                    BiomePalettedContainer::filled(1),
                 );
 
                 block_sections.push(chunk_section);
@@ -162,7 +178,7 @@ impl Chunk {
     }
 
     pub fn set_block(&mut self, x: u8, y: usize, z: u8, block: u16) {
-        let index = y / Self::SECTION_BLOCK_WIDTH_I + 4;  // temp: remove + 4 when world limit is set to y = 0
+        let index = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
         let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
         if self.block_sections[index].set_block(x, section_y as _, z, block) {
             self.invalidate_cache();

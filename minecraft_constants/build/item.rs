@@ -1,5 +1,5 @@
-use std::io::Write;
 use std::fmt::Write as _;
+use std::io::Write;
 
 use convert_case::{Case, Casing};
 use serde_derive::Deserialize;

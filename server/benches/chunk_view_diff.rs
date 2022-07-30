@@ -1,12 +1,26 @@
 #![allow(warnings)]
 
-use std::{any::TypeId, collections::hash_map::DefaultHasher, hash::{Hash, Hasher}};
+use std::{
+    any::TypeId,
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
 
-use command::{brigadier, types::{CommandResult, ParseState}};
+use command::{
+    brigadier,
+    types::{CommandResult, ParseState},
+};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use minecraft_constants::block::Block;
 use rand::RngCore;
-use server::{player::{Player, proto_player::ProtoPlayer, player_vec::PlayerVec, PlayerService, player_connection::ConnectionReference}, world::{World, WorldService, TickPhase}, universe::{UniverseService, Universe}};
+use server::{
+    player::{
+        player_connection::ConnectionReference, player_vec::PlayerVec, proto_player::ProtoPlayer,
+        Player, PlayerService,
+    },
+    universe::{Universe, UniverseService},
+    world::{TickPhase, World, WorldService},
+};
 
 // Naive implementation of `chunk_view_diff`, for reference
 fn for_each_diff_naive<F1, F2>(
@@ -94,16 +108,12 @@ fn chunk_view_diff(c: &mut Criterion) {
 
 fn command_dispatch(c: &mut Criterion) {
     #[brigadier("hello", {})]
-    fn my_function(
-        _player: &mut Player<MyPlayerService>,
-        number: u64,
-    ) -> CommandResult {
+    fn my_function(_player: &mut Player<MyPlayerService>, number: u64) -> CommandResult {
         black_box(number);
         Ok(())
     }
 
-    let (dispatcher, _) =
-            command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
+    let (dispatcher, _) = command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
     /*c.bench_function("command_dispatch: ParseState", |b| {
         b.iter(|| {
@@ -153,7 +163,7 @@ fn command_dispatch(c: &mut Criterion) {
             black_box(result);
         })
     });*/
-    
+
     c.bench_function("one", |b| {
         b.iter(|| {
             let r = (rand::thread_rng().next_u32() % 20000) as u16;
@@ -184,14 +194,11 @@ struct MyUniverseService {
 }
 
 impl UniverseService for MyUniverseService {
-    fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {
-    }
+    fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {}
 
-    fn initialize(universe: &Universe<Self>) {
-    }
+    fn initialize(universe: &Universe<Self>) {}
 
-    fn tick(universe: &mut Universe<Self>) {
-    }
+    fn tick(universe: &mut Universe<Self>) {}
 
     fn get_player_count(universe: &Universe<Self>) -> usize {
         0

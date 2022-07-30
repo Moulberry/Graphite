@@ -1,6 +1,12 @@
-use common::{DummyUniverseService};
+use common::DummyUniverseService;
 use protocol::play::server::*;
-use server::{universe::{UniverseService, Universe, EntityId}, entity::{components::{BasicEntity, Viewable}, position::Coordinate}};
+use server::{
+    entity::{
+        components::{BasicEntity, Viewable},
+        position::Coordinate,
+    },
+    universe::{EntityId, Universe, UniverseService},
+};
 
 mod common;
 
@@ -31,13 +37,13 @@ fn player_join() {
             gamemode: 1,
             ping: 0,
             display_name: None,
-            signature_data: None
+            signature_data: None,
         }],
     });
 
     // LevelChunkWithLight -- Can't read NBT yet
     log!("Checking chunk packets...");
-    for _ in 0..(17*17) {
+    for _ in 0..(17 * 17) {
         conn.skip_outgoing(PacketId::LevelChunkWithLight as u8);
     }
 
@@ -45,7 +51,7 @@ fn player_join() {
     log!("Checking SetChunkCacheCenter packet...");
     conn.assert_outgoing(&SetChunkCacheCenter {
         chunk_x: 2,
-        chunk_z: 2
+        chunk_z: 2,
     });
 
     // SetPlayerPosition
@@ -58,7 +64,7 @@ fn player_join() {
         pitch: 0.0,
         relative_arguments: 0,
         id: 0,
-        dismount_vehicle: false
+        dismount_vehicle: false,
     });
 
     // No more packets
@@ -109,7 +115,7 @@ fn spawn_entity_close() {
     // (2) Player receives RemoveEntity on the 2nd tick
     DummyUniverseService::tick(&mut universe);
     conn.assert_outgoing(&RemoveEntities {
-        entities: vec![entity_id.as_i32()]
+        entities: vec![entity_id.as_i32()],
     });
     conn.assert_none_outgoing(); // No more packets
 }
@@ -182,12 +188,12 @@ fn spawn_entity_before() {
 
     // (b) Connect the player at a nearby location
     let mut conn = common::create_player(&mut universe);
-    
+
     // Skip login packets
     conn.skip_outgoing(PacketId::Login as u8);
     conn.skip_outgoing(PacketId::CustomPayload as u8);
     conn.skip_outgoing(PacketId::PlayerInfo as u8);
-    for _ in 0..(17*17) {
+    for _ in 0..(17 * 17) {
         conn.skip_outgoing(PacketId::LevelChunkWithLight as u8);
     }
 
@@ -218,7 +224,7 @@ fn spawn_entity_before() {
     conn.skip_outgoing(PacketId::Login as u8);
     conn.skip_outgoing(PacketId::CustomPayload as u8);
     conn.skip_outgoing(PacketId::PlayerInfo as u8);
-    for _ in 0..(17*17) {
+    for _ in 0..(17 * 17) {
         conn.skip_outgoing(PacketId::LevelChunkWithLight as u8);
     }
 
@@ -228,26 +234,38 @@ fn spawn_entity_before() {
     conn.skip_outgoing(PacketId::SetChunkCacheCenter as u8);
     conn.skip_outgoing(PacketId::SetPlayerPosition as u8);
     conn.assert_none_outgoing();
-
-
 }
 
 // Helper functions
 
-fn spawn_entity_at(universe: &mut Universe<DummyUniverseService>, position: Coordinate) -> EntityId {
+fn spawn_entity_at(
+    universe: &mut Universe<DummyUniverseService>,
+    position: Coordinate,
+) -> EntityId {
     let entity_id = universe.new_entity_id();
     let test_entity = BasicEntity {
         entity_id,
         entity_type: 6,
     };
-    universe.service.the_world.push_entity((), position, test_entity, entity_id);
+    universe
+        .service
+        .the_world
+        .push_entity((), position, test_entity, entity_id);
     entity_id
 }
 
-fn move_entity_to(universe: &mut Universe<DummyUniverseService>, entity_id: EntityId, coordinate: Coordinate) {
-    let mut entity = universe.service.the_world.get_entity_mut(entity_id)
+fn move_entity_to(
+    universe: &mut Universe<DummyUniverseService>,
+    entity_id: EntityId,
+    coordinate: Coordinate,
+) {
+    let mut entity = universe
+        .service
+        .the_world
+        .get_entity_mut(entity_id)
         .expect("entity must exist");
-    let mut viewable = entity.get_mut::<Viewable>()
+    let mut viewable = entity
+        .get_mut::<Viewable>()
         .expect("entity must have viewable component");
     viewable.coord.x = coordinate.x;
     viewable.coord.y = coordinate.y;

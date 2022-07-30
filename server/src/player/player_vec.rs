@@ -1,6 +1,10 @@
 use sticky::Unsticky;
 
-use crate::{entity::position::Position, error::UninitializedError, world::{World, TickPhase}};
+use crate::{
+    entity::position::Position,
+    error::UninitializedError,
+    world::{TickPhase, World},
+};
 
 use super::{
     player::{Player, PlayerService},
@@ -78,6 +82,7 @@ impl<P: PlayerService> PlayerVec<P> {
     }
 
     pub fn tick(&mut self, tick_phase: TickPhase) {
-        self.players.retain_mut(|player| player.tick(tick_phase).is_ok());
+        self.players
+            .retain_mut(|player| player.tick(tick_phase).is_ok());
     }
 }

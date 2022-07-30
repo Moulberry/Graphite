@@ -1,7 +1,14 @@
-use bevy_ecs::{world::{EntityRef, EntityMut}, prelude::Component};
+use bevy_ecs::{
+    prelude::Component,
+    world::{EntityMut, EntityRef},
+};
 use binary::slice_serialization::SliceSerializable;
 use net::{network_buffer::WriteBuffer, packet_helper};
-use protocol::{play::server::{self, RemoveEntities, AddEntity, AddPlayer, PlayerInfo, PlayerInfoAddPlayer}, IdentifiedPacket, types::{GameProfile, GameProfileProperty}};
+use protocol::{
+    play::server::{self, AddEntity, AddPlayer, PlayerInfo, PlayerInfoAddPlayer, RemoveEntities},
+    types::{GameProfile, GameProfileProperty},
+    IdentifiedPacket,
+};
 use rand::Rng;
 
 use crate::universe::EntityId;
@@ -29,7 +36,13 @@ unsafe impl Send for Viewable {}
 unsafe impl Sync for Viewable {}
 
 impl Viewable {
-    pub fn new(coord: Coordinate, chunk_x: i32, chunk_z: i32, fn_create: FnPacket, destroy_buffer: WriteBuffer) -> Self {
+    pub fn new(
+        coord: Coordinate,
+        chunk_x: i32,
+        chunk_z: i32,
+        fn_create: FnPacket,
+        destroy_buffer: WriteBuffer,
+    ) -> Self {
         Self {
             index_in_chunk_entity_slab: 0,
             last_chunk_x: chunk_x,
@@ -68,7 +81,7 @@ pub struct EntityIdHolder(EntityId);
 pub struct PlayerNPC {
     pub entity_id: EntityId,
     pub uuid: u128,
-    pub username: String
+    pub username: String,
 }
 
 #[derive(Component)]
@@ -104,9 +117,11 @@ impl EntitySpawnDefinition for BasicEntity {
 
 impl BasicEntity {
     fn write_spawn_packet(write_buffer: &mut WriteBuffer, entity: EntityRef) {
-        let viewable = entity.get::<Viewable>()
+        let viewable = entity
+            .get::<Viewable>()
             .expect("all entities must have viewable");
-        let basic_entity = entity.get::<BasicEntity>()
+        let basic_entity = entity
+            .get::<BasicEntity>()
             .expect("should have test entity!");
 
         let add_entity_packet = AddEntity {
@@ -135,7 +150,7 @@ impl EntitySpawnDefinition for PlayerNPC {
 
     fn get_despawn_buffer(&mut self) -> WriteBuffer {
         let mut write_buffer = WriteBuffer::with_min_capacity(8);
-        
+
         // Remove Entity Packet
         let remove_entity_packet = RemoveEntities {
             entities: vec![self.entity_id.as_i32()],
@@ -144,7 +159,7 @@ impl EntitySpawnDefinition for PlayerNPC {
 
         // Remove Player Info
         let remove_info_packet = PlayerInfo::RemovePlayer {
-            uuids: vec![self.uuid]
+            uuids: vec![self.uuid],
         };
         net::packet_helper::write_packet(&mut write_buffer, &remove_info_packet).unwrap();
 
@@ -158,10 +173,10 @@ impl EntitySpawnDefinition for PlayerNPC {
 
 impl PlayerNPC {
     fn write_spawn_packet(write_buffer: &mut WriteBuffer, entity: EntityRef) {
-        let viewable = entity.get::<Viewable>()
+        let viewable = entity
+            .get::<Viewable>()
             .expect("all entities must have viewable");
-        let player_npc = entity.get::<PlayerNPC>()
-            .expect("should have test entity!");
+        let player_npc = entity.get::<PlayerNPC>().expect("should have test entity!");
 
         let profile = GameProfile {
             uuid: player_npc.uuid,
@@ -176,15 +191,13 @@ impl PlayerNPC {
         };
 
         let packet = PlayerInfo::AddPlayer {
-            values: vec![
-                PlayerInfoAddPlayer {
-                    profile,
-                    gamemode: 1,
-                    ping: 69,
-                    display_name: Some("{\"text\": \"Ya Boi\"}"), 
-                    signature_data: None
-                }
-            ]
+            values: vec![PlayerInfoAddPlayer {
+                profile,
+                gamemode: 1,
+                ping: 69,
+                display_name: Some("{\"text\": \"Ya Boi\"}"),
+                signature_data: None,
+            }],
         };
         net::packet_helper::write_packet(write_buffer, &packet).unwrap();
 
