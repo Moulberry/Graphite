@@ -1,8 +1,11 @@
+use std::sync::mpsc::Sender;
+
 use command::brigadier;
 use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
 use net::network_handler::UninitializedConnection;
+use protocol::types::GameProfile;
 use rand::Rng;
 use server::entity::components::PlayerNPC;
 use server::entity::components::Spinalla;
@@ -17,10 +20,13 @@ use server::player::Player;
 use server::player::PlayerService;
 use server::universe::Universe;
 use server::universe::UniverseService;
+use server::world::TickPhase;
 use server::world::World;
 use server::world::WorldService;
 
-struct MyConciergeImpl;
+struct MyConciergeImpl {
+    universe_sender: Sender<(UninitializedConnection, GameProfile)>
+}
 
 impl ConciergeService for MyConciergeImpl {
     fn get_serverlist_response(&mut self) -> String {
@@ -46,7 +52,63 @@ impl ConciergeService for MyConciergeImpl {
         player_connection: UninitializedConnection,
         mut concierge_connection: concierge::ConciergeConnection<Self>,
     ) {
-        #[brigadier("hello", {10..2000}, {})]
+        let join_data = (
+            player_connection,
+            concierge_connection.game_profile.take().unwrap(),
+        );
+
+        self.universe_sender.send(join_data).unwrap();
+    }
+}
+
+fn main() {
+    /*use binary::slice_serialization::BigEndian;
+    use binary::slice_serialization::SizedString;
+    use binary::slice_serialization::SliceSerializable;
+
+    macros::slice_serializable!(
+        #[derive(Debug)]
+        pub enum Hello {
+            Xyz {
+                something: i32 as BigEndian
+            },
+            Abc {
+                something: i32 as BigEndian
+            }
+        }
+    );
+
+    macros::slice_serializable!(
+        #[derive(Debug)]
+        pub enum Hello<'b> {
+            Xyz {
+                blah: &'b str as SizedString,
+                something: i32 as BigEndian
+            },
+            Abc {
+                blah: &'b str as SizedString,
+                something: i32 as BigEndian
+            }
+        }
+    );
+
+    let abc = Hello::Abc {
+        blah: "HELLO",
+        something: 5
+    };
+
+    println!("Write size: {}", Hello::get_write_size(&abc));
+    let mut buf = [0; 128];
+    unsafe { Hello::write(&mut buf, &abc); }
+    println!("Buf: {:?}", buf);
+    let out = Hello::read(&mut &buf[..10]);
+    println!("out: {:?}", out);*/
+
+    //println!("{:?}", packet);
+    //dispatcher.dispatch("hello 800 10");
+
+    // server::command::dispatcher::dispatch("hello 100 whatever_we_want 7174");
+    #[brigadier("hello", {10..2000}, {})]
         fn my_function(
             player: &mut Player<MyPlayerService>,
             number: u16,
@@ -141,7 +203,7 @@ impl ConciergeService for MyConciergeImpl {
         let (dispatcher, packet) =
             command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
-        let universe = Universe::create_and_start(
+        let universe_sender = Universe::create_and_start(
             || MyUniverseService {
                 the_world: World::new(MyWorldService {
                     players: PlayerVec::new(),
@@ -149,63 +211,10 @@ impl ConciergeService for MyConciergeImpl {
             },
             Some((dispatcher, packet)),
         );
-        let join_data = (
-            player_connection,
-            concierge_connection.game_profile.take().unwrap(),
-        );
 
-        universe.send(join_data).unwrap();
-    }
-}
-
-fn main() {
-    /*use binary::slice_serialization::BigEndian;
-    use binary::slice_serialization::SizedString;
-    use binary::slice_serialization::SliceSerializable;
-
-    macros::slice_serializable!(
-        #[derive(Debug)]
-        pub enum Hello {
-            Xyz {
-                something: i32 as BigEndian
-            },
-            Abc {
-                something: i32 as BigEndian
-            }
-        }
-    );
-
-    macros::slice_serializable!(
-        #[derive(Debug)]
-        pub enum Hello<'b> {
-            Xyz {
-                blah: &'b str as SizedString,
-                something: i32 as BigEndian
-            },
-            Abc {
-                blah: &'b str as SizedString,
-                something: i32 as BigEndian
-            }
-        }
-    );
-
-    let abc = Hello::Abc {
-        blah: "HELLO",
-        something: 5
-    };
-
-    println!("Write size: {}", Hello::get_write_size(&abc));
-    let mut buf = [0; 128];
-    unsafe { Hello::write(&mut buf, &abc); }
-    println!("Buf: {:?}", buf);
-    let out = Hello::read(&mut &buf[..10]);
-    println!("out: {:?}", out);*/
-
-    //println!("{:?}", packet);
-    //dispatcher.dispatch("hello 800 10");
-
-    // server::command::dispatcher::dispatch("hello 100 whatever_we_want 7174");
-    Concierge::bind("127.0.0.1:25565", MyConciergeImpl).unwrap();
+    Concierge::bind("127.0.0.1:25565", MyConciergeImpl {
+        universe_sender
+    }).unwrap();
 }
 
 // universe
@@ -236,9 +245,6 @@ impl UniverseService for MyUniverseService {
 
 // world
 
-// DungeonPlayer
-// SpectatingPlayer
-
 struct MyWorldService {
     players: PlayerVec<MyPlayerService>
 }
@@ -266,7 +272,7 @@ impl WorldService for MyWorldService {
                 Position {
                     coord: Coordinate {
                         x: 32.0,
-                        y: 400.0,
+                        y: 224.0,
                         z: 32.0,
                     },
                     rot: Rotation {
@@ -282,8 +288,8 @@ impl WorldService for MyWorldService {
         world.service.players.initialize(world);
     }
 
-    unsafe fn tick(world: &mut World<Self>) {
-        world.service.players.tick();
+    unsafe fn tick(world: &mut World<Self>, tick_phase: TickPhase) {
+        world.service.players.tick(tick_phase);
     }
 
     fn get_player_count(world: &World<Self>) -> usize {

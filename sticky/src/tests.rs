@@ -10,7 +10,7 @@ fn insert() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
-        sticky_vec.insert(MyStickyType(i));
+        sticky_vec.push(MyStickyType(i));
     }
 
     assert_eq!(sticky_vec.len(), 1000);
@@ -53,7 +53,7 @@ fn remove_descending() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
-        sticky_vec.insert(MyStickyType(i));
+        sticky_vec.push(MyStickyType(i));
     }
 
     assert_eq!(sticky_vec.len(), 1000);
@@ -70,7 +70,7 @@ fn remove_ascending() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
-        sticky_vec.insert(MyStickyType(i));
+        sticky_vec.push(MyStickyType(i));
     }
 
     assert_eq!(sticky_vec.len(), 1000);
@@ -87,7 +87,7 @@ fn remove_random() {
     let mut sticky_vec = StickyVec::new();
 
     for i in 0..1000 {
-        sticky_vec.insert(MyStickyType(i));
+        sticky_vec.push(MyStickyType(i));
     }
 
     assert_eq!(sticky_vec.len(), 1000);
@@ -193,7 +193,7 @@ fn retain_modulo() {
             let drop_counter = Rc::new(AtomicUsize::new(0));
 
             for i in 0..count {
-                sticky_vec.insert(PanicOnModuloDrop {
+                sticky_vec.push(PanicOnModuloDrop {
                     original_index: i,
                     current_index: i,
                     should_be_dropped: i % modulo != eq,

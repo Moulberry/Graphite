@@ -1,4 +1,4 @@
-use std::mem::ManuallyDrop;
+use std::{mem::ManuallyDrop, ops::Range};
 
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
@@ -7,7 +7,7 @@ use net::{
     packet_helper::{self, PacketReadResult},
 };
 use protocol::{
-    play::{client::PacketHandler, server},
+    play::{client::PacketHandler, server::{self, PlayerInfoAddPlayer, PlayerInfo, AddPlayer, RemoveEntities, TeleportEntity, RotateHead}},
     IdentifiedPacket, types::GameProfile,
 };
 use queues::Buffer;
@@ -18,7 +18,7 @@ use text_component::TextComponent;
 use crate::{
     entity::position::{Position, Vec3f},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, World, WorldService},
+    world::{ChunkViewPosition, World, WorldService, TickPhase},
 };
 
 use super::{
@@ -51,11 +51,8 @@ type ConnectionReferenceType<P: PlayerService> = <P::UniverseServiceType as Univ
 
 // graphite player
 pub struct Player<P: PlayerService> {
-    moved_into_proto: bool,
-    pub service: ManuallyDrop<P>,
-    connection: ManuallyDrop<ConnectionReferenceType<P>>,
-
     pub(crate) write_buffer: WriteBuffer,
+    pub(crate) viewable_self_exclusion_write_buffer: WriteBuffer,
     pub(crate) disconnected: bool,
 
     world: *mut World<P::WorldServiceType>,
@@ -67,12 +64,19 @@ pub struct Player<P: PlayerService> {
     pub position: Position,
     pub(crate) client_position: Position,
 
+    viewable_exclusion_range: Range<usize>,
     pub(crate) chunk_view_position: ChunkViewPosition,
+    pub(crate) new_chunk_view_position: ChunkViewPosition,
+    pub(crate) chunk_ref: usize,
     pub(crate) teleport_id_timer: u8,
     pub(crate) waiting_teleportation_id: Buffer<i32>,
 
     pub(crate) current_keep_alive: u64,
     keep_alive_timer: u8,
+
+    moved_into_proto: bool,
+    pub service: ManuallyDrop<P>,
+    connection: ManuallyDrop<ConnectionReferenceType<P>>,
 }
 
 // graphite player impl
@@ -93,6 +97,7 @@ impl<P: PlayerService> Player<P> {
             connection: ManuallyDrop::new(connection),
 
             write_buffer: WriteBuffer::new(),
+            viewable_self_exclusion_write_buffer: WriteBuffer::new(),
             disconnected: false,
 
             world,
@@ -104,12 +109,15 @@ impl<P: PlayerService> Player<P> {
             position,
             client_position: position,
 
+            viewable_exclusion_range: 0..0,
+            new_chunk_view_position: view_position,
             chunk_view_position: view_position,
+            chunk_ref: usize::MAX,
             teleport_id_timer: 0,
             waiting_teleportation_id: Buffer::new(20),
 
             current_keep_alive: 0,
-            keep_alive_timer: 0,
+            keep_alive_timer: 0
         }
     }
 
@@ -121,31 +129,52 @@ impl<P: PlayerService> Player<P> {
         unsafe { self.world.as_mut().unwrap() }
     }
 
-    pub(crate) fn tick(&mut self) -> anyhow::Result<()> {
+    pub(crate) fn tick(&mut self, tick_phase: TickPhase) -> anyhow::Result<()> {
         if self.disconnected {
             bail!("player has been disconnected");
         }
 
-        // set last chunk view position
+        if tick_phase == TickPhase::View {
+            println!("doing view tick!");
 
-        // Get spot packets
-        let chunk_x = self.chunk_view_position.x as i32;
-        let chunk_z = self.chunk_view_position.z as i32;
-        let current_chunk = &self.get_world().chunks[chunk_x as usize][chunk_z as usize];
-        self.write_buffer.copy_from(current_chunk.spot_buffer.get_written());
-
-        // Get viewable packets
-        let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
-        for x in (chunk_x - view_distance).max(0)
-            ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
-        {
-            for z in (chunk_z - view_distance).max(0)
-                ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
+            // Copy viewable packets
+            let chunk_x = self.chunk_view_position.x as i32;
+            let chunk_z = self.chunk_view_position.z as i32;
+            let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
+            for x in (chunk_x - view_distance).max(0)
+                ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
             {
-                let chunk = &self.get_world().chunks[x as usize][z as usize];
+                for z in (chunk_z - view_distance).max(0)
+                    ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
+                {
+                    let chunk = &self.get_world().chunks[x as usize][z as usize];
 
-                self.write_buffer.copy_from(chunk.viewable_buffer.get_written());
+                    let bytes = chunk.viewable_buffer.get_written();
+
+                    if x == chunk_x && z == chunk_z {
+                        self.write_buffer.copy_from(&bytes[..self.viewable_exclusion_range.start]);
+                        self.write_buffer.copy_from(&bytes[self.viewable_exclusion_range.end..]);
+                        self.viewable_exclusion_range = 0..0;
+                    } else {
+                        self.write_buffer.copy_from(bytes);
+                    }
+                }
             }
+
+            self.chunk_view_position = self.new_chunk_view_position;
+
+            // Write packets from buffer
+            if !self.write_buffer.is_empty() {
+                // Write bytes into player connection
+                self.connection.write_bytes(self.write_buffer.get_written());
+
+                // Reset the write buffer
+                self.write_buffer.reset();
+            }
+            self.write_buffer.tick_and_maybe_shrink();
+
+            // Return early -- code after here is for TickPhase::Update
+            return Ok(())
         }
 
         // Check teleport timer
@@ -177,13 +206,25 @@ impl<P: PlayerService> Player<P> {
             self.handle_movement(self.client_position, false)?;
         }
 
-        // Write packets from buffer
-        let written_bytes = self.write_buffer.get_written();
-        if !written_bytes.is_empty() {
-            self.connection.write_bytes(written_bytes);
-            self.write_buffer.reset();
+        // Write packets from viewable self-exclusion
+        // These packets are seen by those in render distance of this player,
+        // but *NOT* this player. This is used for eg. movement
+        if !self.viewable_self_exclusion_write_buffer.is_empty() {
+            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize][self.chunk_view_position.z as usize];
+            let write_to = &mut chunk.viewable_buffer;
+
+            // Copy bytes into viewable buffer
+            let start = write_to.len();
+            write_to.copy_from(self.viewable_self_exclusion_write_buffer.get_written());
+            let end = write_to.len();
+
+            // Set exclusion range
+            self.viewable_exclusion_range = start..end;
+
+            // Reset the write buffer
+            self.viewable_self_exclusion_write_buffer.reset();
         }
-        self.write_buffer.tick_and_maybe_shrink();
+        self.viewable_self_exclusion_write_buffer.tick_and_maybe_shrink();
 
         Ok(())
     }
@@ -196,12 +237,32 @@ impl<P: PlayerService> Player<P> {
         // todo: check for moving too fast
         // holdup: don't have server velocity
 
-        if rotation_changed || coord_changed {
-            self.chunk_view_position = self.get_world_mut().update_view_position(self, to)?;
+        if coord_changed {
+            // Teleport
+            let teleport_packet = TeleportEntity {
+                entity_id: self.entity_id.as_i32(),
+                x: to.coord.x as _,
+                y: to.coord.y as _,
+                z: to.coord.z as _,
+                yaw: to.rot.yaw,
+                pitch: to.rot.pitch,
+                on_ground: false,
+            };
+            self.write_viewable_packet(&teleport_packet, true);
 
-            self.position = to;
-            self.last_position = to;
+            // Rotate head
+            let rotate_head = RotateHead {
+                entity_id: self.entity_id.as_i32(),
+                head_yaw: to.rot.yaw,
+            };
+            self.write_viewable_packet(&rotate_head, true);
+
+            self.get_world_mut().update_view_position(self, to)?;
         }
+
+        self.position = to;
+        self.last_position = to;
+        self.client_position = to;
 
         Ok(())
     }
@@ -227,19 +288,78 @@ impl<P: PlayerService> Player<P> {
         }
     }
 
-    pub fn handle_packets(player: *mut Player<P>) -> anyhow::Result<u32> {
-        // Read all the bytes
-        let mut bytes = unsafe { player.as_ref().unwrap() }.connection.read_bytes();
+    pub fn write_viewable_packet<'a, T>(&mut self, packet: &'a T, exclude_self: bool)
+    where
+        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
+    {
+        let write_to = if exclude_self {
+            &mut self.viewable_self_exclusion_write_buffer
+        } else {
+            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize][self.chunk_view_position.z as usize];
+            &mut chunk.viewable_buffer
+        };
 
-        // Get the player that received the packets
-        let player: &mut Player<P> = unsafe { player.as_mut() }.unwrap();
+        if packet_helper::write_packet(write_to, packet).is_err() {
+            // Packet was too big
+            self.disconnect();
+        }
+    }
+
+    pub(crate) fn write_destroy_packet(&mut self, write_buffer: &mut WriteBuffer) {
+        // Remove Entity Packet
+        let remove_entity_packet = RemoveEntities {
+            entities: vec![self.entity_id.as_i32()],
+        };
+        net::packet_helper::write_packet(write_buffer, &remove_entity_packet).unwrap();
+
+        // Remove Player Info
+        let remove_info_packet = PlayerInfo::RemovePlayer {
+            uuids: vec![self.profile.uuid]
+        };
+        net::packet_helper::write_packet(write_buffer, &remove_info_packet).unwrap();
+    }
+
+    pub(crate) fn write_create_packet(&mut self, write_buffer: &mut WriteBuffer) {
+        let packet = PlayerInfo::AddPlayer {
+            values: vec![
+                PlayerInfoAddPlayer {
+                    profile: self.profile.clone(),
+                    gamemode: 1, // todo: gamemode
+                    ping: 69, // todo: ping
+                    display_name: None, 
+                    signature_data: None
+                }
+            ]
+        };
+        net::packet_helper::write_packet(write_buffer, &packet).unwrap();
+
+        let add_player_packet = AddPlayer {
+            id: self.entity_id.as_i32(),
+            uuid: self.profile.uuid,
+            x: self.position.coord.x as _,
+            y: self.position.coord.y as _,
+            z: self.position.coord.z as _,
+            yaw: 0.0,
+            pitch: 0.0,
+        };
+        net::packet_helper::write_packet(write_buffer, &add_player_packet).unwrap();
+    }
+
+    pub(crate) fn write_packet_bytes(&mut self, bytes: &[u8]) {
+        self.write_buffer.copy_from(bytes);
+    }
+
+    pub fn handle_packets(&mut self) -> anyhow::Result<u32> {
+        // Read all the bytes
+        // Safety: Nothing can modify the bytes that we have read
+        let mut bytes = unsafe { &*(self.connection.read_bytes() as *const _) };
 
         // Split, parse and handle all the received packets
         loop {
             let packet_read_result = net::packet_helper::try_read_packet(&mut bytes)?;
             match packet_read_result {
                 PacketReadResult::Complete(bytes) => {
-                    player.parse_and_handle(bytes)?;
+                    self.parse_and_handle(bytes)?;
                 }
                 PacketReadResult::Partial => break,
                 PacketReadResult::Empty => break,
@@ -248,38 +368,39 @@ impl<P: PlayerService> Player<P> {
 
         // Send contents of write buffer if FAST_PACKET_RESPONSE is enabled
         if P::FAST_PACKET_RESPONSE {
-            let to_write = player.write_buffer.get_written();
+            let to_write = self.write_buffer.get_written();
             if !to_write.is_empty() {
-                player.connection.write_bytes(to_write);
+                self.connection.write_bytes(to_write);
             }
-            player.write_buffer.reset();
+            self.write_buffer.reset();
         }
 
         // Return remaining bytes
         Ok(bytes.len() as u32)
     }
 
-    pub(crate) fn handle_disconnect(player: *mut Player<P>) {
+    pub fn handle_disconnect(&mut self) {
         unsafe {
-            let player: &mut Player<P> = &mut *player;
-            player.connection.forget();
-            player.disconnect();
+            self.connection.forget();
+            self.disconnect();
         }
     }
 }
 
 impl<P: PlayerService> Drop for Player<P> {
     fn drop(&mut self) {
-        if !self.moved_into_proto {
+        if !std::thread::panicking() {
+            // Safety: we are dropping the player
             unsafe {
-                ManuallyDrop::drop(&mut self.connection);
-                ManuallyDrop::drop(&mut self.service);
+                self.get_world_mut().remove_player_from_chunk(self);
             }
-        }
 
-        // Safety: we are dropping the player
-        unsafe {
-            self.get_world_mut().decrease_player_count_in_chunk(self.chunk_view_position);
+            if !self.moved_into_proto {
+                unsafe {
+                    ManuallyDrop::drop(&mut self.connection);
+                    ManuallyDrop::drop(&mut self.service);
+                }
+            }
         }
     }
 }
@@ -290,10 +411,20 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
     fn update_pointer(&mut self, _: usize) {
         let ptr: *mut Player<P> = self;
         self.connection.update_player_pointer(ptr);
+
+        let world = self.get_world_mut();
+        let chunk = &mut world.chunks[self.chunk_view_position.x as usize][self.chunk_view_position.z as usize];
+        if self.chunk_ref == usize::MAX {
+            chunk.add_new_player(self);
+        } else {
+            chunk.update_player_pointer(self);
+        }
     }
 
     fn unstick(mut self) -> Self::UnstuckType {
         self.moved_into_proto = true; // Prevent calling drop on connection and service
+
+        self.connection.clear_player_pointer();
 
         // Safety: `self.moved_into_proto = true` means that the following values
         // will not be dropped, so its safe to take them

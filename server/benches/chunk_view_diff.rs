@@ -6,7 +6,7 @@ use command::{brigadier, types::{CommandResult, ParseState}};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use minecraft_constants::block::Block;
 use rand::RngCore;
-use server::{player::{Player, proto_player::ProtoPlayer, player_vec::PlayerVec, PlayerService, player_connection::ConnectionReference}, world::{World, WorldService}, universe::{UniverseService, Universe}};
+use server::{player::{Player, proto_player::ProtoPlayer, player_vec::PlayerVec, PlayerService, player_connection::ConnectionReference}, world::{World, WorldService, TickPhase}, universe::{UniverseService, Universe}};
 
 // Naive implementation of `chunk_view_diff`, for reference
 fn for_each_diff_naive<F1, F2>(
@@ -221,8 +221,8 @@ impl WorldService for MyWorldService {
         world.service.players.initialize(world);
     }
 
-    unsafe fn tick(world: &mut World<Self>) {
-        world.service.players.tick();
+    unsafe fn tick(world: &mut World<Self>, tick_phase: TickPhase) {
+        world.service.players.tick(tick_phase);
     }
 
     fn get_player_count(world: &World<Self>) -> usize {

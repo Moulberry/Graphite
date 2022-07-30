@@ -14,8 +14,10 @@ type FnPacket = fn(&mut WriteBuffer, EntityRef);
 pub struct Viewable {
     pub coord: Coordinate,
     pub(crate) index_in_chunk_entity_slab: usize,
+
     pub(crate) last_chunk_x: i32,
     pub(crate) last_chunk_z: i32,
+
     pub(crate) buffer: *mut WriteBuffer,
 
     pub(crate) fn_create: FnPacket,

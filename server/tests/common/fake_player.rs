@@ -4,10 +4,13 @@ use protocol::{IdentifiedPacket, play};
 use std::fmt::Debug;
 use server::{player::{player_connection::AbstractConnectionReference, Player, PlayerService}, universe::Universe};
 
+use crate::log;
+
 use super::{DummyUniverseService, DummyPlayerService};
 
 pub struct FakePlayerConnection {
     player: *mut Player<DummyPlayerService>,
+    handle_disconnect: fn(*mut ()),
     incoming_bytes: WriteBuffer,
     pub outgoing_bytes: WriteBuffer,
 }
@@ -16,9 +19,14 @@ impl FakePlayerConnection {
     pub fn new() -> Self {
         Self {
             player: std::ptr::null_mut(),
+            handle_disconnect: unsafe { std::mem::transmute(std::ptr::null_mut() as *mut ()) },
             incoming_bytes: WriteBuffer::new(),
             outgoing_bytes: WriteBuffer::new(),
         }
+    }
+
+    pub fn disconnect(&self) {
+        (self.handle_disconnect)(self.player as *mut _);
     }
 
     pub fn assert_none_outgoing(&mut self) {
@@ -27,6 +35,7 @@ impl FakePlayerConnection {
             .expect("invalid packet was sent to player");
         match packet_bytes {
             PacketReadResult::Complete(packet_bytes) => {
+                log!("Found packet with id: 0x{:x}", packet_bytes[0]);
                 panic!("\npacket assertion failed: expected no more packets,\n\tgot: {}\n",
                     play::server::debug_print_packet(packet_bytes))
             },
@@ -40,7 +49,7 @@ impl FakePlayerConnection {
         self.outgoing_bytes.reset();
     }
 
-    pub fn skip_outgoing(&mut self) {
+    pub fn skip_outgoing(&mut self, packet_id: u8) {
         let bytes = self.outgoing_bytes.get_written().to_owned();
         let mut bytes: &[u8] = &bytes;
 
@@ -52,7 +61,9 @@ impl FakePlayerConnection {
         self.outgoing_bytes.copy_from(&bytes);
 
         match packet_bytes {
-            PacketReadResult::Complete(_) => {},
+            PacketReadResult::Complete(packet_bytes) => {
+                assert_eq!(packet_id, packet_bytes[0], "expected: 0x{:x}, found: 0x{:x}", packet_id, packet_bytes[0]);
+            },
             PacketReadResult::Partial => panic!("packet was only partially written"),
             PacketReadResult::Empty => panic!("expected a packet, but there was none"),
         }
@@ -75,6 +86,7 @@ impl FakePlayerConnection {
 
         match packet_bytes {
             PacketReadResult::Complete(mut packet_bytes) => {
+                log!("Found packet with id: 0x{:x}", packet_bytes[0]);
                 play::server::debug_handle_packet(&mut packet_bytes, func);
             },
             PacketReadResult::Partial => panic!("packet was only partially written"),
@@ -98,6 +110,8 @@ impl FakePlayerConnection {
 
         match packet_bytes {
             PacketReadResult::Complete(packet_bytes) => {
+                log!("Found packet with id: 0x{:x}", packet_bytes[0]);
+
                 let mut temp = WriteBuffer::new();
                 if packet_helper::write_packet(&mut temp, packet).is_err() {
                     panic!("packet was too big");
@@ -124,7 +138,7 @@ impl FakePlayerConnection {
             panic!("packet was too big");
         }
 
-        let bytes_remaining = Player::handle_packets(self.player)?;
+        let bytes_remaining = Player::handle_packets(unsafe { &mut *self.player })?;
         assert_eq!(bytes_remaining, 0); // Player must have handled the entire packet
         Ok(())
     }
@@ -134,6 +148,14 @@ impl AbstractConnectionReference<DummyUniverseService> for *mut FakePlayerConnec
     fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
         let conn = unsafe { &mut **self };
         conn.player = player as *mut _;
+
+        // Set ptr to process_disconnection function
+        let process_disconnect_ptr = Player::<P>::handle_disconnect as *const ();
+        conn.handle_disconnect = unsafe { std::mem::transmute(process_disconnect_ptr) };
+    }
+
+    fn clear_player_pointer(&mut self) {
+        // noop
     }
 
     fn read_bytes(&self) -> &[u8] {

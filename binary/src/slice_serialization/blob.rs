@@ -1,4 +1,29 @@
 use super::*;
+
+pub enum NBTBlob {}
+
+impl<'a> SliceSerializable<'a, &'a [u8]> for NBTBlob {
+    type RefType = &'a [u8];
+
+    fn read(_bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
+        todo!("nbt reading not implemented")
+    }
+
+    fn get_write_size(data: &[u8]) -> usize {
+        data.len()
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
+        bytes[0..data.len()].clone_from_slice(data);
+        &mut bytes[data.len()..]
+    }
+
+    #[inline(always)]
+    fn maybe_deref(t: &&'a [u8]) -> Self::RefType {
+        *t
+    }
+}
+
 pub enum GreedyBlob {}
 
 impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {

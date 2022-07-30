@@ -3,13 +3,13 @@ use crate::unsticky::Unsticky;
 use std::fmt::Debug;
 
 #[derive(Debug)]
-pub struct StickyVec<T> {
+pub struct StickyVec<T: Unsticky> {
     buckets: Vec<Vec<T>>,
     len: usize,
     next: usize,
 }
 
-impl<T> Default for StickyVec<T> {
+impl<T: Unsticky> Default for StickyVec<T> {
     fn default() -> Self {
         Self {
             buckets: Default::default(),
@@ -32,7 +32,7 @@ impl<T: Unsticky> StickyVec<T> {
         self.len == 0
     }
 
-    pub fn insert(&mut self, t: T) {
+    pub fn push(&mut self, t: T) -> usize {
         debug_assert!(self.buckets.len() >= self.next);
 
         // Allocate the bucket if needed
@@ -67,6 +67,8 @@ impl<T: Unsticky> StickyVec<T> {
                 }
             }
         }
+
+        actual_index
     }
 
     pub fn get(&self, index: usize) -> &T {

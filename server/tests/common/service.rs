@@ -1,7 +1,15 @@
 use std::pin::Pin;
 use protocol::types::GameProfile;
-use server::{universe::{UniverseService, Universe}, world::{WorldService, World}, player::{player_vec::PlayerVec, PlayerService}, entity::position::{Position, Coordinate, Rotation}};
+use server::{universe::{UniverseService, Universe}, world::{WorldService, World, TickPhase}, player::{player_vec::PlayerVec, PlayerService}, entity::position::{Position, Coordinate, Rotation}};
 use super::FakePlayerConnection;
+
+pub fn create_game_profile() -> GameProfile {
+    GameProfile {
+        username: "Moulberry".into(),
+        uuid: 0xd0e05de76067454dbeaec6d19d886191,
+        properties: vec![]
+    }
+}
 
 pub fn create_universe_and_player() -> (Pin<Box<Universe<DummyUniverseService>>>, Pin<Box<FakePlayerConnection>>) {
     let mut universe = create_universe();
@@ -11,11 +19,7 @@ pub fn create_universe_and_player() -> (Pin<Box<Universe<DummyUniverseService>>>
 
 pub fn create_player(universe: &mut Universe<DummyUniverseService>) -> Pin<Box<FakePlayerConnection>> {
     let mut conn = Box::from(FakePlayerConnection::new());
-    universe.handle_player_connect(conn.as_mut(), GameProfile {
-        username: "Moulberry".into(),
-        uuid: 81723182,
-        properties: vec![]
-    });
+    universe.handle_player_connect(conn.as_mut(), create_game_profile());
     Pin::from(conn)
 }
 
@@ -91,8 +95,8 @@ impl WorldService for DummyWorldService {
         world.service.players.initialize(world);
     }
 
-    unsafe fn tick(world: &mut World<Self>) {
-        world.service.players.tick();
+    unsafe fn tick(world: &mut World<Self>, phase: TickPhase) {
+        world.service.players.tick(phase);
     }
 
     fn get_player_count(world: &World<Self>) -> usize {

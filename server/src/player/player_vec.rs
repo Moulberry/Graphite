@@ -1,6 +1,6 @@
 use sticky::Unsticky;
 
-use crate::{entity::position::Position, error::UninitializedError, world::World};
+use crate::{entity::position::Position, error::UninitializedError, world::{World, TickPhase}};
 
 use super::{
     player::{Player, PlayerService},
@@ -54,9 +54,14 @@ impl<P: PlayerService> PlayerVec<P> {
         service: P,
         position: Position,
     ) -> anyhow::Result<()> {
+        if self.world.is_null() {
+            return Err(UninitializedError.into());
+        }
+
         let world = self.get_world()?;
         let player = proto_player.create_player(service, world, position)?;
-        self.players.insert(player);
+        self.players.push(player);
+
         Ok(())
     }
 
@@ -72,7 +77,7 @@ impl<P: PlayerService> PlayerVec<P> {
         self.players.is_empty()
     }
 
-    pub fn tick(&mut self) {
-        self.players.retain_mut(|player| player.tick().is_ok());
+    pub fn tick(&mut self, tick_phase: TickPhase) {
+        self.players.retain_mut(|player| player.tick(tick_phase).is_ok());
     }
 }

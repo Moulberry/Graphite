@@ -8,6 +8,7 @@ use super::player::{Player, PlayerService};
 
 pub trait AbstractConnectionReference<U: UniverseService> {
     fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>);
+    fn clear_player_pointer(&mut self);
 
     fn read_bytes(&self) -> &[u8];
     fn write_bytes(&mut self, bytes: &[u8]);
@@ -65,6 +66,10 @@ impl<U: UniverseService> AbstractConnectionReference<U> for ConnectionReference<
 
     fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
         self.get_connection_mut().1.update_player_pointer(player);
+    }
+
+    fn clear_player_pointer(&mut self) {
+        self.get_connection_mut().1.clear_player_pointer();
     }
 
     unsafe fn forget(&mut self) {
@@ -152,6 +157,11 @@ impl<U: UniverseService> PlayerConnection<U> {
 
     pub(crate) fn teardown(&mut self) {
         self.is_closing = true;
+        self.player_process_packet = None;
+        self.player_process_disconnect = None;
+    }
+
+    pub(crate) fn clear_player_pointer(&mut self) {
         self.player_process_packet = None;
         self.player_process_disconnect = None;
     }

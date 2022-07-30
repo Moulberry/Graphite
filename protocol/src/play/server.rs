@@ -91,7 +91,7 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct ChunkBlockData<'a> {
-        pub heightmaps: &'a [u8] as GreedyBlob, // todo: actually nbt, don't use blob, doesn't have correct read semantics
+        pub heightmaps: &'a [u8] as NBTBlob,
         pub data: &'a [u8] as SizedBlob,
         pub block_entity_count: i32 as VarInt,
         // todo: block entities
@@ -130,7 +130,7 @@ slice_serializable! {
         pub gamemode: u8 as Single,
         pub previous_gamemode: i8 as Single,
         pub dimension_names: Vec<&'a str> as SizedArray<SizedString>,
-        pub registry_codec: &'a [u8] as GreedyBlob, // todo: actually nbt, don't use blob, doesn't have correct read semantics
+        pub registry_codec: &'a [u8] as NBTBlob,
         pub dimension_type: &'a str as SizedString,
         pub dimension_name: &'a str as SizedString,
         pub hashed_seed: u64 as BigEndian,
@@ -159,9 +159,42 @@ slice_serializable! {
 
 slice_serializable! {
     #[derive(Debug)]
+    pub struct PlayerInfoUpdateGamemode {
+        pub uuid: u128 as BigEndian,
+        pub gamemode: u8 as Single
+    } 
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlayerInfoUpdateLatency {
+        pub uuid: u128 as BigEndian,
+        pub ping: i32 as VarInt
+    } 
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlayerInfoDisplayName<'a> {
+        pub uuid: u128 as BigEndian,
+        pub display_name: Option<&'a str> as Option<SizedString>, 
+    } 
+}
+
+slice_serializable! {
+    #[derive(Debug)]
     pub enum PlayerInfo<'a> {
         AddPlayer {
             values: Vec<PlayerInfoAddPlayer<'a>> as SizedArray<PlayerInfoAddPlayer>
+        },
+        UpdateGameMode {
+            values: Vec<PlayerInfoUpdateGamemode> as SizedArray<PlayerInfoUpdateGamemode>
+        },
+        UpdateLatency {
+            values: Vec<PlayerInfoUpdateLatency> as SizedArray<PlayerInfoUpdateLatency>
+        },
+        UpdateDisplayName {
+            values: Vec<PlayerInfoDisplayName<'a>> as SizedArray<PlayerInfoDisplayName>
         },
         RemovePlayer {
             uuids: Vec<u128> as SizedArray<BigEndian>,

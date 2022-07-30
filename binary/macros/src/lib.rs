@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use proc_macro::{TokenStream};
 use quote::{quote, ToTokens, quote_spanned};
 use syn::{parse::Parse, parse_macro_input, Token, braced, punctuated::Punctuated, Attribute, spanned::Spanned};
@@ -149,7 +151,7 @@ impl InputVariant {
             read_impl.extend(
                 quote_spanned!(
                     serialize_type_span =>
-                    #field_ident: #serializable_impl::read(bytes)?,
+                    #field_ident: (#serializable_impl::read(bytes)?),
                 )
             );
         }
@@ -232,6 +234,17 @@ impl Input {
                 )
             },
             Input::Enum { attributes: _, vis: _, ident, lifetime, variants } => {
+                // Check for duplicate variant names
+                let mut variant_names: HashSet<String> = HashSet::new();
+                for variant in variants {
+                    let name = variant.ident.to_string();
+                    if variant_names.contains(&name) {
+                        return quote_spanned!(variant.ident.span() => compile_error!("Duplicate variant name"););
+                    } else {
+                        variant_names.insert(name);
+                    }
+                }
+
                 let mut get_write_size_impl: proc_macro2::TokenStream  = Default::default();
                 let mut write_impl: proc_macro2::TokenStream  = Default::default();
                 let mut read_impl: proc_macro2::TokenStream  = Default::default();

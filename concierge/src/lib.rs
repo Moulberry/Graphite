@@ -16,6 +16,7 @@ use protocol::{
     login,
     status::{self, client::PingRequest, server::StatusResponse}, types::{GameProfile, GameProfileProperty},
 };
+use rand::Rng;
 
 pub struct ConciergeConnection<T> {
     _phantom: PhantomData<T>,
@@ -179,7 +180,9 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
                 login::client::PacketId::Hello => {
                     let login_start_packet = login::client::Hello::read_fully(bytes)?;
                     
-                    let uuid = login_start_packet.uuid.ok_or(anyhow!("invalid uuid"))?;
+                    let uuid = rand::thread_rng().gen();//login_start_packet.uuid.ok_or(anyhow!("invalid uuid"))?;
+
+                    println!("player joined with uuid: {:x}", uuid);
 
                     // todo: download skin
                     let game_profile = GameProfile {

@@ -79,6 +79,30 @@ slice_serializable! {
     }
 }
 
+/*impl <'a> binary::slice_serialization::SliceSerializable<'a> for &'a GameProfile {
+    type RefType = &'a GameProfile;
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a GameProfile> {
+        Ok(&GameProfile {
+
+        })
+    }
+
+    fn get_write_size(object: &'a GameProfile) -> usize {
+        #get_write_size_impl
+        0
+    }
+
+    unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &'a GameProfile) -> &'bytes mut [u8] {
+        #write_impl
+        bytes
+    }
+
+    fn maybe_deref(t: &&'a GameProfile) -> Self::RefType {
+        *t
+    }
+}*/
+
 // Signature Data
 
 slice_serializable! {

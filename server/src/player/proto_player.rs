@@ -47,18 +47,19 @@ impl<U: UniverseService> ProtoPlayer<U> {
         // holdup: implementing dimension ids to be able to differentiate worlds
 
         // todo: if new, send join game
-        world.write_game_join_packet(&mut self)?;
+        world.write_login_packet(&mut self)?;
         world
             .get_universe()
             .write_brand_packet(&mut self.write_buffer)?;
 
+        // Send player info
         let add_player_info = PlayerInfo::AddPlayer {
             values: vec![
                 PlayerInfoAddPlayer {
                     profile: self.profile.clone(),
                     gamemode: 1,
-                    ping: 69,
-                    display_name: Some("{\"text\": \"Ya Boi\"}"), 
+                    ping: 0,
+                    display_name: None, 
                     signature_data: None
                 }
             ]
