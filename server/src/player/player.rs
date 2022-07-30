@@ -135,8 +135,6 @@ impl<P: PlayerService> Player<P> {
         }
 
         if tick_phase == TickPhase::View {
-            println!("doing view tick!");
-
             // Copy viewable packets
             let chunk_x = self.chunk_view_position.x as i32;
             let chunk_z = self.chunk_view_position.z as i32;

@@ -246,8 +246,6 @@ impl<W: WorldService> World<W> {
                 if viewable.last_chunk_x == chunk_x && viewable.last_chunk_z == chunk_z {
                     return;
                 }
-
-                println!("entity moved to: {chunk_x},{chunk_z}");
                 
                 // Remove from old entity list
                 let old_chunk =
@@ -349,6 +347,15 @@ impl<W: WorldService> World<W> {
             }
         }
 
+        // todo: maybe cache this write buffer?
+        let mut create_buffer = WriteBuffer::with_min_capacity(64);
+        player.write_create_packet(&mut create_buffer);
+        let create_bytes = create_buffer.get_written();
+
+        let mut destroy_buffer = WriteBuffer::with_min_capacity(64);
+        player.write_destroy_packet(&mut destroy_buffer);
+        let destroy_bytes = destroy_buffer.get_written();
+
         // Safety: closures just need to perform a single write call,
         // they don't rely on the previous state of the closure
         let player_write_buffer_ptr: *mut WriteBuffer = &mut player.write_buffer as *mut _;
@@ -368,22 +375,32 @@ impl<W: WorldService> World<W> {
                     let viewable = entity.get::<Viewable>()
                         .expect("entity in chunk-list must be viewable");
 
-                    // Use viewable to write create packet into player's buffer
+                    // Write create into player's buffer
                     (viewable.fn_create)(&mut player.write_buffer, entity);
                 });
+
+                // Create players
+                chunk.write_create_for_players_in_chunk(&mut player.write_buffer);
+                chunk.write_to_players_in_chunk(create_bytes);
             },
             |chunk| {
+                // Access the write_buffer from the ptr
+                let write_buffer = unsafe { &mut *player_write_buffer_ptr };
+
                 // Get all entities in chunk
                 chunk.entities.iter().for_each(|(_, id)| {
                     // Get viewable component
                     let entity = self.entities.entity(*id);
                     let viewable = entity.get::<Viewable>()
                         .expect("entity in chunk-list must be viewable");
-                    
-                    // Use viewable to write destroy packet into player's buffer
-                    let write_buffer = unsafe { &mut *player_write_buffer_ptr };
+
+                    // Write destroy into player's buffer
                     write_buffer.copy_from(viewable.destroy_buffer.get_written());
                 });
+
+                // Destroy players
+                chunk.write_destroy_for_players_in_chunk(write_buffer);
+                chunk.write_to_players_in_chunk(destroy_bytes);
             },
             W::CHUNKS_X, W::CHUNKS_Z
         );

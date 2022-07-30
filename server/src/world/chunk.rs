@@ -52,6 +52,12 @@ impl Chunk {
         }
     }
 
+    pub(crate) fn write_destroy_for_players_in_chunk(&self, write_buffer: &mut WriteBuffer) {
+        for (_, reference) in &self.player_refs {
+            write_buffer.copy_from(&reference.destroy_buffer);
+        }
+    }
+
     pub(crate) fn remove_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
         let ref_index = player.chunk_ref;
 
