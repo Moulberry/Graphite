@@ -13,5 +13,4 @@ net = { path = "../net" }
 concierge = { path = "../concierge" }
 command = { path = "../command" }
 protocol = { path = "../protocol" }
-
-binary = { path = "../binary" }
+minecraft_constants = { path = "../minecraft_constants" }

@@ -570,9 +570,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bevy_ecs",
- "binary",
  "command",
  "concierge",
+ "minecraft_constants",
  "net",
  "protocol",
  "rand",

@@ -1,13 +1,15 @@
 use anyhow::bail;
 use command::types::ParseState;
 use protocol::{
-    play::client::{
+    play::{client::{
         self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
-        MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction,
-    },
-    types::{HandAction, MoveAction},
+        MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction, MovePlayerOnGround,
+    }, server::{AnimateEntity, EntityAnimation}},
+    types::{HandAction, MoveAction, Hand},
 };
 use queues::IsQueue;
+
+use crate::inventory::inventory_handler::InventoryHandler;
 
 use super::{Player, PlayerService};
 
@@ -24,6 +26,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         self.client_position.coord.z = packet.z as _;
         self.client_position.rot.yaw = packet.yaw;
         self.client_position.rot.pitch = packet.pitch;
+        self.on_ground = packet.on_ground;
 
         Ok(())
     }
@@ -36,6 +39,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         self.client_position.coord.x = packet.x as _;
         self.client_position.coord.y = packet.y as _;
         self.client_position.coord.z = packet.z as _;
+        self.on_ground = packet.on_ground;
 
         Ok(())
     }
@@ -47,6 +51,17 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
 
         self.client_position.rot.yaw = packet.yaw;
         self.client_position.rot.pitch = packet.pitch;
+        self.on_ground = packet.on_ground;
+
+        Ok(())
+    }
+
+    fn handle_move_player_on_ground(&mut self, packet: MovePlayerOnGround) -> anyhow::Result<()> {
+        if self.waiting_teleportation_id.size() > 0 {
+            return Ok(());
+        }
+
+        self.on_ground = packet.on_ground;
 
         Ok(())
     }
@@ -99,12 +114,10 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
                 // todo: move to function in world. remove magic 16s
                 // todo: validate chunk_x/chunk_z is in-bounds
                 let chunk_x = (pos.x / 16) as usize;
-                let section_x = (pos.x % 16) as u8;
                 let chunk_z = (pos.z / 16) as usize;
-                let section_z = (pos.z % 16) as u8;
 
                 let chunk = &mut self.get_world_mut().chunks[chunk_x][chunk_z];
-                chunk.set_block(section_x, pos.y as usize, section_z, 0);
+                chunk.set_block(pos.x as _, pos.y as _, pos.z as _, 0);
             }
             HandAction::AbortDestroyBlock => (),
             HandAction::StopDestroyBlock => (),
@@ -157,6 +170,30 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
 
             self.send_message(format!("{:?}", result));
         }
+
+        Ok(())
+    }
+
+    fn handle_swing(&mut self, packet: client::Swing) -> anyhow::Result<()> {
+        // Get animation corresponding to hand
+        let animation = if packet.hand == Hand::Main {
+            EntityAnimation::SwingMainHand
+        } else {
+            EntityAnimation::SwingOffHand
+        };
+
+        // Write animation packet as viewable, excluding self
+        self.write_viewable_packet(&AnimateEntity {
+            id: self.entity_id.as_i32(),
+            animation,
+        }, true);
+
+        Ok(())
+    }
+
+    fn handle_set_creative_mode_slot(&mut self, packet: client::SetCreativeModeSlot) -> anyhow::Result<()> {
+        // todo: check if player is in creative
+        self.inventory.creative_mode_set(packet.slot as usize, packet.item)?;
 
         Ok(())
     }

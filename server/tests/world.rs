@@ -56,7 +56,7 @@ fn player_join() {
 
     // SetPlayerPosition
     log!("Checking SetPlayerPosition packet...");
-    conn.assert_outgoing(&SetPlayerPosition {
+    conn.assert_outgoing(&PlayerPosition {
         x: 40.0,
         y: 224.0,
         z: 40.0,
@@ -232,7 +232,7 @@ fn spawn_entity_before() {
 
     // Skip remaining login packets
     conn.skip_outgoing(PacketId::SetChunkCacheCenter as u8);
-    conn.skip_outgoing(PacketId::SetPlayerPosition as u8);
+    conn.skip_outgoing(PacketId::PlayerPosition as u8);
     conn.assert_none_outgoing();
 }
 

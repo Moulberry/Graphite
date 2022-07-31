@@ -25,7 +25,7 @@ use text_component::TextComponent;
 use crate::{
     entity::position::{Position, Vec3f},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, TickPhase, World, WorldService},
+    world::{ChunkViewPosition, TickPhase, World, WorldService, TickPhaseInner}, inventory::inventory_handler::InventoryHandler,
 };
 
 use super::{
@@ -49,8 +49,7 @@ where
     type UniverseServiceType: UniverseService;
     type WorldServiceType: WorldService<UniverseServiceType = Self::UniverseServiceType>;
 
-    // type InventoryHandlerType: InventoryHandler;
-    // fn get_inventory_handler(player: &mut Player<Self>) -> &mut Self::InventoryHandlerType;
+    type InventoryHandlerType: InventoryHandler;
 }
 
 #[allow(type_alias_bounds)] // Justification: used as a shortcut to avoid monsterous type
@@ -71,6 +70,7 @@ pub struct Player<P: PlayerService> {
     last_position: Position,
     pub position: Position,
     pub(crate) client_position: Position,
+    pub on_ground: bool,
 
     viewable_exclusion_range: Range<usize>,
     pub(crate) chunk_view_position: ChunkViewPosition,
@@ -78,6 +78,8 @@ pub struct Player<P: PlayerService> {
     pub(crate) chunk_ref: usize,
     pub(crate) teleport_id_timer: u8,
     pub(crate) waiting_teleportation_id: Buffer<i32>,
+
+    pub inventory: P::InventoryHandlerType,
 
     pub(crate) current_keep_alive: u64,
     keep_alive_timer: u8,
@@ -116,6 +118,7 @@ impl<P: PlayerService> Player<P> {
             last_position: position,
             position,
             client_position: position,
+            on_ground: false,
 
             viewable_exclusion_range: 0..0,
             new_chunk_view_position: view_position,
@@ -123,6 +126,8 @@ impl<P: PlayerService> Player<P> {
             chunk_ref: usize::MAX,
             teleport_id_timer: 0,
             waiting_teleportation_id: Buffer::new(20),
+
+            inventory: Default::default(),
 
             current_keep_alive: 0,
             keep_alive_timer: 0,
@@ -142,10 +147,12 @@ impl<P: PlayerService> Player<P> {
             bail!("player has been disconnected");
         }
 
-        if tick_phase == TickPhase::View {
+        if tick_phase.0 == TickPhaseInner::View {
             // Copy viewable packets
             let chunk_x = self.chunk_view_position.x as i32;
             let chunk_z = self.chunk_view_position.z as i32;
+
+            // Entity viewable buffers
             let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
             for x in (chunk_x - view_distance).max(0)
                 ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
@@ -155,7 +162,7 @@ impl<P: PlayerService> Player<P> {
                 {
                     let chunk = &self.get_world().chunks[x as usize][z as usize];
 
-                    let bytes = chunk.viewable_buffer.get_written();
+                    let bytes = chunk.entity_viewable_buffer.get_written();
 
                     if x == chunk_x && z == chunk_z {
                         self.write_buffer
@@ -169,7 +176,23 @@ impl<P: PlayerService> Player<P> {
                 }
             }
 
+            // Block viewable buffers
+            let view_distance = P::WorldServiceType::CHUNK_VIEW_DISTANCE as i32;
+            for x in (chunk_x - view_distance).max(0)
+                ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
+            {
+                for z in (chunk_z - view_distance).max(0)
+                    ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
+                {
+                    let chunk = &self.get_world().chunks[x as usize][z as usize];
+                    self.write_buffer.copy_from(chunk.block_viewable_buffer.get_written());
+                }
+            }
+
             self.chunk_view_position = self.new_chunk_view_position;
+
+            // Write inventory packets
+            self.inventory.write_changes(&mut self.write_buffer)?;
 
             // Write packets from buffer
             if !self.write_buffer.is_empty() {
@@ -220,7 +243,7 @@ impl<P: PlayerService> Player<P> {
         if !self.viewable_self_exclusion_write_buffer.is_empty() {
             let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
                 [self.chunk_view_position.z as usize];
-            let write_to = &mut chunk.viewable_buffer;
+            let write_to = &mut chunk.entity_viewable_buffer;
 
             // Copy bytes into viewable buffer
             let start = write_to.len();
@@ -256,7 +279,7 @@ impl<P: PlayerService> Player<P> {
                 z: to.coord.z as _,
                 yaw: to.rot.yaw,
                 pitch: to.rot.pitch,
-                on_ground: false,
+                on_ground: self.on_ground,
             };
             self.write_viewable_packet(&teleport_packet, true);
 
@@ -307,7 +330,7 @@ impl<P: PlayerService> Player<P> {
         } else {
             let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
                 [self.chunk_view_position.z as usize];
-            &mut chunk.viewable_buffer
+            &mut chunk.entity_viewable_buffer
         };
 
         if packet_helper::write_packet(write_to, packet).is_err() {

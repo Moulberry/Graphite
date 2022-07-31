@@ -4,7 +4,7 @@ use server::{
     entity::position::{Coordinate, Position, Rotation},
     player::{player_vec::PlayerVec, PlayerService},
     universe::{Universe, UniverseService},
-    world::{TickPhase, World, WorldService},
+    world::{TickPhase, World, WorldService}, inventory::inventory_handler::VanillaPlayerInventory,
 };
 use std::pin::Pin;
 
@@ -108,7 +108,7 @@ impl WorldService for DummyWorldService {
         world.service.players.initialize(world);
     }
 
-    unsafe fn tick(world: &mut World<Self>, phase: TickPhase) {
+    fn tick(world: &mut World<Self>, phase: TickPhase) {
         world.service.players.tick(phase);
     }
 
@@ -122,4 +122,5 @@ impl PlayerService for DummyPlayerService {
     const FAST_PACKET_RESPONSE: bool = true;
     type UniverseServiceType = DummyUniverseService;
     type WorldServiceType = DummyWorldService;
+    type InventoryHandlerType = VanillaPlayerInventory;
 }

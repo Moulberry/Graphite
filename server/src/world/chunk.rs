@@ -1,7 +1,7 @@
 use bevy_ecs::entity::Entity;
 use binary::slice_serialization::{slice_serializable, BigEndian, GreedyBlob};
 use net::{network_buffer::WriteBuffer, packet_helper};
-use protocol::play::server::{self, ChunkBlockData, ChunkLightData};
+use protocol::{play::server::{self, ChunkBlockData, ChunkLightData, BlockUpdate}, types::BlockPosition};
 use slab::Slab;
 
 use crate::player::{Player, PlayerService};
@@ -22,11 +22,15 @@ pub struct PlayerReference {
 pub struct Chunk {
     block_sections: Vec<ChunkSection>,
 
+    chunk_x: usize,
+    chunk_z: usize,
+
     valid_cache: bool,
     cached_block_data: WriteBuffer,
     cached_light_data: WriteBuffer,
 
-    pub(crate) viewable_buffer: WriteBuffer,
+    pub(crate) block_viewable_buffer: WriteBuffer,
+    pub(crate) entity_viewable_buffer: WriteBuffer,
     pub(crate) entities: Slab<Entity>,
     player_refs: Slab<PlayerReference>,
 }
@@ -73,7 +77,7 @@ impl Chunk {
             panic!("{}", Self::INVALID_OTHER_PLAYER)
         }
 
-        self.viewable_buffer.copy_from(&removed.destroy_buffer);
+        self.entity_viewable_buffer.copy_from(&removed.destroy_buffer);
     }
 
     pub(crate) fn move_player<T: PlayerService>(
@@ -137,7 +141,7 @@ impl Chunk {
         player.chunk_ref = self.player_refs.insert(reference);
     }
 
-    pub fn new(empty: bool) -> Self {
+    pub fn new(empty: bool, chunk_x: usize, chunk_z: usize) -> Self {
         // Setup default block sections
         let mut block_sections = Vec::new();
         for i in 0..24 {
@@ -165,7 +169,10 @@ impl Chunk {
             valid_cache: false,
             cached_block_data: WriteBuffer::new(),
             cached_light_data: WriteBuffer::new(),
-            viewable_buffer: WriteBuffer::new(),
+            chunk_x,
+            chunk_z,
+            block_viewable_buffer: WriteBuffer::new(),
+            entity_viewable_buffer: WriteBuffer::new(),
             entities: Slab::new(),
             player_refs: Slab::new(),
         }
@@ -177,15 +184,31 @@ impl Chunk {
         }
     }
 
-    pub fn set_block(&mut self, x: u8, y: usize, z: u8, block: u16) {
-        let index = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
+    pub fn set_block(&mut self, x: usize, y: usize, z: usize, block: u16) {
+        let section_x = x % Self::SECTION_BLOCK_WIDTH_I;
         let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
-        if self.block_sections[index].set_block(x, section_y as _, z, block) {
+        let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
+
+        debug_assert_eq!(self.chunk_x, x / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
+        debug_assert_eq!(self.chunk_z, z / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+
+        if self.block_sections[chunk_y].set_block(section_x as _, section_y as _, section_z as _, block) {
             self.invalidate_cache();
+
+            packet_helper::write_packet(&mut self.block_viewable_buffer, &BlockUpdate {
+                pos: BlockPosition {
+                    x: x as _,
+                    y: y as _,
+                    z: z as _,
+                },
+                block_state: block as _,
+            }).expect("packet exceeds 2MB limit");
         }
     }
 
     fn invalidate_cache(&mut self) {
+        // todo: maybe have more fine-grained invalidation here, not sure if its worth it
         self.valid_cache = false;
     }
 

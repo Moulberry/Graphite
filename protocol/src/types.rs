@@ -21,6 +21,14 @@ pub enum ArmPosition {
     Left,
 }
 
+#[derive(Eq, PartialEq, Default, Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
+#[repr(u8)]
+pub enum Hand {
+    #[default]
+    Main,
+    Off,
+}
+
 #[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
 #[repr(u8)]
 pub enum HandAction {
@@ -58,6 +66,17 @@ pub enum Direction {
     East,
 }
 
+// ItemStack
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ProtocolItemStack {
+        pub item: i32 as VarInt,
+        pub count: i8 as Single,
+        pub temp_nbt: u8 as Single
+    }
+}
+
 // Game Profile
 
 // Note: Currently the only property that is used by the vanilla
@@ -80,29 +99,6 @@ slice_serializable! {
     }
 }
 
-/*impl <'a> binary::slice_serialization::SliceSerializable<'a> for &'a GameProfile {
-    type RefType = &'a GameProfile;
-
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a GameProfile> {
-        Ok(&GameProfile {
-
-        })
-    }
-
-    fn get_write_size(object: &'a GameProfile) -> usize {
-        #get_write_size_impl
-        0
-    }
-
-    unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &'a GameProfile) -> &'bytes mut [u8] {
-        #write_impl
-        bytes
-    }
-
-    fn maybe_deref(t: &&'a GameProfile) -> Self::RefType {
-        *t
-    }
-}*/
 
 // Signature Data
 

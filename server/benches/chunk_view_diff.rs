@@ -106,7 +106,7 @@ fn chunk_view_diff(c: &mut Criterion) {
     }
 }
 
-fn command_dispatch(c: &mut Criterion) {
+/*fn command_dispatch(c: &mut Criterion) {
     #[brigadier("hello", {})]
     fn my_function(_player: &mut Player<MyPlayerService>, number: u64) -> CommandResult {
         black_box(number);
@@ -115,7 +115,7 @@ fn command_dispatch(c: &mut Criterion) {
 
     let (dispatcher, _) = command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
-    /*c.bench_function("command_dispatch: ParseState", |b| {
+    c.bench_function("command_dispatch: ParseState", |b| {
         b.iter(|| {
             let parse_state = ParseState::new("hello 8372836593");
             black_box(parse_state);
@@ -147,7 +147,7 @@ fn command_dispatch(c: &mut Criterion) {
 
             black_box(result);
         })
-    });*/
+    });
 
     /*c.bench_function("command_dispatch", |b| {
         b.iter(|| {
@@ -180,68 +180,11 @@ fn command_dispatch(c: &mut Criterion) {
             black_box(state_id);
         })
     });
-}
+}*/
 
 criterion_group!(
     name = benches;
     config = Criterion::default().sample_size(1000);
-    targets = command_dispatch /*chunk_view_diff_naive*/
+    targets = chunk_view_diff_naive
 );
 criterion_main!(benches);
-
-struct MyUniverseService {
-    the_world: World<MyWorldService>,
-}
-
-impl UniverseService for MyUniverseService {
-    fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {}
-
-    fn initialize(universe: &Universe<Self>) {}
-
-    fn tick(universe: &mut Universe<Self>) {}
-
-    fn get_player_count(universe: &Universe<Self>) -> usize {
-        0
-    }
-
-    type ConnectionReferenceType = ConnectionReference<Self>;
-}
-
-struct MyWorldService {
-    players: PlayerVec<MyPlayerService>,
-}
-
-impl WorldService for MyWorldService {
-    type UniverseServiceType = MyUniverseService;
-    const CHUNKS_X: usize = 6;
-    const CHUNKS_Z: usize = 6;
-    const CHUNK_VIEW_DISTANCE: u8 = 8;
-    const ENTITY_VIEW_DISTANCE: u8 = 1;
-
-    fn handle_player_join(
-        world: &mut World<Self>,
-        mut proto_player: ProtoPlayer<Self::UniverseServiceType>,
-    ) {
-    }
-
-    fn initialize(world: &World<Self>) {
-        world.service.players.initialize(world);
-    }
-
-    unsafe fn tick(world: &mut World<Self>, tick_phase: TickPhase) {
-        world.service.players.tick(tick_phase);
-    }
-
-    fn get_player_count(world: &World<Self>) -> usize {
-        world.service.players.len()
-    }
-}
-
-// player
-
-struct MyPlayerService {}
-
-impl PlayerService for MyPlayerService {
-    type UniverseServiceType = MyUniverseService;
-    type WorldServiceType = MyWorldService;
-}

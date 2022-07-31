@@ -4,7 +4,7 @@ use anyhow::bail;
 use bevy_ecs::{prelude::*, world::EntityMut};
 use net::network_buffer::WriteBuffer;
 use protocol::play::server::{
-    Login, RotateHead, SetChunkCacheCenter, SetPlayerPosition, TeleportEntity,
+    Login, RotateHead, SetChunkCacheCenter, PlayerPosition, TeleportEntity,
 };
 
 use crate::{
@@ -20,12 +20,15 @@ use super::chunk::Chunk;
 
 // user defined world service trait
 
-// todo: make it so that pub can't construct this
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub enum TickPhase {
+pub(crate) enum TickPhaseInner {
     Update,
     View,
 }
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct TickPhase(pub(crate) TickPhaseInner);
 
 pub trait WorldService
 where
@@ -44,10 +47,7 @@ where
     fn initialize(world: &World<Self>);
     fn get_player_count(world: &World<Self>) -> usize;
 
-    /// # Safety
-    /// This method (WorldService::tick) should not be called directly
-    /// You should be calling World::tick, which will call this as well
-    unsafe fn tick(world: &mut World<Self>, phase: TickPhase);
+    fn tick(world: &mut World<Self>, phase: TickPhase);
 }
 
 // graphite world
@@ -81,10 +81,10 @@ impl<W: WorldService> World<W> {
         // todo: these are default chunks, eventually this ctor should take
         // a list of chunks, or something equivalent
         let mut chunks = Vec::with_capacity(W::CHUNKS_X);
-        for _ in 0..W::CHUNKS_X {
+        for x in 0..W::CHUNKS_X {
             let mut chunks_z = Vec::with_capacity(W::CHUNKS_Z);
-            for _ in 0..W::CHUNKS_Z {
-                chunks_z.push(Chunk::new(false));
+            for z in 0..W::CHUNKS_Z {
+                chunks_z.push(Chunk::new(false, x, z));
             }
             chunks.push(chunks_z);
         }
@@ -95,7 +95,9 @@ impl<W: WorldService> World<W> {
             chunks,
             entities: Default::default(),
             entity_map: Default::default(),
-            empty_chunk: Chunk::new(true),
+
+            // todo: don't use this, send packets directly instead
+            empty_chunk: Chunk::new(true, 0, 0),
         }
     }
 
@@ -156,7 +158,7 @@ impl<W: WorldService> World<W> {
         // Initialize viewable
         let mut viewable = Viewable::new(position, chunk_x, chunk_z, fn_create, destroy_buf);
         viewable.index_in_chunk_entity_slab = chunk.entities.insert(id);
-        viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
+        viewable.buffer = &mut chunk.entity_viewable_buffer as *mut WriteBuffer;
         viewable.last_chunk_x = chunk_x;
         viewable.last_chunk_z = chunk_z;
 
@@ -172,7 +174,7 @@ impl<W: WorldService> World<W> {
         let entity_ref = self.entities.entity(id);
 
         // Spawn the entity for players in the view distance of the chunk
-        (fn_create)(&mut chunk.viewable_buffer, entity_ref);
+        (fn_create)(&mut chunk.entity_viewable_buffer, entity_ref);
     }
 
     pub fn tick(&mut self) {
@@ -220,16 +222,14 @@ impl<W: WorldService> World<W> {
             );
 
         // Tick service (ticks players as well)
-        unsafe {
-            W::tick(self, TickPhase::Update);
-            W::tick(self, TickPhase::View);
-        }
+        W::tick(self, TickPhase(TickPhaseInner::Update));
+        W::tick(self, TickPhase(TickPhaseInner::View));
 
         // Clear viewable buffers
         for chunk_list in &mut self.chunks {
             for chunk in chunk_list {
-                chunk.viewable_buffer.reset();
-                chunk.viewable_buffer.tick_and_maybe_shrink();
+                chunk.entity_viewable_buffer.reset();
+                chunk.entity_viewable_buffer.tick_and_maybe_shrink();
             }
         }
     }
@@ -269,7 +269,7 @@ impl<W: WorldService> World<W> {
                     viewable.index_in_chunk_entity_slab = chunk.entities.insert(id);
 
                     // Update viewable entity's buffer ptr
-                    viewable.buffer = &mut chunk.viewable_buffer as *mut WriteBuffer;
+                    viewable.buffer = &mut chunk.entity_viewable_buffer as *mut WriteBuffer;
 
                     // todo: maybe cache this write buffer?
                     let mut write_buffer = WriteBuffer::with_min_capacity(64);
@@ -561,7 +561,7 @@ impl<W: WorldService> World<W> {
         )?;
 
         // Position
-        let position_packet = SetPlayerPosition {
+        let position_packet = PlayerPosition {
             x: position.coord.x as _,
             y: position.coord.y as _,
             z: position.coord.z as _,

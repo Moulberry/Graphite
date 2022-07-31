@@ -13,6 +13,9 @@ use server::entity::components::Spinalla;
 use server::entity::position::Coordinate;
 use server::entity::position::Position;
 use server::entity::position::Rotation;
+use server::inventory::inventory_handler::InventoryHandler;
+use server::inventory::inventory_handler::PlayerInventorySection;
+use server::inventory::inventory_handler::VanillaPlayerInventory;
 use server::player::player_connection::ConnectionReference;
 use server::player::player_vec::PlayerVec;
 use server::player::proto_player::ProtoPlayer;
@@ -205,8 +208,17 @@ fn main() {
         Ok(())
     }
 
+    #[brigadier("gib", {})]
+    fn gib(player: &mut Player<MyPlayerService>, slot: u8) -> CommandResult {
+        let itemstack = player.inventory.get(PlayerInventorySection::Hotbar(slot as _)).unwrap();
+        println!("In slot: {:?}", itemstack);
+
+        Ok(())
+    }
+
     my_function.merge(entity_test).unwrap();
     my_function.merge(spawn_player).unwrap();
+    my_function.merge(gib).unwrap();
 
     let (dispatcher, packet) =
         command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
@@ -294,7 +306,7 @@ impl WorldService for MyWorldService {
         world.service.players.initialize(world);
     }
 
-    unsafe fn tick(world: &mut World<Self>, tick_phase: TickPhase) {
+    fn tick(world: &mut World<Self>, tick_phase: TickPhase) {
         world.service.players.tick(tick_phase);
     }
 
@@ -310,4 +322,5 @@ struct MyPlayerService {}
 impl PlayerService for MyPlayerService {
     type UniverseServiceType = MyUniverseService;
     type WorldServiceType = MyWorldService;
+    type InventoryHandlerType = VanillaPlayerInventory;
 }

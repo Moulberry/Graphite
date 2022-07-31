@@ -7,21 +7,64 @@ use crate::types::ChatVisibility;
 use crate::types::Direction;
 use crate::types::HandAction;
 use crate::types::MoveAction;
+use crate::types::Hand;
 use crate::IdentifiedPacket;
+use crate::types::ProtocolItemStack;
 use num_enum::TryFromPrimitive;
 
 identify_packets! {
     PacketId,
     AcceptTeleportation = 0x00,
+    // BlockEntityTagQuery = 0x01,
+    // ChangeDifficulty = 0x02,
+    // ChatAck = 0x03,
     ChatCommand<'_> = 0x04,
+    // Chat = 0x05,
+    // ChatPreview = 0x06
+    // ClientCommand = 0x07,
     ClientInformation<'_> = 0x08,
+    // CommandSuggestion = 0x09,
+    // ContainerButtonClick = 0x0a,
+    // ContainerClick = 0x0b,
+    // ContainerClose = 0x0c,
     CustomPayload<'_> = 0x0d,
+    // EditBook = 0x0e,
+    // EntityTagQuery = 0x0f,
+    // Interact = 0x10,
+    // JigsawGenerate = 0x11,
     KeepAlive = 0x12,
+    // LockDifficulty = 0x13,
     MovePlayerPos = 0x14,
     MovePlayerPosRot = 0x15,
     MovePlayerRot = 0x16,
+    MovePlayerOnGround = 0x17,
+    // MoveVehicle = 0x18,
+    // PaddleBoat = 0x19,
+    // PickItem = 0x1a,
+    // PlaceRecipe = 0x1b,
+    // PlayerAbilities = 0x1c,
     PlayerHandAction = 0x1d,
-    PlayerMoveAction = 0x1e
+    PlayerMoveAction = 0x1e,
+    // PlayerInput = 0x1f,
+    // Pong = 0x20,
+    // RecipeBookChangeSettings = 0x21,
+    // RecipeBookSeenRecipe = 0x22,
+    // RenameItem = 0x23,
+    // ResourcePack = 0x24,
+    // SeenAdvancements = 0x25,
+    // SelectTrade = 0x26,
+    // SetBeaconEffect = 0x27,
+    // SetCarriedItem = 0x28,
+    // SetCommandBlock = 0x29,
+    // SetCommandBlockMinecart = 0x2a,
+    SetCreativeModeSlot = 0x2b,
+    // SetJigsawBlock = 0x2c,
+    // SetStructureBlock = 0x2d,
+    // UpdateSign = 0x2e,
+    Swing = 0x2f
+    // TeleportToEntity = 0x30,
+    // UseItemOn = 0x31,
+    // UseItem = 0x32
 }
 
 // Accept Teleportation
@@ -133,8 +176,14 @@ slice_serializable! {
     }
 }
 
-// Player Action
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct MovePlayerOnGround {
+        pub on_ground: bool as Single
+    }
+}
 
+// Player Action
 slice_serializable! {
     #[derive(Debug)]
     pub struct PlayerHandAction {
@@ -151,5 +200,22 @@ slice_serializable! {
         pub id: i32 as VarInt,
         pub action: MoveAction as AttemptFrom<Single, u8>,
         pub data: i32 as VarInt,
+    }
+}
+
+// Set Creative Mode Slot
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetCreativeModeSlot {
+        pub slot: i16 as BigEndian,
+        pub item: Option<ProtocolItemStack>
+    }
+}
+
+// Swing
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Swing {
+        pub hand: Hand as AttemptFrom<Single, u8>,
     }
 }
