@@ -28,11 +28,11 @@ where
     }
 }
 
-pub fn write_metadata_packet<'a, T>(
+pub fn write_metadata_packet< T>(
     write_buffer: &mut WriteBuffer,
     packet_id: u8,
     entity_id: i32,
-    metadata: &'a mut T,
+    metadata: &mut T,
 ) -> anyhow::Result<()>
 where
     T: Metadata,

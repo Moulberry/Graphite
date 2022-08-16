@@ -1,7 +1,10 @@
 use bevy_ecs::entity::Entity;
 use binary::slice_serialization::{slice_serializable, BigEndian, GreedyBlob};
 use net::{network_buffer::WriteBuffer, packet_helper};
-use protocol::{play::server::{self, ChunkBlockData, ChunkLightData, BlockUpdate}, types::BlockPosition};
+use protocol::{
+    play::server::{self, BlockUpdate, ChunkBlockData, ChunkLightData},
+    types::BlockPosition,
+};
 use slab::Slab;
 
 use crate::player::{Player, PlayerService};
@@ -77,12 +80,13 @@ impl Chunk {
             panic!("{}", Self::INVALID_OTHER_PLAYER)
         }
 
-        self.entity_viewable_buffer.copy_from(&removed.destroy_buffer);
+        self.entity_viewable_buffer
+            .copy_from(&removed.destroy_buffer);
     }
 
     pub(crate) fn pop_player_ref<T: PlayerService>(
         &mut self,
-        player: &mut Player<T>
+        player: &mut Player<T>,
     ) -> PlayerReference {
         let reference = self
             .player_refs
@@ -99,7 +103,7 @@ impl Chunk {
     pub(crate) fn push_player_ref<T: PlayerService>(
         &mut self,
         player: &mut Player<T>,
-        reference: PlayerReference
+        reference: PlayerReference,
     ) {
         player.chunk_ref = self.player_refs.insert(reference);
     }
@@ -271,9 +275,17 @@ impl BlockStorage for Chunk {
         let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
         let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
 
-        debug_assert_eq!(self.chunk_x, x / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+        debug_assert_eq!(
+            self.chunk_x,
+            x / Self::SECTION_BLOCK_WIDTH_I,
+            "set_block called on wrong chunk"
+        );
         let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
-        debug_assert_eq!(self.chunk_z, z / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+        debug_assert_eq!(
+            self.chunk_z,
+            z / Self::SECTION_BLOCK_WIDTH_I,
+            "set_block called on wrong chunk"
+        );
 
         if chunk_y >= self.block_sections.len() {
             return None; // out of bounds
@@ -288,26 +300,39 @@ impl BlockStorage for Chunk {
         let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
         let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
 
-        debug_assert_eq!(self.chunk_x, x / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+        debug_assert_eq!(
+            self.chunk_x,
+            x / Self::SECTION_BLOCK_WIDTH_I,
+            "set_block called on wrong chunk"
+        );
         let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
-        debug_assert_eq!(self.chunk_z, z / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+        debug_assert_eq!(
+            self.chunk_z,
+            z / Self::SECTION_BLOCK_WIDTH_I,
+            "set_block called on wrong chunk"
+        );
 
         if chunk_y >= self.block_sections.len() {
             return None; // out of bounds
         }
 
         let section = &mut self.block_sections[chunk_y];
-        if let Some(old) = section.set_block(section_x as _, section_y as _, section_z as _, block) {
+        if let Some(old) = section.set_block(section_x as _, section_y as _, section_z as _, block)
+        {
             self.invalidate_cache();
 
-            packet_helper::write_packet(&mut self.block_viewable_buffer, &BlockUpdate {
-                pos: BlockPosition {
-                    x: x as _,
-                    y: y as _,
-                    z: z as _,
+            packet_helper::write_packet(
+                &mut self.block_viewable_buffer,
+                &BlockUpdate {
+                    pos: BlockPosition {
+                        x: x as _,
+                        y: y as _,
+                        z: z as _,
+                    },
+                    block_state: block as _,
                 },
-                block_state: block as _,
-            }).expect("packet exceeds 2MB limit");
+            )
+            .expect("packet exceeds 2MB limit");
 
             Some(old)
         } else {

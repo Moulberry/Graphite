@@ -4,11 +4,7 @@ use command::brigadier;
 use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
-use minecraft_constants::entity::Metadata;
-use minecraft_constants::entity::PlayerMetadata;
-use net::network_buffer::WriteBuffer;
 use net::network_handler::UninitializedConnection;
-use protocol::play::server::SetEntityData;
 use protocol::types::GameProfile;
 use protocol::types::Pose;
 use rand::Rng;
@@ -153,7 +149,10 @@ fn main() {
 
     #[brigadier("gib", {})]
     fn gib(player: &mut Player<MyPlayerService>, slot: u8) -> CommandResult {
-        let itemstack = player.inventory.get(InventorySlot::Hotbar(slot as _)).unwrap();
+        let itemstack = player
+            .inventory
+            .get(InventorySlot::Hotbar(slot as _))
+            .unwrap();
         println!("In slot: {:?}", itemstack);
 
         Ok(())
@@ -174,7 +173,7 @@ fn main() {
             1 => GameMode::Creative,
             2 => GameMode::Adventure,
             3 => GameMode::Spectator,
-            _ => panic!("unknown gamemode")
+            _ => panic!("unknown gamemode"),
         };
         player.abilities.gamemode = gamemode;
 
@@ -284,9 +283,7 @@ impl WorldService for MyWorldService {
 
 // player
 
-struct MyPlayerService {
-
-}
+struct MyPlayerService {}
 
 impl PlayerService for MyPlayerService {
     const FAST_PACKET_RESPONSE: bool = true;

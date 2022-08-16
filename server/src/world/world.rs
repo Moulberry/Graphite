@@ -5,7 +5,7 @@ use bevy_ecs::{prelude::*, world::EntityMut};
 use minecraft_constants::block::BlockProperties;
 use net::network_buffer::WriteBuffer;
 use protocol::play::server::{
-    Login, RotateHead, SetChunkCacheCenter, PlayerPosition, TeleportEntity,
+    Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity,
 };
 
 use crate::{
@@ -17,7 +17,7 @@ use crate::{
     universe::{EntityId, Universe, UniverseService},
 };
 
-use super::chunk::{Chunk, BlockStorage};
+use super::chunk::{BlockStorage, Chunk};
 
 // user defined world service trait
 
@@ -254,8 +254,6 @@ impl<W: WorldService> World<W> {
 
                 let mut viewable = unsafe { entity_ref.get_unchecked_mut::<Viewable>(0, 0) }
                     .expect("all entities must have viewable");
-
-                
 
                 let chunk_x = Chunk::to_chunk_coordinate(viewable.coord.x);
                 let chunk_z = Chunk::to_chunk_coordinate(viewable.coord.z);

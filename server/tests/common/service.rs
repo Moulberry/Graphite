@@ -2,9 +2,10 @@ use super::FakePlayerConnection;
 use protocol::types::GameProfile;
 use server::{
     entity::position::{Coordinate, Position, Rotation},
+    inventory::inventory_handler::VanillaPlayerInventory,
     player::{player_vec::PlayerVec, PlayerService},
     universe::{Universe, UniverseService},
-    world::{TickPhase, World, WorldService}, inventory::inventory_handler::VanillaPlayerInventory,
+    world::{TickPhase, World, WorldService},
 };
 use std::pin::Pin;
 

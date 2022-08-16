@@ -1,7 +1,8 @@
 use crate::{
     entity::position::Position,
+    gamemode::Abilities,
     universe::{EntityId, UniverseService},
-    world::World, gamemode::Abilities,
+    world::World,
 };
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::{
@@ -17,7 +18,7 @@ use super::{
 // Proto player
 
 pub struct ProtoPlayer<U: UniverseService> {
-    connection: U::ConnectionReferenceType,
+    pub(crate) connection: U::ConnectionReferenceType,
     pub hardcore: bool,
     pub abilities: Abilities,
     pub profile: GameProfile,
@@ -85,12 +86,9 @@ impl<U: UniverseService> ProtoPlayer<U> {
         let player = Player::new(
             service,
             world,
-            self.profile,
-            self.entity_id,
             position,
             view_position,
-            self.abilities,
-            self.connection,
+            self,
         );
 
         Ok(player)

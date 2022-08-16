@@ -58,9 +58,7 @@ where
     pub fn get(&self, x: u8, y: u8, z: u8) -> T {
         match self {
             PalettedContainer::Single(value) => *value,
-            PalettedContainer::Array(array) => {
-                array.get(Self::get_index(x, y, z))
-            },
+            PalettedContainer::Array(array) => array.get(Self::get_index(x, y, z)),
             PalettedContainer::Direct(_) => todo!(),
         }
     }

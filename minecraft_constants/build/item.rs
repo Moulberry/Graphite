@@ -1,4 +1,4 @@
-use std::{fmt::Write as _};
+use std::fmt::Write as _;
 use std::io::Write;
 
 use convert_case::{Case, Casing};
@@ -40,11 +40,13 @@ pub fn write_items() -> anyhow::Result<()> {
     }
     write_buffer.push_str("}\n\n");
 
-    write_buffer.push_str(r#"impl Item {
+    write_buffer.push_str(
+        r#"impl Item {
     pub fn get_properties(self) -> &'static ItemProperties {
         &ITEM_PROPERTIES_LUT[self as usize]
     }
-}"#);
+}"#,
+    );
 
     write_buffer.push_str("\n\n");
 
@@ -72,15 +74,19 @@ pub fn write_items() -> anyhow::Result<()> {
     write_buffer.push_str("#[derive(Debug, thiserror::Error)]\n");
     write_buffer.push_str("#[error(\"No item exists for id: {0}\")]\n");
     write_buffer.push_str("pub struct NoSuchItemError(u16);\n\n");
-    
+
     // TryFrom<u16> for Item
     write_buffer.push_str("impl TryFrom<u16> for Item {\n");
     write_buffer.push_str("\ttype Error = NoSuchItemError;\n");
     write_buffer.push_str("\tfn try_from(value: u16) -> Result<Self, Self::Error> {\n");
-    writeln!(write_buffer, "\t\tif value >= {} {{ return Err(NoSuchItemError(value)); }}", item_count)?;
+    writeln!(
+        write_buffer,
+        "\t\tif value >= {} {{ return Err(NoSuchItemError(value)); }}",
+        item_count
+    )?;
     write_buffer.push_str("\t\tOk(unsafe { std::mem::transmute(value) })\n");
     write_buffer.push_str("\t}\n");
-    write_buffer.push_str("}");
+    write_buffer.push('}');
 
     let mut f = crate::file_src("item.rs");
     f.write_all(write_buffer.as_bytes())?;

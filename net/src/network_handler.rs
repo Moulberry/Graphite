@@ -10,7 +10,7 @@ use io_uring::types::Timespec;
 use io_uring::{opcode, squeue, types, IoUring, SubmissionQueue, Submitter};
 use slab::Slab;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq)]
 #[repr(C, u16)]
 enum UserData {
     Accept,
@@ -22,7 +22,7 @@ enum UserData {
         _3: u16,
     },
     TickTimeout,
-    IOTimeout,
+    // IOTimeout,
     Write {
         connection_index: u16,
         write_buffer_index: u16,
@@ -422,7 +422,6 @@ impl<N: NetworkManagerService> NetworkManager<N> {
         }
 
         loop {
-
             // Ensure there are enough accept events in the squeue
             let mut squeue = unsafe { self.ring.submission_shared() };
             if let Some(ref mut accept) = accept {
@@ -507,7 +506,7 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                 }
 
                 match user_data {
-                    UserData::IOTimeout => (),
+                    // UserData::IOTimeout => (),
                     UserData::CancelRead => (),
                     UserData::Write {
                         connection_index,

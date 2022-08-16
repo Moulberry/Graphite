@@ -93,6 +93,7 @@ impl<'a> ParseState<'a> {
         self.cursor
     }
 
+    #[allow(dead_code)] // todo: use this method
     pub(crate) fn peek_input<'b>(&'b self) -> Option<SpannedWord<'a>> {
         if self.is_finished() {
             None
@@ -114,6 +115,7 @@ impl<'a> ParseState<'a> {
         self.cursor >= self.words.len()
     }
 
+    #[allow(dead_code)] // todo: use this method
     pub(crate) fn advance(&mut self, advance: usize) {
         self.cursor += advance;
         debug_assert!(self.cursor <= self.words.len());

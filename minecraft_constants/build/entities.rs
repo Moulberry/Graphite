@@ -1,4 +1,4 @@
-use std::{fmt::Write as _};
+use std::fmt::Write as _;
 use std::io::Write;
 
 use convert_case::{Case, Casing};
@@ -7,6 +7,7 @@ use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 struct EntityData {
     pub id: usize,
     pub translation_key: String,
@@ -15,7 +16,7 @@ struct EntityData {
     pub width: f32,
     pub client_tracking_range: usize,
     #[serde(default)]
-    pub metadata: IndexMap<String, String>
+    pub metadata: IndexMap<String, String>,
 }
 
 pub fn write_entities() -> anyhow::Result<()> {
@@ -26,6 +27,7 @@ pub fn write_entities() -> anyhow::Result<()> {
     let mut write_buffer = String::new();
 
     // Item Enum
+    write_buffer.push_str("#![allow(warnings, unused, unused_assignments)]\n\n");
     write_buffer.push_str("#[derive(Debug, Clone, Copy, Eq, PartialEq)]\n");
     write_buffer.push_str("#[repr(u8)]\n");
     write_buffer.push_str("pub enum Entity {\n");
@@ -81,7 +83,6 @@ impl<const T: usize> MetadataChanges<T> {
 }
 
 use binary::slice_serialization::*;
-#[allow(warnings, unused, unused_assignments)]
 
 "#);
 
@@ -93,20 +94,34 @@ use binary::slice_serialization::*;
         writeln!(write_buffer, "#[readonly::make]")?;
         writeln!(write_buffer, "#[derive(Default)]")?;
         writeln!(write_buffer, "pub struct {}Metadata {{", pascal_name)?;
-        writeln!(write_buffer, "\tchanges: MetadataChanges<{}>,", metadata.len())?;
+        writeln!(
+            write_buffer,
+            "\tchanges: MetadataChanges<{}>,",
+            metadata.len()
+        )?;
         for (name, typ) in metadata {
             let mut name = name.as_str();
             if name == "type" {
                 name = "r#type";
             }
 
-            writeln!(write_buffer, "\tpub {}: {},", name, serialize_type_to_rust_type(typ))?;
+            writeln!(
+                write_buffer,
+                "\tpub {}: {},",
+                name,
+                serialize_type_to_rust_type(typ)
+            )?;
         }
         write_buffer.push_str("}\n\n");
 
         writeln!(write_buffer, "impl {}Metadata {{", pascal_name)?;
         for (index, (name, typ)) in metadata.iter().enumerate() {
-            writeln!(write_buffer, "\tpub fn set_{}(&mut self, value: {}) {{", name, serialize_type_to_rust_type(typ))?;
+            writeln!(
+                write_buffer,
+                "\tpub fn set_{}(&mut self, value: {}) {{",
+                name,
+                serialize_type_to_rust_type(typ)
+            )?;
 
             let mut name = name.as_str();
             if name == "type" {
@@ -119,7 +134,8 @@ use binary::slice_serialization::*;
         }
 
         write_buffer.push_str("\n\t#[inline(always)]\n");
-        write_buffer.push_str("\tpub fn get_write_size_for_index(&self, index: usize) -> usize {\n");
+        write_buffer
+            .push_str("\tpub fn get_write_size_for_index(&self, index: usize) -> usize {\n");
         write_buffer.push_str("\t\tmatch index {\n");
         for (index, (name, typ)) in metadata.iter().enumerate() {
             let mut name = name.as_str();
@@ -145,10 +161,18 @@ use binary::slice_serialization::*;
             }
 
             let serialize_id = serialize_type_to_id(typ);
-            
+
             writeln!(write_buffer, "\t\t\t{} => {{", index)?;
-            writeln!(write_buffer, "\t\t\t\tbytes = <Single as SliceSerializable<'_, u8>>::write(bytes, {});", index)?;
-            writeln!(write_buffer, "\t\t\t\tbytes = <Single as SliceSerializable<'_, u8>>::write(bytes, {});", serialize_id)?;
+            writeln!(
+                write_buffer,
+                "\t\t\t\tbytes = <Single as SliceSerializable<'_, u8>>::write(bytes, {});",
+                index
+            )?;
+            writeln!(
+                write_buffer,
+                "\t\t\t\tbytes = <Single as SliceSerializable<'_, u8>>::write(bytes, {});",
+                serialize_id
+            )?;
             write_buffer.push_str("\t\t\t\t");
             write_buffer.push_str(&serialize_type_to_write(typ, name));
             write_buffer.push_str("\n\t\t\t},\n");
@@ -179,10 +203,15 @@ use binary::slice_serialization::*;
                 let mut size = 1;
 "#);
         for index in 0..metadata.len() {
-            writeln!(write_buffer, "\t\t\t\tif indices[{}] {{ size += 2 + self.get_write_size_for_index({}); }}", index, index)?;
+            writeln!(
+                write_buffer,
+                "\t\t\t\tif indices[{}] {{ size += 2 + self.get_write_size_for_index({}); }}",
+                index, index
+            )?;
         }
 
-        write_buffer.push_str(r#"                size
+        write_buffer.push_str(
+            r#"                size
             }
         }
     }
@@ -195,29 +224,38 @@ use binary::slice_serialization::*;
                 bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
-"#);
+"#,
+        );
         for index in 0..metadata.len() {
-            writeln!(write_buffer, "\t\t\t\tif indices[{}] {{ bytes = self.write_for_index(bytes, {}); }}", index, index)?;
+            writeln!(
+                write_buffer,
+                "\t\t\t\tif indices[{}] {{ bytes = self.write_for_index(bytes, {}); }}",
+                index, index
+            )?;
         }
 
-        write_buffer.push_str(r#"                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+        write_buffer.push_str(
+            r#"                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
         bytes
     }
-"#);
+"#,
+        );
 
         write_buffer.push_str("}\n\n");
 
         // break;
     }
 
-    write_buffer.push_str(r#"impl Entity {
+    write_buffer.push_str(
+        r#"impl Entity {
     pub fn get_properties(self) -> &'static EntityProperties {
         &ENTITY_PROPERTIES_LUT[self as usize]
     }
-}"#);
+}"#,
+    );
 
     write_buffer.push_str("\n\n");
 
@@ -245,15 +283,19 @@ use binary::slice_serialization::*;
     write_buffer.push_str("#[derive(Debug, thiserror::Error)]\n");
     write_buffer.push_str("#[error(\"No entity exists for id: {0}\")]\n");
     write_buffer.push_str("pub struct NoSuchEntityError(u8);\n\n");
-    
+
     // TryFrom<u16> for Item
     write_buffer.push_str("impl TryFrom<u8> for Entity {\n");
     write_buffer.push_str("\ttype Error = NoSuchEntityError;\n");
     write_buffer.push_str("\tfn try_from(value: u8) -> Result<Self, Self::Error> {\n");
-    writeln!(write_buffer, "\t\tif value >= {} {{ return Err(NoSuchEntityError(value)); }}", entity_count)?;
+    writeln!(
+        write_buffer,
+        "\t\tif value >= {} {{ return Err(NoSuchEntityError(value)); }}",
+        entity_count
+    )?;
     write_buffer.push_str("\t\tOk(unsafe { std::mem::transmute(value) })\n");
     write_buffer.push_str("\t}\n");
-    write_buffer.push_str("}");
+    write_buffer.push('}');
 
     let mut f = crate::file_src("entity.rs");
     f.write_all(write_buffer.as_bytes())?;
@@ -319,7 +361,7 @@ fn serialize_type_to_id(typ: &String) -> usize {
         "frog_variant" => 20,
         "optional_global_pos" => 21,
         "painting_variant" => 22,
-        _ => panic!("unknown serialize type: {}", typ)
+        _ => panic!("unknown serialize type: {}", typ),
     }
 }
 
@@ -330,8 +372,12 @@ fn serialize_type_to_write_size(typ: &String, varname: &str) -> String {
         "float" => "4".into(),
         "string" => format!("5 + self.{varname}.len()"),
         "component" => format!("5 + self.{varname}.len()"),
-        "optional_component" => format!("1 + if let Some(value) = &self.{varname} {{ 5 + value.len() }} else {{ 0 }}"),
-        "item_stack" => format!("protocol::types::ProtocolItemStack::get_write_size(&self.{varname})"),
+        "optional_component" => {
+            format!("1 + if let Some(value) = &self.{varname} {{ 5 + value.len() }} else {{ 0 }}")
+        }
+        "item_stack" => {
+            format!("protocol::types::ProtocolItemStack::get_write_size(&self.{varname})")
+        }
         "boolean" => "1".into(),
         "rotations" => "12".into(),
         "block_pos" => "8".into(),
@@ -346,9 +392,11 @@ fn serialize_type_to_write_size(typ: &String, varname: &str) -> String {
         "pose" => "1".into(),
         "cat_variant" => "1".into(),
         "frog_variant" => "1".into(),
-        "optional_global_pos" => format!("1 + if let Some((world, _)) = &self.{varname} {{ 5 + world.len() + 8 }} else {{ 8 }}"),
+        "optional_global_pos" => format!(
+            "1 + if let Some((world, _)) = &self.{varname} {{ 5 + world.len() + 8 }} else {{ 8 }}"
+        ),
         "painting_variant" => "1".into(),
-        _ => panic!("unknown serialize type: {}", typ)
+        _ => panic!("unknown serialize type: {}", typ),
     }
 }
 
@@ -377,6 +425,6 @@ fn serialize_type_to_rust_type(typ: &String) -> &'static str {
         "frog_variant" => "u8",
         "optional_global_pos" => "Option<(String, protocol::types::BlockPosition)>",
         "painting_variant" => "u8",
-        _ => panic!("unknown serialize type: {}", typ)
+        _ => panic!("unknown serialize type: {}", typ),
     }
 }

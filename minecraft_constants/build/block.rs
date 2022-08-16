@@ -15,39 +15,32 @@ pub struct Block {
     properties: IndexMap<String, BlockParameter>,
     hardness: f32,
     #[serde(default)]
-    air: bool
-    
-    /*name: &'static str,
-    display_name: &'static str,
-    hardness: f32,
-    resistance: f32,
-    stack_size: u8,
-    diggable: bool,
-    material: &'static str,
-    transparent: bool,
-    emit_light: u8,
-    filter_light: u8,
-    default_state: u16,
-    min_state_id: u16,
-    max_state_id: u16,
-    states: Vec<BlockParameter>,
-    bounding_box: &'static str,*/
+    air: bool, /*name: &'static str,
+               display_name: &'static str,
+               hardness: f32,
+               resistance: f32,
+               stack_size: u8,
+               diggable: bool,
+               material: &'static str,
+               transparent: bool,
+               emit_light: u8,
+               filter_light: u8,
+               default_state: u16,
+               min_state_id: u16,
+               max_state_id: u16,
+               states: Vec<BlockParameter>,
+               bounding_box: &'static str,*/
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum BlockParameter {
     #[serde(rename = "string")]
-    Enum {
-        values: Vec<String>,
-    },
+    Enum { values: Vec<String> },
     #[serde(rename = "bool")]
-    Bool {
-    },
+    Bool {},
     #[serde(rename = "int")]
-    Int {
-        values: Vec<i32>,
-    },
+    Int { values: Vec<i32> },
 }
 
 pub fn write_block_states() -> anyhow::Result<()> {
@@ -58,9 +51,7 @@ pub fn write_block_states() -> anyhow::Result<()> {
     let mut parameter_writer: ParameterWriter = Default::default();
     for (_, block) in &blocks {
         for (name, parameter) in &block.properties {
-            if let BlockParameter::Enum {
-                values,
-            } = parameter {
+            if let BlockParameter::Enum { values } = parameter {
                 parameter_writer.define_parameter(name, values)?;
             }
         }
@@ -80,14 +71,22 @@ pub fn write_block_states() -> anyhow::Result<()> {
             &parameter_writer,
             block_name,
             block,
-            state_count
+            state_count,
         )?;
 
         // Block Properties
         for _state_id in min_state_count..state_count {
             // todo: allow overriding properties for a particular state
-            writeln!(state_properties_lut, "\tBlockProperties {{ // {}", block_name)?;
-            writeln!(state_properties_lut, "\t\thardness: {}_f32,", block.hardness)?;
+            writeln!(
+                state_properties_lut,
+                "\tBlockProperties {{ // {}",
+                block_name
+            )?;
+            writeln!(
+                state_properties_lut,
+                "\t\thardness: {}_f32,",
+                block.hardness
+            )?;
             writeln!(state_properties_lut, "\t\tair: {},", block.air)?;
             state_properties_lut.push_str("\t},\n");
         }
@@ -131,9 +130,11 @@ pub fn write_block_states() -> anyhow::Result<()> {
     // Block Properties
     write_buffer.push_str("impl TryFrom<u16> for &BlockProperties {\n");
     write_buffer.push_str("\ttype Error = NoSuchBlockError;");
-    write_buffer.push_str("\tfn try_from(id: u16) -> Result<&'static BlockProperties, Self::Error> {\n");
     write_buffer
-        .push_str("\t\tif id >= BLOCK_PROPERTIES_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n");
+        .push_str("\tfn try_from(id: u16) -> Result<&'static BlockProperties, Self::Error> {\n");
+    write_buffer.push_str(
+        "\t\tif id >= BLOCK_PROPERTIES_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n",
+    );
     write_buffer.push_str("\t\tOk(&BLOCK_PROPERTIES_LUT[id as usize])\n");
     write_buffer.push_str("\t}\n");
     write_buffer.push_str("}\n");
@@ -157,7 +158,8 @@ pub fn write_block_states() -> anyhow::Result<()> {
     write_buffer.push_str("use crate::block_parameter::*;\n\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/block_to_u16.rs\"));\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block.rs\"));\n\n");
-    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block_properties.rs\"));\n\n");
+    write_buffer
+        .push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block_properties.rs\"));\n\n");
 
     write_buffer.push_str("#[derive(Debug, thiserror::Error)]\n");
     write_buffer.push_str("#[error(\"No block exists for id: {0}\")]\n");
@@ -219,9 +221,7 @@ fn write_block_state(
 
         for (name, state) in &block.properties {
             match state {
-                BlockParameter::Enum {
-                    values,
-                } => {
+                BlockParameter::Enum { values } => {
                     let parameter_name = parameters.get_parameter_name(name, values);
 
                     if *name == "type" {
@@ -244,7 +244,7 @@ fn write_block_state(
                         all_possible_parameters.push(named_values);
                     }
                 }
-                BlockParameter::Bool {  } => {
+                BlockParameter::Bool {} => {
                     let mut named_values = Vec::new();
                     named_values.push(format!("{name}: true,"));
                     named_values.push(format!("{name}: false,"));
@@ -254,9 +254,7 @@ fn write_block_state(
                     block_def.push_str(name);
                     block_def.push_str(": bool,\n");
                 }
-                BlockParameter::Int {
-                    values,
-                } => {
+                BlockParameter::Int { values } => {
                     block_def.push_str("\t\t");
                     block_def.push_str(name);
                     block_def.push_str(": u8,\n");
@@ -326,12 +324,7 @@ struct ParameterWriter {
 }
 
 impl ParameterWriter {
-    fn define_parameter(
-        &mut self,
-        name: &String,
-        values: &Vec<String>,
-    ) -> anyhow::Result<()> {
-
+    fn define_parameter(&mut self, name: &String, values: &Vec<String>) -> anyhow::Result<()> {
         if let Some(previous_aliases) = self.already_aliased.get_mut(name) {
             for previous_alias_value in previous_aliases.iter() {
                 if previous_alias_value == values {
@@ -340,7 +333,7 @@ impl ParameterWriter {
                 }
             }
 
-            let alias = Self::resolve_clash(name, &values)?;
+            let alias = Self::resolve_clash(name, values)?;
             previous_aliases.push(values.clone());
             self.code.insert(alias.clone(), Self::codegen(values));
             self.aliases.insert((name.clone(), values.clone()), alias);
@@ -364,8 +357,8 @@ impl ParameterWriter {
                 alias_values.push(defined.clone());
 
                 // Write new definition
-                let alias = Self::resolve_clash(name, &values)?;
-                self.code.insert(alias.clone(), Self::codegen(&values));
+                let alias = Self::resolve_clash(name, values)?;
+                self.code.insert(alias.clone(), Self::codegen(values));
                 self.aliases.insert((name.clone(), values.clone()), alias);
                 alias_values.push(values.clone());
 
@@ -375,14 +368,17 @@ impl ParameterWriter {
                 Ok(())
             }
         } else {
-            self.code.insert(String::from(name), Self::codegen(&values));
+            self.code.insert(String::from(name), Self::codegen(values));
             self.definitions.insert(name.clone(), values.clone());
             Ok(())
         }
     }
 
-    fn resolve_clash(name: &str, values: &Vec<String>) -> anyhow::Result<String> {
-        let values: Vec<&'static str> = values.iter().map(|f| unsafe { std::mem::transmute(f.as_str()) }).collect();
+    fn resolve_clash(name: &str, values: &[String]) -> anyhow::Result<String> {
+        let values: Vec<&'static str> = values
+            .iter()
+            .map(|f| unsafe { std::mem::transmute(f.as_str()) })
+            .collect();
 
         match name {
             "facing" => match values.as_slice() {

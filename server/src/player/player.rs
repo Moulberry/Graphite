@@ -2,21 +2,26 @@ use std::{mem::ManuallyDrop, ops::Range};
 
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
-use minecraft_constants::entity::{PlayerMetadata, Metadata};
+use minecraft_constants::entity::{Metadata, PlayerMetadata};
 use net::{
     network_buffer::WriteBuffer,
     packet_helper::{self, PacketReadResult},
 };
-use parry3d::{query::Ray, math::{Point, Vector, Real}, bounding_volume::AABB};
+use parry3d::{
+    bounding_volume::AABB,
+    math::{Point, Real, Vector},
+    query::Ray,
+};
 use protocol::{
     play::{
         client::PacketHandler,
         server::{
-            self, AddPlayer, PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
-            TeleportEntity, BlockChangedAck, LevelEvent, LevelEventType, BlockDestruction, SetEquipment, SetEntityData,
+            self, AddPlayer, BlockChangedAck, BlockDestruction, LevelEvent, LevelEventType,
+            PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
+            SetEquipment, TeleportEntity,
         },
     },
-    types::{GameProfile, BlockPosition, EquipmentSlot, ProtocolItemStack, Hand},
+    types::{BlockPosition, EquipmentSlot, GameProfile, Hand},
     IdentifiedPacket,
 };
 use queues::Buffer;
@@ -26,13 +31,19 @@ use text_component::TextComponent;
 
 use crate::{
     entity::position::{Position, Vec3f},
+    gamemode::Abilities,
+    inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, TickPhase, World, WorldService, TickPhaseInner, chunk::BlockStorage}, inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot}, gamemode::Abilities,
+    world::{
+        chunk::BlockStorage, ChunkViewPosition, TickPhase, TickPhaseInner, World, WorldService,
+    },
 };
 
 use super::{
-    player_connection::AbstractConnectionReference, player_settings::PlayerSettings,
-    proto_player::ProtoPlayer, interaction::{InteractionState, Interaction},
+    interaction::{Interaction, InteractionState},
+    player_connection::AbstractConnectionReference,
+    player_settings::PlayerSettings,
+    proto_player::ProtoPlayer,
 };
 
 // User defined player service trait
@@ -104,12 +115,9 @@ impl<P: PlayerService> Player<P> {
     pub(crate) fn new(
         service: P,
         world: &mut World<P::WorldServiceType>,
-        profile: GameProfile,
-        entity_id: EntityId,
         position: Position,
         view_position: ChunkViewPosition,
-        abilities: Abilities,
-        connection: ConnectionReferenceType<P>,
+        proto_player: ProtoPlayer<P::UniverseServiceType>
     ) -> Self {
         Self {
             world,
@@ -118,11 +126,11 @@ impl<P: PlayerService> Player<P> {
             viewable_self_exclusion_write_buffer: WriteBuffer::new(),
             disconnected: false,
 
-            entity_id,
-            abilities,
+            entity_id: proto_player.entity_id,
+            abilities: proto_player.abilities,
             inventory: Default::default(),
             settings: PlayerSettings::new(),
-            profile,
+            profile: proto_player.profile,
             metadata: Default::default(),
 
             last_position: position,
@@ -146,7 +154,7 @@ impl<P: PlayerService> Player<P> {
             keep_alive_timer: 0,
 
             moved_into_proto: false,
-            connection: ManuallyDrop::new(connection),
+            connection: ManuallyDrop::new(proto_player.connection),
             service: ManuallyDrop::new(service),
         }
     }
@@ -206,7 +214,8 @@ impl<P: PlayerService> Player<P> {
                     ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
                 {
                     let chunk = &self.get_world().chunks[x as usize][z as usize];
-                    self.write_buffer.copy_from(chunk.block_viewable_buffer.get_written());
+                    self.write_buffer
+                        .copy_from(chunk.block_viewable_buffer.get_written());
                 }
             }
 
@@ -238,11 +247,9 @@ impl<P: PlayerService> Player<P> {
         // Send block change ack
         match self.ack_sequence_up_to {
             Some(sequence) => {
-                self.write_packet(&BlockChangedAck {
-                    sequence
-                });
+                self.write_packet(&BlockChangedAck { sequence });
                 self.ack_sequence_up_to = None;
-            },
+            }
             None => (),
         }
 
@@ -260,7 +267,8 @@ impl<P: PlayerService> Player<P> {
         }
 
         // Update selected hotbar slot
-        let selected_hotbar_slot_changed = self.last_selected_hotbar_slot != self.selected_hotbar_slot;
+        let selected_hotbar_slot_changed =
+            self.last_selected_hotbar_slot != self.selected_hotbar_slot;
         if selected_hotbar_slot_changed {
             self.last_selected_hotbar_slot = self.selected_hotbar_slot;
 
@@ -275,7 +283,7 @@ impl<P: PlayerService> Player<P> {
         if let Some(hand) = self.interaction_state.get_used_hand() {
             let inventory_slot = match hand {
                 Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
-                Hand::Off => InventorySlot::OffHand
+                Hand::Off => InventorySlot::OffHand,
             };
 
             let slot = self.inventory.get(inventory_slot)?;
@@ -283,7 +291,8 @@ impl<P: PlayerService> Player<P> {
                 ItemSlot::Empty => (),
                 ItemSlot::Filled(item) => {
                     if item.properties.use_duration > 0 {
-                        self.interaction_state.start_using(item.properties.use_duration as _, hand);
+                        self.interaction_state
+                            .start_using(item.properties.use_duration as _, hand);
                     }
                 }
             }
@@ -300,12 +309,15 @@ impl<P: PlayerService> Player<P> {
         // Add MainHand if hotbar slot has changed
         if selected_hotbar_slot_changed {
             let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
-            let held_item = self.inventory.get(slot).expect("self.selected_hotbar_slot between 0..9");
+            let held_item = self
+                .inventory
+                .get(slot)
+                .expect("self.selected_hotbar_slot between 0..9");
 
             equipment_changes.push((EquipmentSlot::MainHand, held_item.into()));
         }
 
-        // Add other equipment 
+        // Add other equipment
         if self.inventory.is_any_changed() {
             // Update MainHand
             let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
@@ -323,15 +335,16 @@ impl<P: PlayerService> Player<P> {
                 }
             }
 
-            let mut write_equipment_changes = |inventory: InventorySlot, equipment: EquipmentSlot| {
-                if self.inventory.is_changed(inventory).unwrap() {
-                    let itemslot = self.inventory.get(inventory).unwrap();
-                    equipment_changes.push((equipment, itemslot.into()));
-                    true
-                } else {
-                    false
-                }
-            };
+            let mut write_equipment_changes =
+                |inventory: InventorySlot, equipment: EquipmentSlot| {
+                    if self.inventory.is_changed(inventory).unwrap() {
+                        let itemslot = self.inventory.get(inventory).unwrap();
+                        equipment_changes.push((equipment, itemslot.into()));
+                        true
+                    } else {
+                        false
+                    }
+                };
 
             // Update armor
             write_equipment_changes(InventorySlot::Feet, EquipmentSlot::Feet);
@@ -351,10 +364,13 @@ impl<P: PlayerService> Player<P> {
 
         // Write equipment changes
         if !equipment_changes.is_empty() {
-            self.write_viewable_packet(&SetEquipment {
-                entity_id: self.entity_id.as_i32(),
-                equipment: equipment_changes,
-            }, true);
+            self.write_viewable_packet(
+                &SetEquipment {
+                    entity_id: self.entity_id.as_i32(),
+                    equipment: equipment_changes,
+                },
+                true,
+            );
         }
 
         // Write inventory packets
@@ -371,9 +387,12 @@ impl<P: PlayerService> Player<P> {
             let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
                 [self.chunk_view_position.z as usize];
 
-            packet_helper::write_metadata_packet(&mut chunk.entity_viewable_buffer,
-                 server::PacketId::SetEntityData as _,
-                self.entity_id.as_i32(), &mut self.metadata)?;
+            packet_helper::write_metadata_packet(
+                &mut chunk.entity_viewable_buffer,
+                server::PacketId::SetEntityData as _,
+                self.entity_id.as_i32(),
+                &mut self.metadata,
+            )?;
         }
 
         // Update position
@@ -449,16 +468,24 @@ impl<P: PlayerService> Player<P> {
     pub fn clip_block_position(&self, position: BlockPosition) -> Option<(f32, f32)> {
         let aabb = AABB::new(
             Point::new(position.x as f32, position.y as f32, position.z as f32),
-            Point::new(position.x as f32 + 1.0, position.y as f32 + 1.0, position.z as f32 + 1.0)
+            Point::new(
+                position.x as f32 + 1.0,
+                position.y as f32 + 1.0,
+                position.z as f32 + 1.0,
+            ),
         );
 
-        return aabb.clip_ray_parameters(&self.get_look_ray());
+        aabb.clip_ray_parameters(&self.get_look_ray())
     }
 
     pub fn get_look_ray(&self) -> Ray {
         Ray::new(
-            Point::new(self.client_position.coord.x, self.client_position.coord.y + self.get_eye_height(), self.client_position.coord.z),
-            self.get_look_vector()
+            Point::new(
+                self.client_position.coord.x,
+                self.client_position.coord.y + self.get_eye_height(),
+                self.client_position.coord.z,
+            ),
+            self.get_look_vector(),
         )
     }
 
@@ -476,13 +503,19 @@ impl<P: PlayerService> Player<P> {
 
     fn break_block(&mut self, pos: BlockPosition) {
         if pos.x >= 0 && pos.y >= 0 && pos.z >= 0 {
-            if let Some(old) = self.get_world_mut().set_block(pos.x as _, pos.y as _, pos.z as _, 0) {
-                self.write_viewable_packet(&LevelEvent {
-                    event_type: LevelEventType::ParticlesDestroyBlock,
-                    pos,
-                    data: old as _,
-                    global: false,
-                }, true);
+            if let Some(old) = self
+                .get_world_mut()
+                .set_block(pos.x as _, pos.y as _, pos.z as _, 0)
+            {
+                self.write_viewable_packet(
+                    &LevelEvent {
+                        event_type: LevelEventType::ParticlesDestroyBlock,
+                        pos,
+                        data: old as _,
+                        global: false,
+                    },
+                    true,
+                );
             }
         }
     }
@@ -494,66 +527,107 @@ impl<P: PlayerService> Player<P> {
             Interaction::LeftClickBlock {
                 position,
                 face: _,
-                instabreak
+                instabreak,
             } => {
                 if instabreak {
                     self.break_block(position);
                 }
-            },
+            }
             Interaction::LeftClickEntity { entity_id: _ } => {
                 // todo: entity interaction
-            },
-            Interaction::LeftClickAir => {},
+            }
+            Interaction::LeftClickAir => {}
 
-            Interaction::RightClickBlock { position: _, face: _, offset: _ } => {},
-            Interaction::RightClickEntity { entity_id: _, offset: _ } => {
+            Interaction::RightClickBlock {
+                position: _,
+                face: _,
+                offset: _,
+            } => {}
+            Interaction::RightClickEntity {
+                entity_id: _,
+                offset: _,
+            } => {
                 // todo: entity interaction
-            },
-            Interaction::RightClickAir { hand: _ } => {},
+            }
+            Interaction::RightClickAir { hand: _ } => {}
 
-            Interaction::ContinuousBreak { position, break_time, distance: _ } => {
-                if let Some(destroy_stage) = self.get_world().get_destroy_stage(position.x, position.y as _,
-                        position.z, break_time, self.get_break_speed_multiplier()) {
+            Interaction::ContinuousBreak {
+                position,
+                break_time,
+                distance: _,
+            } => {
+                if let Some(destroy_stage) = self.get_world().get_destroy_stage(
+                    position.x,
+                    position.y as _,
+                    position.z,
+                    break_time,
+                    self.get_break_speed_multiplier(),
+                ) {
                     // todo: check if the stage changed, only send packet then
-                    self.write_viewable_packet(&BlockDestruction {
-                        entity_id: self.entity_id.as_i32(),
-                        location: position,
-                        destroy_stage,
-                    }, true);
+                    self.write_viewable_packet(
+                        &BlockDestruction {
+                            entity_id: self.entity_id.as_i32(),
+                            location: position,
+                            destroy_stage,
+                        },
+                        true,
+                    );
                 }
 
                 // update destruction
-            },
-            Interaction::FinishBreak { position, break_time: _, distance: _ } => {
+            }
+            Interaction::FinishBreak {
+                position,
+                break_time: _,
+                distance: _,
+            } => {
                 self.break_block(position);
-            },
-            Interaction::AbortBreak { position, break_time: _ } => {
-                self.write_viewable_packet(&BlockDestruction {
-                    entity_id: self.entity_id.as_i32(),
-                    location: position,
-                    destroy_stage: -1,
-                }, true);
-            },
+            }
+            Interaction::AbortBreak {
+                position,
+                break_time: _,
+            } => {
+                self.write_viewable_packet(
+                    &BlockDestruction {
+                        entity_id: self.entity_id.as_i32(),
+                        location: position,
+                        destroy_stage: -1,
+                    },
+                    true,
+                );
+            }
 
             Interaction::ContinuousUse { use_time, hand } => {
                 if use_time == 1 {
-                    self.metadata.set_living_entity_flags(self.metadata.living_entity_flags | 0x1);
+                    self.metadata
+                        .set_living_entity_flags(self.metadata.living_entity_flags | 0x1);
 
                     // Set the hand that is in use
                     if hand == Hand::Off {
-                        self.metadata.set_living_entity_flags(self.metadata.living_entity_flags | 0x2);
+                        self.metadata
+                            .set_living_entity_flags(self.metadata.living_entity_flags | 0x2);
                     } else {
-                        self.metadata.set_living_entity_flags(self.metadata.living_entity_flags & !0x2);
+                        self.metadata
+                            .set_living_entity_flags(self.metadata.living_entity_flags & !0x2);
                     }
                 }
-            },
-            Interaction::FinishUse { use_time: _, hand: _ } => {
+            }
+            Interaction::FinishUse {
+                use_time: _,
+                hand: _,
+            } => {
                 // todo: send finish to all players
-                self.metadata.set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
-            },
-            Interaction::AbortUse { use_time: _, hand: _, aborted_by_client: _} => {
-                self.metadata.set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
-            },
+                self.metadata
+                    .set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
+            }
+            Interaction::AbortUse {
+                use_time: _,
+                hand: _,
+                aborted_by_client: _,
+            } => {
+                self.metadata
+                    .set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
+            }
         }
     }
 
@@ -634,7 +708,7 @@ impl<P: PlayerService> Player<P> {
             values: vec![PlayerInfoAddPlayer {
                 profile: self.profile.clone(),
                 gamemode: self.abilities.gamemode as _, // todo: gamemode
-                ping: 69,    // todo: ping
+                ping: 69,                               // todo: ping
                 display_name: None,
                 signature_data: None,
             }],

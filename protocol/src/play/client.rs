@@ -2,15 +2,15 @@ use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::types::ArmPosition;
+use crate::types::BlockHitResult;
 use crate::types::BlockPosition;
 use crate::types::ChatVisibility;
 use crate::types::Direction;
+use crate::types::Hand;
 use crate::types::HandAction;
 use crate::types::MoveAction;
-use crate::types::Hand;
-use crate::types::BlockHitResult;
-use crate::IdentifiedPacket;
 use crate::types::ProtocolItemStack;
+use crate::IdentifiedPacket;
 use num_enum::TryFromPrimitive;
 
 identify_packets! {
@@ -265,7 +265,6 @@ slice_serializable! {
         pub sequence: i32 as VarInt
     }
 }
-
 
 // Use Item
 slice_serializable! {

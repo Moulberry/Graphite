@@ -1,11 +1,11 @@
-use minecraft_constants::item::{Item, NoSuchItemError, ItemProperties};
+use minecraft_constants::item::{Item, ItemProperties, NoSuchItemError};
 use protocol::types::ProtocolItemStack;
 
 #[derive(Clone, Debug)]
 pub struct ItemStack {
     pub(crate) item: Item,
     pub(crate) count: i8,
-    pub(crate) properties: &'static ItemProperties
+    pub(crate) properties: &'static ItemProperties,
 }
 
 impl PartialEq for ItemStack {
@@ -23,7 +23,7 @@ impl TryFrom<ProtocolItemStack> for ItemStack {
         Ok(ItemStack {
             item,
             properties,
-            count: protocol_itemstack.count
+            count: protocol_itemstack.count,
         })
     }
 }
@@ -33,7 +33,7 @@ impl From<&ItemStack> for ProtocolItemStack {
         ProtocolItemStack {
             item: itemstack.item as _,
             count: itemstack.count,
-            temp_nbt: 0 // todo: implement nbt
+            temp_nbt: 0, // todo: implement nbt
         }
     }
 }

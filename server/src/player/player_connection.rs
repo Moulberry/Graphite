@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use net::network_handler::{Connection, ConnectionService, ConnectionSlab};
 
-use crate::{universe::{Universe, UniverseService}};
+use crate::universe::{Universe, UniverseService};
 
 use super::player::{Player, PlayerService};
 

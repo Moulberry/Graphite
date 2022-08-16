@@ -2,10 +2,10 @@ use std::{env, fs::File, io::Write, path::Path};
 
 #[path = "build/block.rs"]
 mod block;
-#[path = "build/item.rs"]
-mod item;
 #[path = "build/entities.rs"]
 mod entities;
+#[path = "build/item.rs"]
+mod item;
 
 fn main() {
     block::write_block_states().unwrap();

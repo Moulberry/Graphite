@@ -1,5 +1,5 @@
 use binary::slice_serialization::{
-    self, slice_serializable, BigEndian, Single, SizedArray, SizedBlob, SizedString, AttemptFrom,
+    self, slice_serializable, AttemptFrom, BigEndian, Single, SizedArray, SizedBlob, SizedString,
     SliceSerializable, VarInt,
 };
 use num_enum::{IntoPrimitive, TryFromPrimitive};
@@ -30,7 +30,7 @@ pub enum Pose {
     Roaring,
     Sniffing,
     Emerging,
-    Digging
+    Digging,
 }
 
 #[derive(Default, Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
@@ -105,7 +105,7 @@ slice_serializable! {
     pub struct ProtocolItemStack {
         pub item: i32 as VarInt,
         pub count: i8 as Single,
-        pub temp_nbt: u8 as Single  
+        pub temp_nbt: u8 as Single
     }
 }
 
@@ -114,7 +114,7 @@ impl Default for ProtocolItemStack {
         Self {
             item: 1,
             count: 1,
-            temp_nbt: 0
+            temp_nbt: 0,
         }
     }
 }
@@ -140,7 +140,6 @@ slice_serializable! {
         pub properties: Vec<GameProfileProperty> as SizedArray<GameProfileProperty>
     }
 }
-
 
 // Signature Data
 
@@ -277,7 +276,7 @@ impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> 
         let mut remaining = data.len();
         for (slot, stack) in data {
             remaining -= 1;
-            
+
             let mut slot_id = *slot as u8;
             if remaining > 0 {
                 slot_id |= 0b10000000;

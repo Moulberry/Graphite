@@ -2,10 +2,11 @@ use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::types::{
-    BlockPosition, ByteRotation, CommandNode, GameProfile, QuantizedShort, SignatureData, ProtocolItemStack, EquipmentList, EquipmentSlot
+    BlockPosition, ByteRotation, CommandNode, EquipmentList, EquipmentSlot, GameProfile,
+    ProtocolItemStack, QuantizedShort, SignatureData,
 };
 use crate::IdentifiedPacket;
-use num_enum::{TryFromPrimitive, IntoPrimitive};
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 identify_packets! {
     PacketId,
@@ -164,7 +165,7 @@ pub enum EntityAnimation {
     WakeUp,
     SwingOffHand,
     CriticalHit,
-    MagicCriticalHit
+    MagicCriticalHit,
 }
 
 // Animate Entity

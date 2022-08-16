@@ -9,7 +9,7 @@ pub enum Interaction {
         instabreak: bool,
     },
     LeftClickEntity {
-        entity_id: i32
+        entity_id: i32,
     },
     LeftClickAir,
 
@@ -17,26 +17,26 @@ pub enum Interaction {
     RightClickBlock {
         position: BlockPosition,
         face: Direction,
-        offset: (f32, f32, f32)
+        offset: (f32, f32, f32),
     },
     RightClickEntity {
         entity_id: i32,
-        offset: (f32, f32, f32)
+        offset: (f32, f32, f32),
     },
     RightClickAir {
-        hand: Hand
+        hand: Hand,
     },
 
     // Breaking
     ContinuousBreak {
         position: BlockPosition,
         break_time: usize, // Number of server ticks that have been spent breaking this block
-        distance: f32, // Distance to block
+        distance: f32,     // Distance to block
     },
     FinishBreak {
         position: BlockPosition,
         break_time: usize, // Number of server ticks that have been spent breaking this block
-        distance: f32, // Distance to block
+        distance: f32,     // Distance to block
     },
     AbortBreak {
         position: BlockPosition,
@@ -56,7 +56,7 @@ pub enum Interaction {
         use_time: usize,
         hand: Hand,
         aborted_by_client: bool,
-    }
+    },
 }
 
 /*#[derive(Debug)]
@@ -132,7 +132,7 @@ impl InteractionState {
         if let Some(position) = self.breaking_block {
             let interaction = Interaction::AbortBreak {
                 position,
-                break_time: self.break_time
+                break_time: self.break_time,
             };
 
             self.reset();
@@ -148,7 +148,7 @@ impl InteractionState {
             let interaction = Interaction::FinishBreak {
                 position,
                 break_time: self.break_time,
-                distance
+                distance,
             };
 
             self.reset();
@@ -161,7 +161,7 @@ impl InteractionState {
 
     pub(crate) fn start_using(&mut self, max_use_time: usize, hand: Hand) -> Option<Interaction> {
         let ret = self.try_abort_break_or_use();
-        
+
         self.using_hand = Some(hand);
         self.use_time = 0;
 
@@ -177,13 +177,13 @@ impl InteractionState {
             let interaction = if aborted_by_client && self.max_use_time.is_none() {
                 Interaction::FinishUse {
                     use_time: self.use_time,
-                    hand
+                    hand,
                 }
             } else {
                 Interaction::AbortUse {
                     use_time: self.use_time,
                     hand,
-                    aborted_by_client
+                    aborted_by_client,
                 }
             };
 
@@ -199,7 +199,7 @@ impl InteractionState {
         if let Some(hand) = self.using_hand {
             let interaction = Interaction::FinishUse {
                 use_time: self.use_time,
-                hand
+                hand,
             };
 
             self.reset();
@@ -220,7 +220,8 @@ impl InteractionState {
         }
     }
 
-    pub(crate) fn update(&mut self) -> Vec<Interaction> { // todo: Option<...> instead of Vec<...>
+    pub(crate) fn update(&mut self) -> Vec<Interaction> {
+        // todo: Option<...> instead of Vec<...>
         let mut interactions = Vec::new();
 
         self.processed_use_item_mainhand = false;
@@ -254,7 +255,7 @@ impl InteractionState {
             if self.using_hand.is_some() {
                 interactions.push(Interaction::ContinuousUse {
                     use_time: self.use_time,
-                    hand
+                    hand,
                 })
             }
         }
