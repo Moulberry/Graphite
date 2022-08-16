@@ -31,7 +31,7 @@ identify_packets! {
     CustomPayload<'_> = 0x0d,
     // EditBook = 0x0e,
     // EntityTagQuery = 0x0f,
-    // Interact = 0x10,
+    InteractEntity = 0x10,
     // JigsawGenerate = 0x11,
     KeepAlive = 0x12,
     // LockDifficulty = 0x13,
@@ -133,6 +133,33 @@ slice_serializable! {
     pub struct CustomPayload<'a> {
         pub channel: &'a str as SizedString,
         pub data: &'a [u8] as GreedyBlob
+    }
+}
+
+// Interact
+slice_serializable! {
+    #[derive(Debug)]
+    pub enum InteractMode {
+        Interact {
+            hand: Hand as AttemptFrom<Single, u8>
+        },
+        Attack {
+        },
+        InteractAt {
+            offset_x: f32 as BigEndian,
+            offset_y: f32 as BigEndian,
+            offset_z: f32 as BigEndian,
+            hand: Hand as AttemptFrom<Single, u8>
+        }
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct InteractEntity {
+        pub entity_id: i32 as VarInt,
+        pub mode: InteractMode,
+        pub sneaking: bool as Single
     }
 }
 

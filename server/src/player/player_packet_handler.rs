@@ -1,16 +1,15 @@
 use anyhow::bail;
 use command::types::ParseState;
-use minecraft_constants::block::BlockProperties;
 use protocol::{
     play::{client::{
         self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
-        MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction, MovePlayerOnGround, UseItem, UseItemOn,
-    }, server::{AnimateEntity, EntityAnimation}},
+        MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction, MovePlayerOnGround, UseItem, UseItemOn, InteractEntity,
+    }, server::{AnimateEntity, EntityAnimation, ContainerSetSlot}},
     types::{HandAction, MoveAction, Hand},
 };
 use queues::IsQueue;
 
-use crate::{inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot}, gamemode::GameMode, player::interaction::Interaction};
+use crate::{inventory::inventory_handler::{InventoryHandler, InventorySlot}, gamemode::GameMode, player::interaction::Interaction};
 
 use super::{Player, PlayerService};
 
@@ -172,49 +171,92 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         Ok(())
     }
 
+    fn handle_interact_entity(&mut self, packet: InteractEntity) -> anyhow::Result<()> {
+        // todo: update sneaking state here
+
+        if !self.interaction_state.processed_interaction {
+            self.interaction_state.processed_interaction = true;
+            self.interaction_state.ignore_swing_ticks = 1;
+
+            if let Some(interaction) = self.interaction_state.try_abort_break_or_use() {
+                self.fire_interaction(interaction);
+            }
+
+            match packet.mode {
+                client::InteractMode::Interact { hand: _ } => {}, // unused
+                client::InteractMode::Attack { } => {
+                    self.fire_interaction(Interaction::LeftClickEntity {
+                        entity_id: packet.entity_id,
+                    });
+                },
+                client::InteractMode::InteractAt { offset_x, offset_y, offset_z, hand: _ } => {
+                    self.fire_interaction(Interaction::RightClickEntity {
+                        entity_id: packet.entity_id,
+                        offset: (offset_x, offset_y, offset_z)
+                    });
+                },
+            }
+        }
+
+        Ok(())
+    }
+
     fn handle_use_item(&mut self, packet: UseItem) -> anyhow::Result<()> {
-        println!("use item!");
+        let mut is_first_use = false;
 
-        if !self.interaction_state.processed_use_item {
-            self.interaction_state.processed_use_item = true;
+        if packet.hand == Hand::Main {
+            if !self.interaction_state.processed_use_item_mainhand {
+                self.interaction_state.processed_use_item_mainhand = true;
+                is_first_use = true;
+            }
+        } else if packet.hand == Hand::Off {
+            if !self.interaction_state.processed_use_item_offhand {
+                self.interaction_state.processed_use_item_offhand = true;
+                is_first_use = !self.interaction_state.processed_use_item_mainhand;
+            }
+        }
 
+        if is_first_use {
             if let Some(interaction) = self.interaction_state.try_abort_break_or_use() {
                 self.fire_interaction(interaction);
             }
 
             // Fire RightClick on Air
-            if !self.interaction_state.processed_use_item_on {
+            if !self.interaction_state.processed_interaction {
                 self.interaction_state.ignore_swing_ticks = 1;
-                self.fire_interaction(Interaction::RightClickAir);
-            }
+                self.fire_interaction(Interaction::RightClickAir {
+                    hand: packet.hand
+                });
 
-            // Check if item can be used, to start continuous usage
-            let slot = self.inventory.get(InventorySlot::Hotbar(0))?;
-            match slot {
-                ItemSlot::Empty => (),
-                ItemSlot::Filled(item) => {
-                    if item.properties.use_duration > 0 {
-                        self.interaction_state.start_using(item.properties.use_duration as _);
-                    }
+                // Sync held item
+                let slot = match packet.hand {
+                    Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
+                    Hand::Off => InventorySlot::OffHand
+                };
+                if !self.inventory.is_changed(slot).unwrap() {
+                    self.write_packet(&ContainerSetSlot {
+                        window_id: 0,
+                        state_id: 0,
+                        slot: slot.get_index().unwrap() as _,
+                        item: self.inventory.get(slot).unwrap().into()
+                    });
                 }
             }
         }
 
         self.ack_block_sequence(packet.sequence);
-        self.inventory.sync(InventorySlot::Hotbar(0))?; // todo: actual hotbar slot
 
         Ok(())
     }
 
     fn handle_use_item_on(&mut self, packet: UseItemOn) -> anyhow::Result<()> {
-        if !self.interaction_state.processed_use_item_on {
-            self.interaction_state.processed_use_item_on = true;
+        if !self.interaction_state.processed_interaction {
+            self.interaction_state.processed_interaction = true;
+            self.interaction_state.ignore_swing_ticks = 1;
 
             if let Some(interaction) = self.interaction_state.try_abort_break_or_use() {
                 self.fire_interaction(interaction);
             }
-
-            self.interaction_state.ignore_swing_ticks = 1;
             
             let hit = packet.block_hit;
             if !(0.0..=1.0).contains(&hit.offset_x) ||
@@ -228,6 +270,20 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
                 face: hit.direction,
                 offset: (hit.offset_x, hit.offset_y, hit.offset_z)
             });
+
+            // Sync held item
+            let slot = match packet.hand {
+                Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
+                Hand::Off => InventorySlot::OffHand
+            };
+            if !self.inventory.is_changed(slot).unwrap() {
+                self.write_packet(&ContainerSetSlot {
+                    window_id: 0,
+                    state_id: 0,
+                    slot: slot.get_index().unwrap() as _,
+                    item: self.inventory.get(slot).unwrap().into()
+                });
+            }
         }
 
         self.ack_block_sequence(packet.sequence);
@@ -345,7 +401,7 @@ impl<P: PlayerService> Player<P> {
             Some(old) => if old >= sequence { return },
             None => (),
         }
-        self.ack_sequence_up_to = Some(sequence);
+        // self.ack_sequence_up_to = Some(sequence);
     }
 
     fn finish_breaking_block(&mut self, packet: &PlayerHandAction) {

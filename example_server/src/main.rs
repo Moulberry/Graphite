@@ -83,7 +83,7 @@ fn main() {
     fn entity_test(player: &mut Player<MyPlayerService>, entity_type: u8) -> CommandResult {
         player.send_message("Hello from MyPlayerService");
 
-        for _ in 0..1000 {
+        for _ in 0..1 {
             let entity_id = player.get_world_mut().get_universe().new_entity_id();
 
             let test_entity = BasicEntity {
@@ -91,7 +91,7 @@ fn main() {
                 entity_type: entity_type as _,
             };
 
-            let entity = (Spinalla {
+            /*let entity = (Spinalla {
                 direction: (
                     rand::thread_rng().gen_range(-1.0..1.0),
                     rand::thread_rng().gen_range(-1.0..1.0),
@@ -100,10 +100,10 @@ fn main() {
                     yaw: 0.0,
                     pitch: 0.0,
                 },
-            },);
+            },);*/
 
             player.get_world_mut().push_entity(
-                entity,
+                (),
                 Coordinate {
                     x: player.position.coord.x,
                     y: player.position.coord.y,

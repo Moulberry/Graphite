@@ -16,7 +16,7 @@ use protocol::{
             TeleportEntity, BlockChangedAck, LevelEvent, LevelEventType, BlockDestruction, SetEquipment, SetEntityData,
         },
     },
-    types::{GameProfile, BlockPosition, EquipmentSlot, ProtocolItemStack},
+    types::{GameProfile, BlockPosition, EquipmentSlot, ProtocolItemStack, Hand},
     IdentifiedPacket,
 };
 use queues::Buffer;
@@ -27,7 +27,7 @@ use text_component::TextComponent;
 use crate::{
     entity::position::{Position, Vec3f},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, TickPhase, World, WorldService, TickPhaseInner, chunk::BlockStorage}, inventory::inventory_handler::{InventoryHandler, InventorySlot}, gamemode::Abilities,
+    world::{ChunkViewPosition, TickPhase, World, WorldService, TickPhaseInner, chunk::BlockStorage}, inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot}, gamemode::Abilities,
 };
 
 use super::{
@@ -226,11 +226,6 @@ impl<P: PlayerService> Player<P> {
             return Ok(());
         }
 
-        // Update interaction state
-        for interaction in self.interaction_state.update() {
-            self.fire_interaction(interaction);
-        }
-
         // Check teleport timer
         if self.teleport_id_timer > 0 {
             self.teleport_id_timer += 1;
@@ -264,18 +259,46 @@ impl<P: PlayerService> Player<P> {
             });
         }
 
-        // Equipment changes
-        let mut equipment_changes = vec![];
-
-        // Add MainHand if hotbar slot has changed
+        // Update selected hotbar slot
         let selected_hotbar_slot_changed = self.last_selected_hotbar_slot != self.selected_hotbar_slot;
         if selected_hotbar_slot_changed {
             self.last_selected_hotbar_slot = self.selected_hotbar_slot;
 
-            if let Some(interaction) = self.interaction_state.try_abort_use(false) {
+            // If we were using an item, abort the use
+            if self.interaction_state.using_hand == Some(Hand::Main) {
+                let interaction = self.interaction_state.try_abort_use(false).unwrap();
                 self.fire_interaction(interaction);
             }
+        }
 
+        // Start item continuous usage
+        if let Some(hand) = self.interaction_state.get_used_hand() {
+            let inventory_slot = match hand {
+                Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
+                Hand::Off => InventorySlot::OffHand
+            };
+
+            let slot = self.inventory.get(inventory_slot)?;
+            match slot {
+                ItemSlot::Empty => (),
+                ItemSlot::Filled(item) => {
+                    if item.properties.use_duration > 0 {
+                        self.interaction_state.start_using(item.properties.use_duration as _, hand);
+                    }
+                }
+            }
+        }
+
+        // Update interaction state
+        for interaction in self.interaction_state.update() {
+            self.fire_interaction(interaction);
+        }
+
+        // Equipment changes
+        let mut equipment_changes = vec![];
+
+        // Add MainHand if hotbar slot has changed
+        if selected_hotbar_slot_changed {
             let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
             let held_item = self.inventory.get(slot).expect("self.selected_hotbar_slot between 0..9");
 
@@ -284,21 +307,45 @@ impl<P: PlayerService> Player<P> {
 
         // Add other equipment 
         if self.inventory.is_any_changed() {
+            // Update MainHand
+            let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
+            if self.inventory.is_changed(slot).unwrap() {
+                // Abort item usage for main hand
+                if self.interaction_state.using_hand == Some(Hand::Main) {
+                    let interaction = self.interaction_state.try_abort_use(false).unwrap();
+                    self.fire_interaction(interaction);
+                }
+
+                // Update equipment for MainHand, if needed
+                if !selected_hotbar_slot_changed {
+                    let itemslot = self.inventory.get(slot).unwrap();
+                    equipment_changes.push((EquipmentSlot::MainHand, itemslot.into()));
+                }
+            }
+
             let mut write_equipment_changes = |inventory: InventorySlot, equipment: EquipmentSlot| {
                 if self.inventory.is_changed(inventory).unwrap() {
                     let itemslot = self.inventory.get(inventory).unwrap();
                     equipment_changes.push((equipment, itemslot.into()));
+                    true
+                } else {
+                    false
                 }
             };
-            write_equipment_changes(InventorySlot::OffHand, EquipmentSlot::OffHand);
+
+            // Update armor
             write_equipment_changes(InventorySlot::Feet, EquipmentSlot::Feet);
             write_equipment_changes(InventorySlot::Legs, EquipmentSlot::Legs);
             write_equipment_changes(InventorySlot::Chest, EquipmentSlot::Chest);
             write_equipment_changes(InventorySlot::Head, EquipmentSlot::Head);
 
-            if !selected_hotbar_slot_changed {
-                let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
-                write_equipment_changes(slot, EquipmentSlot::MainHand);
+            // Update OffHand
+            if write_equipment_changes(InventorySlot::OffHand, EquipmentSlot::OffHand) {
+                // Abort item usage for off hand
+                if self.interaction_state.using_hand == Some(Hand::Off) {
+                    let interaction = self.interaction_state.try_abort_use(false).unwrap();
+                    self.fire_interaction(interaction);
+                }
             }
         }
 
@@ -319,6 +366,8 @@ impl<P: PlayerService> Player<P> {
         // Write metadata packets
         let write_size = self.metadata.get_write_size();
         if write_size > 0 {
+            println!("writing metadata!");
+
             let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
                 [self.chunk_view_position.z as usize];
 
@@ -460,7 +509,7 @@ impl<P: PlayerService> Player<P> {
             Interaction::RightClickEntity { entity_id: _, offset: _ } => {
                 // todo: entity interaction
             },
-            Interaction::RightClickAir => {},
+            Interaction::RightClickAir { hand: _ } => {},
 
             Interaction::ContinuousBreak { position, break_time, distance: _ } => {
                 if let Some(destroy_stage) = self.get_world().get_destroy_stage(position.x, position.y as _,
@@ -486,16 +535,24 @@ impl<P: PlayerService> Player<P> {
                 }, true);
             },
 
-            Interaction::ContinuousUse { use_time: _ } => {},
-            Interaction::FinishUse { use_time: _ } => {
-                // todo: send finish to all players
-            },
-            Interaction::AbortUse { use_time: _, aborted_by_client} => {
-                if aborted_by_client {
-                    // todo: send finish to other players
-                } else {
-                    // todo: send finish to all players
+            Interaction::ContinuousUse { use_time, hand } => {
+                if use_time == 1 {
+                    self.metadata.set_living_entity_flags(self.metadata.living_entity_flags | 0x1);
+
+                    // Set the hand that is in use
+                    if hand == Hand::Off {
+                        self.metadata.set_living_entity_flags(self.metadata.living_entity_flags | 0x2);
+                    } else {
+                        self.metadata.set_living_entity_flags(self.metadata.living_entity_flags & !0x2);
+                    }
                 }
+            },
+            Interaction::FinishUse { use_time: _, hand: _ } => {
+                // todo: send finish to all players
+                self.metadata.set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
+            },
+            Interaction::AbortUse { use_time: _, hand: _, aborted_by_client: _} => {
+                self.metadata.set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
             },
         }
     }

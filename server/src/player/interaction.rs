@@ -1,4 +1,4 @@
-use protocol::types::{BlockPosition, Direction};
+use protocol::types::{BlockPosition, Direction, Hand};
 
 #[derive(Debug)]
 pub enum Interaction {
@@ -23,7 +23,9 @@ pub enum Interaction {
         entity_id: i32,
         offset: (f32, f32, f32)
     },
-    RightClickAir,
+    RightClickAir {
+        hand: Hand
+    },
 
     // Breaking
     ContinuousBreak {
@@ -44,13 +46,16 @@ pub enum Interaction {
     // Using
     ContinuousUse {
         use_time: usize,
+        hand: Hand,
     },
     FinishUse {
         use_time: usize,
+        hand: Hand,
     },
     AbortUse {
         use_time: usize,
-        aborted_by_client: bool
+        hand: Hand,
+        aborted_by_client: bool,
     }
 }
 
@@ -77,10 +82,11 @@ pub struct Interaction {
 pub(crate) struct InteractionState {
     pub(crate) ignore_swing_ticks: usize,
 
-    pub(crate) processed_use_item: bool,
-    pub(crate) processed_use_item_on: bool,
+    pub(crate) processed_use_item_mainhand: bool,
+    pub(crate) processed_use_item_offhand: bool,
+    pub(crate) processed_interaction: bool,
 
-    pub(crate) is_using_item: bool,
+    pub(crate) using_hand: Option<Hand>,
     pub(crate) use_time: usize,
     pub(crate) max_use_time: Option<usize>,
 
@@ -95,7 +101,7 @@ impl InteractionState {
         // Using
         self.use_time = 0;
         self.max_use_time = None;
-        self.is_using_item = false;
+        self.using_hand = None;
 
         // Breaking block
         self.breaking_block = None;
@@ -115,7 +121,7 @@ impl InteractionState {
     pub(crate) fn try_abort_break_or_use(&mut self) -> Option<Interaction> {
         let abort_break = self.try_abort_break();
         if abort_break.is_some() {
-            debug_assert!(!self.is_using_item); // Can't break and use simultaneously
+            debug_assert!(self.using_hand.is_none()); // Can't break and use simultaneously
             abort_break
         } else {
             self.try_abort_use(false)
@@ -153,10 +159,10 @@ impl InteractionState {
         }
     }
 
-    pub(crate) fn start_using(&mut self, max_use_time: usize) -> Option<Interaction> {
+    pub(crate) fn start_using(&mut self, max_use_time: usize, hand: Hand) -> Option<Interaction> {
         let ret = self.try_abort_break_or_use();
         
-        self.is_using_item = true;
+        self.using_hand = Some(hand);
         self.use_time = 0;
 
         if max_use_time < 1200 {
@@ -167,14 +173,16 @@ impl InteractionState {
     }
 
     pub(crate) fn try_abort_use(&mut self, aborted_by_client: bool) -> Option<Interaction> {
-        if self.use_time > 0 {
+        if let Some(hand) = self.using_hand {
             let interaction = if aborted_by_client && self.max_use_time.is_none() {
                 Interaction::FinishUse {
-                    use_time: self.use_time
+                    use_time: self.use_time,
+                    hand
                 }
             } else {
                 Interaction::AbortUse {
                     use_time: self.use_time,
+                    hand,
                     aborted_by_client
                 }
             };
@@ -188,9 +196,10 @@ impl InteractionState {
     }
 
     fn try_finish_use(&mut self) -> Option<Interaction> {
-        if self.use_time > 0 {
+        if let Some(hand) = self.using_hand {
             let interaction = Interaction::FinishUse {
-                use_time: self.use_time
+                use_time: self.use_time,
+                hand
             };
 
             self.reset();
@@ -201,18 +210,29 @@ impl InteractionState {
         }
     }
 
+    pub(crate) fn get_used_hand(&self) -> Option<Hand> {
+        if self.processed_use_item_offhand {
+            Some(Hand::Off)
+        } else if self.processed_use_item_mainhand {
+            Some(Hand::Main)
+        } else {
+            None
+        }
+    }
+
     pub(crate) fn update(&mut self) -> Vec<Interaction> { // todo: Option<...> instead of Vec<...>
         let mut interactions = Vec::new();
 
-        self.processed_use_item = false;
-        self.processed_use_item_on = false;
+        self.processed_use_item_mainhand = false;
+        self.processed_use_item_offhand = false;
+        self.processed_interaction = false;
 
         if self.ignore_swing_ticks > 0 {
             self.ignore_swing_ticks -= 1;
         }
 
         if self.breaking_block_timer > 0 {
-            debug_assert!(!self.is_using_item); // can't use and break simultaneously
+            debug_assert!(self.using_hand.is_none()); // can't use and break simultaneously
 
             self.breaking_block_timer -= 1;
             if self.breaking_block_timer == 0 {
@@ -222,7 +242,7 @@ impl InteractionState {
                 // Still breaking, increase the break time
                 self.break_time += 1;
             }
-        } else if self.is_using_item {
+        } else if let Some(hand) = self.using_hand {
             self.use_time += 1;
 
             if let Some(max_use_time) = self.max_use_time {
@@ -231,9 +251,10 @@ impl InteractionState {
                 }
             }
 
-            if self.is_using_item {
+            if self.using_hand.is_some() {
                 interactions.push(Interaction::ContinuousUse {
-                    use_time: self.use_time
+                    use_time: self.use_time,
+                    hand
                 })
             }
         }
