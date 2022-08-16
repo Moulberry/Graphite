@@ -1,0 +1,227 @@
+{
+  "minecraft:leave_game": {
+    "id": 0
+  },
+  "minecraft:play_time": {
+    "id": 1
+  },
+  "minecraft:total_world_time": {
+    "id": 2
+  },
+  "minecraft:time_since_death": {
+    "id": 3
+  },
+  "minecraft:time_since_rest": {
+    "id": 4
+  },
+  "minecraft:sneak_time": {
+    "id": 5
+  },
+  "minecraft:walk_one_cm": {
+    "id": 6
+  },
+  "minecraft:crouch_one_cm": {
+    "id": 7
+  },
+  "minecraft:sprint_one_cm": {
+    "id": 8
+  },
+  "minecraft:walk_on_water_one_cm": {
+    "id": 9
+  },
+  "minecraft:fall_one_cm": {
+    "id": 10
+  },
+  "minecraft:climb_one_cm": {
+    "id": 11
+  },
+  "minecraft:fly_one_cm": {
+    "id": 12
+  },
+  "minecraft:walk_under_water_one_cm": {
+    "id": 13
+  },
+  "minecraft:minecart_one_cm": {
+    "id": 14
+  },
+  "minecraft:boat_one_cm": {
+    "id": 15
+  },
+  "minecraft:pig_one_cm": {
+    "id": 16
+  },
+  "minecraft:horse_one_cm": {
+    "id": 17
+  },
+  "minecraft:aviate_one_cm": {
+    "id": 18
+  },
+  "minecraft:swim_one_cm": {
+    "id": 19
+  },
+  "minecraft:strider_one_cm": {
+    "id": 20
+  },
+  "minecraft:jump": {
+    "id": 21
+  },
+  "minecraft:drop": {
+    "id": 22
+  },
+  "minecraft:damage_dealt": {
+    "id": 23
+  },
+  "minecraft:damage_dealt_absorbed": {
+    "id": 24
+  },
+  "minecraft:damage_dealt_resisted": {
+    "id": 25
+  },
+  "minecraft:damage_taken": {
+    "id": 26
+  },
+  "minecraft:damage_blocked_by_shield": {
+    "id": 27
+  },
+  "minecraft:damage_absorbed": {
+    "id": 28
+  },
+  "minecraft:damage_resisted": {
+    "id": 29
+  },
+  "minecraft:deaths": {
+    "id": 30
+  },
+  "minecraft:mob_kills": {
+    "id": 31
+  },
+  "minecraft:animals_bred": {
+    "id": 32
+  },
+  "minecraft:player_kills": {
+    "id": 33
+  },
+  "minecraft:fish_caught": {
+    "id": 34
+  },
+  "minecraft:talked_to_villager": {
+    "id": 35
+  },
+  "minecraft:traded_with_villager": {
+    "id": 36
+  },
+  "minecraft:eat_cake_slice": {
+    "id": 37
+  },
+  "minecraft:fill_cauldron": {
+    "id": 38
+  },
+  "minecraft:use_cauldron": {
+    "id": 39
+  },
+  "minecraft:clean_armor": {
+    "id": 40
+  },
+  "minecraft:clean_banner": {
+    "id": 41
+  },
+  "minecraft:clean_shulker_box": {
+    "id": 42
+  },
+  "minecraft:interact_with_brewingstand": {
+    "id": 43
+  },
+  "minecraft:interact_with_beacon": {
+    "id": 44
+  },
+  "minecraft:inspect_dropper": {
+    "id": 45
+  },
+  "minecraft:inspect_hopper": {
+    "id": 46
+  },
+  "minecraft:inspect_dispenser": {
+    "id": 47
+  },
+  "minecraft:play_noteblock": {
+    "id": 48
+  },
+  "minecraft:tune_noteblock": {
+    "id": 49
+  },
+  "minecraft:pot_flower": {
+    "id": 50
+  },
+  "minecraft:trigger_trapped_chest": {
+    "id": 51
+  },
+  "minecraft:open_enderchest": {
+    "id": 52
+  },
+  "minecraft:enchant_item": {
+    "id": 53
+  },
+  "minecraft:play_record": {
+    "id": 54
+  },
+  "minecraft:interact_with_furnace": {
+    "id": 55
+  },
+  "minecraft:interact_with_crafting_table": {
+    "id": 56
+  },
+  "minecraft:open_chest": {
+    "id": 57
+  },
+  "minecraft:sleep_in_bed": {
+    "id": 58
+  },
+  "minecraft:open_shulker_box": {
+    "id": 59
+  },
+  "minecraft:open_barrel": {
+    "id": 60
+  },
+  "minecraft:interact_with_blast_furnace": {
+    "id": 61
+  },
+  "minecraft:interact_with_smoker": {
+    "id": 62
+  },
+  "minecraft:interact_with_lectern": {
+    "id": 63
+  },
+  "minecraft:interact_with_campfire": {
+    "id": 64
+  },
+  "minecraft:interact_with_cartography_table": {
+    "id": 65
+  },
+  "minecraft:interact_with_loom": {
+    "id": 66
+  },
+  "minecraft:interact_with_stonecutter": {
+    "id": 67
+  },
+  "minecraft:bell_ring": {
+    "id": 68
+  },
+  "minecraft:raid_trigger": {
+    "id": 69
+  },
+  "minecraft:raid_win": {
+    "id": 70
+  },
+  "minecraft:interact_with_anvil": {
+    "id": 71
+  },
+  "minecraft:interact_with_grindstone": {
+    "id": 72
+  },
+  "minecraft:target_hit": {
+    "id": 73
+  },
+  "minecraft:interact_with_smithing_table": {
+    "id": 74
+  }
+}

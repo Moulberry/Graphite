@@ -1,0 +1,178 @@
+{
+  "minecraft:block_activate": {
+    "id": 0,
+    "notificationRadius": 16
+  },
+  "minecraft:block_attach": {
+    "id": 1,
+    "notificationRadius": 16
+  },
+  "minecraft:block_change": {
+    "id": 2,
+    "notificationRadius": 16
+  },
+  "minecraft:block_close": {
+    "id": 3,
+    "notificationRadius": 16
+  },
+  "minecraft:block_deactivate": {
+    "id": 4,
+    "notificationRadius": 16
+  },
+  "minecraft:block_destroy": {
+    "id": 5,
+    "notificationRadius": 16
+  },
+  "minecraft:block_detach": {
+    "id": 6,
+    "notificationRadius": 16
+  },
+  "minecraft:block_open": {
+    "id": 7,
+    "notificationRadius": 16
+  },
+  "minecraft:block_place": {
+    "id": 8,
+    "notificationRadius": 16
+  },
+  "minecraft:container_close": {
+    "id": 9,
+    "notificationRadius": 16
+  },
+  "minecraft:container_open": {
+    "id": 10,
+    "notificationRadius": 16
+  },
+  "minecraft:dispense_fail": {
+    "id": 11,
+    "notificationRadius": 16
+  },
+  "minecraft:drink": {
+    "id": 12,
+    "notificationRadius": 16
+  },
+  "minecraft:eat": {
+    "id": 13,
+    "notificationRadius": 16
+  },
+  "minecraft:elytra_glide": {
+    "id": 14,
+    "notificationRadius": 16
+  },
+  "minecraft:entity_damage": {
+    "id": 15,
+    "notificationRadius": 16
+  },
+  "minecraft:entity_die": {
+    "id": 16,
+    "notificationRadius": 16
+  },
+  "minecraft:entity_interact": {
+    "id": 17,
+    "notificationRadius": 16
+  },
+  "minecraft:entity_place": {
+    "id": 18,
+    "notificationRadius": 16
+  },
+  "minecraft:entity_roar": {
+    "id": 19,
+    "notificationRadius": 16
+  },
+  "minecraft:entity_shake": {
+    "id": 20,
+    "notificationRadius": 16
+  },
+  "minecraft:equip": {
+    "id": 21,
+    "notificationRadius": 16
+  },
+  "minecraft:explode": {
+    "id": 22,
+    "notificationRadius": 16
+  },
+  "minecraft:flap": {
+    "id": 23,
+    "notificationRadius": 16
+  },
+  "minecraft:fluid_pickup": {
+    "id": 24,
+    "notificationRadius": 16
+  },
+  "minecraft:fluid_place": {
+    "id": 25,
+    "notificationRadius": 16
+  },
+  "minecraft:hit_ground": {
+    "id": 26,
+    "notificationRadius": 16
+  },
+  "minecraft:instrument_play": {
+    "id": 27,
+    "notificationRadius": 16
+  },
+  "minecraft:item_interact_finish": {
+    "id": 28,
+    "notificationRadius": 16
+  },
+  "minecraft:item_interact_start": {
+    "id": 29,
+    "notificationRadius": 16
+  },
+  "minecraft:lightning_strike": {
+    "id": 30,
+    "notificationRadius": 16
+  },
+  "minecraft:note_block_play": {
+    "id": 31,
+    "notificationRadius": 16
+  },
+  "minecraft:piston_contract": {
+    "id": 32,
+    "notificationRadius": 16
+  },
+  "minecraft:piston_extend": {
+    "id": 33,
+    "notificationRadius": 16
+  },
+  "minecraft:prime_fuse": {
+    "id": 34,
+    "notificationRadius": 16
+  },
+  "minecraft:projectile_land": {
+    "id": 35,
+    "notificationRadius": 16
+  },
+  "minecraft:projectile_shoot": {
+    "id": 36,
+    "notificationRadius": 16
+  },
+  "minecraft:sculk_sensor_tendrils_clicking": {
+    "id": 37,
+    "notificationRadius": 16
+  },
+  "minecraft:shear": {
+    "id": 38,
+    "notificationRadius": 16
+  },
+  "minecraft:shriek": {
+    "id": 39,
+    "notificationRadius": 32
+  },
+  "minecraft:splash": {
+    "id": 40,
+    "notificationRadius": 16
+  },
+  "minecraft:step": {
+    "id": 41,
+    "notificationRadius": 16
+  },
+  "minecraft:swim": {
+    "id": 42,
+    "notificationRadius": 16
+  },
+  "minecraft:teleport": {
+    "id": 43,
+    "notificationRadius": 16
+  }
+}

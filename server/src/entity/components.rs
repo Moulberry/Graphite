@@ -77,6 +77,20 @@ pub trait EntitySpawnDefinition {
 
 pub struct EntityIdHolder(EntityId);
 
+/*#[derive(Component)]
+pub struct EntityMetadata {
+    pub metadata: Box<dyn Metadata>
+}
+
+unsafe impl Sync for EntityMetadata {}
+unsafe impl Send for EntityMetadata {}
+
+impl EntityMetadata {
+    pub fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.metadata.as_any_mut().downcast_mut()
+    }
+}*/
+
 #[derive(Component)]
 pub struct PlayerNPC {
     pub entity_id: EntityId,

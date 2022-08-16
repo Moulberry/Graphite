@@ -1,0 +1,131 @@
+{
+  "minecraft:empty": {
+    "id": 0
+  },
+  "minecraft:water": {
+    "id": 1
+  },
+  "minecraft:mundane": {
+    "id": 2
+  },
+  "minecraft:thick": {
+    "id": 3
+  },
+  "minecraft:awkward": {
+    "id": 4
+  },
+  "minecraft:night_vision": {
+    "id": 5
+  },
+  "minecraft:long_night_vision": {
+    "id": 6
+  },
+  "minecraft:invisibility": {
+    "id": 7
+  },
+  "minecraft:long_invisibility": {
+    "id": 8
+  },
+  "minecraft:leaping": {
+    "id": 9
+  },
+  "minecraft:long_leaping": {
+    "id": 10
+  },
+  "minecraft:strong_leaping": {
+    "id": 11
+  },
+  "minecraft:fire_resistance": {
+    "id": 12
+  },
+  "minecraft:long_fire_resistance": {
+    "id": 13
+  },
+  "minecraft:swiftness": {
+    "id": 14
+  },
+  "minecraft:long_swiftness": {
+    "id": 15
+  },
+  "minecraft:strong_swiftness": {
+    "id": 16
+  },
+  "minecraft:slowness": {
+    "id": 17
+  },
+  "minecraft:long_slowness": {
+    "id": 18
+  },
+  "minecraft:strong_slowness": {
+    "id": 19
+  },
+  "minecraft:turtle_master": {
+    "id": 20
+  },
+  "minecraft:long_turtle_master": {
+    "id": 21
+  },
+  "minecraft:strong_turtle_master": {
+    "id": 22
+  },
+  "minecraft:water_breathing": {
+    "id": 23
+  },
+  "minecraft:long_water_breathing": {
+    "id": 24
+  },
+  "minecraft:healing": {
+    "id": 25
+  },
+  "minecraft:strong_healing": {
+    "id": 26
+  },
+  "minecraft:harming": {
+    "id": 27
+  },
+  "minecraft:strong_harming": {
+    "id": 28
+  },
+  "minecraft:poison": {
+    "id": 29
+  },
+  "minecraft:long_poison": {
+    "id": 30
+  },
+  "minecraft:strong_poison": {
+    "id": 31
+  },
+  "minecraft:regeneration": {
+    "id": 32
+  },
+  "minecraft:long_regeneration": {
+    "id": 33
+  },
+  "minecraft:strong_regeneration": {
+    "id": 34
+  },
+  "minecraft:strength": {
+    "id": 35
+  },
+  "minecraft:long_strength": {
+    "id": 36
+  },
+  "minecraft:strong_strength": {
+    "id": 37
+  },
+  "minecraft:weakness": {
+    "id": 38
+  },
+  "minecraft:long_weakness": {
+    "id": 39
+  },
+  "minecraft:luck": {
+    "id": 40
+  },
+  "minecraft:slow_falling": {
+    "id": 41
+  },
+  "minecraft:long_slow_falling": {
+    "id": 42
+  }
+}

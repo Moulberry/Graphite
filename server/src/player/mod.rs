@@ -2,6 +2,7 @@ pub mod player_connection;
 pub mod player_settings;
 pub mod player_vec;
 pub mod proto_player;
+pub mod interaction;
 
 mod player_packet_handler;
 

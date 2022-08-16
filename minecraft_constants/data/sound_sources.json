@@ -1,0 +1,42 @@
+[
+  {
+    "id": 0,
+    "type": "master"
+  },
+  {
+    "id": 1,
+    "type": "music"
+  },
+  {
+    "id": 2,
+    "type": "record"
+  },
+  {
+    "id": 3,
+    "type": "weather"
+  },
+  {
+    "id": 4,
+    "type": "block"
+  },
+  {
+    "id": 5,
+    "type": "hostile"
+  },
+  {
+    "id": 6,
+    "type": "neutral"
+  },
+  {
+    "id": 7,
+    "type": "player"
+  },
+  {
+    "id": 8,
+    "type": "ambient"
+  },
+  {
+    "id": 9,
+    "type": "voice"
+  }
+]

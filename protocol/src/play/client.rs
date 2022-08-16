@@ -8,6 +8,7 @@ use crate::types::Direction;
 use crate::types::HandAction;
 use crate::types::MoveAction;
 use crate::types::Hand;
+use crate::types::BlockHitResult;
 use crate::IdentifiedPacket;
 use crate::types::ProtocolItemStack;
 use num_enum::TryFromPrimitive;
@@ -54,17 +55,17 @@ identify_packets! {
     // SeenAdvancements = 0x25,
     // SelectTrade = 0x26,
     // SetBeaconEffect = 0x27,
-    // SetCarriedItem = 0x28,
+    SetCarriedItem = 0x28,
     // SetCommandBlock = 0x29,
     // SetCommandBlockMinecart = 0x2a,
     SetCreativeModeSlot = 0x2b,
     // SetJigsawBlock = 0x2c,
     // SetStructureBlock = 0x2d,
     // UpdateSign = 0x2e,
-    Swing = 0x2f
+    Swing = 0x2f,
     // TeleportToEntity = 0x30,
-    // UseItemOn = 0x31,
-    // UseItem = 0x32
+    UseItemOn = 0x31,
+    UseItem = 0x32
 }
 
 // Accept Teleportation
@@ -203,6 +204,14 @@ slice_serializable! {
     }
 }
 
+// Set Carried Item
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetCarriedItem {
+        pub slot: u16 as BigEndian
+    }
+}
+
 // Set Creative Mode Slot
 slice_serializable! {
     #[derive(Debug)]
@@ -216,6 +225,26 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct Swing {
+        pub hand: Hand as AttemptFrom<Single, u8>
+    }
+}
+
+// Use Item On
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct UseItemOn {
         pub hand: Hand as AttemptFrom<Single, u8>,
+        pub block_hit: BlockHitResult,
+        pub sequence: i32 as VarInt
+    }
+}
+
+
+// Use Item
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct UseItem {
+        pub hand: Hand as AttemptFrom<Single, u8>,
+        pub sequence: i32 as VarInt
     }
 }

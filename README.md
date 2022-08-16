@@ -31,6 +31,10 @@
 
 Project is currently under heavy development, many things are completely non-functional
 
+# Building
+
+Make sure to run `git submodule update --init --recursive` before building/running
+
 # How to run the example server
 
 !!! Currently Graphite only supports modern versions of Linux with io\_uring !!!  

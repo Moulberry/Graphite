@@ -1,0 +1,130 @@
+[
+  {
+    "id": 0,
+    "name": "WHITE",
+    "textureDiffuseColor": 16383998,
+    "textColor": 16777215,
+    "fireworkColor": 15790320,
+    "mapColorId": 8
+  },
+  {
+    "id": 1,
+    "name": "ORANGE",
+    "textureDiffuseColor": 16351261,
+    "textColor": 16738335,
+    "fireworkColor": 15435844,
+    "mapColorId": 15
+  },
+  {
+    "id": 2,
+    "name": "MAGENTA",
+    "textureDiffuseColor": 13061821,
+    "textColor": 16711935,
+    "fireworkColor": 12801229,
+    "mapColorId": 16
+  },
+  {
+    "id": 3,
+    "name": "LIGHT_BLUE",
+    "textureDiffuseColor": 3847130,
+    "textColor": 10141901,
+    "fireworkColor": 6719955,
+    "mapColorId": 17
+  },
+  {
+    "id": 4,
+    "name": "YELLOW",
+    "textureDiffuseColor": 16701501,
+    "textColor": 16776960,
+    "fireworkColor": 14602026,
+    "mapColorId": 18
+  },
+  {
+    "id": 5,
+    "name": "LIME",
+    "textureDiffuseColor": 8439583,
+    "textColor": 12582656,
+    "fireworkColor": 4312372,
+    "mapColorId": 19
+  },
+  {
+    "id": 6,
+    "name": "PINK",
+    "textureDiffuseColor": 15961002,
+    "textColor": 16738740,
+    "fireworkColor": 14188952,
+    "mapColorId": 20
+  },
+  {
+    "id": 7,
+    "name": "GRAY",
+    "textureDiffuseColor": 4673362,
+    "textColor": 8421504,
+    "fireworkColor": 4408131,
+    "mapColorId": 21
+  },
+  {
+    "id": 8,
+    "name": "LIGHT_GRAY",
+    "textureDiffuseColor": 10329495,
+    "textColor": 13882323,
+    "fireworkColor": 11250603,
+    "mapColorId": 22
+  },
+  {
+    "id": 9,
+    "name": "CYAN",
+    "textureDiffuseColor": 1481884,
+    "textColor": 65535,
+    "fireworkColor": 2651799,
+    "mapColorId": 23
+  },
+  {
+    "id": 10,
+    "name": "PURPLE",
+    "textureDiffuseColor": 8991416,
+    "textColor": 10494192,
+    "fireworkColor": 8073150,
+    "mapColorId": 24
+  },
+  {
+    "id": 11,
+    "name": "BLUE",
+    "textureDiffuseColor": 3949738,
+    "textColor": 255,
+    "fireworkColor": 2437522,
+    "mapColorId": 25
+  },
+  {
+    "id": 12,
+    "name": "BROWN",
+    "textureDiffuseColor": 8606770,
+    "textColor": 9127187,
+    "fireworkColor": 5320730,
+    "mapColorId": 26
+  },
+  {
+    "id": 13,
+    "name": "GREEN",
+    "textureDiffuseColor": 6192150,
+    "textColor": 65280,
+    "fireworkColor": 3887386,
+    "mapColorId": 27
+  },
+  {
+    "id": 14,
+    "name": "RED",
+    "textureDiffuseColor": 11546150,
+    "textColor": 16711680,
+    "fireworkColor": 11743532,
+    "mapColorId": 28
+  },
+  {
+    "id": 15,
+    "name": "BLACK",
+    "textureDiffuseColor": 1908001,
+    "textColor": 0,
+    "fireworkColor": 1973019,
+    "mapColorId": 29
+  }
+]

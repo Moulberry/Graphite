@@ -1,0 +1,119 @@
+{
+  "minecraft:generic.max_health": {
+    "translationKey": "attribute.name.generic.max_health",
+    "defaultValue": 20.0,
+    "clientSync": true,
+    "range": {
+      "maxValue": 1024.0,
+      "minValue": 1.0
+    }
+  },
+  "minecraft:generic.follow_range": {
+    "translationKey": "attribute.name.generic.follow_range",
+    "defaultValue": 32.0,
+    "clientSync": false,
+    "range": {
+      "maxValue": 2048.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.knockback_resistance": {
+    "translationKey": "attribute.name.generic.knockback_resistance",
+    "defaultValue": 0.0,
+    "clientSync": false,
+    "range": {
+      "maxValue": 1.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.movement_speed": {
+    "translationKey": "attribute.name.generic.movement_speed",
+    "defaultValue": 0.699999988079071,
+    "clientSync": true,
+    "range": {
+      "maxValue": 1024.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.flying_speed": {
+    "translationKey": "attribute.name.generic.flying_speed",
+    "defaultValue": 0.4000000059604645,
+    "clientSync": true,
+    "range": {
+      "maxValue": 1024.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.attack_damage": {
+    "translationKey": "attribute.name.generic.attack_damage",
+    "defaultValue": 2.0,
+    "clientSync": false,
+    "range": {
+      "maxValue": 2048.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.attack_knockback": {
+    "translationKey": "attribute.name.generic.attack_knockback",
+    "defaultValue": 0.0,
+    "clientSync": false,
+    "range": {
+      "maxValue": 5.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.attack_speed": {
+    "translationKey": "attribute.name.generic.attack_speed",
+    "defaultValue": 4.0,
+    "clientSync": true,
+    "range": {
+      "maxValue": 1024.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.armor": {
+    "translationKey": "attribute.name.generic.armor",
+    "defaultValue": 0.0,
+    "clientSync": true,
+    "range": {
+      "maxValue": 30.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.armor_toughness": {
+    "translationKey": "attribute.name.generic.armor_toughness",
+    "defaultValue": 0.0,
+    "clientSync": true,
+    "range": {
+      "maxValue": 20.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:generic.luck": {
+    "translationKey": "attribute.name.generic.luck",
+    "defaultValue": 0.0,
+    "clientSync": true,
+    "range": {
+      "maxValue": 1024.0,
+      "minValue": -1024.0
+    }
+  },
+  "minecraft:zombie.spawn_reinforcements": {
+    "translationKey": "attribute.name.zombie.spawn_reinforcements",
+    "defaultValue": 0.0,
+    "clientSync": false,
+    "range": {
+      "maxValue": 1.0,
+      "minValue": 0.0
+    }
+  },
+  "minecraft:horse.jump_strength": {
+    "translationKey": "attribute.name.horse.jump_strength",
+    "defaultValue": 0.7,
+    "clientSync": true,
+    "range": {
+      "maxValue": 2.0,
+      "minValue": 0.0
+    }
+  }
+}

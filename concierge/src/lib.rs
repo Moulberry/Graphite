@@ -254,7 +254,7 @@ impl<T: ConciergeService + 'static> Concierge<T> {
             service,
         };
 
-        net::network_handler::start(concierge, Some(addr))?;
+        net::network_handler::start(concierge, Some(addr)).unwrap();
 
         Ok(())
     }

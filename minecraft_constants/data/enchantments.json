@@ -1,0 +1,287 @@
+{
+  "minecraft:protection": {
+    "id": 0,
+    "translationKey": "enchantment.minecraft.protection",
+    "maxLevel": 4,
+    "rarity": "COMMON",
+    "category": "ARMOR"
+  },
+  "minecraft:fire_protection": {
+    "id": 1,
+    "translationKey": "enchantment.minecraft.fire_protection",
+    "maxLevel": 4,
+    "rarity": "UNCOMMON",
+    "category": "ARMOR"
+  },
+  "minecraft:feather_falling": {
+    "id": 2,
+    "translationKey": "enchantment.minecraft.feather_falling",
+    "maxLevel": 4,
+    "rarity": "UNCOMMON",
+    "category": "ARMOR_FEET"
+  },
+  "minecraft:blast_protection": {
+    "id": 3,
+    "translationKey": "enchantment.minecraft.blast_protection",
+    "maxLevel": 4,
+    "rarity": "RARE",
+    "category": "ARMOR"
+  },
+  "minecraft:projectile_protection": {
+    "id": 4,
+    "translationKey": "enchantment.minecraft.projectile_protection",
+    "maxLevel": 4,
+    "rarity": "UNCOMMON",
+    "category": "ARMOR"
+  },
+  "minecraft:respiration": {
+    "id": 5,
+    "translationKey": "enchantment.minecraft.respiration",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "ARMOR_HEAD"
+  },
+  "minecraft:aqua_affinity": {
+    "id": 6,
+    "translationKey": "enchantment.minecraft.aqua_affinity",
+    "maxLevel": 1,
+    "rarity": "RARE",
+    "category": "ARMOR_HEAD"
+  },
+  "minecraft:thorns": {
+    "id": 7,
+    "translationKey": "enchantment.minecraft.thorns",
+    "maxLevel": 3,
+    "rarity": "VERY_RARE",
+    "category": "ARMOR_CHEST"
+  },
+  "minecraft:depth_strider": {
+    "id": 8,
+    "translationKey": "enchantment.minecraft.depth_strider",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "ARMOR_FEET"
+  },
+  "minecraft:frost_walker": {
+    "id": 9,
+    "translationKey": "enchantment.minecraft.frost_walker",
+    "maxLevel": 2,
+    "rarity": "RARE",
+    "treasureOnly": true,
+    "category": "ARMOR_FEET"
+  },
+  "minecraft:binding_curse": {
+    "id": 10,
+    "translationKey": "enchantment.minecraft.binding_curse",
+    "maxLevel": 1,
+    "rarity": "VERY_RARE",
+    "curse": true,
+    "treasureOnly": true,
+    "category": "WEARABLE"
+  },
+  "minecraft:soul_speed": {
+    "id": 11,
+    "translationKey": "enchantment.minecraft.soul_speed",
+    "maxLevel": 3,
+    "rarity": "VERY_RARE",
+    "discoverable": false,
+    "tradeable": false,
+    "treasureOnly": true,
+    "category": "ARMOR_FEET"
+  },
+  "minecraft:swift_sneak": {
+    "id": 12,
+    "translationKey": "enchantment.minecraft.swift_sneak",
+    "maxLevel": 3,
+    "rarity": "VERY_RARE",
+    "discoverable": false,
+    "tradeable": false,
+    "treasureOnly": true,
+    "category": "ARMOR_LEGS"
+  },
+  "minecraft:sharpness": {
+    "id": 13,
+    "translationKey": "enchantment.minecraft.sharpness",
+    "maxLevel": 5,
+    "rarity": "COMMON",
+    "category": "WEAPON"
+  },
+  "minecraft:smite": {
+    "id": 14,
+    "translationKey": "enchantment.minecraft.smite",
+    "maxLevel": 5,
+    "rarity": "UNCOMMON",
+    "category": "WEAPON"
+  },
+  "minecraft:bane_of_arthropods": {
+    "id": 15,
+    "translationKey": "enchantment.minecraft.bane_of_arthropods",
+    "maxLevel": 5,
+    "rarity": "UNCOMMON",
+    "category": "WEAPON"
+  },
+  "minecraft:knockback": {
+    "id": 16,
+    "translationKey": "enchantment.minecraft.knockback",
+    "maxLevel": 2,
+    "rarity": "UNCOMMON",
+    "category": "WEAPON"
+  },
+  "minecraft:fire_aspect": {
+    "id": 17,
+    "translationKey": "enchantment.minecraft.fire_aspect",
+    "maxLevel": 2,
+    "rarity": "RARE",
+    "category": "WEAPON"
+  },
+  "minecraft:looting": {
+    "id": 18,
+    "translationKey": "enchantment.minecraft.looting",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "WEAPON"
+  },
+  "minecraft:sweeping": {
+    "id": 19,
+    "translationKey": "enchantment.minecraft.sweeping",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "WEAPON"
+  },
+  "minecraft:efficiency": {
+    "id": 20,
+    "translationKey": "enchantment.minecraft.efficiency",
+    "maxLevel": 5,
+    "rarity": "COMMON",
+    "category": "DIGGER"
+  },
+  "minecraft:silk_touch": {
+    "id": 21,
+    "translationKey": "enchantment.minecraft.silk_touch",
+    "maxLevel": 1,
+    "rarity": "VERY_RARE",
+    "category": "DIGGER"
+  },
+  "minecraft:unbreaking": {
+    "id": 22,
+    "translationKey": "enchantment.minecraft.unbreaking",
+    "maxLevel": 3,
+    "rarity": "UNCOMMON",
+    "category": "BREAKABLE"
+  },
+  "minecraft:fortune": {
+    "id": 23,
+    "translationKey": "enchantment.minecraft.fortune",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "DIGGER"
+  },
+  "minecraft:power": {
+    "id": 24,
+    "translationKey": "enchantment.minecraft.power",
+    "maxLevel": 5,
+    "rarity": "COMMON",
+    "category": "BOW"
+  },
+  "minecraft:punch": {
+    "id": 25,
+    "translationKey": "enchantment.minecraft.punch",
+    "maxLevel": 2,
+    "rarity": "RARE",
+    "category": "BOW"
+  },
+  "minecraft:flame": {
+    "id": 26,
+    "translationKey": "enchantment.minecraft.flame",
+    "maxLevel": 1,
+    "rarity": "RARE",
+    "category": "BOW"
+  },
+  "minecraft:infinity": {
+    "id": 27,
+    "translationKey": "enchantment.minecraft.infinity",
+    "maxLevel": 1,
+    "rarity": "VERY_RARE",
+    "category": "BOW"
+  },
+  "minecraft:luck_of_the_sea": {
+    "id": 28,
+    "translationKey": "enchantment.minecraft.luck_of_the_sea",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "FISHING_ROD"
+  },
+  "minecraft:lure": {
+    "id": 29,
+    "translationKey": "enchantment.minecraft.lure",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "FISHING_ROD"
+  },
+  "minecraft:loyalty": {
+    "id": 30,
+    "translationKey": "enchantment.minecraft.loyalty",
+    "maxLevel": 3,
+    "rarity": "UNCOMMON",
+    "category": "TRIDENT"
+  },
+  "minecraft:impaling": {
+    "id": 31,
+    "translationKey": "enchantment.minecraft.impaling",
+    "maxLevel": 5,
+    "rarity": "RARE",
+    "category": "TRIDENT"
+  },
+  "minecraft:riptide": {
+    "id": 32,
+    "translationKey": "enchantment.minecraft.riptide",
+    "maxLevel": 3,
+    "rarity": "RARE",
+    "category": "TRIDENT"
+  },
+  "minecraft:channeling": {
+    "id": 33,
+    "translationKey": "enchantment.minecraft.channeling",
+    "maxLevel": 1,
+    "rarity": "VERY_RARE",
+    "category": "TRIDENT"
+  },
+  "minecraft:multishot": {
+    "id": 34,
+    "translationKey": "enchantment.minecraft.multishot",
+    "maxLevel": 1,
+    "rarity": "RARE",
+    "category": "CROSSBOW"
+  },
+  "minecraft:quick_charge": {
+    "id": 35,
+    "translationKey": "enchantment.minecraft.quick_charge",
+    "maxLevel": 3,
+    "rarity": "UNCOMMON",
+    "category": "CROSSBOW"
+  },
+  "minecraft:piercing": {
+    "id": 36,
+    "translationKey": "enchantment.minecraft.piercing",
+    "maxLevel": 4,
+    "rarity": "COMMON",
+    "category": "CROSSBOW"
+  },
+  "minecraft:mending": {
+    "id": 37,
+    "translationKey": "enchantment.minecraft.mending",
+    "maxLevel": 1,
+    "rarity": "RARE",
+    "treasureOnly": true,
+    "category": "BREAKABLE"
+  },
+  "minecraft:vanishing_curse": {
+    "id": 38,
+    "translationKey": "enchantment.minecraft.vanishing_curse",
+    "maxLevel": 1,
+    "rarity": "VERY_RARE",
+    "curse": true,
+    "treasureOnly": true,
+    "category": "VANISHABLE"
+  }
+}

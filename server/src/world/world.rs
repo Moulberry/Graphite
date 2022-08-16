@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use bevy_ecs::{prelude::*, world::EntityMut};
+use minecraft_constants::block::BlockProperties;
 use net::network_buffer::WriteBuffer;
 use protocol::play::server::{
     Login, RotateHead, SetChunkCacheCenter, PlayerPosition, TeleportEntity,
@@ -9,14 +10,14 @@ use protocol::play::server::{
 
 use crate::{
     entity::{
-        components::{BasicEntity, EntitySpawnDefinition, Spinalla, Viewable},
+        components::{BasicEntity, EntitySpawnDefinition, Spinalla, Viewable, EntityMetadata},
         position::{Coordinate, Position},
     },
     player::{proto_player::ProtoPlayer, Player, PlayerService},
     universe::{EntityId, Universe, UniverseService},
 };
 
-use super::chunk::Chunk;
+use super::chunk::{Chunk, BlockStorage};
 
 // user defined world service trait
 
@@ -178,6 +179,8 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn tick(&mut self) {
+        // let start = Instant::now();
+
         // Update viewable state for entities
         self.update_viewable_entities();
 
@@ -232,6 +235,10 @@ impl<W: WorldService> World<W> {
                 chunk.entity_viewable_buffer.tick_and_maybe_shrink();
             }
         }
+
+        // let end = Instant::now();
+        // let took = end.duration_since(start);
+        // println!("Took: {:?}", took);
     }
 
     fn update_viewable_entities(&mut self) {
@@ -312,7 +319,7 @@ impl<W: WorldService> World<W> {
     ) {
         let old_chunk =
             &mut self.chunks[player.chunk_view_position.x][player.chunk_view_position.z];
-        old_chunk.remove_player(player);
+        old_chunk.destroy_player(player);
     }
 
     pub(crate) fn update_view_position<P: PlayerService>(
@@ -330,6 +337,20 @@ impl<W: WorldService> World<W> {
         if same_position || out_of_bounds {
             return Ok(());
         }
+
+        // Update view position
+        let update_view_position_packet = SetChunkCacheCenter { chunk_x, chunk_z };
+        player.write_packet(&update_view_position_packet);
+
+        // Remove player from old internal chunk lists
+        let player_ref = {
+            let old_chunk = &mut self.chunks[old_chunk_x as usize][old_chunk_z as usize];
+            old_chunk.pop_player_ref(player)
+        };
+        player.new_chunk_view_position = ChunkViewPosition {
+            x: chunk_x as usize,
+            z: chunk_z as usize,
+        };
 
         // Chunk
         // todo: only send new chunks
@@ -423,22 +444,9 @@ impl<W: WorldService> World<W> {
             W::CHUNKS_Z,
         );
 
-        // Update view position
-        let update_view_position_packet = SetChunkCacheCenter { chunk_x, chunk_z };
-        player.write_packet(&update_view_position_packet);
-
-        // Bypass borrow checker. Safety: We already checked that old_chunk_x/z != chunk_x/z
-        let old_chunk: &mut Chunk = unsafe {
-            &mut *(&mut self.chunks[old_chunk_x as usize][old_chunk_z as usize] as *mut _)
-        };
+        // Add player to new_chunk's internal player list
         let new_chunk = &mut self.chunks[chunk_x as usize][chunk_z as usize];
-
-        // Move player between internal chunk lists
-        old_chunk.move_player(player, new_chunk);
-        player.new_chunk_view_position = ChunkViewPosition {
-            x: chunk_x as usize,
-            z: chunk_z as usize,
-        };
+        new_chunk.push_player_ref(player, player_ref);
 
         Ok(())
     }
@@ -596,7 +604,7 @@ impl<W: WorldService> World<W> {
         let join_game_packet = Login {
             entity_id: proto_player.entity_id.as_i32(),
             is_hardcore: proto_player.hardcore,
-            gamemode: 1,
+            gamemode: proto_player.abilities.gamemode as u8,
             previous_gamemode: -1,
             dimension_names: vec!["minecraft:overworld"],
             registry_codec: &binary,
@@ -622,6 +630,37 @@ impl<W: WorldService> World<W> {
         Ok(())
     }
 
+    pub fn get_required_destroy_ticks(&self, x: i32, y: i32, z: i32, speed: f32) -> Option<f32> {
+        if let Some(block) = self.get_block_i32(x, y, z) {
+            let properties: &BlockProperties = block.try_into().expect("valid block");
+
+            if properties.air {
+                None
+            } else {
+                Some(properties.hardness * speed)
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn get_destroy_stage(&self, x: i32, y: i32, z: i32, time: usize, speed: f32) -> Option<i8> {
+        let destroy_ticks = self.get_required_destroy_ticks(x, y, z, speed)?;
+        let break_progress = if destroy_ticks < 1.0 {
+            1.0
+        } else {
+            time as f32 / destroy_ticks
+        };
+
+        let destroy_stage = if break_progress > 1.0 {
+            8
+        } else {
+            (break_progress * 10.0 - 1.0).floor() as i8
+        };
+
+        Some(destroy_stage)
+    }
+
     #[inline(always)]
     fn chunk_coords_in_bounds(chunk_x: i32, chunk_z: i32) -> bool {
         chunk_x >= 0 && chunk_x < W::CHUNKS_X as _ && chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _
@@ -633,5 +672,55 @@ impl<W: WorldService> World<W> {
         debug_assert!(chunk_z >= 0, "position must be in-bounds");
         debug_assert!(chunk_x < W::CHUNKS_X as _, "position must be in-bounds");
         debug_assert!(chunk_z < W::CHUNKS_Z as _, "position must be in-bounds");
+    }
+}
+
+impl<W: WorldService + ?Sized> World<W> {
+    pub fn set_block_i32(&mut self, x: i32, y: i32, z: i32, block: u16) -> Option<u16> {
+        if x < 0 || y < 0 || z < 0 {
+            return None;
+        }
+        self.set_block(x as _, y as _, z as _, block)
+    }
+
+    pub fn get_block_i32(&self, x: i32, y: i32, z: i32) -> Option<u16> {
+        if x < 0 || y < 0 || z < 0 {
+            return None;
+        }
+        self.get_block(x as _, y as _, z as _)
+    }
+}
+
+impl<W: WorldService + ?Sized> BlockStorage for World<W> {
+    fn fill_section_blocks(&mut self, y: usize, block: u16) {
+        for chunk_list in &mut self.chunks {
+            for chunk in chunk_list {
+                chunk.fill_section_blocks(y, block);
+            }
+        }
+    }
+
+    fn set_block(&mut self, x: usize, y: usize, z: usize, block: u16) -> Option<u16> {
+        let chunk_x = (x / Chunk::SECTION_BLOCK_WIDTH_I) as usize;
+        let chunk_z = (z / Chunk::SECTION_BLOCK_WIDTH_I) as usize;
+
+        if chunk_x < W::CHUNKS_X && chunk_z < W::CHUNKS_Z {
+            let chunk = &mut self.chunks[chunk_x][chunk_z];
+            chunk.set_block(x, y, z, block)
+        } else {
+            None
+        }
+    }
+
+    fn get_block(&self, x: usize, y: usize, z: usize) -> Option<u16> {
+        let chunk_x = (x / Chunk::SECTION_BLOCK_WIDTH_I) as usize;
+        let chunk_z = (z / Chunk::SECTION_BLOCK_WIDTH_I) as usize;
+
+        if chunk_x < W::CHUNKS_X && chunk_z < W::CHUNKS_Z {
+            let chunk = &self.chunks[chunk_x][chunk_z];
+            chunk.get_block(x, y, z)
+        } else {
+            None
+        }
     }
 }

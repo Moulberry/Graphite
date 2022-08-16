@@ -1,5 +1,5 @@
 use binary::slice_serialization::{
-    self, slice_serializable, BigEndian, Single, SizedArray, SizedBlob, SizedString,
+    self, slice_serializable, BigEndian, Single, SizedArray, SizedBlob, SizedString, AttemptFrom,
     SliceSerializable, VarInt,
 };
 use num_enum::{IntoPrimitive, TryFromPrimitive};
@@ -11,6 +11,26 @@ pub enum ChatVisibility {
     Full,
     System,
     None,
+}
+
+#[derive(Default, Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
+#[repr(u8)]
+pub enum Pose {
+    #[default]
+    Standing,
+    FallFlying,
+    Sleeping,
+    Swimming,
+    SpinAttack,
+    Sneaking,
+    LongJumping,
+    Dying,
+    Croaking,
+    UsingTongue,
+    Roaring,
+    Sniffing,
+    Emerging,
+    Digging
 }
 
 #[derive(Default, Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
@@ -55,15 +75,27 @@ pub enum MoveAction {
     StartFallFlying,
 }
 
-#[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
+#[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive, Default)]
 #[repr(u8)]
 pub enum Direction {
+    #[default]
     Down,
     Up,
     North,
     South,
     West,
     East,
+}
+
+#[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
+#[repr(u8)]
+pub enum EquipmentSlot {
+    MainHand,
+    OffHand,
+    Feet,
+    Legs,
+    Chest,
+    Head,
 }
 
 // ItemStack
@@ -73,7 +105,17 @@ slice_serializable! {
     pub struct ProtocolItemStack {
         pub item: i32 as VarInt,
         pub count: i8 as Single,
-        pub temp_nbt: u8 as Single
+        pub temp_nbt: u8 as Single  
+    }
+}
+
+impl Default for ProtocolItemStack {
+    fn default() -> Self {
+        Self {
+            item: 1,
+            count: 1,
+            temp_nbt: 0
+        }
     }
 }
 
@@ -108,6 +150,20 @@ slice_serializable! {
         pub timestamp: i64 as BigEndian,
         pub public_key: &'a [u8] as SizedBlob,
         pub signature: &'a [u8] as SizedBlob
+    }
+}
+
+// Block Hit Result
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct BlockHitResult {
+        pub position: BlockPosition,
+        pub direction: Direction as AttemptFrom<Single, u8>,
+        pub offset_x: f32 as BigEndian,
+        pub offset_y: f32 as BigEndian,
+        pub offset_z: f32 as BigEndian,
+        pub is_inside: bool as Single
     }
 }
 
@@ -165,7 +221,7 @@ impl SliceSerializable<'_, f32> for QuantizedShort {
 
 // Block Position
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub struct BlockPosition {
     pub x: i32,
     pub y: i16,
@@ -199,6 +255,53 @@ impl SliceSerializable<'_> for BlockPosition {
 
     fn get_write_size(_: Self) -> usize {
         <slice_serialization::BigEndian as SliceSerializable<'_, i64>>::get_write_size(0)
+    }
+}
+
+// Equipment List (https://wiki.vg/Protocol#Set_Equipment)
+
+pub(crate) enum EquipmentList {}
+
+impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> for EquipmentList {
+    type RefType = &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>;
+
+    fn maybe_deref(t: &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>) -> Self::RefType {
+        t
+    }
+
+    fn read(_: &mut &'a [u8]) -> anyhow::Result<Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> {
+        unimplemented!()
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: Self::RefType) -> &mut [u8] {
+        let mut remaining = data.len();
+        for (slot, stack) in data {
+            remaining -= 1;
+            
+            let mut slot_id = *slot as u8;
+            if remaining > 0 {
+                slot_id |= 0b10000000;
+            }
+
+            bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, slot_id);
+            if let Some(stack) = stack {
+                bytes = <Single as SliceSerializable<'_, bool>>::write(bytes, true);
+                bytes = ProtocolItemStack::write(bytes, stack);
+            } else {
+                bytes = <Single as SliceSerializable<'_, bool>>::write(bytes, false);
+            }
+        }
+        bytes
+    }
+
+    fn get_write_size(data: Self::RefType) -> usize {
+        let mut size = data.len() * 2;
+        for (_, stack) in data {
+            if let Some(stack) = stack {
+                size += ProtocolItemStack::get_write_size(stack)
+            }
+        }
+        size
     }
 }
 

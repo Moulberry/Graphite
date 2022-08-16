@@ -1,0 +1,146 @@
+{
+  "brigadier:bool": {
+    "id": 0
+  },
+  "brigadier:float": {
+    "id": 1
+  },
+  "brigadier:double": {
+    "id": 2
+  },
+  "brigadier:integer": {
+    "id": 3
+  },
+  "brigadier:long": {
+    "id": 4
+  },
+  "brigadier:string": {
+    "id": 5
+  },
+  "minecraft:entity": {
+    "id": 6
+  },
+  "minecraft:game_profile": {
+    "id": 7
+  },
+  "minecraft:block_pos": {
+    "id": 8
+  },
+  "minecraft:column_pos": {
+    "id": 9
+  },
+  "minecraft:vec3": {
+    "id": 10
+  },
+  "minecraft:vec2": {
+    "id": 11
+  },
+  "minecraft:block_state": {
+    "id": 12
+  },
+  "minecraft:block_predicate": {
+    "id": 13
+  },
+  "minecraft:item_stack": {
+    "id": 14
+  },
+  "minecraft:item_predicate": {
+    "id": 15
+  },
+  "minecraft:color": {
+    "id": 16
+  },
+  "minecraft:component": {
+    "id": 17
+  },
+  "minecraft:message": {
+    "id": 18
+  },
+  "minecraft:nbt_compound_tag": {
+    "id": 19
+  },
+  "minecraft:nbt_tag": {
+    "id": 20
+  },
+  "minecraft:nbt_path": {
+    "id": 21
+  },
+  "minecraft:objective": {
+    "id": 22
+  },
+  "minecraft:objective_criteria": {
+    "id": 23
+  },
+  "minecraft:operation": {
+    "id": 24
+  },
+  "minecraft:particle": {
+    "id": 25
+  },
+  "minecraft:angle": {
+    "id": 26
+  },
+  "minecraft:rotation": {
+    "id": 27
+  },
+  "minecraft:scoreboard_slot": {
+    "id": 28
+  },
+  "minecraft:score_holder": {
+    "id": 29
+  },
+  "minecraft:swizzle": {
+    "id": 30
+  },
+  "minecraft:team": {
+    "id": 31
+  },
+  "minecraft:item_slot": {
+    "id": 32
+  },
+  "minecraft:resource_location": {
+    "id": 33
+  },
+  "minecraft:mob_effect": {
+    "id": 34
+  },
+  "minecraft:function": {
+    "id": 35
+  },
+  "minecraft:entity_anchor": {
+    "id": 36
+  },
+  "minecraft:int_range": {
+    "id": 37
+  },
+  "minecraft:float_range": {
+    "id": 38
+  },
+  "minecraft:item_enchantment": {
+    "id": 39
+  },
+  "minecraft:entity_summon": {
+    "id": 40
+  },
+  "minecraft:dimension": {
+    "id": 41
+  },
+  "minecraft:time": {
+    "id": 42
+  },
+  "minecraft:resource_or_tag": {
+    "id": 43
+  },
+  "minecraft:resource": {
+    "id": 44
+  },
+  "minecraft:template_mirror": {
+    "id": 45
+  },
+  "minecraft:template_rotation": {
+    "id": 46
+  },
+  "minecraft:uuid": {
+    "id": 47
+  }
+}

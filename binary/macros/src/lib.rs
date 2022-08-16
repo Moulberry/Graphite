@@ -1,17 +1,26 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, result};
 
 use proc_macro::TokenStream;
+use proc_macro2::{Ident, Span};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
     braced, parse::Parse, parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute,
-    Token,
+    Token, parenthesized,
 };
+
+#[derive(Debug)]
+enum SpecialInstruction {
+    None,
+    Pack,
+    Invalid(Span, String)
+}
 
 #[derive(Debug)]
 struct FieldInput {
     pub vis: syn::Visibility,
     pub ident: syn::Ident,
     pub field_type: syn::Type,
+    pub special_instruction: SpecialInstruction,
     pub serialize_type: Option<syn::Type>,
 }
 
@@ -32,17 +41,46 @@ impl Parse for FieldInput {
         let _: Token![:] = input.parse()?;
         let field_type = input.parse()?;
 
-        let serialize_type = if input.peek(Token![as]) {
+        let (special_instruction, serialize_type) = if input.peek(Token![as]) {
             let _: Token![as] = input.parse()?;
-            Some(input.parse()?)
+
+            if input.peek2(Token![!]) {
+                let instruction: Ident = input.parse()?;
+                let _: Token![!] = input.parse()?;
+
+                let _parenthesized;
+                parenthesized!(_parenthesized in input);
+
+                let instruction_str = instruction.to_string();
+                if instruction_str == "packed" {
+                    match &field_type {
+                        syn::Type::Path(path) => {
+                            if path.path.is_ident("bool") {
+                                (SpecialInstruction::Pack, None)
+                            } else {
+                                (SpecialInstruction::Invalid(instruction.span(),
+                                    "packed instruction only valid for bools".into()), None)
+                            }
+                        },
+                        _ => (SpecialInstruction::Invalid(instruction.span(),
+                            "packed instruction only valid for bools".into()), None),
+                    }
+                } else {
+                    let error_str = format!("unknown custom serialization instruction: {}", instruction_str);
+                    (SpecialInstruction::Invalid(instruction.span(), error_str), None)
+                }
+            } else {
+                (SpecialInstruction::None, Some(input.parse()?))
+            }
         } else {
-            None
+            (SpecialInstruction::None, None)
         };
 
         Ok(Self {
             vis,
             ident,
             field_type,
+            special_instruction,
             serialize_type,
         })
     }
@@ -103,6 +141,13 @@ impl ToTokens for InputVariant {
     }
 }
 
+struct VariantSerializeImpl {
+    read_impl: proc_macro2::TokenStream,
+    read_impl_construct: proc_macro2::TokenStream,
+    get_write_size_impl: proc_macro2::TokenStream,
+    write_impl: proc_macro2::TokenStream,
+}
+
 impl InputVariant {
     fn get_lifetime_or_default(&self) -> proc_macro2::TokenStream {
         if let Some(lifetime) = &self.lifetime {
@@ -123,17 +168,37 @@ impl InputVariant {
         &self,
         lifetime: proc_macro2::TokenStream,
         prefix: proc_macro2::TokenStream,
-    ) -> (
-        proc_macro2::TokenStream,
-        proc_macro2::TokenStream,
-        proc_macro2::TokenStream,
-    ) {
+    ) -> result::Result<VariantSerializeImpl, (Span, String)> {
         let mut get_write_size_impl: proc_macro2::TokenStream = Default::default();
         let mut write_impl: proc_macro2::TokenStream = Default::default();
         let mut read_impl: proc_macro2::TokenStream = Default::default();
+        let mut read_impl_construct: proc_macro2::TokenStream = Default::default();
+
+        let mut total_packed = 0;
+        let mut packed = Vec::new();
 
         for field in &self.fields {
             let field_ident = &field.ident;
+
+            read_impl_construct.extend(
+                quote!(
+                    #field_ident,
+                )
+            );
+
+            match &field.special_instruction {
+                SpecialInstruction::None => {},
+                SpecialInstruction::Pack => {
+                    if packed.len() == 8 {
+                        return Err((field_ident.span(), "packed only supports up to 8 fields".into()))
+                    }
+                    packed.push(field_ident.clone());
+                    continue;
+                },
+                SpecialInstruction::Invalid(span, msg) => {
+                    return Err((*span, msg.clone()));
+                },
+            }
 
             let serialize_type = field.get_serialize_type();
             let serialize_type_span = serialize_type.span();
@@ -143,6 +208,60 @@ impl InputVariant {
                 serialize_type_span =>
                 <#serialize_type as binary::slice_serialization::SliceSerializable<#lifetime, #field_type>>
             );
+
+            if !packed.is_empty() {
+                // Packed get_write_size
+                get_write_size_impl.extend(
+                    quote_spanned!(
+                        serialize_type_span => 1 +
+                    )
+                );
+
+                // Packed write
+                let mut inner_write_impl = quote!();
+                for (index, field) in packed.iter().enumerate() {
+                    let value: u8 = 1 << index;
+
+                    let or = if index == 0 { quote!() } else { quote!(|) };
+                    inner_write_impl.extend(
+                        quote_spanned!(
+                            serialize_type_span =>
+                            #or (if *#prefix #field { #value } else { 0 })
+                        )
+                    )
+                }
+                write_impl.extend(
+                    quote_spanned!(
+                        serialize_type_span =>
+                        bytes = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::write(bytes,
+                            #inner_write_impl
+                        );
+                    )
+                );
+
+                let packed_ident = Ident::new(&format!("internal_packed_{total_packed}"), serialize_type_span);
+
+                // Packed read
+                read_impl.extend(
+                    quote_spanned!(
+                        serialize_type_span =>
+                        let #packed_ident = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::read(bytes)?;
+                    )
+                );
+
+                for (index, field) in packed.iter().enumerate() {
+                    let value: u8 = 1 << index;
+                    read_impl.extend(
+                        quote_spanned!(
+                            serialize_type_span =>
+                            let #field = (#packed_ident & #value) != 0;
+                        )
+                    )
+                }
+
+                total_packed += 1;
+                packed = Vec::new();
+            }
 
             get_write_size_impl.extend(
                 quote_spanned!(
@@ -160,11 +279,16 @@ impl InputVariant {
 
             read_impl.extend(quote_spanned!(
                 serialize_type_span =>
-                #field_ident: (#serializable_impl::read(bytes)?),
+                let #field_ident = #serializable_impl::read(bytes)?;
             ));
         }
 
-        (read_impl, get_write_size_impl, write_impl)
+        Ok(VariantSerializeImpl {
+            read_impl,
+            read_impl_construct,
+            get_write_size_impl,
+            write_impl
+        })
     }
 }
 
@@ -215,7 +339,7 @@ impl Input {
         }
     }
 
-    fn get_slice_serializable_impl(&self) -> proc_macro2::TokenStream {
+    fn get_slice_serializable_impl(&self) -> result::Result<proc_macro2::TokenStream, (Span, String)> {
         match self {
             Input::Struct {
                 attributes: _,
@@ -223,18 +347,25 @@ impl Input {
                 data,
             } => {
                 let ident = data.get_ident_and_lifetime();
-                let (read_impl, get_write_size_impl, write_impl) = data
-                    .get_slice_serializable_impl(data.get_lifetime_or_default(), quote!(&object.));
+                let variant_impl = data
+                    .get_slice_serializable_impl(data.get_lifetime_or_default(), quote!(&object.))?;
+
+                let read_impl = variant_impl.read_impl;
+                let read_impl_construct = variant_impl.read_impl_construct;
+                let get_write_size_impl = variant_impl.get_write_size_impl;
+                let write_impl = variant_impl.write_impl;
 
                 let lifetime = data.get_lifetime_or_default();
 
-                quote!(
+                Ok(quote!(
                     impl <#lifetime> binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
                         type RefType = &#lifetime #ident;
 
                         fn read(bytes: &mut &#lifetime [u8]) -> anyhow::Result<#ident> {
+                            #read_impl
+
                             Ok(Self {
-                                #read_impl
+                                #read_impl_construct
                             })
                         }
 
@@ -252,7 +383,7 @@ impl Input {
                             t
                         }
                     }
-                )
+                ))
             }
             Input::Enum {
                 attributes: _,
@@ -266,7 +397,7 @@ impl Input {
                 for variant in variants {
                     let name = variant.ident.to_string();
                     if variant_names.contains(&name) {
-                        return quote_spanned!(variant.ident.span() => compile_error!("Duplicate variant name"););
+                        return Err((variant.ident.span(), "Duplicate variant name".into()));
                     } else {
                         variant_names.insert(name);
                     }
@@ -287,8 +418,13 @@ impl Input {
 
                 for (index, variant) in variants.iter().enumerate() {
                     let ident = &variant.ident;
-                    let (variant_read_impl, variant_get_write_size_impl, variant_write_impl) =
-                        variant.get_slice_serializable_impl(lifetime.clone(), quote!());
+                    let variant_impl =
+                        variant.get_slice_serializable_impl(lifetime.clone(), quote!())?;
+
+                    let variant_read_impl = variant_impl.read_impl;
+                    let variant_read_impl_construct = variant_impl.read_impl_construct;
+                    let variant_get_write_size_impl = variant_impl.get_write_size_impl;
+                    let variant_write_impl = variant_impl.write_impl;
 
                     let mut enum_struct_fields = quote!();
                     for field in &variant.fields {
@@ -299,8 +435,10 @@ impl Input {
                     let index = index as u8;
                     read_impl.extend(quote!(
                         #index => {
+                            #variant_read_impl
+
                             Ok(Self::#ident {
-                                #variant_read_impl
+                                #variant_read_impl_construct
                             })
                         }
                     ));
@@ -323,7 +461,7 @@ impl Input {
                     );
                 }
 
-                quote!(
+                Ok(quote!(
                     impl <#lifetime> binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
                         type RefType = &#lifetime #ident;
 
@@ -353,7 +491,7 @@ impl Input {
                             t
                         }
                     }
-                )
+                ))
             }
         }
     }
@@ -409,9 +547,21 @@ pub fn slice_serializable(input: TokenStream) -> TokenStream {
     let base_data = input.get_base_data();
     let serialize_impl = input.get_slice_serializable_impl();
 
-    quote!(
-        #base_data
-        #serialize_impl
-    )
-    .into()
+    match serialize_impl {
+        Ok(serialize_impl) => {
+            quote!(
+                #base_data
+                #serialize_impl
+            ).into()
+        },
+        Err((span, msg)) => {
+            let spanned = quote_spanned!(span => compile_error!(#msg););
+
+            quote!(
+                #base_data
+                #spanned
+            ).into()
+        },
+    }
+
 }

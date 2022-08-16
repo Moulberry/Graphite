@@ -11,12 +11,12 @@ use super::{
     paletted_container::{BiomePalettedContainer, BlockPalettedContainer},
 };
 
-pub struct PlayerReference {
-    pub uuid: u128,
-    pub player: *mut (),
-    pub fn_write: fn(*mut (), &[u8]),
-    pub fn_create: fn(*mut (), &mut WriteBuffer),
-    pub destroy_buffer: Box<[u8]>,
+pub(crate) struct PlayerReference {
+    uuid: u128,
+    player: *mut (),
+    fn_write: fn(*mut (), &[u8]),
+    fn_create: fn(*mut (), &mut WriteBuffer),
+    destroy_buffer: Box<[u8]>,
 }
 
 pub struct Chunk {
@@ -66,7 +66,7 @@ impl Chunk {
         }
     }
 
-    pub(crate) fn remove_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
+    pub(crate) fn destroy_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
         let ref_index = player.chunk_ref;
 
         let removed = self
@@ -80,22 +80,28 @@ impl Chunk {
         self.entity_viewable_buffer.copy_from(&removed.destroy_buffer);
     }
 
-    pub(crate) fn move_player<T: PlayerService>(
+    pub(crate) fn pop_player_ref<T: PlayerService>(
         &mut self,
-        player: &mut Player<T>,
-        other_chunk: &mut Chunk,
-    ) {
-        let ref_index = player.chunk_ref;
-
-        let removed = self
+        player: &mut Player<T>
+    ) -> PlayerReference {
+        let reference = self
             .player_refs
-            .try_remove(ref_index)
+            .try_remove(player.chunk_ref)
             .expect(Self::INVALID_NO_ENTRY);
-        if removed.uuid != player.profile.uuid {
+        if reference.uuid != player.profile.uuid {
             panic!("{}", Self::INVALID_OTHER_PLAYER)
         }
 
-        player.chunk_ref = other_chunk.player_refs.insert(removed);
+        player.chunk_ref = usize::MAX;
+        reference
+    }
+
+    pub(crate) fn push_player_ref<T: PlayerService>(
+        &mut self,
+        player: &mut Player<T>,
+        reference: PlayerReference
+    ) {
+        player.chunk_ref = self.player_refs.insert(reference);
     }
 
     pub(crate) fn update_player_pointer<T: PlayerService>(&mut self, player: &mut Player<T>) {
@@ -112,7 +118,7 @@ impl Chunk {
         reference.player = player as *mut _ as *mut ();
     }
 
-    pub(crate) fn add_new_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
+    pub(crate) fn create_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
         // Safety: write_create_packet doesn't touch `viewable_self_exclusion_write_buffer`
         let exclusion_write_buffer =
             unsafe { &mut *(&mut player.viewable_self_exclusion_write_buffer as *mut _) };
@@ -178,35 +184,6 @@ impl Chunk {
         }
     }
 
-    pub fn fill_blocks(&mut self, index: usize, block: u16) {
-        if self.block_sections[index].fill_blocks(block) {
-            self.invalidate_cache();
-        }
-    }
-
-    pub fn set_block(&mut self, x: usize, y: usize, z: usize, block: u16) {
-        let section_x = x % Self::SECTION_BLOCK_WIDTH_I;
-        let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
-        let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
-
-        debug_assert_eq!(self.chunk_x, x / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
-        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
-        debug_assert_eq!(self.chunk_z, z / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
-
-        if self.block_sections[chunk_y].set_block(section_x as _, section_y as _, section_z as _, block) {
-            self.invalidate_cache();
-
-            packet_helper::write_packet(&mut self.block_viewable_buffer, &BlockUpdate {
-                pos: BlockPosition {
-                    x: x as _,
-                    y: y as _,
-                    z: z as _,
-                },
-                block_state: block as _,
-            }).expect("packet exceeds 2MB limit");
-        }
-    }
-
     fn invalidate_cache(&mut self) {
         // todo: maybe have more fine-grained invalidation here, not sure if its worth it
         self.valid_cache = false;
@@ -269,6 +246,73 @@ impl Chunk {
 
         let packet_id = server::PacketId::LevelChunkWithLight as u8;
         net::packet_helper::write_custom_packet(write_buffer, packet_id, &composite)
+    }
+}
+
+pub trait BlockStorage {
+    fn fill_section_blocks(&mut self, y: usize, block: u16);
+    fn set_block(&mut self, x: usize, y: usize, z: usize, block: u16) -> Option<u16>;
+    fn get_block(&self, x: usize, y: usize, z: usize) -> Option<u16>;
+}
+
+impl BlockStorage for Chunk {
+    fn fill_section_blocks(&mut self, y: usize, block: u16) {
+        if y >= self.block_sections.len() {
+            return; // out of bounds
+        }
+
+        if self.block_sections[y].fill_blocks(block) {
+            self.invalidate_cache();
+        }
+    }
+
+    fn get_block(&self, x: usize, y: usize, z: usize) -> Option<u16> {
+        let section_x = x % Self::SECTION_BLOCK_WIDTH_I;
+        let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
+        let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
+
+        debug_assert_eq!(self.chunk_x, x / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
+        debug_assert_eq!(self.chunk_z, z / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+
+        if chunk_y >= self.block_sections.len() {
+            return None; // out of bounds
+        }
+
+        let section = &self.block_sections[chunk_y];
+        Some(section.get_block(section_x as _, section_y as _, section_z as _))
+    }
+
+    fn set_block(&mut self, x: usize, y: usize, z: usize, block: u16) -> Option<u16> {
+        let section_x = x % Self::SECTION_BLOCK_WIDTH_I;
+        let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
+        let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
+
+        debug_assert_eq!(self.chunk_x, x / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
+        debug_assert_eq!(self.chunk_z, z / Self::SECTION_BLOCK_WIDTH_I, "set_block called on wrong chunk");
+
+        if chunk_y >= self.block_sections.len() {
+            return None; // out of bounds
+        }
+
+        let section = &mut self.block_sections[chunk_y];
+        if let Some(old) = section.set_block(section_x as _, section_y as _, section_z as _, block) {
+            self.invalidate_cache();
+
+            packet_helper::write_packet(&mut self.block_viewable_buffer, &BlockUpdate {
+                pos: BlockPosition {
+                    x: x as _,
+                    y: y as _,
+                    z: z as _,
+                },
+                block_state: block as _,
+            }).expect("packet exceeds 2MB limit");
+
+            Some(old)
+        } else {
+            None
+        }
     }
 }
 

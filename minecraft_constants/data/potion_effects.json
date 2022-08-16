@@ -1,0 +1,200 @@
+{
+  "minecraft:speed": {
+    "id": 1,
+    "translationKey": "effect.minecraft.speed",
+    "color": 8171462,
+    "instantaneous": false
+  },
+  "minecraft:slowness": {
+    "id": 2,
+    "translationKey": "effect.minecraft.slowness",
+    "color": 5926017,
+    "instantaneous": false
+  },
+  "minecraft:haste": {
+    "id": 3,
+    "translationKey": "effect.minecraft.haste",
+    "color": 14270531,
+    "instantaneous": false
+  },
+  "minecraft:mining_fatigue": {
+    "id": 4,
+    "translationKey": "effect.minecraft.mining_fatigue",
+    "color": 4866583,
+    "instantaneous": false
+  },
+  "minecraft:strength": {
+    "id": 5,
+    "translationKey": "effect.minecraft.strength",
+    "color": 9643043,
+    "instantaneous": false
+  },
+  "minecraft:instant_health": {
+    "id": 6,
+    "translationKey": "effect.minecraft.instant_health",
+    "color": 16262179,
+    "instantaneous": true
+  },
+  "minecraft:instant_damage": {
+    "id": 7,
+    "translationKey": "effect.minecraft.instant_damage",
+    "color": 4393481,
+    "instantaneous": true
+  },
+  "minecraft:jump_boost": {
+    "id": 8,
+    "translationKey": "effect.minecraft.jump_boost",
+    "color": 2293580,
+    "instantaneous": false
+  },
+  "minecraft:nausea": {
+    "id": 9,
+    "translationKey": "effect.minecraft.nausea",
+    "color": 5578058,
+    "instantaneous": false
+  },
+  "minecraft:regeneration": {
+    "id": 10,
+    "translationKey": "effect.minecraft.regeneration",
+    "color": 13458603,
+    "instantaneous": false
+  },
+  "minecraft:resistance": {
+    "id": 11,
+    "translationKey": "effect.minecraft.resistance",
+    "color": 10044730,
+    "instantaneous": false
+  },
+  "minecraft:fire_resistance": {
+    "id": 12,
+    "translationKey": "effect.minecraft.fire_resistance",
+    "color": 14981690,
+    "instantaneous": false
+  },
+  "minecraft:water_breathing": {
+    "id": 13,
+    "translationKey": "effect.minecraft.water_breathing",
+    "color": 3035801,
+    "instantaneous": false
+  },
+  "minecraft:invisibility": {
+    "id": 14,
+    "translationKey": "effect.minecraft.invisibility",
+    "color": 8356754,
+    "instantaneous": false
+  },
+  "minecraft:blindness": {
+    "id": 15,
+    "translationKey": "effect.minecraft.blindness",
+    "color": 2039587,
+    "instantaneous": false
+  },
+  "minecraft:night_vision": {
+    "id": 16,
+    "translationKey": "effect.minecraft.night_vision",
+    "color": 2039713,
+    "instantaneous": false
+  },
+  "minecraft:hunger": {
+    "id": 17,
+    "translationKey": "effect.minecraft.hunger",
+    "color": 5797459,
+    "instantaneous": false
+  },
+  "minecraft:weakness": {
+    "id": 18,
+    "translationKey": "effect.minecraft.weakness",
+    "color": 4738376,
+    "instantaneous": false
+  },
+  "minecraft:poison": {
+    "id": 19,
+    "translationKey": "effect.minecraft.poison",
+    "color": 5149489,
+    "instantaneous": false
+  },
+  "minecraft:wither": {
+    "id": 20,
+    "translationKey": "effect.minecraft.wither",
+    "color": 3484199,
+    "instantaneous": false
+  },
+  "minecraft:health_boost": {
+    "id": 21,
+    "translationKey": "effect.minecraft.health_boost",
+    "color": 16284963,
+    "instantaneous": false
+  },
+  "minecraft:absorption": {
+    "id": 22,
+    "translationKey": "effect.minecraft.absorption",
+    "color": 2445989,
+    "instantaneous": false
+  },
+  "minecraft:saturation": {
+    "id": 23,
+    "translationKey": "effect.minecraft.saturation",
+    "color": 16262179,
+    "instantaneous": true
+  },
+  "minecraft:glowing": {
+    "id": 24,
+    "translationKey": "effect.minecraft.glowing",
+    "color": 9740385,
+    "instantaneous": false
+  },
+  "minecraft:levitation": {
+    "id": 25,
+    "translationKey": "effect.minecraft.levitation",
+    "color": 13565951,
+    "instantaneous": false
+  },
+  "minecraft:luck": {
+    "id": 26,
+    "translationKey": "effect.minecraft.luck",
+    "color": 3381504,
+    "instantaneous": false
+  },
+  "minecraft:unluck": {
+    "id": 27,
+    "translationKey": "effect.minecraft.unluck",
+    "color": 12624973,
+    "instantaneous": false
+  },
+  "minecraft:slow_falling": {
+    "id": 28,
+    "translationKey": "effect.minecraft.slow_falling",
+    "color": 16773073,
+    "instantaneous": false
+  },
+  "minecraft:conduit_power": {
+    "id": 29,
+    "translationKey": "effect.minecraft.conduit_power",
+    "color": 1950417,
+    "instantaneous": false
+  },
+  "minecraft:dolphins_grace": {
+    "id": 30,
+    "translationKey": "effect.minecraft.dolphins_grace",
+    "color": 8954814,
+    "instantaneous": false
+  },
+  "minecraft:bad_omen": {
+    "id": 31,
+    "translationKey": "effect.minecraft.bad_omen",
+    "color": 745784,
+    "instantaneous": false
+  },
+  "minecraft:hero_of_the_village": {
+    "id": 32,
+    "translationKey": "effect.minecraft.hero_of_the_village",
+    "color": 4521796,
+    "instantaneous": false
+  },
+  "minecraft:darkness": {
+    "id": 33,
+    "translationKey": "effect.minecraft.darkness",
+    "color": 2696993,
+    "instantaneous": false
+  }
+}

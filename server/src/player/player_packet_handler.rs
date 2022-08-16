@@ -1,15 +1,16 @@
 use anyhow::bail;
 use command::types::ParseState;
+use minecraft_constants::block::BlockProperties;
 use protocol::{
     play::{client::{
         self, AcceptTeleportation, ClientInformation, CustomPayload, MovePlayerPos,
-        MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction, MovePlayerOnGround,
+        MovePlayerPosRot, MovePlayerRot, PlayerHandAction, PlayerMoveAction, MovePlayerOnGround, UseItem, UseItemOn,
     }, server::{AnimateEntity, EntityAnimation}},
     types::{HandAction, MoveAction, Hand},
 };
 use queues::IsQueue;
 
-use crate::inventory::inventory_handler::InventoryHandler;
+use crate::{inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot}, gamemode::GameMode, player::interaction::Interaction};
 
 use super::{Player, PlayerService};
 
@@ -109,23 +110,127 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
     fn handle_player_hand_action(&mut self, packet: PlayerHandAction) -> anyhow::Result<()> {
         match packet.action {
             HandAction::StartDestroyBlock => {
+                println!("start destroy block!");
+
+                if let Some(interaction) = self.interaction_state.try_abort_break_or_use() {
+                    self.fire_interaction(interaction);
+                }
+
                 let pos = packet.block_pos;
+                
+                if let Some(destroy_ticks) = self.get_world().get_required_destroy_ticks(
+                        pos.x, pos.y as _, pos.z, self.get_break_speed_multiplier()) {
+                    let instabreak = self.abilities.gamemode == GameMode::Creative || destroy_ticks <= 1.0;
 
-                // todo: move to function in world. remove magic 16s
-                // todo: validate chunk_x/chunk_z is in-bounds
-                let chunk_x = (pos.x / 16) as usize;
-                let chunk_z = (pos.z / 16) as usize;
+                    if instabreak {
+                        self.interaction_state.ignore_swing_ticks = 6;
+                    } else {
+                        self.interaction_state.start_breaking(packet.block_pos);
+                        self.interaction_state.ignore_swing_ticks = 1;
+                    }
+    
+                    // Left click block
+                    self.fire_interaction(Interaction::LeftClickBlock {
+                        position: packet.block_pos,
+                        face: packet.direction,
+                        instabreak
+                    });
+                }           
 
-                let chunk = &mut self.get_world_mut().chunks[chunk_x][chunk_z];
-                chunk.set_block(pos.x as _, pos.y as _, pos.z as _, 0);
+                self.ack_block_sequence(packet.sequence);
             }
-            HandAction::AbortDestroyBlock => (),
-            HandAction::StopDestroyBlock => (),
-            HandAction::DropAllItems => (),
-            HandAction::DropItem => (),
-            HandAction::ReleaseUseItem => (),
+            HandAction::AbortDestroyBlock => {
+                println!("abort destroy block!");
+
+                if let Some(interaction) = self.interaction_state.try_abort_break() {
+                    self.fire_interaction(interaction);
+                }
+
+                self.ack_block_sequence(packet.sequence);
+            },
+            HandAction::StopDestroyBlock => {
+                println!("stop destroy block!");
+                self.finish_breaking_block(&packet);
+                self.ack_block_sequence(packet.sequence);
+            },
+            HandAction::DropAllItems => {
+                self.interaction_state.ignore_swing_ticks = 1;
+            },
+            HandAction::DropItem => {
+                self.interaction_state.ignore_swing_ticks = 1;
+            },
+            HandAction::ReleaseUseItem => {
+                println!("release use item!");
+
+                if let Some(interaction) = self.interaction_state.try_abort_use(true) {
+                    self.fire_interaction(interaction);
+                }
+            },
             HandAction::SwapItemWithOffHand => (),
         }
+
+        Ok(())
+    }
+
+    fn handle_use_item(&mut self, packet: UseItem) -> anyhow::Result<()> {
+        println!("use item!");
+
+        if !self.interaction_state.processed_use_item {
+            self.interaction_state.processed_use_item = true;
+
+            if let Some(interaction) = self.interaction_state.try_abort_break_or_use() {
+                self.fire_interaction(interaction);
+            }
+
+            // Fire RightClick on Air
+            if !self.interaction_state.processed_use_item_on {
+                self.interaction_state.ignore_swing_ticks = 1;
+                self.fire_interaction(Interaction::RightClickAir);
+            }
+
+            // Check if item can be used, to start continuous usage
+            let slot = self.inventory.get(InventorySlot::Hotbar(0))?;
+            match slot {
+                ItemSlot::Empty => (),
+                ItemSlot::Filled(item) => {
+                    if item.properties.use_duration > 0 {
+                        self.interaction_state.start_using(item.properties.use_duration as _);
+                    }
+                }
+            }
+        }
+
+        self.ack_block_sequence(packet.sequence);
+        self.inventory.sync(InventorySlot::Hotbar(0))?; // todo: actual hotbar slot
+
+        Ok(())
+    }
+
+    fn handle_use_item_on(&mut self, packet: UseItemOn) -> anyhow::Result<()> {
+        if !self.interaction_state.processed_use_item_on {
+            self.interaction_state.processed_use_item_on = true;
+
+            if let Some(interaction) = self.interaction_state.try_abort_break_or_use() {
+                self.fire_interaction(interaction);
+            }
+
+            self.interaction_state.ignore_swing_ticks = 1;
+            
+            let hit = packet.block_hit;
+            if !(0.0..=1.0).contains(&hit.offset_x) ||
+                !(0.0..=1.0).contains(&hit.offset_y) ||
+                !(0.0..=1.0).contains(&hit.offset_z) {
+                bail!("invalid hit offset");
+            }
+
+            self.fire_interaction(Interaction::RightClickBlock {
+                position: hit.position,
+                face: hit.direction,
+                offset: (hit.offset_x, hit.offset_y, hit.offset_z)
+            });
+        }
+
+        self.ack_block_sequence(packet.sequence);
 
         Ok(())
     }
@@ -174,6 +279,14 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         Ok(())
     }
 
+    fn handle_set_carried_item(&mut self, packet: client::SetCarriedItem) -> anyhow::Result<()> {
+        if packet.slot > 8 {
+            bail!("invalid slot")
+        }
+        self.selected_hotbar_slot = packet.slot as u8;
+        Ok(())
+    }
+
     fn handle_swing(&mut self, packet: client::Swing) -> anyhow::Result<()> {
         // Get animation corresponding to hand
         let animation = if packet.hand == Hand::Main {
@@ -188,13 +301,75 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             animation,
         }, true);
 
+        // Use the swing to perform interactions
+        if self.interaction_state.ignore_swing_ticks == 0 {
+            if let Some(position) = self.interaction_state.breaking_block {
+                if let Some((first, _)) = self.clip_block_position(position) {
+                    self.interaction_state.breaking_block_timer = 5;
+
+                    self.fire_interaction(Interaction::ContinuousBreak {
+                        position,
+                        break_time: self.interaction_state.break_time,
+                        distance: first
+                    });
+                }
+
+                return Ok(());
+            }
+
+            // Bug: https://bugs.mojang.com/browse/MC-255057
+
+            // Currently we have to use swing to fire this interaction...
+            // However, https://bugs.mojang.com/browse/MC-255058 would allow the following interaction
+            // to be fired by a ServerboundMissPacket, which is a lot less error prone
+            self.fire_interaction(Interaction::LeftClickAir);
+        }
+
         Ok(())
     }
 
     fn handle_set_creative_mode_slot(&mut self, packet: client::SetCreativeModeSlot) -> anyhow::Result<()> {
-        // todo: check if player is in creative
-        self.inventory.creative_mode_set(packet.slot as usize, packet.item)?;
+        if self.abilities.gamemode == GameMode::Creative {
+            self.inventory.creative_mode_set(packet.slot as usize, packet.item)?;
+        }
 
         Ok(())
+    }
+
+
+}
+
+impl<P: PlayerService> Player<P> {
+    fn ack_block_sequence(&mut self, sequence: i32) {
+        match self.ack_sequence_up_to {
+            Some(old) => if old >= sequence { return },
+            None => (),
+        }
+        self.ack_sequence_up_to = Some(sequence);
+    }
+
+    fn finish_breaking_block(&mut self, packet: &PlayerHandAction) {
+        if let Some(position) = self.interaction_state.breaking_block {
+            // Check if breaking location matches packet location 
+            if position != packet.block_pos {   
+                // Packet location was incorrect, abort the break
+                let interaction = self.interaction_state.try_abort_break().expect("break must be active");
+                self.fire_interaction(interaction);
+            }
+
+            // Make sure player is looking at block, get distance     
+            if let Some((first, _)) = self.clip_block_position(position) {
+                // Finish the block break
+                let interaction = self.interaction_state.try_finish_break(first)
+                    .expect("break must be active");
+                self.fire_interaction(interaction);
+            } else {
+                // Player wasn't looking at correct block, abort break
+                let interaction = self.interaction_state.try_abort_break().expect("break must be active");
+                self.fire_interaction(interaction);
+            }
+
+            self.interaction_state.ignore_swing_ticks = 6;
+        }
     }
 }

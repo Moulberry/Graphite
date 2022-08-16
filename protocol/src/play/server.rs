@@ -2,7 +2,7 @@ use binary::slice_serialization::*;
 
 use crate::identify_packets;
 use crate::types::{
-    BlockPosition, ByteRotation, CommandNode, GameProfile, QuantizedShort, SignatureData, ProtocolItemStack,
+    BlockPosition, ByteRotation, CommandNode, GameProfile, QuantizedShort, SignatureData, ProtocolItemStack, EquipmentList, EquipmentSlot
 };
 use crate::IdentifiedPacket;
 use num_enum::{TryFromPrimitive, IntoPrimitive};
@@ -14,8 +14,8 @@ identify_packets! {
     AddPlayer = 0x02,
     AnimateEntity = 0x03,
     // AwardStats = 0x04,
-    // BlockChangedAck = 0x05,
-    // BlockDestruction = 0x06,
+    BlockChangedAck = 0x05,
+    BlockDestruction = 0x06,
     // BlockEntityData = 0x07,
     // BlockEvent = 0x08,
     BlockUpdate = 0x09,
@@ -38,7 +38,7 @@ identify_packets! {
     // EntityEvent = 0x1a,
     // Explode = 0x1b,
     // ForgetLevelChunk = 0x1c,
-    // GameEvent = 0x1d,
+    GameEvent = 0x1d,
     // HorseScreenOpen = 0x1e,
     // InitializeBorder = 0x1f,
     KeepAlive = 0x20,
@@ -58,7 +58,7 @@ identify_packets! {
     // OpenSignEditor = 0x2e,
     // Ping = 0x2f,
     // PlaceGhostRecipe = 0x30,
-    // PlayerAbilities = 0x31,
+    PlayerAbilities = 0x31,
     // PlayerChatHeader = 0x32,
     // PlayerChat = 0x33,
     // PlayerCombatEnd = 0x34,
@@ -89,10 +89,10 @@ identify_packets! {
     // SetDefaultSpawnPosition = 0x4d,
     // SetDisplayChatPreview = 0x4e,
     // SetDisplayObjective = 0x4f,
-    // SetEntityData = 0x50,
+    SetEntityData<'_> = 0x50,
     // SetEntityLink = 0x51,
     // SetEntityMotion = 0x52,
-    // SetEquipment = 0x53,
+    SetEquipment = 0x53,
     // SetExperience = 0x54,
     // SetHealth = 0x55,
     // SetObjective = 0x56,
@@ -176,6 +176,24 @@ slice_serializable! {
     }
 }
 
+// Block Changed Ack
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct BlockChangedAck {
+        pub sequence: i32 as VarInt
+    }
+}
+
+// Block Destruction
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct BlockDestruction {
+        pub entity_id: i32 as VarInt,
+        pub location: BlockPosition,
+        pub destroy_stage: i8 as Single
+    }
+}
+
 // Block Update
 slice_serializable! {
     #[derive(Debug)]
@@ -214,6 +232,33 @@ slice_serializable! {
     }
 }
 
+// Game Event
+
+#[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
+#[repr(u8)]
+pub enum GameEventType {
+    NoRespawnBlockAvailable,
+    StartRaining,
+    StopRaining,
+    ChangeGameMode,
+    WinGame,
+    DemoEvent,
+    ArrowHitPlayer,
+    RainLevelChange,
+    ThunderLevelChange,
+    PufferFishSting,
+    GuardianElderEffect,
+    ImmediateRespawn,
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct GameEvent {
+        pub event_type: GameEventType as AttemptFrom<Single, u8>,
+        pub param: f32 as BigEndian
+    }
+}
+
 // Keep Alive
 slice_serializable! {
     #[derive(Debug)]
@@ -235,88 +280,91 @@ slice_serializable! {
 }
 
 #[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
-#[repr(u16)]
+#[repr(i32)]
 pub enum LevelEventType {
-    SOUND_DISPENSER_DISPENSE = 1000,
-    SOUND_DISPENSER_FAIL = 1001,
-    SOUND_DISPENSER_PROJECTILE_LAUNCH = 1002,
-    SOUND_ENDER_EYE_LAUNCH = 1003,
-    SOUND_FIREWORK_SHOOT = 1004,
-    SOUND_OPEN_IRON_DOOR = 1005,
-    SOUND_OPEN_WOODEN_DOOR = 1006,
-    SOUND_OPEN_WOODEN_TRAP_DOOR = 1007,
-    SOUND_OPEN_FENCE_GATE = 1008,
-    SOUND_EXTINGUISH_FIRE = 1009,
-    SOUND_PLAY_RECORDING = 1010,
-    SOUND_CLOSE_IRON_DOOR = 1011,
-    SOUND_CLOSE_WOODEN_DOOR = 1012,
-    SOUND_CLOSE_WOODEN_TRAP_DOOR = 1013,
-    SOUND_CLOSE_FENCE_GATE = 1014,
-    SOUND_GHAST_WARNING = 1015,
-    SOUND_GHAST_FIREBALL = 1016,
-    SOUND_DRAGON_FIREBALL = 1017,
-    SOUND_BLAZE_FIREBALL = 1018,
-    SOUND_ZOMBIE_WOODEN_DOOR = 1019,
-    SOUND_ZOMBIE_IRON_DOOR = 1020,
-    SOUND_ZOMBIE_DOOR_CRASH = 1021,
-    SOUND_WITHER_BLOCK_BREAK = 1022,
-    SOUND_WITHER_BOSS_SPAWN = 1023,
-    SOUND_WITHER_BOSS_SHOOT = 1024,
-    SOUND_BAT_LIFTOFF = 1025,
-    SOUND_ZOMBIE_INFECTED = 1026,
-    SOUND_ZOMBIE_CONVERTED = 1027,
-    SOUND_DRAGON_DEATH = 1028,
-    SOUND_ANVIL_BROKEN = 1029,
-    SOUND_ANVIL_USED = 1030,
-    SOUND_ANVIL_LAND = 1031,
-    SOUND_PORTAL_TRAVEL = 1032,
-    SOUND_CHORUS_GROW = 1033,
-    SOUND_CHORUS_DEATH = 1034,
-    SOUND_BREWING_STAND_BREW = 1035,
-    SOUND_CLOSE_IRON_TRAP_DOOR = 1036,
-    SOUND_OPEN_IRON_TRAP_DOOR = 1037,
-    SOUND_END_PORTAL_SPAWN = 1038,
-    SOUND_PHANTOM_BITE = 1039,
-    SOUND_ZOMBIE_TO_DROWNED = 1040,
-    SOUND_HUSK_TO_ZOMBIE = 1041,
-    SOUND_GRINDSTONE_USED = 1042,
-    SOUND_PAGE_TURN = 1043,
-    SOUND_SMITHING_TABLE_USED = 1044,
-    SOUND_POINTED_DRIPSTONE_LAND = 1045,
-    SOUND_DRIP_LAVA_INTO_CAULDRON = 1046,
-    SOUND_DRIP_WATER_INTO_CAULDRON = 1047,
-    SOUND_SKELETON_TO_STRAY = 1048,
-    COMPOSTER_FILL = 1500,
-    LAVA_FIZZ = 1501,
-    REDSTONE_TORCH_BURNOUT = 1502,
-    END_PORTAL_FRAME_FILL = 1503,
-    DRIPSTONE_DRIP = 1504,
-    PARTICLES_AND_SOUND_PLANT_GROWTH = 1505,
-    PARTICLES_SHOOT = 2000,
-    PARTICLES_DESTROY_BLOCK = 2001,
-    PARTICLES_SPELL_POTION_SPLASH = 2002,
-    PARTICLES_EYE_OF_ENDER_DEATH = 2003,
-    PARTICLES_MOBBLOCK_SPAWN = 2004,
-    PARTICLES_PLANT_GROWTH = 2005,
-    PARTICLES_DRAGON_FIREBALL_SPLASH = 2006,
-    PARTICLES_INSTANT_POTION_SPLASH = 2007,
-    PARTICLES_DRAGON_BLOCK_BREAK = 2008,
-    PARTICLES_WATER_EVAPORATING = 2009,
-    ANIMATION_END_GATEWAY_SPAWN = 3000,
-    ANIMATION_DRAGON_SUMMON_ROAR = 3001,
-    PARTICLES_ELECTRIC_SPARK = 3002,
-    PARTICLES_AND_SOUND_WAX_ON = 3003,
-    PARTICLES_WAX_OFF = 3004,
-    PARTICLES_SCRAPE = 3005,
-    PARTICLES_SCULK_CHARGE = 3006,
-    PARTICLES_SCULK_SHRIEK = 3007,
+    SoundDispenserDispense = 1000,
+    SoundDispenserFail = 1001,
+    SoundDispenserProjectileLaunch = 1002,
+    SoundEnderEyeLaunch = 1003,
+    SoundFireworkShoot = 1004,
+    SoundOpenIronDoor = 1005,
+    SoundOpenWoodenDoor = 1006,
+    SoundOpenWoodenTrapDoor = 1007,
+    SoundOpenFenceGate = 1008,
+    SoundExtinguishFire = 1009,
+    SoundPlayRecording = 1010,
+    SoundCloseIronDoor = 1011,
+    SoundCloseWoodenDoor = 1012,
+    SoundCloseWoodenTrapDoor = 1013,
+    SoundCloseFenceGate = 1014,
+    SoundGhastWarning = 1015,
+    SoundGhastFireball = 1016,
+    SoundDragonFireball = 1017,
+    SoundBlazeFireball = 1018,
+    SoundZombieWoodenDoor = 1019,
+    SoundZombieIronDoor = 1020,
+    SoundZombieDoorCrash = 1021,
+    SoundWitherBlockBreak = 1022,
+    SoundWitherBossSpawn = 1023,
+    SoundWitherBossShoot = 1024,
+    SoundBatLiftoff = 1025,
+    SoundZombieInfected = 1026,
+    SoundZombieConverted = 1027,
+    SoundDragonDeath = 1028,
+    SoundAnvilBroken = 1029,
+    SoundAnvilUsed = 1030,
+    SoundAnvilLand = 1031,
+    SoundPortalTravel = 1032,
+    SoundChorusGrow = 1033,
+    SoundChorusDeath = 1034,
+    SoundBrewingStandBrew = 1035,
+    SoundCloseIronTrapDoor = 1036,
+    SoundOpenIronTrapDoor = 1037,
+    SoundEndPortalSpawn = 1038,
+    SoundPhantomBite = 1039,
+    SoundZombieToDrowned = 1040,
+    SoundHuskToZombie = 1041,
+    SoundGrindstoneUsed = 1042,
+    SoundPageTurn = 1043,
+    SoundSmithingTableUsed = 1044,
+    SoundPointedDripstoneLand = 1045,
+    SoundDripLavaIntoCauldron = 1046,
+    SoundDripWaterIntoCauldron = 1047,
+    SoundSkeletonToStray = 1048,
+    ComposterFill = 1500,
+    LavaFizz = 1501,
+    RedstoneTorchBurnout = 1502,
+    EndPortalFrameFill = 1503,
+    DripstoneDrip = 1504,
+    ParticlesAndSoundPlantGrowth = 1505,
+    ParticlesShoot = 2000,
+    ParticlesDestroyBlock = 2001,
+    ParticlesSpellPotionSplash = 2002,
+    ParticlesEyeOfEnderDeath = 2003,
+    ParticlesMobblockSpawn = 2004,
+    ParticlesPlantGrowth = 2005,
+    ParticlesDragonFireballSplash = 2006,
+    ParticlesInstantPotionSplash = 2007,
+    ParticlesDragonBlockBreak = 2008,
+    ParticlesWaterEvaporating = 2009,
+    AnimationEndGatewaySpawn = 3000,
+    AnimationDragonSummonRoar = 3001,
+    ParticlesElectricSpark = 3002,
+    ParticlesAndSoundWaxOn = 3003,
+    ParticlesWaxOff = 3004,
+    ParticlesScrape = 3005,
+    ParticlesSculkCharge = 3006,
+    ParticlesSculkShriek = 3007,
 }
 
 // Level Event
 slice_serializable! {
     #[derive(Debug)]
     pub struct LevelEvent {
-        pub id: u64 as BigEndian
+        pub event_type: LevelEventType as AttemptFrom<BigEndian, i32>,
+        pub pos: BlockPosition,
+        pub data: i32 as BigEndian,
+        pub global: bool as Single // global used by vanilla for dragon death and portal opening
     }
 }
 
@@ -363,6 +411,19 @@ slice_serializable! {
         pub is_debug: bool as Single,
         pub is_flat: bool as Single,
         pub death_location: Option<BlockPosition>
+    }
+}
+
+// Player Abilities
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlayerAbilities {
+        pub invulnerable: bool as packed!(),
+        pub is_flying: bool as packed!(),
+        pub allow_flying: bool as packed!(),
+        pub instant_breaking: bool as packed!(),
+        pub flying_speed: f32 as BigEndian,
+        pub walking_speed: f32 as BigEndian,
     }
 }
 
@@ -461,6 +522,24 @@ slice_serializable! {
     pub struct SetChunkCacheCenter {
         pub chunk_x: i32 as VarInt,
         pub chunk_z: i32 as VarInt
+    }
+}
+
+// Set Equipment
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetEquipment {
+        pub entity_id: i32 as VarInt,
+        pub equipment: Vec<(EquipmentSlot, Option<ProtocolItemStack>)> as EquipmentList
+    }
+}
+
+// Set Entity Data
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetEntityData<'a> {
+        pub entity_id: i32 as VarInt,
+        pub data: &'a [u8] as GreedyBlob
     }
 }
 

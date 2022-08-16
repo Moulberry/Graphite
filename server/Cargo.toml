@@ -16,6 +16,8 @@ bytemuck = "1.10.0"
 num = "0.4.0"
 heapless = "0.7.15"
 bevy_ecs = "0.7.0"
+readonly = "0.2.1"
+parry3d = "0.9.0"
 
 binary = { path = "../binary" }
 net = { path = "../net" }

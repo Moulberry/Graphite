@@ -1,7 +1,7 @@
 use crate::{
     entity::position::Position,
     universe::{EntityId, UniverseService},
-    world::World,
+    world::World, gamemode::Abilities,
 };
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::{
@@ -19,6 +19,7 @@ use super::{
 pub struct ProtoPlayer<U: UniverseService> {
     connection: U::ConnectionReferenceType,
     pub hardcore: bool,
+    pub abilities: Abilities,
     pub profile: GameProfile,
 
     pub(crate) write_buffer: WriteBuffer,
@@ -33,6 +34,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
     ) -> Self {
         Self {
             hardcore: false,
+            abilities: Default::default(),
             profile,
 
             write_buffer: WriteBuffer::new(),
@@ -64,7 +66,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
         let add_player_info = PlayerInfo::AddPlayer {
             values: vec![PlayerInfoAddPlayer {
                 profile: self.profile.clone(),
-                gamemode: 1,
+                gamemode: self.abilities.gamemode as u8,
                 ping: 0,
                 display_name: None,
                 signature_data: None,
@@ -87,6 +89,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
             self.entity_id,
             position,
             view_position,
+            self.abilities,
             self.connection,
         );
 

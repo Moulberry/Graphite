@@ -1,0 +1,281 @@
+{
+  "minecraft:ambient_entity_effect": {
+    "id": 0
+  },
+  "minecraft:angry_villager": {
+    "id": 1
+  },
+  "minecraft:block": {
+    "id": 2
+  },
+  "minecraft:block_marker": {
+    "id": 3
+  },
+  "minecraft:bubble": {
+    "id": 4
+  },
+  "minecraft:cloud": {
+    "id": 5
+  },
+  "minecraft:crit": {
+    "id": 6
+  },
+  "minecraft:damage_indicator": {
+    "id": 7
+  },
+  "minecraft:dragon_breath": {
+    "id": 8
+  },
+  "minecraft:dripping_lava": {
+    "id": 9
+  },
+  "minecraft:falling_lava": {
+    "id": 10
+  },
+  "minecraft:landing_lava": {
+    "id": 11
+  },
+  "minecraft:dripping_water": {
+    "id": 12
+  },
+  "minecraft:falling_water": {
+    "id": 13
+  },
+  "minecraft:dust": {
+    "id": 14
+  },
+  "minecraft:dust_color_transition": {
+    "id": 15
+  },
+  "minecraft:effect": {
+    "id": 16
+  },
+  "minecraft:elder_guardian": {
+    "id": 17
+  },
+  "minecraft:enchanted_hit": {
+    "id": 18
+  },
+  "minecraft:enchant": {
+    "id": 19
+  },
+  "minecraft:end_rod": {
+    "id": 20
+  },
+  "minecraft:entity_effect": {
+    "id": 21
+  },
+  "minecraft:explosion_emitter": {
+    "id": 22
+  },
+  "minecraft:explosion": {
+    "id": 23
+  },
+  "minecraft:sonic_boom": {
+    "id": 24
+  },
+  "minecraft:falling_dust": {
+    "id": 25
+  },
+  "minecraft:firework": {
+    "id": 26
+  },
+  "minecraft:fishing": {
+    "id": 27
+  },
+  "minecraft:flame": {
+    "id": 28
+  },
+  "minecraft:sculk_soul": {
+    "id": 29
+  },
+  "minecraft:sculk_charge": {
+    "id": 30
+  },
+  "minecraft:sculk_charge_pop": {
+    "id": 31
+  },
+  "minecraft:soul_fire_flame": {
+    "id": 32
+  },
+  "minecraft:soul": {
+    "id": 33
+  },
+  "minecraft:flash": {
+    "id": 34
+  },
+  "minecraft:happy_villager": {
+    "id": 35
+  },
+  "minecraft:composter": {
+    "id": 36
+  },
+  "minecraft:heart": {
+    "id": 37
+  },
+  "minecraft:instant_effect": {
+    "id": 38
+  },
+  "minecraft:item": {
+    "id": 39
+  },
+  "minecraft:vibration": {
+    "id": 40
+  },
+  "minecraft:item_slime": {
+    "id": 41
+  },
+  "minecraft:item_snowball": {
+    "id": 42
+  },
+  "minecraft:large_smoke": {
+    "id": 43
+  },
+  "minecraft:lava": {
+    "id": 44
+  },
+  "minecraft:mycelium": {
+    "id": 45
+  },
+  "minecraft:note": {
+    "id": 46
+  },
+  "minecraft:poof": {
+    "id": 47
+  },
+  "minecraft:portal": {
+    "id": 48
+  },
+  "minecraft:rain": {
+    "id": 49
+  },
+  "minecraft:smoke": {
+    "id": 50
+  },
+  "minecraft:sneeze": {
+    "id": 51
+  },
+  "minecraft:spit": {
+    "id": 52
+  },
+  "minecraft:squid_ink": {
+    "id": 53
+  },
+  "minecraft:sweep_attack": {
+    "id": 54
+  },
+  "minecraft:totem_of_undying": {
+    "id": 55
+  },
+  "minecraft:underwater": {
+    "id": 56
+  },
+  "minecraft:splash": {
+    "id": 57
+  },
+  "minecraft:witch": {
+    "id": 58
+  },
+  "minecraft:bubble_pop": {
+    "id": 59
+  },
+  "minecraft:current_down": {
+    "id": 60
+  },
+  "minecraft:bubble_column_up": {
+    "id": 61
+  },
+  "minecraft:nautilus": {
+    "id": 62
+  },
+  "minecraft:dolphin": {
+    "id": 63
+  },
+  "minecraft:campfire_cosy_smoke": {
+    "id": 64
+  },
+  "minecraft:campfire_signal_smoke": {
+    "id": 65
+  },
+  "minecraft:dripping_honey": {
+    "id": 66
+  },
+  "minecraft:falling_honey": {
+    "id": 67
+  },
+  "minecraft:landing_honey": {
+    "id": 68
+  },
+  "minecraft:falling_nectar": {
+    "id": 69
+  },
+  "minecraft:falling_spore_blossom": {
+    "id": 70
+  },
+  "minecraft:ash": {
+    "id": 71
+  },
+  "minecraft:crimson_spore": {
+    "id": 72
+  },
+  "minecraft:warped_spore": {
+    "id": 73
+  },
+  "minecraft:spore_blossom_air": {
+    "id": 74
+  },
+  "minecraft:dripping_obsidian_tear": {
+    "id": 75
+  },
+  "minecraft:falling_obsidian_tear": {
+    "id": 76
+  },
+  "minecraft:landing_obsidian_tear": {
+    "id": 77
+  },
+  "minecraft:reverse_portal": {
+    "id": 78
+  },
+  "minecraft:white_ash": {
+    "id": 79
+  },
+  "minecraft:small_flame": {
+    "id": 80
+  },
+  "minecraft:snowflake": {
+    "id": 81
+  },
+  "minecraft:dripping_dripstone_lava": {
+    "id": 82
+  },
+  "minecraft:falling_dripstone_lava": {
+    "id": 83
+  },
+  "minecraft:dripping_dripstone_water": {
+    "id": 84
+  },
+  "minecraft:falling_dripstone_water": {
+    "id": 85
+  },
+  "minecraft:glow_squid_ink": {
+    "id": 86
+  },
+  "minecraft:glow": {
+    "id": 87
+  },
+  "minecraft:wax_on": {
+    "id": 88
+  },
+  "minecraft:wax_off": {
+    "id": 89
+  },
+  "minecraft:electric_spark": {
+    "id": 90
+  },
+  "minecraft:scrape": {
+    "id": 91
+  },
+  "minecraft:shriek": {
+    "id": 92
+  }
+}

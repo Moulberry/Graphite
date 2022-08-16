@@ -36,6 +36,7 @@ impl From<&str> for TextComponent {
 }
 
 /*
+
 TODO:
 let unfinished_component = component! {
     red! bold! link!("https://twitch.tv/moulberry2") {

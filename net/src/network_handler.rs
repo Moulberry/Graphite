@@ -22,6 +22,7 @@ enum UserData {
         _3: u16,
     },
     TickTimeout,
+    IOTimeout,
     Write {
         connection_index: u16,
         write_buffer_index: u16,
@@ -369,7 +370,7 @@ impl<N: NetworkManagerService> NetworkManager<N> {
     fn new(service: N) -> anyhow::Result<Self> {
         // todo: maybe use IORING_SETUP_SQPOLL?
 
-        let ring = IoUring::new(128)?; // 128? too large? too small?
+        let ring = IoUring::new(256)?; // 256? too large? too small?
         let backlog = VecDeque::new();
 
         // let (ring_submitter, raw_ring_squeue, mut ring_cqueue) = ring.split();
@@ -394,7 +395,7 @@ impl<N: NetworkManagerService> NetworkManager<N> {
         // Start listening on the address `addr`
         let mut accept = None;
         if let Some(addr) = addr {
-            accept = Some(AcceptCount::new(TcpListener::bind(addr)?, 3));
+            accept = Some(AcceptCount::new(TcpListener::bind(addr)?, 30));
         }
 
         // Split the ring into submitter and completion queue
@@ -421,11 +422,26 @@ impl<N: NetworkManagerService> NetworkManager<N> {
         }
 
         loop {
+
             // Ensure there are enough accept events in the squeue
             let mut squeue = unsafe { self.ring.submission_shared() };
             if let Some(ref mut accept) = accept {
                 accept.push_to(&mut squeue);
             }
+
+            // todo: increase want count, add timeout (timeout has to be first submission to ensure it fits)
+            /*let mut timespec = types::Timespec::new();
+            timespec = timespec.nsec(100_000);
+            let timeout_e = opcode::Timeout::new(&timespec)
+                .build()
+                .user_data(UserData::IOTimeout.into());
+
+            unsafe {
+                if squeue.push(&timeout_e).is_err() {
+                    self.backlog.push_back(timeout_e);
+                }
+            }*/
+
             NetworkManager::<N>::clean_backlog(&mut self.backlog, &ring_submitter, squeue)?;
 
             // Submit from submission queue and wait for some event on the completion queue
@@ -480,7 +496,8 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                             if user_data.is_write() && err == EBADFD {
                                 continue;
                             }
-                            panic!(
+                            // todo: this should be panic
+                            eprintln!(
                                 "io_uring: completion query entry error:\n  {:?}\n  userdata: {:?}",
                                 io::Error::from_raw_os_error(err),
                                 user_data
@@ -490,6 +507,7 @@ impl<N: NetworkManagerService> NetworkManager<N> {
                 }
 
                 match user_data {
+                    UserData::IOTimeout => (),
                     UserData::CancelRead => (),
                     UserData::Write {
                         connection_index,

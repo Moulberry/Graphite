@@ -1,7 +1,8 @@
 use crate::network_buffer::WriteBuffer;
 use anyhow::bail;
-use binary::slice_serialization::SliceSerializable;
+use binary::slice_serialization::{SliceSerializable, VarInt};
 use binary::varint;
+use minecraft_constants::entity::Metadata;
 use protocol::IdentifiedPacket;
 use std::fmt::Debug;
 use thiserror::Error;
@@ -25,6 +26,59 @@ where
     unsafe {
         write_buffer.advance(bytes_written);
     }
+}
+
+pub fn write_metadata_packet<'a, T>(
+    write_buffer: &mut WriteBuffer,
+    packet_id: u8,
+    entity_id: i32,
+    metadata: &'a mut T,
+) -> anyhow::Result<()>
+where
+    T: Metadata,
+{
+    let expected_packet_size = 5 + metadata.get_write_size();
+    if expected_packet_size > 2097148 {
+        bail!("packet too large!");
+    }
+
+    // allocate necessary bytes
+    let bytes = write_buffer.get_unwritten(4 + expected_packet_size);
+
+    // write packet data
+    // safety: invariant should be satisfied because we allocated at least `get_write_size` bytes
+    let contents = &mut bytes[4..];
+    let contents = unsafe { VarInt::write(contents, entity_id) };
+    let contents = unsafe { metadata.write_changes(contents) };
+    let bytes_written = expected_packet_size - contents.len();
+
+    // encode packet size varint for [packet id size (1) + content size]
+    let (varint_raw, varint_bytes) = varint::encode::i32_raw(1 + bytes_written as i32);
+    if varint_bytes > 3 {
+        bail!("packet too large!");
+    }
+
+    // write packet size varint
+    bytes[0..varint_bytes].copy_from_slice(&varint_raw[..varint_bytes]);
+
+    if varint_bytes == 1 {
+        bytes[0] |= 0b10000000;
+        bytes[1] = 0b10000000;
+        bytes[2] = 0b00000000;
+    } else if varint_bytes == 2 {
+        bytes[1] |= 0b10000000;
+        bytes[2] = 0b00000000;
+    }
+
+    // write packet id
+    bytes[3] = packet_id;
+
+    unsafe {
+        // advance write buffer
+        write_buffer.advance(4 + bytes_written);
+    }
+
+    Ok(())
 }
 
 pub fn write_custom_packet<'a, T>(

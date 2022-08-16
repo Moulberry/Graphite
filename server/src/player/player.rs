@@ -2,19 +2,21 @@ use std::{mem::ManuallyDrop, ops::Range};
 
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
+use minecraft_constants::entity::{PlayerMetadata, Metadata};
 use net::{
     network_buffer::WriteBuffer,
     packet_helper::{self, PacketReadResult},
 };
+use parry3d::{query::Ray, math::{Point, Vector, Real}, bounding_volume::AABB};
 use protocol::{
     play::{
         client::PacketHandler,
         server::{
             self, AddPlayer, PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
-            TeleportEntity,
+            TeleportEntity, BlockChangedAck, LevelEvent, LevelEventType, BlockDestruction, SetEquipment, SetEntityData,
         },
     },
-    types::GameProfile,
+    types::{GameProfile, BlockPosition, EquipmentSlot, ProtocolItemStack},
     IdentifiedPacket,
 };
 use queues::Buffer;
@@ -25,12 +27,12 @@ use text_component::TextComponent;
 use crate::{
     entity::position::{Position, Vec3f},
     universe::{EntityId, UniverseService},
-    world::{ChunkViewPosition, TickPhase, World, WorldService, TickPhaseInner}, inventory::inventory_handler::InventoryHandler,
+    world::{ChunkViewPosition, TickPhase, World, WorldService, TickPhaseInner, chunk::BlockStorage}, inventory::inventory_handler::{InventoryHandler, InventorySlot}, gamemode::Abilities,
 };
 
 use super::{
     player_connection::AbstractConnectionReference, player_settings::PlayerSettings,
-    proto_player::ProtoPlayer,
+    proto_player::ProtoPlayer, interaction::{InteractionState, Interaction},
 };
 
 // User defined player service trait
@@ -58,19 +60,26 @@ type ConnectionReferenceType<P: PlayerService> =
 
 // graphite player
 pub struct Player<P: PlayerService> {
+    world: *mut World<P::WorldServiceType>,
+
     pub(crate) write_buffer: WriteBuffer,
     pub(crate) viewable_self_exclusion_write_buffer: WriteBuffer,
     pub(crate) disconnected: bool,
 
-    world: *mut World<P::WorldServiceType>,
-    pub profile: GameProfile,
-    pub(crate) entity_id: EntityId,
+    pub entity_id: EntityId,
+    pub abilities: Abilities,
+    pub metadata: PlayerMetadata,
+    pub inventory: P::InventoryHandlerType,
     pub settings: PlayerSettings,
+    pub profile: GameProfile,
 
     last_position: Position,
     pub position: Position,
     pub(crate) client_position: Position,
     pub on_ground: bool,
+
+    pub selected_hotbar_slot: u8,
+    last_selected_hotbar_slot: u8,
 
     viewable_exclusion_range: Range<usize>,
     pub(crate) chunk_view_position: ChunkViewPosition,
@@ -78,15 +87,15 @@ pub struct Player<P: PlayerService> {
     pub(crate) chunk_ref: usize,
     pub(crate) teleport_id_timer: u8,
     pub(crate) waiting_teleportation_id: Buffer<i32>,
-
-    pub inventory: P::InventoryHandlerType,
+    pub(crate) ack_sequence_up_to: Option<i32>,
+    pub(crate) interaction_state: InteractionState,
 
     pub(crate) current_keep_alive: u64,
     keep_alive_timer: u8,
 
     moved_into_proto: bool,
-    pub service: ManuallyDrop<P>,
     connection: ManuallyDrop<ConnectionReferenceType<P>>,
+    pub service: ManuallyDrop<P>,
 }
 
 // graphite player impl
@@ -99,38 +108,46 @@ impl<P: PlayerService> Player<P> {
         entity_id: EntityId,
         position: Position,
         view_position: ChunkViewPosition,
+        abilities: Abilities,
         connection: ConnectionReferenceType<P>,
     ) -> Self {
         Self {
-            moved_into_proto: false,
-            service: ManuallyDrop::new(service),
-            connection: ManuallyDrop::new(connection),
+            world,
 
             write_buffer: WriteBuffer::new(),
             viewable_self_exclusion_write_buffer: WriteBuffer::new(),
             disconnected: false,
 
-            world,
-            profile,
             entity_id,
+            abilities,
+            inventory: Default::default(),
             settings: PlayerSettings::new(),
+            profile,
+            metadata: Default::default(),
 
             last_position: position,
             position,
             client_position: position,
             on_ground: false,
 
+            selected_hotbar_slot: 0,
+            last_selected_hotbar_slot: 0,
+
             viewable_exclusion_range: 0..0,
-            new_chunk_view_position: view_position,
             chunk_view_position: view_position,
+            new_chunk_view_position: view_position,
             chunk_ref: usize::MAX,
             teleport_id_timer: 0,
             waiting_teleportation_id: Buffer::new(20),
-
-            inventory: Default::default(),
+            ack_sequence_up_to: None,
+            interaction_state: Default::default(),
 
             current_keep_alive: 0,
             keep_alive_timer: 0,
+
+            moved_into_proto: false,
+            connection: ManuallyDrop::new(connection),
+            service: ManuallyDrop::new(service),
         }
     }
 
@@ -152,15 +169,19 @@ impl<P: PlayerService> Player<P> {
             let chunk_x = self.chunk_view_position.x as i32;
             let chunk_z = self.chunk_view_position.z as i32;
 
+            let chunks = &self.get_world().chunks;
+
             // Entity viewable buffers
             let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
             for x in (chunk_x - view_distance).max(0)
                 ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
             {
+                let chunks_list = &chunks[x as usize];
+
                 for z in (chunk_z - view_distance).max(0)
                     ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
                 {
-                    let chunk = &self.get_world().chunks[x as usize][z as usize];
+                    let chunk = &chunks_list[z as usize];
 
                     let bytes = chunk.entity_viewable_buffer.get_written();
 
@@ -191,9 +212,6 @@ impl<P: PlayerService> Player<P> {
 
             self.chunk_view_position = self.new_chunk_view_position;
 
-            // Write inventory packets
-            self.inventory.write_changes(&mut self.write_buffer)?;
-
             // Write packets from buffer
             if !self.write_buffer.is_empty() {
                 // Write bytes into player connection
@@ -208,6 +226,11 @@ impl<P: PlayerService> Player<P> {
             return Ok(());
         }
 
+        // Update interaction state
+        for interaction in self.interaction_state.update() {
+            self.fire_interaction(interaction);
+        }
+
         // Check teleport timer
         if self.teleport_id_timer > 0 {
             self.teleport_id_timer += 1;
@@ -217,7 +240,18 @@ impl<P: PlayerService> Player<P> {
             }
         }
 
-        // Sending keep alive timer
+        // Send block change ack
+        match self.ack_sequence_up_to {
+            Some(sequence) => {
+                self.write_packet(&BlockChangedAck {
+                    sequence
+                });
+                self.ack_sequence_up_to = None;
+            },
+            None => (),
+        }
+
+        // Send keep alive timer
         self.keep_alive_timer = self.keep_alive_timer.wrapping_add(1);
         if self.keep_alive_timer == 0 {
             if self.current_keep_alive != 0 {
@@ -228,6 +262,69 @@ impl<P: PlayerService> Player<P> {
             self.write_packet(&server::KeepAlive {
                 id: self.current_keep_alive,
             });
+        }
+
+        // Equipment changes
+        let mut equipment_changes = vec![];
+
+        // Add MainHand if hotbar slot has changed
+        let selected_hotbar_slot_changed = self.last_selected_hotbar_slot != self.selected_hotbar_slot;
+        if selected_hotbar_slot_changed {
+            self.last_selected_hotbar_slot = self.selected_hotbar_slot;
+
+            if let Some(interaction) = self.interaction_state.try_abort_use(false) {
+                self.fire_interaction(interaction);
+            }
+
+            let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
+            let held_item = self.inventory.get(slot).expect("self.selected_hotbar_slot between 0..9");
+
+            equipment_changes.push((EquipmentSlot::MainHand, held_item.into()));
+        }
+
+        // Add other equipment 
+        if self.inventory.is_any_changed() {
+            let mut write_equipment_changes = |inventory: InventorySlot, equipment: EquipmentSlot| {
+                if self.inventory.is_changed(inventory).unwrap() {
+                    let itemslot = self.inventory.get(inventory).unwrap();
+                    equipment_changes.push((equipment, itemslot.into()));
+                }
+            };
+            write_equipment_changes(InventorySlot::OffHand, EquipmentSlot::OffHand);
+            write_equipment_changes(InventorySlot::Feet, EquipmentSlot::Feet);
+            write_equipment_changes(InventorySlot::Legs, EquipmentSlot::Legs);
+            write_equipment_changes(InventorySlot::Chest, EquipmentSlot::Chest);
+            write_equipment_changes(InventorySlot::Head, EquipmentSlot::Head);
+
+            if !selected_hotbar_slot_changed {
+                let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
+                write_equipment_changes(slot, EquipmentSlot::MainHand);
+            }
+        }
+
+        // Write equipment changes
+        if !equipment_changes.is_empty() {
+            self.write_viewable_packet(&SetEquipment {
+                entity_id: self.entity_id.as_i32(),
+                equipment: equipment_changes,
+            }, true);
+        }
+
+        // Write inventory packets
+        self.inventory.write_changes(&mut self.write_buffer)?;
+
+        // Write abilities packets (note: this must come after equipment changes)
+        Abilities::write_changes(self);
+
+        // Write metadata packets
+        let write_size = self.metadata.get_write_size();
+        if write_size > 0 {
+            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
+                [self.chunk_view_position.z as usize];
+
+            packet_helper::write_metadata_packet(&mut chunk.entity_viewable_buffer,
+                 server::PacketId::SetEntityData as _,
+                self.entity_id.as_i32(), &mut self.metadata)?;
         }
 
         // Update position
@@ -300,6 +397,123 @@ impl<P: PlayerService> Player<P> {
         Ok(())
     }
 
+    pub fn clip_block_position(&self, position: BlockPosition) -> Option<(f32, f32)> {
+        let aabb = AABB::new(
+            Point::new(position.x as f32, position.y as f32, position.z as f32),
+            Point::new(position.x as f32 + 1.0, position.y as f32 + 1.0, position.z as f32 + 1.0)
+        );
+
+        return aabb.clip_ray_parameters(&self.get_look_ray());
+    }
+
+    pub fn get_look_ray(&self) -> Ray {
+        Ray::new(
+            Point::new(self.client_position.coord.x, self.client_position.coord.y + self.get_eye_height(), self.client_position.coord.z),
+            self.get_look_vector()
+        )
+    }
+
+    pub fn get_eye_height(&self) -> f32 {
+        1.62
+    }
+
+    pub fn get_look_vector(&self) -> Vector<Real> {
+        let pitch_rad = self.client_position.rot.pitch.to_radians();
+        let yaw_rad = -self.client_position.rot.yaw.to_radians();
+        let (pitch_sin, pitch_cos) = pitch_rad.sin_cos();
+        let (yaw_sin, yaw_cos) = yaw_rad.sin_cos();
+        Vector::new(yaw_sin * pitch_cos, -pitch_sin, yaw_cos * pitch_cos)
+    }
+
+    fn break_block(&mut self, pos: BlockPosition) {
+        if pos.x >= 0 && pos.y >= 0 && pos.z >= 0 {
+            if let Some(old) = self.get_world_mut().set_block(pos.x as _, pos.y as _, pos.z as _, 0) {
+                self.write_viewable_packet(&LevelEvent {
+                    event_type: LevelEventType::ParticlesDestroyBlock,
+                    pos,
+                    data: old as _,
+                    global: false,
+                }, true);
+            }
+        }
+    }
+
+    pub fn do_default_interaction(&mut self, interaction: Interaction) {
+        println!("Got interaction: {:?}", interaction);
+
+        match interaction {
+            Interaction::LeftClickBlock {
+                position,
+                face: _,
+                instabreak
+            } => {
+                if instabreak {
+                    self.break_block(position);
+                }
+            },
+            Interaction::LeftClickEntity { entity_id: _ } => {
+                // todo: entity interaction
+            },
+            Interaction::LeftClickAir => {},
+
+            Interaction::RightClickBlock { position: _, face: _, offset: _ } => {},
+            Interaction::RightClickEntity { entity_id: _, offset: _ } => {
+                // todo: entity interaction
+            },
+            Interaction::RightClickAir => {},
+
+            Interaction::ContinuousBreak { position, break_time, distance: _ } => {
+                if let Some(destroy_stage) = self.get_world().get_destroy_stage(position.x, position.y as _,
+                        position.z, break_time, self.get_break_speed_multiplier()) {
+                    // todo: check if the stage changed, only send packet then
+                    self.write_viewable_packet(&BlockDestruction {
+                        entity_id: self.entity_id.as_i32(),
+                        location: position,
+                        destroy_stage,
+                    }, true);
+                }
+
+                // update destruction
+            },
+            Interaction::FinishBreak { position, break_time: _, distance: _ } => {
+                self.break_block(position);
+            },
+            Interaction::AbortBreak { position, break_time: _ } => {
+                self.write_viewable_packet(&BlockDestruction {
+                    entity_id: self.entity_id.as_i32(),
+                    location: position,
+                    destroy_stage: -1,
+                }, true);
+            },
+
+            Interaction::ContinuousUse { use_time: _ } => {},
+            Interaction::FinishUse { use_time: _ } => {
+                // todo: send finish to all players
+            },
+            Interaction::AbortUse { use_time: _, aborted_by_client} => {
+                if aborted_by_client {
+                    // todo: send finish to other players
+                } else {
+                    // todo: send finish to all players
+                }
+            },
+        }
+    }
+
+    pub fn get_break_speed_multiplier(&self) -> f32 {
+        let speed_multiplier = 1.0;
+        // todo: item bonus
+        // todo: efficiency bonus
+        // todo: "dig speed" aka Haste bonus
+        // todo: "dig slowdown" aka Mining Fatigue
+        // todo: eye in water (/5)
+        // todo: not on ground (/5)
+
+        let correct_tool_multiplier = 100.0; // set to 30 if using correct tool
+
+        correct_tool_multiplier * speed_multiplier
+    }
+
     pub fn send_message<T: Into<TextComponent>>(&mut self, message: T) {
         self.write_packet(&server::SystemChat {
             message: message.into().to_json(),
@@ -339,6 +553,11 @@ impl<P: PlayerService> Player<P> {
         }
     }
 
+    pub(crate) fn fire_interaction(&mut self, interaction: Interaction) {
+        // todo: send to service
+        self.do_default_interaction(interaction);
+    }
+
     pub(crate) fn write_destroy_packet(&mut self, write_buffer: &mut WriteBuffer) {
         // Remove Entity Packet
         let remove_entity_packet = RemoveEntities {
@@ -357,7 +576,7 @@ impl<P: PlayerService> Player<P> {
         let packet = PlayerInfo::AddPlayer {
             values: vec![PlayerInfoAddPlayer {
                 profile: self.profile.clone(),
-                gamemode: 1, // todo: gamemode
+                gamemode: self.abilities.gamemode as _, // todo: gamemode
                 ping: 69,    // todo: ping
                 display_name: None,
                 signature_data: None,
@@ -375,6 +594,10 @@ impl<P: PlayerService> Player<P> {
             pitch: 0.0,
         };
         net::packet_helper::write_packet(write_buffer, &add_player_packet).unwrap();
+
+        // todo: equipment
+
+        // todo: metadata
     }
 
     pub(crate) fn write_packet_bytes(&mut self, bytes: &[u8]) {
@@ -448,7 +671,7 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
         let chunk = &mut world.chunks[self.chunk_view_position.x as usize]
             [self.chunk_view_position.z as usize];
         if self.chunk_ref == usize::MAX {
-            chunk.add_new_player(self);
+            chunk.create_player(self);
         } else {
             chunk.update_player_pointer(self);
         }

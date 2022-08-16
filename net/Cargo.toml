@@ -13,3 +13,4 @@ nix = "0.24.1"
 
 binary = { path = "../binary" }
 protocol = { path = "../protocol" }
+minecraft_constants = { path = "../minecraft_constants" }

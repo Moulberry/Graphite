@@ -1,0 +1,14 @@
+{
+  "minecraft:lava": {
+    "values": [
+      "minecraft:lava",
+      "minecraft:flowing_lava"
+    ]
+  },
+  "minecraft:water": {
+    "values": [
+      "minecraft:water",
+      "minecraft:flowing_water"
+    ]
+  }
+}

@@ -37,14 +37,22 @@ pub struct ChunkSection {
 
 impl ChunkSection {
     pub fn fill_blocks(&mut self, block: u16) -> bool {
-        self.get_block_palette().fill(block)
+        self.get_block_palette_mut().fill(block)
     }
 
-    pub fn set_block(&mut self, x: u8, y: u8, z: u8, block: u16) -> bool {
-        self.get_block_palette().set(x, y, z, block)
+    pub fn set_block(&mut self, x: u8, y: u8, z: u8, block: u16) -> Option<u16> {
+        self.get_block_palette_mut().set(x, y, z, block)
     }
 
-    fn get_block_palette(&mut self) -> &mut BlockPalettedContainer {
+    pub fn get_block(&self, x: u8, y: u8, z: u8) -> u16 {
+        self.get_block_palette().get(x, y, z)
+    }
+
+    fn get_block_palette(&self) -> &BlockPalettedContainer {
+        unsafe { &*self.block_palette }
+    }
+
+    fn get_block_palette_mut(&mut self) -> &mut BlockPalettedContainer {
         if self.copy_on_write {
             self.perform_copy();
         }

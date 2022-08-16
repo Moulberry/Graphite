@@ -1,5 +1,6 @@
 use std::result;
 
+use minecraft_constants::item::NoSuchItemError;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::{play::server::ContainerSetSlot};
 use protocol::types::ProtocolItemStack;
@@ -7,13 +8,14 @@ use thiserror::Error;
 
 use super::itemstack::ItemStack;
 
-pub trait InventoryHandler: Default {
-    type InventorySection;
-
+pub trait InventoryHandler: Default { // todo: make generic over InventorySlot
     fn creative_mode_set(&mut self, index: usize, itemstack: Option<ProtocolItemStack>) -> anyhow::Result<()>;
-    fn get(&self, section: Self::InventorySection) -> result::Result<&ItemSlot, SlotOutOfBoundsError>;
-    fn set(&mut self, section: Self::InventorySection, itemstack: ItemStack) -> result::Result<(), SlotOutOfBoundsError>;
-    fn clear(&mut self, section: Self::InventorySection) -> result::Result<(), SlotOutOfBoundsError>;
+    fn get(&self, slot: InventorySlot) -> result::Result<&ItemSlot, SlotOutOfBoundsError>;
+    fn set(&mut self, slot: InventorySlot, itemstack: ItemStack) -> result::Result<(), SlotOutOfBoundsError>;
+    fn sync(&mut self, slot: InventorySlot) -> result::Result<(), SlotOutOfBoundsError>;
+    fn is_changed(&self, slot: InventorySlot) -> result::Result<bool, SlotOutOfBoundsError>;
+    fn is_any_changed(&self) -> bool;
+    fn clear(&mut self, slot: InventorySlot) -> result::Result<(), SlotOutOfBoundsError>;
     fn write_changes(&mut self, write_buffer: &mut WriteBuffer) -> anyhow::Result<()>;
 }
 
@@ -22,6 +24,25 @@ pub enum ItemSlot {
     #[default]
     Empty,
     Filled(ItemStack)
+}
+
+impl TryFrom<Option<ProtocolItemStack>> for ItemSlot {
+    type Error = NoSuchItemError;
+    fn try_from(value: Option<ProtocolItemStack>) -> Result<Self, Self::Error> {
+        match value {
+            Some(itemstack) => Ok(ItemSlot::Filled(itemstack.try_into()?)),
+            None => Ok(ItemSlot::Empty),
+        }
+    }
+}
+
+impl From<&ItemSlot> for Option<ProtocolItemStack> {
+    fn from(value: &ItemSlot) -> Self {
+        match value {
+            ItemSlot::Filled(itemstack) => Some(itemstack.into()),
+            ItemSlot::Empty => None,
+        }
+    }
 }
 
 pub struct VanillaPlayerInventory {
@@ -38,16 +59,17 @@ impl Default for VanillaPlayerInventory {
     }
 }
 
-pub enum PlayerInventorySection {
+#[derive(Clone, Copy, Debug)]
+pub enum InventorySlot {
     All(usize),
     Hotbar(usize),
     Main(usize),
     MainAndHotbar(usize),
     OffHand,
-    Helmet,
-    Chestplate,
-    Leggings,
-    Boots,
+    Head,
+    Chest,
+    Legs,
+    Feet,
     CraftingInput(usize),
     CraftingResult
 }
@@ -56,50 +78,50 @@ pub enum PlayerInventorySection {
 #[error("slot index out of bounds: the max is {0} but the index is {1}")]
 pub struct SlotOutOfBoundsError(usize, usize);
 
-impl PlayerInventorySection {
-    pub fn get_slot(&self) -> result::Result<usize, SlotOutOfBoundsError> {
+impl InventorySlot {
+    pub fn get_index(&self) -> result::Result<usize, SlotOutOfBoundsError> {
         match self {
-            PlayerInventorySection::All(index) => {
+            InventorySlot::All(index) => {
                 if *index < 46 {
                     Ok(*index)
                 } else {
                     Err(SlotOutOfBoundsError(46, *index))
                 }
             },
-            PlayerInventorySection::Hotbar(index) => {
+            InventorySlot::Hotbar(index) => {
                 if *index < 9 {
                     Ok(index + 36)
                 } else {
                     Err(SlotOutOfBoundsError(9, *index))
                 }
             },
-            PlayerInventorySection::Main(index) => {
+            InventorySlot::Main(index) => {
                 if *index < 27 {
                     Ok(index + 9)
                 } else {
                     Err(SlotOutOfBoundsError(27, *index))
                 }
             },
-            PlayerInventorySection::MainAndHotbar(index) => {
+            InventorySlot::MainAndHotbar(index) => {
                 if *index < 36 {
                     Ok(index + 9)
                 } else {
                     Err(SlotOutOfBoundsError(36, *index))
                 }
             },
-            PlayerInventorySection::OffHand => Ok(45),
-            PlayerInventorySection::Helmet => Ok(5),
-            PlayerInventorySection::Chestplate => Ok(6),
-            PlayerInventorySection::Leggings => Ok(7),
-            PlayerInventorySection::Boots => Ok(8),
-            PlayerInventorySection::CraftingInput(index) => {
+            InventorySlot::OffHand => Ok(45),
+            InventorySlot::Head => Ok(5),
+            InventorySlot::Chest => Ok(6),
+            InventorySlot::Legs => Ok(7),
+            InventorySlot::Feet => Ok(8),
+            InventorySlot::CraftingInput(index) => {
                 if *index < 4 {
                     Ok(*index)
                 } else {
                     Err(SlotOutOfBoundsError(4, *index))
                 }
             },
-            PlayerInventorySection::CraftingResult => Ok(4),
+            InventorySlot::CraftingResult => Ok(4),
         }
     }
 }
@@ -107,7 +129,7 @@ impl PlayerInventorySection {
 enum ChangeState {
     NoChange,
     SingleSlot {
-        slot: usize
+        index: usize
     },
     MultiSlot {
         count: usize,
@@ -116,8 +138,6 @@ enum ChangeState {
 }
 
 impl InventoryHandler for VanillaPlayerInventory {
-    type InventorySection = PlayerInventorySection;
-
     fn creative_mode_set(&mut self, index: usize, itemstack: Option<ProtocolItemStack>) -> anyhow::Result<()> {
         if index > 45 {
             return Err(SlotOutOfBoundsError(45, index).into())
@@ -133,20 +153,49 @@ impl InventoryHandler for VanillaPlayerInventory {
         Ok(())
     }
 
-    fn get(&self, section: Self::InventorySection) -> result::Result<&ItemSlot, SlotOutOfBoundsError> {
-        let slot = section.get_slot()?;
-        Ok(&self.slots[slot])
+    fn get(&self, section: InventorySlot) -> result::Result<&ItemSlot, SlotOutOfBoundsError> {
+        let index = section.get_index()?;
+        Ok(&self.slots[index])
     }
 
-    fn set(&mut self, section: Self::InventorySection, itemstack: ItemStack) -> result::Result<(), SlotOutOfBoundsError> {
-        let slot = section.get_slot()?;
-        self.slots[slot] = ItemSlot::Filled(itemstack);
-        self.mark_changed(slot);
+    fn set(&mut self, section: InventorySlot, itemstack: ItemStack) -> result::Result<(), SlotOutOfBoundsError> {
+        let index = section.get_index()?;
+        self.slots[index] = ItemSlot::Filled(itemstack);
+        self.mark_changed(index);
         Ok(())
     }
 
-    fn clear(&mut self, section: Self::InventorySection) -> result::Result<(), SlotOutOfBoundsError> {
-        let slot = section.get_slot()?;
+    fn sync(&mut self, section: InventorySlot) -> result::Result<(), SlotOutOfBoundsError> {
+        self.mark_changed(section.get_index()?);
+        Ok(())
+    }
+
+    fn is_changed(&self, section: InventorySlot) -> result::Result<bool, SlotOutOfBoundsError> {
+        let check_index = section.get_index()?;
+        match self.change_state {
+            ChangeState::NoChange => Ok(false),
+            ChangeState::SingleSlot { index } => {
+                Ok(check_index == index)
+            },
+            ChangeState::MultiSlot { count: _, changed } => {
+                Ok(changed[check_index])
+            },
+        }
+    }
+
+    fn is_any_changed(&self) -> bool {
+        match self.change_state {
+            ChangeState::NoChange => {
+                false
+            },
+            ChangeState::SingleSlot { index: _ } | ChangeState::MultiSlot { count: _, changed: _ } => {
+                true
+            }
+        }
+    }
+
+    fn clear(&mut self, section: InventorySlot) -> result::Result<(), SlotOutOfBoundsError> {
+        let slot = section.get_index()?;
         self.slots[slot] = ItemSlot::Empty;
         self.mark_changed(slot);
         Ok(())
@@ -155,8 +204,8 @@ impl InventoryHandler for VanillaPlayerInventory {
     fn write_changes(&mut self, write_buffer: &mut WriteBuffer) -> anyhow::Result<()> {
         match self.change_state {
             ChangeState::NoChange => return Ok(()),
-            ChangeState::SingleSlot { slot } => {
-                let item = match &self.slots[slot] {
+            ChangeState::SingleSlot { index } => {
+                let item = match &self.slots[index] {
                     ItemSlot::Empty => {
                         None
                     },
@@ -174,7 +223,7 @@ impl InventoryHandler for VanillaPlayerInventory {
                 let packet = ContainerSetSlot {
                     window_id: 0,
                     state_id: 0,
-                    slot: slot as _,
+                    slot: index as _,
                     item
                 };
                 packet_helper::write_packet(write_buffer, &packet)?;        
@@ -194,9 +243,9 @@ impl VanillaPlayerInventory {
     fn mark_changed(&mut self, index: usize) {
         match self.change_state {
             ChangeState::NoChange => {
-                self.change_state = ChangeState::SingleSlot { slot: index }
+                self.change_state = ChangeState::SingleSlot { index }
             },
-            ChangeState::SingleSlot { slot: other_index } => {
+            ChangeState::SingleSlot { index: other_index } => {
                 if other_index != index {
                     let mut changed = [false; 46];
                     changed[other_index] = true;

@@ -3,16 +3,21 @@ use std::{collections::HashMap, io::Write};
 
 use anyhow::bail;
 use convert_case::{Case, Casing};
+use indexmap::IndexMap;
 use serde_derive::Deserialize;
 
 use crate::file_src;
 
-#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Block {
-    id: usize,
-    name: &'static str,
+    #[serde(default = "IndexMap::new")]
+    properties: IndexMap<String, BlockParameter>,
+    hardness: f32,
+    #[serde(default)]
+    air: bool
+    
+    /*name: &'static str,
     display_name: &'static str,
     hardness: f32,
     resistance: f32,
@@ -26,46 +31,36 @@ pub struct Block {
     min_state_id: u16,
     max_state_id: u16,
     states: Vec<BlockParameter>,
-    bounding_box: &'static str,
+    bounding_box: &'static str,*/
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum BlockParameter {
-    #[serde(rename = "enum")]
+    #[serde(rename = "string")]
     Enum {
-        name: &'static str,
-        num_values: usize,
-        values: Vec<&'static str>,
+        values: Vec<String>,
     },
     #[serde(rename = "bool")]
     Bool {
-        name: &'static str,
-        num_values: usize,
     },
     #[serde(rename = "int")]
     Int {
-        name: &'static str,
-        num_values: usize,
-        values: Vec<&'static str>,
+        values: Vec<i32>,
     },
 }
 
 pub fn write_block_states() -> anyhow::Result<()> {
-    let raw_data = include_str!("../minecraft-data/data/pc/1.19/blocks.json");
-    let blocks: Vec<Block> = serde_json::from_str(raw_data)?;
+    let raw_data = include_str!("../data/blocks.json");
+    let blocks: IndexMap<String, Block> = serde_json::from_str(raw_data)?;
 
     // Codegen all the parameters
     let mut parameter_writer: ParameterWriter = Default::default();
-    for block in &blocks {
-        for parameter in &block.states {
+    for (_, block) in &blocks {
+        for (name, parameter) in &block.properties {
             if let BlockParameter::Enum {
-                name,
-                num_values,
                 values,
-            } = parameter
-            {
-                assert_eq!(*num_values, values.len());
+            } = parameter {
                 parameter_writer.define_parameter(name, values)?;
             }
         }
@@ -74,16 +69,28 @@ pub fn write_block_states() -> anyhow::Result<()> {
     let mut block_def = String::new();
     let mut u16_from_block_def = String::new();
     let mut state_lut = String::new();
+    let mut state_properties_lut = String::new();
     let mut state_count = 0;
-    for block in blocks {
-        write_block_state(
+    for (block_name, block) in &blocks {
+        let min_state_count = state_count;
+        state_count += write_block_state(
             &mut block_def,
             &mut state_lut,
             &mut u16_from_block_def,
             &parameter_writer,
-            &block,
+            block_name,
+            block,
+            state_count
         )?;
-        state_count = block.max_state_id + 1;
+
+        // Block Properties
+        for _state_id in min_state_count..state_count {
+            // todo: allow overriding properties for a particular state
+            writeln!(state_properties_lut, "\tBlockProperties {{ // {}", block_name)?;
+            writeln!(state_properties_lut, "\t\thardness: {}_f32,", block.hardness)?;
+            writeln!(state_properties_lut, "\t\tair: {},", block.air)?;
+            state_properties_lut.push_str("\t},\n");
+        }
     }
 
     let mut write_buffer = String::new();
@@ -121,6 +128,26 @@ pub fn write_block_states() -> anyhow::Result<()> {
     f.write_all(write_buffer.as_bytes())?;
     write_buffer.clear();
 
+    // Block Properties
+    write_buffer.push_str("impl TryFrom<u16> for &BlockProperties {\n");
+    write_buffer.push_str("\ttype Error = NoSuchBlockError;");
+    write_buffer.push_str("\tfn try_from(id: u16) -> Result<&'static BlockProperties, Self::Error> {\n");
+    write_buffer
+        .push_str("\t\tif id >= BLOCK_PROPERTIES_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n");
+    write_buffer.push_str("\t\tOk(&BLOCK_PROPERTIES_LUT[id as usize])\n");
+    write_buffer.push_str("\t}\n");
+    write_buffer.push_str("}\n");
+    writeln!(
+        write_buffer,
+        "const BLOCK_PROPERTIES_LUT: [BlockProperties; {}] = [",
+        state_count
+    )?;
+    write_buffer.push_str(&state_properties_lut);
+    write_buffer.push_str("];");
+    let mut f = crate::file_out("u16_to_block_properties.rs");
+    f.write_all(write_buffer.as_bytes())?;
+    write_buffer.clear();
+
     // Block Parameters
     let mut f = file_src("block_parameter.rs");
     f.write_all(parameter_writer.get_enum_code().as_bytes())?;
@@ -130,6 +157,7 @@ pub fn write_block_states() -> anyhow::Result<()> {
     write_buffer.push_str("use crate::block_parameter::*;\n\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/block_to_u16.rs\"));\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block.rs\"));\n\n");
+    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block_properties.rs\"));\n\n");
 
     write_buffer.push_str("#[derive(Debug, thiserror::Error)]\n");
     write_buffer.push_str("#[error(\"No block exists for id: {0}\")]\n");
@@ -137,6 +165,13 @@ pub fn write_block_states() -> anyhow::Result<()> {
 
     write_buffer.push_str("#[derive(Debug)]\npub enum Block {\n");
     write_buffer.push_str(&block_def);
+    write_buffer.push_str("}\n\n");
+
+    // Block Properties Struct
+    write_buffer.push_str("#[derive(Debug)]\n");
+    write_buffer.push_str("pub struct BlockProperties {\n");
+    write_buffer.push_str("\tpub hardness: f32,\n");
+    write_buffer.push_str("\tpub air: bool,\n");
     write_buffer.push_str("}\n\n");
 
     let mut f = crate::file_src("block.rs");
@@ -158,30 +193,35 @@ fn write_block_state(
     state_lut: &mut String,
     u16_from_block_def: &mut String,
     parameters: &ParameterWriter,
+    block_name: &str,
     block: &Block,
-) -> anyhow::Result<()> {
+    current_state_id: usize,
+) -> anyhow::Result<usize> {
     let mut all_possible_parameters = Vec::new();
 
     block_def.push('\t');
-    block_def.push_str(&block.name.to_case(Case::Pascal));
+    block_def.push_str(&block_name.to_case(Case::Pascal));
 
-    if block.states.is_empty() {
+    if block.properties.is_empty() {
         block_def.push_str(",\n");
 
         u16_from_block_def.push_str("\t\t\tBlock::");
-        u16_from_block_def.push_str(&block.name.to_case(Case::Pascal));
-        writeln!(u16_from_block_def, " => {},", block.min_state_id)?;
+        u16_from_block_def.push_str(&block_name.to_case(Case::Pascal));
+        writeln!(u16_from_block_def, " => {},", current_state_id)?;
+
+        state_lut.push_str("\tBlock::");
+        state_lut.push_str(&block_name.to_case(Case::Pascal));
+        state_lut.push_str(",\n");
+
+        return Ok(1);
     } else {
         block_def.push_str(" {\n");
 
-        for state in &block.states {
+        for (name, state) in &block.properties {
             match state {
                 BlockParameter::Enum {
-                    name,
-                    num_values,
                     values,
                 } => {
-                    assert_eq!(*num_values, values.len());
                     let parameter_name = parameters.get_parameter_name(name, values);
 
                     if *name == "type" {
@@ -204,9 +244,7 @@ fn write_block_state(
                         all_possible_parameters.push(named_values);
                     }
                 }
-                BlockParameter::Bool { name, num_values } => {
-                    assert_eq!(*num_values, 2);
-
+                BlockParameter::Bool {  } => {
                     let mut named_values = Vec::new();
                     named_values.push(format!("{name}: true,"));
                     named_values.push(format!("{name}: false,"));
@@ -217,19 +255,14 @@ fn write_block_state(
                     block_def.push_str(": bool,\n");
                 }
                 BlockParameter::Int {
-                    name,
-                    num_values,
                     values,
                 } => {
-                    assert_eq!(*num_values, values.len());
-
                     block_def.push_str("\t\t");
                     block_def.push_str(name);
                     block_def.push_str(": u8,\n");
 
                     let mut named_values = Vec::new();
                     for value in values {
-                        let value = value.parse::<u8>()?;
                         named_values.push(format!("{name}: {value},"));
                     }
                     all_possible_parameters.push(named_values);
@@ -239,76 +272,66 @@ fn write_block_state(
         block_def.push_str("\t},\n");
     }
 
-    if all_possible_parameters.is_empty() {
-        state_lut.push_str("\tBlock::");
-        state_lut.push_str(&block.name.to_case(Case::Pascal));
-        state_lut.push_str(",\n");
-    } else {
-        let mut all: Vec<String> = Vec::new();
-        for possible_parameterizations in all_possible_parameters {
-            let mut new_all = Vec::new();
-            if all.is_empty() {
+    assert!(!all_possible_parameters.is_empty());
+
+    let mut all: Vec<String> = Vec::new();
+    for possible_parameterizations in all_possible_parameters {
+        let mut new_all = Vec::new();
+        if all.is_empty() {
+            for possible_parameterization in &possible_parameterizations {
+                new_all.push(possible_parameterization.clone())
+            }
+        } else {
+            for current in &all {
                 for possible_parameterization in &possible_parameterizations {
-                    new_all.push(possible_parameterization.clone())
-                }
-            } else {
-                for current in &all {
-                    for possible_parameterization in &possible_parameterizations {
-                        let mut current = current.clone();
-                        current.push_str(possible_parameterization);
-                        new_all.push(current)
-                    }
+                    let mut current = current.clone();
+                    current.push_str(possible_parameterization);
+                    new_all.push(current)
                 }
             }
-            all = new_all;
         }
-
-        assert_eq!(
-            all.len() as u16,
-            block.max_state_id - block.min_state_id + 1,
-            "missing states, currently only have: {:?}",
-            all
-        );
-
-        let mut index = block.min_state_id;
-        for one in all {
-            assert!(index <= block.max_state_id);
-
-            let mut state_def = String::new();
-            state_def.push_str("\tBlock::");
-            state_def.push_str(&block.name.to_case(Case::Pascal));
-            state_def.push('{');
-            state_def.push_str(&one);
-            state_def.push('}');
-
-            // Push into LUT
-            state_lut.push_str(&state_def);
-            state_lut.push_str(",\n");
-
-            // Push into From
-            writeln!(u16_from_block_def, "\t\t{state_def} => {index},")?;
-
-            index += 1;
-        }
+        all = new_all;
     }
 
-    Ok(())
+    let all_count = all.len();
+
+    let mut index = current_state_id;
+    for one in all {
+        let mut state_def = String::new();
+        state_def.push_str("\tBlock::");
+        state_def.push_str(&block_name.to_case(Case::Pascal));
+        state_def.push('{');
+        state_def.push_str(&one);
+        state_def.push('}');
+
+        // Push into LUT
+        state_lut.push_str(&state_def);
+        state_lut.push_str(",\n");
+
+        // Push into From
+        writeln!(u16_from_block_def, "\t\t{state_def} => {index},")?;
+
+        index += 1;
+    }
+
+    Ok(all_count)
 }
 
 #[derive(Default)]
 struct ParameterWriter {
-    already_aliased: HashMap<&'static str, Vec<Vec<&'static str>>>,
-    definitions: HashMap<&'static str, Vec<&'static str>>,
-    aliases: HashMap<(&'static str, Vec<&'static str>), String>,
+    already_aliased: HashMap<String, Vec<Vec<String>>>,
+    definitions: HashMap<String, Vec<String>>,
+    aliases: HashMap<(String, Vec<String>), String>,
     code: HashMap<String, String>,
 }
 
 impl ParameterWriter {
     fn define_parameter(
         &mut self,
-        name: &'static str,
-        values: &Vec<&'static str>,
+        name: &String,
+        values: &Vec<String>,
     ) -> anyhow::Result<()> {
+
         if let Some(previous_aliases) = self.already_aliased.get_mut(name) {
             for previous_alias_value in previous_aliases.iter() {
                 if previous_alias_value == values {
@@ -317,10 +340,10 @@ impl ParameterWriter {
                 }
             }
 
-            let alias = Self::resolve_clash(name, values)?;
+            let alias = Self::resolve_clash(name, &values)?;
             previous_aliases.push(values.clone());
             self.code.insert(alias.clone(), Self::codegen(values));
-            self.aliases.insert((name, values.clone()), alias);
+            self.aliases.insert((name.clone(), values.clone()), alias);
             return Ok(());
         }
 
@@ -337,28 +360,30 @@ impl ParameterWriter {
                 let previous_code = self.code.remove(name).unwrap();
                 let alias = Self::resolve_clash(name, defined)?;
                 self.code.insert(alias.clone(), previous_code);
-                self.aliases.insert((name, defined.clone()), alias);
+                self.aliases.insert((name.clone(), defined.clone()), alias);
                 alias_values.push(defined.clone());
 
                 // Write new definition
-                let alias = Self::resolve_clash(name, values)?;
-                self.code.insert(alias.clone(), Self::codegen(values));
-                self.aliases.insert((name, values.clone()), alias);
+                let alias = Self::resolve_clash(name, &values)?;
+                self.code.insert(alias.clone(), Self::codegen(&values));
+                self.aliases.insert((name.clone(), values.clone()), alias);
                 alias_values.push(values.clone());
 
                 // Insert already aliased
-                self.already_aliased.insert(name, alias_values);
+                self.already_aliased.insert(name.clone(), alias_values);
 
                 Ok(())
             }
         } else {
-            self.code.insert(String::from(name), Self::codegen(values));
-            self.definitions.insert(name, values.clone());
+            self.code.insert(String::from(name), Self::codegen(&values));
+            self.definitions.insert(name.clone(), values.clone());
             Ok(())
         }
     }
 
-    fn resolve_clash(name: &str, values: &Vec<&str>) -> anyhow::Result<String> {
+    fn resolve_clash(name: &str, values: &Vec<String>) -> anyhow::Result<String> {
+        let values: Vec<&'static str> = values.iter().map(|f| unsafe { std::mem::transmute(f.as_str()) }).collect();
+
         match name {
             "facing" => match values.as_slice() {
                 ["north", "east", "south", "west", "up", "down"] => {
@@ -434,7 +459,7 @@ impl ParameterWriter {
         )
     }
 
-    fn codegen(values: &Vec<&'static str>) -> String {
+    fn codegen(values: &Vec<String>) -> String {
         let mut code = String::new();
         code.push_str(" {\n");
         for value in values {
@@ -456,8 +481,8 @@ impl ParameterWriter {
         code
     }
 
-    fn get_parameter_name(&self, name: &'static str, values: &[&'static str]) -> String {
-        if let Some(name) = self.aliases.get(&(name, values.to_owned())) {
+    fn get_parameter_name(&self, name: &String, values: &[String]) -> String {
+        if let Some(name) = self.aliases.get(&(name.clone(), values.to_owned())) {
             name.clone()
         } else {
             name.to_case(Case::Pascal)

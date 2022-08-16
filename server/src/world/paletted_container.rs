@@ -26,7 +26,7 @@ pub struct ArrayContainer<T, const HALF_CAP: usize> {
 pub struct DirectContainer<T, const DIRECT_LEN: usize> {
     most_common_type: T,
     most_common_count: u16,
-    contents: [u64; DIRECT_LEN],
+    contents: [u64; DIRECT_LEN], // todo: maybe u64 doesnt work because of endianness
 }
 
 #[derive(Debug, Clone)]
@@ -55,23 +55,33 @@ where
         Self::Single(value)
     }
 
-    pub fn set(&mut self, x: u8, y: u8, z: u8, new_value: T) -> bool {
+    pub fn get(&self, x: u8, y: u8, z: u8) -> T {
+        match self {
+            PalettedContainer::Single(value) => *value,
+            PalettedContainer::Array(array) => {
+                array.get(Self::get_index(x, y, z))
+            },
+            PalettedContainer::Direct(_) => todo!(),
+        }
+    }
+
+    pub fn set(&mut self, x: u8, y: u8, z: u8, new_value: T) -> Option<T> {
         match self {
             Self::Single(value) => {
-                if *value == new_value {
-                    println!("no changes have been made!");
-                    return false;
+                let value = *value;
+                if value == new_value {
+                    return None;
                 }
 
-                let mut array = Self::filled_array(*value);
+                let mut array = Self::filled_array(value);
                 array.set_new(Self::get_index(x, y, z), new_value);
                 self.replace(Self::Array(Box::from(array)));
 
-                true
+                Some(value)
             }
             Self::Array(array) => match array.set(Self::get_index(x, y, z), new_value) {
-                ArraySetResult::Changed => true,
-                ArraySetResult::Unchanged => false,
+                ArraySetResult::Changed(old) => Some(old),
+                ArraySetResult::Unchanged => None,
                 ArraySetResult::OutOfSpace => {
                     todo!("switch to direct");
                 }
@@ -107,8 +117,8 @@ where
     }
 }
 
-enum ArraySetResult {
-    Changed,
+enum ArraySetResult<T> {
+    Changed(T),
     Unchanged,
     OutOfSpace,
 }
@@ -117,11 +127,16 @@ impl<T, const HALF_CAP: usize> ArrayContainer<T, HALF_CAP>
 where
     T: Copy + Eq + num::Unsigned,
 {
-    fn set(&mut self, index: usize, new_value: T) -> ArraySetResult {
+    fn get(&self, index: usize) -> T {
+        let palette_id = self.get_as_palette(index);
+        self.indices[palette_id as usize]
+    }
+
+    fn set(&mut self, index: usize, new_value: T) -> ArraySetResult<T> {
         for (palette_index, value) in self.indices.iter().enumerate() {
             if *value == new_value {
-                if self.set_to_palette(index, palette_index) {
-                    return ArraySetResult::Changed;
+                if let Some(old) = self.set_to_palette(index, palette_index) {
+                    return ArraySetResult::Changed(self.indices[old as usize]);
                 } else {
                     return ArraySetResult::Unchanged;
                 }
@@ -130,8 +145,11 @@ where
 
         if self.indices.len() < self.indices.capacity() {
             let _ = self.indices.push(new_value);
-            self.set_to_palette(index, self.indices.len() - 1);
-            ArraySetResult::Changed
+            if let Some(old) = self.set_to_palette(index, self.indices.len() - 1) {
+                ArraySetResult::Changed(self.indices[old as usize])
+            } else {
+                panic!("couldn't find value in palette, but when setting the value was unchanged")
+            }
         } else {
             ArraySetResult::OutOfSpace
         }
@@ -146,7 +164,16 @@ where
         }
     }
 
-    fn set_to_palette(&mut self, content_index: usize, palette_index: usize) -> bool {
+    fn get_as_palette(&self, content_index: usize) -> u8 {
+        let nibble_pair = self.contents[content_index / 2];
+        if content_index % 2 == 0 {
+            nibble_pair & 0b11110000
+        } else {
+            nibble_pair & 0b00001111
+        }
+    }
+
+    fn set_to_palette(&mut self, content_index: usize, palette_index: usize) -> Option<u8> {
         let nibble_pair = self.contents[content_index / 2];
 
         let offset = ((content_index + 1) % 2) * 4;
@@ -156,9 +183,9 @@ where
 
         if new_nibble_pair != nibble_pair {
             self.contents[content_index / 2] = new_nibble_pair;
-            true
+            Some(nibble_pair & mask)
         } else {
-            false
+            None
         }
     }
 }

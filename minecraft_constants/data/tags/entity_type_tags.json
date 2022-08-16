@@ -1,0 +1,89 @@
+{
+  "minecraft:frog_food": {
+    "values": [
+      "minecraft:slime",
+      "minecraft:magma_cube"
+    ]
+  },
+  "minecraft:freeze_hurts_extra_types": {
+    "values": [
+      "minecraft:strider",
+      "minecraft:blaze",
+      "minecraft:magma_cube"
+    ]
+  },
+  "minecraft:freeze_immune_entity_types": {
+    "values": [
+      "minecraft:stray",
+      "minecraft:polar_bear",
+      "minecraft:snow_golem",
+      "minecraft:wither"
+    ]
+  },
+  "minecraft:axolotl_always_hostiles": {
+    "values": [
+      "minecraft:drowned",
+      "minecraft:guardian",
+      "minecraft:elder_guardian"
+    ]
+  },
+  "minecraft:axolotl_hunt_targets": {
+    "values": [
+      "minecraft:tropical_fish",
+      "minecraft:pufferfish",
+      "minecraft:salmon",
+      "minecraft:cod",
+      "minecraft:squid",
+      "minecraft:glow_squid",
+      "minecraft:tadpole"
+    ]
+  },
+  "minecraft:powder_snow_walkable_mobs": {
+    "values": [
+      "minecraft:rabbit",
+      "minecraft:endermite",
+      "minecraft:silverfish",
+      "minecraft:fox"
+    ]
+  },
+  "minecraft:impact_projectiles": {
+    "values": [
+      "#minecraft:arrows",
+      "minecraft:snowball",
+      "minecraft:fireball",
+      "minecraft:small_fireball",
+      "minecraft:egg",
+      "minecraft:trident",
+      "minecraft:dragon_fireball",
+      "minecraft:wither_skull"
+    ]
+  },
+  "minecraft:arrows": {
+    "values": [
+      "minecraft:arrow",
+      "minecraft:spectral_arrow"
+    ]
+  },
+  "minecraft:beehive_inhabitors": {
+    "values": [
+      "minecraft:bee"
+    ]
+  },
+  "minecraft:raiders": {
+    "values": [
+      "minecraft:evoker",
+      "minecraft:pillager",
+      "minecraft:ravager",
+      "minecraft:vindicator",
+      "minecraft:illusioner",
+      "minecraft:witch"
+    ]
+  },
+  "minecraft:skeletons": {
+    "values": [
+      "minecraft:skeleton",
+      "minecraft:stray",
+      "minecraft:wither_skeleton"
+    ]
+  }
+}

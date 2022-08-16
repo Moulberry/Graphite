@@ -4,8 +4,13 @@ use command::brigadier;
 use command::types::CommandResult;
 use concierge::Concierge;
 use concierge::ConciergeService;
+use minecraft_constants::entity::Metadata;
+use minecraft_constants::entity::PlayerMetadata;
+use net::network_buffer::WriteBuffer;
 use net::network_handler::UninitializedConnection;
+use protocol::play::server::SetEntityData;
 use protocol::types::GameProfile;
+use protocol::types::Pose;
 use rand::Rng;
 use server::entity::components::BasicEntity;
 use server::entity::components::PlayerNPC;
@@ -13,8 +18,9 @@ use server::entity::components::Spinalla;
 use server::entity::position::Coordinate;
 use server::entity::position::Position;
 use server::entity::position::Rotation;
+use server::gamemode::GameMode;
 use server::inventory::inventory_handler::InventoryHandler;
-use server::inventory::inventory_handler::PlayerInventorySection;
+use server::inventory::inventory_handler::InventorySlot;
 use server::inventory::inventory_handler::VanillaPlayerInventory;
 use server::player::player_connection::ConnectionReference;
 use server::player::player_vec::PlayerVec;
@@ -65,52 +71,6 @@ impl ConciergeService for MyConciergeImpl {
 }
 
 fn main() {
-    /*use binary::slice_serialization::BigEndian;
-    use binary::slice_serialization::SizedString;
-    use binary::slice_serialization::SliceSerializable;
-
-    macros::slice_serializable!(
-        #[derive(Debug)]
-        pub enum Hello {
-            Xyz {
-                something: i32 as BigEndian
-            },
-            Abc {
-                something: i32 as BigEndian
-            }
-        }
-    );
-
-    macros::slice_serializable!(
-        #[derive(Debug)]
-        pub enum Hello<'b> {
-            Xyz {
-                blah: &'b str as SizedString,
-                something: i32 as BigEndian
-            },
-            Abc {
-                blah: &'b str as SizedString,
-                something: i32 as BigEndian
-            }
-        }
-    );
-
-    let abc = Hello::Abc {
-        blah: "HELLO",
-        something: 5
-    };
-
-    println!("Write size: {}", Hello::get_write_size(&abc));
-    let mut buf = [0; 128];
-    unsafe { Hello::write(&mut buf, &abc); }
-    println!("Buf: {:?}", buf);
-    let out = Hello::read(&mut &buf[..10]);
-    println!("out: {:?}", out);*/
-
-    //println!("{:?}", packet);
-    //dispatcher.dispatch("hello 800 10");
-
-    // server::command::dispatcher::dispatch("hello 100 whatever_we_want 7174");
     #[brigadier("hello", {10..2000}, {})]
     fn my_function(player: &mut Player<MyPlayerService>, number: u16, numer2: u8) -> CommandResult {
         println!("number: {}", number);
@@ -118,23 +78,6 @@ fn main() {
         player.send_message("Hello from my_function");
         Ok(())
     }
-
-    // Options
-    // 1. Take a direct Player<MyPlayerService>
-    // 2. Make the function "generic", and use `brigadier_player_types` to specify the service types
-    // ---2 generates (in surrogate function)
-    /*
-    let __player_id_0 = std::any::TypeId::of::<XYZ>();
-    let __player_id_1 = std::any::TypeId::of::<ABC>();
-    match __player_id {
-        __player_id_0 => {
-            my_function(player as &mut Player<XYZ>, ...);
-        }
-        __player_id_1 => {
-            my_function(player as &mut Player<ABC>, ...);
-        }
-    }
-    */
 
     #[brigadier("entity_test", {})]
     fn entity_test(player: &mut Player<MyPlayerService>, entity_type: u8) -> CommandResult {
@@ -210,8 +153,30 @@ fn main() {
 
     #[brigadier("gib", {})]
     fn gib(player: &mut Player<MyPlayerService>, slot: u8) -> CommandResult {
-        let itemstack = player.inventory.get(PlayerInventorySection::Hotbar(slot as _)).unwrap();
+        let itemstack = player.inventory.get(InventorySlot::Hotbar(slot as _)).unwrap();
         println!("In slot: {:?}", itemstack);
+
+        Ok(())
+    }
+
+    #[brigadier("glow_up", {})]
+    fn glow_up(player: &mut Player<MyPlayerService>, flags: u8) -> CommandResult {
+        player.metadata.set_shared_flags(flags);
+        player.metadata.set_pose(Pose::FallFlying);
+
+        Ok(())
+    }
+
+    #[brigadier("gamemode", {})]
+    fn gamemode(player: &mut Player<MyPlayerService>, id: u8) -> CommandResult {
+        let gamemode = match id {
+            0 => GameMode::Survival,
+            1 => GameMode::Creative,
+            2 => GameMode::Adventure,
+            3 => GameMode::Spectator,
+            _ => panic!("unknown gamemode")
+        };
+        player.abilities.gamemode = gamemode;
 
         Ok(())
     }
@@ -219,6 +184,8 @@ fn main() {
     my_function.merge(entity_test).unwrap();
     my_function.merge(spawn_player).unwrap();
     my_function.merge(gib).unwrap();
+    my_function.merge(glow_up).unwrap();
+    my_function.merge(gamemode).unwrap();
 
     let (dispatcher, packet) =
         command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
@@ -317,9 +284,13 @@ impl WorldService for MyWorldService {
 
 // player
 
-struct MyPlayerService {}
+struct MyPlayerService {
+
+}
 
 impl PlayerService for MyPlayerService {
+    const FAST_PACKET_RESPONSE: bool = true;
+
     type UniverseServiceType = MyUniverseService;
     type WorldServiceType = MyWorldService;
     type InventoryHandlerType = VanillaPlayerInventory;
