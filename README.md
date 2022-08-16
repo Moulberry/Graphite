@@ -10,7 +10,7 @@
 - [x] Allow multiple players to connect (and see each other)
 - [ ] Base lib crate that reexports everything
 - [ ] ItemStacks with NBT
-- [ ] Player Input Handling (Left/Right Click Air/Block)
+- [x] Player Input Handling (Left/Right Click Air/Block)
 - [ ] TextComponent things & macro
 - [ ] Allow chunk/world modification
 - [ ] "Extras" subproject - raycasting, collision, ...
