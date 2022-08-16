@@ -484,7 +484,6 @@ impl<P: PlayerService> Player<P> {
                     self.write_viewable_packet(&move_packet, true);
                 }
             } else {
-                panic!("teleported?!");
                 self.synced_coord = to.coord;
 
                 // Teleport
