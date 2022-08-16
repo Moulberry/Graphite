@@ -10,7 +10,7 @@ use protocol::play::server::{
 
 use crate::{
     entity::{
-        components::{BasicEntity, EntitySpawnDefinition, Spinalla, Viewable, EntityMetadata},
+        components::{BasicEntity, EntitySpawnDefinition, Spinalla, Viewable},
         position::{Coordinate, Position},
     },
     player::{proto_player::ProtoPlayer, Player, PlayerService},
@@ -254,6 +254,8 @@ impl<W: WorldService> World<W> {
 
                 let mut viewable = unsafe { entity_ref.get_unchecked_mut::<Viewable>(0, 0) }
                     .expect("all entities must have viewable");
+
+                
 
                 let chunk_x = Chunk::to_chunk_coordinate(viewable.coord.x);
                 let chunk_z = Chunk::to_chunk_coordinate(viewable.coord.z);
