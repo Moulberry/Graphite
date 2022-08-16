@@ -18,7 +18,7 @@ use protocol::{
         server::{
             self, AddPlayer, BlockChangedAck, BlockDestruction, LevelEvent, LevelEventType,
             PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
-            SetEquipment, TeleportEntity,
+            SetEquipment, TeleportEntity, MoveEntityPosRot, MoveEntityPos, MoveEntityRot,
         },
     },
     types::{BlockPosition, EquipmentSlot, GameProfile, Hand},
@@ -30,7 +30,7 @@ use sticky::Unsticky;
 use text_component::TextComponent;
 
 use crate::{
-    entity::position::{Position, Vec3f},
+    entity::position::{Position, Vec3f, Coordinate},
     gamemode::Abilities,
     inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
     universe::{EntityId, UniverseService},
@@ -84,9 +84,10 @@ pub struct Player<P: PlayerService> {
     pub settings: PlayerSettings,
     pub profile: GameProfile,
 
-    last_position: Position,
-    pub position: Position,
+    last_position: Position, // used to check for changes
+    synced_coord: Coordinate, // used to calculate correct quantized movement
     pub(crate) client_position: Position,
+    pub position: Position,
     pub on_ground: bool,
 
     pub selected_hotbar_slot: u8,
@@ -134,8 +135,9 @@ impl<P: PlayerService> Player<P> {
             metadata: Default::default(),
 
             last_position: position,
-            position,
+            synced_coord: position.coord,
             client_position: position,
+            position,
             on_ground: false,
 
             selected_hotbar_slot: 0,
@@ -399,6 +401,7 @@ impl<P: PlayerService> Player<P> {
         if self.position != self.last_position {
             self.handle_movement(self.position, true)?;
         } else {
+            // todo: check for moving too fast
             self.handle_movement(self.client_position, false)?;
         }
 
@@ -427,15 +430,89 @@ impl<P: PlayerService> Player<P> {
         Ok(())
     }
 
-    fn handle_movement(&mut self, to: Position, _inform_client: bool) -> anyhow::Result<()> {
+    fn handle_movement(&mut self, to: Position, inform_client: bool) -> anyhow::Result<()> {
         let distance_sq = to.distance_sq(self.last_position);
-        let _rotation_changed = self.client_position.rot.is_diff_u8(self.last_position.rot);
+        let rot_changed = to.rot.is_diff_u8(self.last_position.rot);
         let coord_changed = distance_sq > 0.0001;
 
-        // todo: check for moving too fast
-        // holdup: don't have server velocity
-
         if coord_changed {
+            if distance_sq < 8.0*8.0 {
+                let delta_x = to.coord.x - self.synced_coord.x;
+                let delta_y = to.coord.y - self.synced_coord.y;
+                let delta_z = to.coord.z - self.synced_coord.z;
+
+                let quantized_x = (delta_x * 4096.0) as i16;
+                let quantized_y = (delta_y * 4096.0) as i16;
+                let quantized_z = (delta_z * 4096.0) as i16;
+
+                self.synced_coord.x += quantized_x as f32 / 4096.0;
+                self.synced_coord.y += quantized_y as f32 / 4096.0;
+                self.synced_coord.z += quantized_z as f32 / 4096.0;
+
+                if rot_changed {
+                    // Relative Move & Rotate
+                    let move_packet = MoveEntityPosRot {
+                        entity_id: self.entity_id.as_i32(),
+                        delta_x: quantized_x,
+                        delta_y: quantized_y,
+                        delta_z: quantized_z,
+                        yaw: to.rot.yaw,
+                        pitch: to.rot.pitch,
+                        on_ground: self.on_ground,
+                    };
+                    self.write_viewable_packet(&move_packet, true);
+                    
+                    // Rotate head
+                    let rotate_head = RotateHead {
+                        entity_id: self.entity_id.as_i32(),
+                        head_yaw: to.rot.yaw,
+                    };
+                    self.write_viewable_packet(&rotate_head, true);
+                } else {
+                    // todo: switch to using MoveEntityPos when MC-255263 is fixed
+
+                    // Relative Move
+                    let move_packet = MoveEntityPosRot {
+                        entity_id: self.entity_id.as_i32(),
+                        delta_x: quantized_x,
+                        delta_y: quantized_y,
+                        delta_z: quantized_z,
+                        yaw: to.rot.yaw,
+                        pitch: to.rot.pitch,
+                        on_ground: self.on_ground,
+                    };
+                    self.write_viewable_packet(&move_packet, true);
+                }
+            } else {
+                panic!("teleported?!");
+                self.synced_coord = to.coord;
+
+                // Teleport
+                let teleport_packet = TeleportEntity {
+                    entity_id: self.entity_id.as_i32(),
+                    x: to.coord.x as _,
+                    y: to.coord.y as _,
+                    z: to.coord.z as _,
+                    yaw: to.rot.yaw,
+                    pitch: to.rot.pitch,
+                    on_ground: self.on_ground,
+                };
+                self.write_viewable_packet(&teleport_packet, true);
+
+                if rot_changed {
+                    // Rotate head
+                    let rotate_head = RotateHead {
+                        entity_id: self.entity_id.as_i32(),
+                        head_yaw: to.rot.yaw,
+                    };
+                    self.write_viewable_packet(&rotate_head, true);
+                }
+            }
+
+            self.get_world_mut().update_view_position(self, to)?;
+        } else if rot_changed {
+            // todo: use MoveEntityRot when MC-255263 is fixed
+
             // Teleport
             let teleport_packet = TeleportEntity {
                 entity_id: self.entity_id.as_i32(),
@@ -454,8 +531,22 @@ impl<P: PlayerService> Player<P> {
                 head_yaw: to.rot.yaw,
             };
             self.write_viewable_packet(&rotate_head, true);
+        } else {
+            return Ok(());
+        }
 
-            self.get_world_mut().update_view_position(self, to)?;
+        if inform_client {
+            // todo: use the special move
+            let teleport_packet = TeleportEntity {
+                entity_id: self.entity_id.as_i32(),
+                x: to.coord.x as _,
+                y: to.coord.y as _,
+                z: to.coord.z as _,
+                yaw: to.rot.yaw,
+                pitch: to.rot.pitch,
+                on_ground: self.on_ground,
+            };
+            self.write_packet(&teleport_packet);
         }
 
         self.position = to;

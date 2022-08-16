@@ -50,9 +50,9 @@ identify_packets! {
     Login<'_> = 0x25,
     // MapItemData = 0x26,
     // MerchantOffers = 0x27,
-    // MoveEntityPos = 0x28,
-    // MoveEntityPosRot = 0x29,
-    // MoveEntityRot = 0x2a,
+    MoveEntityPos = 0x28,
+    MoveEntityPosRot = 0x29,
+    MoveEntityRot = 0x2a,
     // MoveVehicle = 0x2b,
     // OpenBook = 0x2c,
     // OpenScreen = 0x2d,
@@ -412,6 +412,42 @@ slice_serializable! {
         pub is_debug: bool as Single,
         pub is_flat: bool as Single,
         pub death_location: Option<BlockPosition>
+    }
+}
+
+// Move Entity
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct MoveEntityPos {
+        pub entity_id: i32 as VarInt,
+        pub delta_x: i16 as BigEndian,
+        pub delta_y: i16 as BigEndian,
+        pub delta_z: i16 as BigEndian,
+        pub on_ground: bool as Single,
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct MoveEntityPosRot {
+        pub entity_id: i32 as VarInt,
+        pub delta_x: i16 as BigEndian,
+        pub delta_y: i16 as BigEndian,
+        pub delta_z: i16 as BigEndian,
+        pub yaw: f32 as ByteRotation,
+        pub pitch: f32 as ByteRotation,
+        pub on_ground: bool as Single,
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct MoveEntityRot {
+        pub entity_id: i32 as VarInt,
+        pub yaw: f32 as ByteRotation,
+        pub pitch: f32 as ByteRotation,
+        pub on_ground: bool as Single,
     }
 }
 
