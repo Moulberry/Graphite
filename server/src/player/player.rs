@@ -18,10 +18,10 @@ use protocol::{
         server::{
             self, AddPlayer, BlockChangedAck, BlockDestruction, LevelEvent, LevelEventType,
             PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
-            SetEquipment, TeleportEntity, MoveEntityPosRot, MoveEntityPos, MoveEntityRot,
+            SetEquipment, TeleportEntity, MoveEntityPosRot,
         },
     },
-    types::{BlockPosition, EquipmentSlot, GameProfile, Hand},
+    types::{BlockPosition, EquipmentSlot, GameProfile, Hand, Pose},
     IdentifiedPacket,
 };
 use queues::Buffer;
@@ -237,6 +237,74 @@ impl<P: PlayerService> Player<P> {
             return Ok(());
         }
 
+        // Update client synchronization (keep alive, block ack, etc.)
+        self.update_client_synchronization()?;
+
+        // Update selected hotbar slot
+        let selected_hotbar_slot_changed =
+            self.last_selected_hotbar_slot != self.selected_hotbar_slot;
+        if selected_hotbar_slot_changed {
+            self.last_selected_hotbar_slot = self.selected_hotbar_slot;
+
+            // If we were using an item, abort the use
+            if self.interaction_state.using_hand == Some(Hand::Main) {
+                let interaction = self.interaction_state.try_abort_use(false).unwrap();
+                self.fire_interaction(interaction);
+            }
+        }
+
+        // Update pose
+        self.update_pose()?;
+
+        // Update interaction state (note: before equipment changes)
+        self.update_interaction_state()?;
+
+        // Update equipment (held items and armor)
+        self.update_equipment(selected_hotbar_slot_changed);
+
+        // Write inventory packets (note: after equipment changes)
+        self.inventory.write_changes(&mut self.write_buffer)?;
+
+        // Write abilities packets (note: after equipment changes)
+        Abilities::write_changes(self);
+
+        // Write metadata packets
+        self.update_metadata()?;
+
+        // Update position
+        if self.position != self.last_position {
+            self.handle_movement(self.position, true)?;
+        } else {
+            // todo: check for moving too fast
+            self.handle_movement(self.client_position, false)?;
+        }
+
+        // Write packets from viewable self-exclusion
+        // These packets are seen by those in render distance of this player,
+        // but *NOT* this player. This is used for eg. movement
+        if !self.viewable_self_exclusion_write_buffer.is_empty() {
+            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
+                [self.chunk_view_position.z as usize];
+            let write_to = &mut chunk.entity_viewable_buffer;
+
+            // Copy bytes into viewable buffer
+            let start = write_to.len();
+            write_to.copy_from(self.viewable_self_exclusion_write_buffer.get_written());
+            let end = write_to.len();
+
+            // Set exclusion range
+            self.viewable_exclusion_range = start..end;
+
+            // Reset the write buffer
+            self.viewable_self_exclusion_write_buffer.reset();
+        }
+        self.viewable_self_exclusion_write_buffer
+            .tick_and_maybe_shrink();
+
+        Ok(())
+    }
+
+    fn update_client_synchronization(&mut self) -> anyhow::Result<()> {
         // Check teleport timer
         if self.teleport_id_timer > 0 {
             self.teleport_id_timer += 1;
@@ -244,15 +312,6 @@ impl<P: PlayerService> Player<P> {
             if self.teleport_id_timer >= 20 {
                 bail!("player sent incorrect teleport id and failed to rectify within time limit");
             }
-        }
-
-        // Send block change ack
-        match self.ack_sequence_up_to {
-            Some(sequence) => {
-                self.write_packet(&BlockChangedAck { sequence });
-                self.ack_sequence_up_to = None;
-            }
-            None => (),
         }
 
         // Send keep alive timer
@@ -268,44 +327,34 @@ impl<P: PlayerService> Player<P> {
             });
         }
 
-        // Update selected hotbar slot
-        let selected_hotbar_slot_changed =
-            self.last_selected_hotbar_slot != self.selected_hotbar_slot;
-        if selected_hotbar_slot_changed {
-            self.last_selected_hotbar_slot = self.selected_hotbar_slot;
-
-            // If we were using an item, abort the use
-            if self.interaction_state.using_hand == Some(Hand::Main) {
-                let interaction = self.interaction_state.try_abort_use(false).unwrap();
-                self.fire_interaction(interaction);
+        // Send block change ack
+        match self.ack_sequence_up_to {
+            Some(sequence) => {
+                self.write_packet(&BlockChangedAck { sequence });
+                self.ack_sequence_up_to = None;
             }
+            None => (),
         }
 
-        // Start item continuous usage
-        if let Some(hand) = self.interaction_state.get_used_hand() {
-            let inventory_slot = match hand {
-                Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
-                Hand::Off => InventorySlot::OffHand,
-            };
+        Ok(())
+    }
 
-            let slot = self.inventory.get(inventory_slot)?;
-            match slot {
-                ItemSlot::Empty => (),
-                ItemSlot::Filled(item) => {
-                    if item.properties.use_duration > 0 {
-                        self.interaction_state
-                            .start_using(item.properties.use_duration as _, hand);
-                    }
-                }
-            }
-        }
+    fn update_metadata(&mut self) -> anyhow::Result<()> {
+        let write_size = self.metadata.get_write_size();
+        Ok(if write_size > 0 {
+            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
+                [self.chunk_view_position.z as usize];
 
-        // Update interaction state
-        for interaction in self.interaction_state.update() {
-            self.fire_interaction(interaction);
-        }
+            packet_helper::write_metadata_packet(
+                &mut chunk.entity_viewable_buffer,
+                server::PacketId::SetEntityData as _,
+                self.entity_id.as_i32(),
+                &mut self.metadata,
+            )?;
+        })
+    }
 
-        // Equipment changes
+    fn update_equipment(&mut self, selected_hotbar_slot_changed: bool) {
         let mut equipment_changes = vec![];
 
         // Add MainHand if hotbar slot has changed
@@ -318,7 +367,6 @@ impl<P: PlayerService> Player<P> {
 
             equipment_changes.push((EquipmentSlot::MainHand, held_item.into()));
         }
-
         // Add other equipment
         if self.inventory.is_any_changed() {
             // Update MainHand
@@ -363,7 +411,6 @@ impl<P: PlayerService> Player<P> {
                 }
             }
         }
-
         // Write equipment changes
         if !equipment_changes.is_empty() {
             self.write_viewable_packet(
@@ -374,60 +421,67 @@ impl<P: PlayerService> Player<P> {
                 true,
             );
         }
+    }
 
-        // Write inventory packets
-        self.inventory.write_changes(&mut self.write_buffer)?;
+    fn update_pose(&mut self) -> anyhow::Result<()> {
+        let mut new_pose;
 
-        // Write abilities packets (note: this must come after equipment changes)
-        Abilities::write_changes(self);
+        // if passenger of another entity, pose should always be standing
 
-        // Write metadata packets
-        let write_size = self.metadata.get_write_size();
-        if write_size > 0 {
-            println!("writing metadata!");
-
-            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
-                [self.chunk_view_position.z as usize];
-
-            packet_helper::write_metadata_packet(
-                &mut chunk.entity_viewable_buffer,
-                server::PacketId::SetEntityData as _,
-                self.entity_id.as_i32(),
-                &mut self.metadata,
-            )?;
-        }
-
-        // Update position
-        if self.position != self.last_position {
-            self.handle_movement(self.position, true)?;
+        if self.is_fall_flying() {
+            new_pose = Pose::FallFlying;
+        } else if self.metadata.sleeping_pos.is_some() {
+            new_pose = Pose::Sleeping;
+        } else if self.is_swimming() {
+            new_pose = Pose::Swimming;
+        } else if self.is_spin_attacking() {
+            new_pose = Pose::SpinAttack;
+        } else if self.is_shift_key_down() && !self.abilities.is_flying {
+            new_pose = Pose::Sneaking;
         } else {
-            // todo: check for moving too fast
-            self.handle_movement(self.client_position, false)?;
+            new_pose = Pose::Standing;
         }
 
-        // Write packets from viewable self-exclusion
-        // These packets are seen by those in render distance of this player,
-        // but *NOT* this player. This is used for eg. movement
-        if !self.viewable_self_exclusion_write_buffer.is_empty() {
-            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
-                [self.chunk_view_position.z as usize];
-            let write_to = &mut chunk.entity_viewable_buffer;
-
-            // Copy bytes into viewable buffer
-            let start = write_to.len();
-            write_to.copy_from(self.viewable_self_exclusion_write_buffer.get_written());
-            let end = write_to.len();
-
-            // Set exclusion range
-            self.viewable_exclusion_range = start..end;
-
-            // Reset the write buffer
-            self.viewable_self_exclusion_write_buffer.reset();
+        if !self.can_enter_pose(new_pose) {
+            if self.can_enter_pose(Pose::Sneaking) {
+                new_pose = Pose::Sneaking;
+            } else {
+                new_pose = Pose::Swimming;
+            }
         }
-        self.viewable_self_exclusion_write_buffer
-            .tick_and_maybe_shrink();
+
+        if self.metadata.pose != new_pose {
+            self.metadata.set_pose(new_pose);
+        }
 
         Ok(())
+    }
+
+    pub fn can_enter_pose(&self, _pose: Pose) -> bool {
+        true // todo: actually check
+    }
+
+    fn update_interaction_state(&mut self) -> anyhow::Result<()> {
+        if let Some(hand) = self.interaction_state.get_used_hand() {
+            let inventory_slot = match hand {
+                Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
+                Hand::Off => InventorySlot::OffHand,
+            };
+
+            let slot = self.inventory.get(inventory_slot)?;
+            match slot {
+                ItemSlot::Empty => (),
+                ItemSlot::Filled(item) => {
+                    if item.properties.use_duration > 0 {
+                        self.interaction_state
+                            .start_using(item.properties.use_duration as _, hand);
+                    }
+                }
+            }
+        }
+        Ok(for interaction in self.interaction_state.update() {
+            self.fire_interaction(interaction);
+        })
     }
 
     fn handle_movement(&mut self, to: Position, inform_client: bool) -> anyhow::Result<()> {
@@ -436,7 +490,10 @@ impl<P: PlayerService> Player<P> {
         let coord_changed = distance_sq > 0.0001;
 
         if coord_changed {
-            if distance_sq < 8.0*8.0 {
+            // todo: maybe force a teleport if a counter is high enough
+            // not sure if this is needed, because this code shouldn't result in posititional desync anyways
+
+            if distance_sq < 8.0*8.0 { 
                 let delta_x = to.coord.x - self.synced_coord.x;
                 let delta_y = to.coord.y - self.synced_coord.y;
                 let delta_z = to.coord.z - self.synced_coord.z;
@@ -689,34 +746,22 @@ impl<P: PlayerService> Player<P> {
 
             Interaction::ContinuousUse { use_time, hand } => {
                 if use_time == 1 {
-                    self.metadata
-                        .set_living_entity_flags(self.metadata.living_entity_flags | 0x1);
-
-                    // Set the hand that is in use
-                    if hand == Hand::Off {
-                        self.metadata
-                            .set_living_entity_flags(self.metadata.living_entity_flags | 0x2);
-                    } else {
-                        self.metadata
-                            .set_living_entity_flags(self.metadata.living_entity_flags & !0x2);
-                    }
+                    self.set_using_item(true);
+                    self.set_using_offhand(hand == Hand::Off);
                 }
             }
             Interaction::FinishUse {
                 use_time: _,
                 hand: _,
             } => {
-                // todo: send finish to all players
-                self.metadata
-                    .set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
+                self.set_using_item(false);
             }
             Interaction::AbortUse {
                 use_time: _,
                 hand: _,
                 aborted_by_client: _,
             } => {
-                self.metadata
-                    .set_living_entity_flags(self.metadata.living_entity_flags & !0x1);
+                self.set_using_item(false);
             }
         }
     }
@@ -811,10 +856,12 @@ impl<P: PlayerService> Player<P> {
             x: self.position.coord.x as _,
             y: self.position.coord.y as _,
             z: self.position.coord.z as _,
-            yaw: 0.0,
-            pitch: 0.0,
+            yaw: self.position.rot.yaw,
+            pitch: self.position.rot.pitch,
         };
         net::packet_helper::write_packet(write_buffer, &add_player_packet).unwrap();
+
+        // todo: head rotation
 
         // todo: equipment
 

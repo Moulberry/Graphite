@@ -15,8 +15,6 @@ use server::entity::position::Coordinate;
 use server::entity::position::Position;
 use server::entity::position::Rotation;
 use server::gamemode::GameMode;
-use server::inventory::inventory_handler::InventoryHandler;
-use server::inventory::inventory_handler::InventorySlot;
 use server::inventory::inventory_handler::VanillaPlayerInventory;
 use server::player::player_connection::ConnectionReference;
 use server::player::player_vec::PlayerVec;
@@ -147,14 +145,9 @@ fn main() {
         Ok(())
     }
 
-    #[brigadier("gib", {})]
-    fn gib(player: &mut Player<MyPlayerService>, slot: u8) -> CommandResult {
-        let itemstack = player
-            .inventory
-            .get(InventorySlot::Hotbar(slot as _))
-            .unwrap();
-        println!("In slot: {:?}", itemstack);
-
+    #[brigadier("fly")]
+    fn fly(player: &mut Player<MyPlayerService>) -> CommandResult {
+        player.abilities.set_flying(!player.abilities.is_flying);
         Ok(())
     }
 
@@ -182,7 +175,7 @@ fn main() {
 
     my_function.merge(entity_test).unwrap();
     my_function.merge(spawn_player).unwrap();
-    my_function.merge(gib).unwrap();
+    my_function.merge(fly).unwrap();
     my_function.merge(glow_up).unwrap();
     my_function.merge(gamemode).unwrap();
 

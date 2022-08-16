@@ -1,11 +1,12 @@
 use anyhow::bail;
 use command::types::ParseState;
+use minecraft_constants::item::Item;
 use protocol::{
     play::{
         client::{
             self, AcceptTeleportation, ClientInformation, CustomPayload, InteractEntity,
             MovePlayerOnGround, MovePlayerPos, MovePlayerPosRot, MovePlayerRot, PlayerHandAction,
-            PlayerMoveAction, UseItem, UseItemOn,
+            PlayerMoveAction, UseItem, UseItemOn, PlayerAbilities,
         },
         server::{AnimateEntity, ContainerSetSlot, EntityAnimation},
     },
@@ -15,7 +16,7 @@ use queues::IsQueue;
 
 use crate::{
     gamemode::GameMode,
-    inventory::inventory_handler::{InventoryHandler, InventorySlot},
+    inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
     player::interaction::Interaction,
 };
 
@@ -300,17 +301,51 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         Ok(())
     }
 
+    fn handle_player_abilities(&mut self, packet: PlayerAbilities) -> anyhow::Result<()> {
+        if packet.flags == 0 {
+            // Client can always stop flying
+            self.abilities.set_flying_without_informing_client(false);
+        } else {
+            // Client may only start to fly if allow_flying is set
+
+            if !self.abilities.allow_flying {
+                // Client thought it could fly, but it can't
+                self.abilities.sync();
+            } else {
+                // Start flying
+                self.abilities.set_flying_without_informing_client(true);
+            }
+        }
+
+        Ok(())
+    }
+
     fn handle_player_move_action(&mut self, packet: PlayerMoveAction) -> anyhow::Result<()> {
         match packet.action {
-            MoveAction::PressShiftKey => (),
-            MoveAction::ReleaseShiftKey => (),
-            MoveAction::StopSleeping => (),
-            MoveAction::StartSprinting => (),
-            MoveAction::StopSprinting => (),
+            MoveAction::PressShiftKey => self.set_shift_key_down(true),
+            MoveAction::ReleaseShiftKey => self.set_shift_key_down(false),
+            MoveAction::StopSleeping => {
+                self.metadata.set_sleeping_pos(None);
+            },
+            MoveAction::StartSprinting => self.set_sprinting(true),
+            MoveAction::StopSprinting => self.set_sprinting(false),
             MoveAction::StartRidingJump => (),
             MoveAction::StopRidingJump => (),
-            MoveAction::OpenInventory => (),
-            MoveAction::StartFallFlying => (),
+            MoveAction::OpenHorseInventory => (),
+            MoveAction::StartFallFlying => {
+                // need to test if this works, currently can't use items with nbt
+                todo!();
+
+                // also need to add a way to automatically stop the fall flying
+                // match self.inventory.get(InventorySlot::Chest).unwrap() {
+                //     ItemSlot::Empty => {},
+                //     ItemSlot::Filled(itemstack) => {
+                //         if itemstack.item == Item::Elytra {
+                //             self.set_fall_flying(true);
+                //         }
+                //     },
+                // }
+            },
         }
 
         Ok(())

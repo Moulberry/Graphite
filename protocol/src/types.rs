@@ -13,7 +13,7 @@ pub enum ChatVisibility {
     None,
 }
 
-#[derive(Default, Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, TryFromPrimitive, IntoPrimitive)]
 #[repr(u8)]
 pub enum Pose {
     #[default]
@@ -71,7 +71,7 @@ pub enum MoveAction {
     StopSprinting,
     StartRidingJump,
     StopRidingJump,
-    OpenInventory,
+    OpenHorseInventory,
     StartFallFlying,
 }
 

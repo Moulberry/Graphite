@@ -193,12 +193,22 @@ impl InputVariant {
         let mut total_packed = 0;
         let mut packed = Vec::new();
 
-        for field in &self.fields {
+        for field_index in 0..self.fields.len() {
+            let field = &self.fields[field_index];
             let field_ident = &field.ident;
 
             read_impl_construct.extend(quote!(
                 #field_ident,
             ));
+
+            let serialize_type = field.get_serialize_type();
+            let serialize_type_span = serialize_type.span();
+            let field_type = &field.field_type;
+
+            let serializable_impl = quote_spanned!(
+                serialize_type_span =>
+                <#serialize_type as binary::slice_serialization::SliceSerializable<#lifetime, #field_type>>
+            );
 
             match &field.special_instruction {
                 SpecialInstruction::None => {}
@@ -210,71 +220,70 @@ impl InputVariant {
                         ));
                     }
                     packed.push(field_ident.clone());
+
+                    let has_more_packed = if field_index == self.fields.len() - 1 {
+                        false
+                    } else {
+                        let next_field = &self.fields[field_index+1];
+                        matches!(next_field.special_instruction, SpecialInstruction::Pack)
+                    };
+
+                    if !has_more_packed {
+                        // Packed get_write_size
+                        get_write_size_impl.extend(quote_spanned!(
+                            serialize_type_span => 1 +
+                        ));
+
+                        // Packed write
+                        let mut inner_write_impl = quote!();
+                        for (index, field) in packed.iter().enumerate() {
+                            let value: u8 = 1 << index;
+
+                            let or = if index == 0 { quote!() } else { quote!(|) };
+                            inner_write_impl.extend(quote_spanned!(
+                                serialize_type_span =>
+                                #or (if *#prefix #field { #value } else { 0 })
+                            ))
+                        }
+                        write_impl.extend(
+                            quote_spanned!(
+                                serialize_type_span =>
+                                bytes = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::write(bytes,
+                                    #inner_write_impl
+                                );
+                            )
+                        );
+
+                        let packed_ident = Ident::new(
+                            &format!("internal_packed_{total_packed}"),
+                            serialize_type_span,
+                        );
+
+                        // Packed read
+                        read_impl.extend(
+                            quote_spanned!(
+                                serialize_type_span =>
+                                let #packed_ident = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::read(bytes)?;
+                            )
+                        );
+
+                        for (index, field) in packed.iter().enumerate() {
+                            let value: u8 = 1 << index;
+                            read_impl.extend(quote_spanned!(
+                                serialize_type_span =>
+                                let #field = (#packed_ident & #value) != 0;
+                            ))
+                        }
+
+                        total_packed += 1;
+                        packed = Vec::new();
+                    }
+
                     continue;
                 }
                 SpecialInstruction::Invalid(span, msg) => {
                     return Err((*span, msg.clone()));
                 }
-            }
-
-            let serialize_type = field.get_serialize_type();
-            let serialize_type_span = serialize_type.span();
-            let field_type = &field.field_type;
-
-            let serializable_impl = quote_spanned!(
-                serialize_type_span =>
-                <#serialize_type as binary::slice_serialization::SliceSerializable<#lifetime, #field_type>>
-            );
-
-            if !packed.is_empty() {
-                // Packed get_write_size
-                get_write_size_impl.extend(quote_spanned!(
-                    serialize_type_span => 1 +
-                ));
-
-                // Packed write
-                let mut inner_write_impl = quote!();
-                for (index, field) in packed.iter().enumerate() {
-                    let value: u8 = 1 << index;
-
-                    let or = if index == 0 { quote!() } else { quote!(|) };
-                    inner_write_impl.extend(quote_spanned!(
-                        serialize_type_span =>
-                        #or (if *#prefix #field { #value } else { 0 })
-                    ))
-                }
-                write_impl.extend(
-                    quote_spanned!(
-                        serialize_type_span =>
-                        bytes = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::write(bytes,
-                            #inner_write_impl
-                        );
-                    )
-                );
-
-                let packed_ident = Ident::new(
-                    &format!("internal_packed_{total_packed}"),
-                    serialize_type_span,
-                );
-
-                // Packed read
-                read_impl.extend(
-                    quote_spanned!(
-                        serialize_type_span =>
-                        let #packed_ident = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::read(bytes)?;
-                    )
-                );
-
-                for (index, field) in packed.iter().enumerate() {
-                    let value: u8 = 1 << index;
-                    read_impl.extend(quote_spanned!(
-                        serialize_type_span =>
-                        let #field = (#packed_ident & #value) != 0;
-                    ))
-                }
-
-                total_packed += 1;
-                packed = Vec::new();
             }
 
             get_write_size_impl.extend(

@@ -43,7 +43,7 @@ identify_packets! {
     // PaddleBoat = 0x19,
     // PickItem = 0x1a,
     // PlaceRecipe = 0x1b,
-    // PlayerAbilities = 0x1c,
+    PlayerAbilities = 0x1c,
     PlayerHandAction = 0x1d,
     PlayerMoveAction = 0x1e,
     // PlayerInput = 0x1f,
@@ -136,7 +136,8 @@ slice_serializable! {
     }
 }
 
-// Interact
+// Interact Entity
+
 slice_serializable! {
     #[derive(Debug)]
     pub enum InteractMode {
@@ -159,7 +160,7 @@ slice_serializable! {
     pub struct InteractEntity {
         pub entity_id: i32 as VarInt,
         pub mode: InteractMode,
-        pub sneaking: bool as Single
+        pub shift_key_down: bool as Single
     }
 }
 
@@ -172,7 +173,6 @@ slice_serializable! {
 }
 
 // Move Player
-
 slice_serializable! {
     #[derive(Debug)]
     pub struct MovePlayerPos {
@@ -208,6 +208,14 @@ slice_serializable! {
     #[derive(Debug)]
     pub struct MovePlayerOnGround {
         pub on_ground: bool as Single
+    }
+}
+
+// Player Abilities
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlayerAbilities {
+        pub flags: u8 as Single,
     }
 }
 

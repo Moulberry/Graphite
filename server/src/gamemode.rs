@@ -20,7 +20,7 @@ use protocol::play::server::{
 
 use crate::player::{Player, PlayerService};
 
-#[derive(Default, PartialEq, Eq, Clone, Copy)]
+#[derive(Default, PartialEq, Eq, Clone, Copy, Debug)]
 #[repr(u8)]
 pub enum GameMode {
     #[default]
@@ -32,6 +32,7 @@ pub enum GameMode {
 
 // PlayerAbilities
 #[readonly::make]
+#[derive(Debug)]
 pub struct Abilities {
     dirty: bool,
 
@@ -155,5 +156,20 @@ impl Abilities {
             event_type: GameEventType::ChangeGameMode,
             param: self.gamemode as u8 as f32,
         }
+    }
+
+    pub fn sync(&mut self) {
+        self.dirty = true;
+    }
+
+    pub fn set_flying(&mut self, is_flying: bool) {
+        if self.is_flying != is_flying {
+            self.is_flying = is_flying;
+            self.dirty = true;
+        }
+    }
+
+    pub(crate) fn set_flying_without_informing_client(&mut self, is_flying: bool) {
+        self.is_flying = is_flying;
     }
 }
