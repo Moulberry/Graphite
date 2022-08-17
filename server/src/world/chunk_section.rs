@@ -104,9 +104,9 @@ impl ChunkSection {
 }
 
 impl<'a> SliceSerializable<'a> for ChunkSection {
-    type RefType = &'a Self;
+    type CopyType = &'a Self;
 
-    fn maybe_deref(t: &'a Self) -> Self::RefType {
+    fn as_copy_type(t: &'a Self) -> Self::CopyType {
         t
     }
 

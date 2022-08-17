@@ -2,7 +2,7 @@ use super::*;
 pub enum VarInt {}
 
 impl SliceSerializable<'_, i32> for VarInt {
-    type RefType = i32;
+    type CopyType = i32;
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<i32> {
         if bytes.is_empty() {
@@ -30,7 +30,7 @@ impl SliceSerializable<'_, i32> for VarInt {
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &i32) -> Self::RefType {
+    fn as_copy_type(t: &i32) -> Self::CopyType {
         *t
     }
 }

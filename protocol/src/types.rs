@@ -171,9 +171,9 @@ slice_serializable! {
 pub enum ByteRotation {}
 
 impl SliceSerializable<'_, f32> for ByteRotation {
-    type RefType = f32;
+    type CopyType = f32;
 
-    fn maybe_deref(t: &f32) -> Self::RefType {
+    fn as_copy_type(t: &f32) -> Self::CopyType {
         *t
     }
 
@@ -197,9 +197,9 @@ impl SliceSerializable<'_, f32> for ByteRotation {
 pub enum QuantizedShort {}
 
 impl SliceSerializable<'_, f32> for QuantizedShort {
-    type RefType = f32;
+    type CopyType = f32;
 
-    fn maybe_deref(t: &f32) -> Self::RefType {
+    fn as_copy_type(t: &f32) -> Self::CopyType {
         *t
     }
 
@@ -228,9 +228,9 @@ pub struct BlockPosition {
 }
 
 impl SliceSerializable<'_> for BlockPosition {
-    type RefType = BlockPosition;
+    type CopyType = BlockPosition;
 
-    fn maybe_deref(t: &Self) -> Self::RefType {
+    fn as_copy_type(t: &Self) -> Self::CopyType {
         *t
     }
 
@@ -262,9 +262,9 @@ impl SliceSerializable<'_> for BlockPosition {
 pub(crate) enum EquipmentList {}
 
 impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> for EquipmentList {
-    type RefType = &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>;
+    type CopyType = &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>;
 
-    fn maybe_deref(t: &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>) -> Self::RefType {
+    fn as_copy_type(t: &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>) -> Self::CopyType {
         t
     }
 
@@ -272,7 +272,7 @@ impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> 
         unimplemented!()
     }
 
-    unsafe fn write(mut bytes: &mut [u8], data: Self::RefType) -> &mut [u8] {
+    unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
         let mut remaining = data.len();
         for (slot, stack) in data {
             remaining -= 1;
@@ -293,7 +293,7 @@ impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> 
         bytes
     }
 
-    fn get_write_size(data: Self::RefType) -> usize {
+    fn get_write_size(data: Self::CopyType) -> usize {
         let mut size = data.len() * 2;
         for (_, stack) in data {
             if let Some(stack) = stack {
@@ -328,9 +328,9 @@ pub enum CommandNode {
 }
 
 impl<'a> SliceSerializable<'a> for CommandNode {
-    type RefType = &'a Self;
+    type CopyType = &'a Self;
 
-    fn maybe_deref(t: &'a Self) -> Self::RefType {
+    fn as_copy_type(t: &'a Self) -> Self::CopyType {
         t
     }
 
@@ -338,7 +338,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
         unimplemented!();
     }
 
-    unsafe fn write(mut bytes: &mut [u8], data: Self::RefType) -> &mut [u8] {
+    unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
         match data {
             CommandNode::Root { children } => {
                 let flags = 0; // root type
@@ -605,9 +605,9 @@ impl From<CommandNodeParser> for u8 {
 }
 
 impl SliceSerializable<'_> for CommandNodeParser {
-    type RefType = Self;
+    type CopyType = Self;
 
-    fn maybe_deref(t: &Self) -> Self::RefType {
+    fn as_copy_type(t: &Self) -> Self::CopyType {
         *t
     }
 
@@ -686,7 +686,7 @@ unsafe fn write_optional_min_max<'a, S, T>(
     max: Option<T>,
 ) -> &mut [u8]
 where
-    S: SliceSerializable<'a, T, RefType = T>,
+    S: SliceSerializable<'a, T, CopyType = T>,
 {
     let flags: u8 = if min.is_some() { 1 } else { 0 } | if max.is_some() { 2 } else { 0 };
     bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, flags);

@@ -193,9 +193,9 @@ impl<'a, T: 'static, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_
 where
     T: Copy + Into<i32>,
 {
-    type RefType = &'a Self;
+    type CopyType = &'a Self;
 
-    fn maybe_deref(t: &'a Self) -> Self::RefType {
+    fn as_copy_type(t: &'a Self) -> Self::CopyType {
         t
     }
 

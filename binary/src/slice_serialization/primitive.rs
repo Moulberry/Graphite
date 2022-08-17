@@ -6,7 +6,7 @@ pub enum LittleEndian {}
 macro_rules! for_primitive {
     ($typ:tt, $mode:ident, $conv_from:tt, $conv_to:tt) => {
         impl SliceSerializable<'_, $typ> for $mode {
-            type RefType = $typ;
+            type CopyType = $typ;
 
             fn read(bytes: &mut &[u8]) -> anyhow::Result<$typ> {
                 const SIZE: usize = std::mem::size_of::<$typ>();
@@ -42,7 +42,7 @@ macro_rules! for_primitive {
             }
 
             #[inline(always)]
-            fn maybe_deref(t: &$typ) -> Self::RefType {
+            fn as_copy_type(t: &$typ) -> Self::CopyType {
                 *t
             }
         }

@@ -5,10 +5,10 @@ pub struct AttemptFrom<S, F> {
     _phantom2: F,
 }
 
-impl<'a, F, T: TryFrom<F> + Into<F> + Copy, S: SliceSerializable<'a, F, RefType = F>>
+impl<'a, F, T: TryFrom<F> + Into<F> + Copy, S: SliceSerializable<'a, F, CopyType = F>>
     SliceSerializable<'a, T> for AttemptFrom<S, F>
 {
-    type RefType = T;
+    type CopyType = T;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<T> {
         let intermediate = S::read(bytes)?;
@@ -24,7 +24,7 @@ impl<'a, F, T: TryFrom<F> + Into<F> + Copy, S: SliceSerializable<'a, F, RefType 
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &T) -> Self::RefType {
+    fn as_copy_type(t: &T) -> Self::CopyType {
         *t
     }
 }

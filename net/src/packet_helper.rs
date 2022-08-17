@@ -11,7 +11,7 @@ pub fn write_slice_serializable<'a, T>(write_buffer: &mut WriteBuffer, serializa
 where
     T: SliceSerializable<'a, T>,
 {
-    let ref_type = T::maybe_deref(serializable);
+    let ref_type = T::as_copy_type(serializable);
 
     let expected_size = T::get_write_size(ref_type.clone());
 
@@ -89,7 +89,7 @@ pub fn write_custom_packet<'a, T>(
 where
     T: SliceSerializable<'a, T>,
 {
-    let expected_packet_size = T::get_write_size(T::maybe_deref(serializable));
+    let expected_packet_size = T::get_write_size(T::as_copy_type(serializable));
     if expected_packet_size > 2097148 {
         bail!("packet too large!");
     }
@@ -99,7 +99,7 @@ where
 
     // write packet data
     // note: invariant should be satisfied because we allocated at least `get_write_size` bytes
-    let slice_after_writing = unsafe { T::write(&mut bytes[4..], T::maybe_deref(serializable)) };
+    let slice_after_writing = unsafe { T::write(&mut bytes[4..], T::as_copy_type(serializable)) };
     let bytes_written = expected_packet_size - slice_after_writing.len();
 
     // encode packet size varint for [packet id size (1) + content size]

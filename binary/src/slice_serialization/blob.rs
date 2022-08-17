@@ -3,7 +3,7 @@ use super::*;
 pub enum NBTBlob {}
 
 impl<'a> SliceSerializable<'a, &'a [u8]> for NBTBlob {
-    type RefType = &'a [u8];
+    type CopyType = &'a [u8];
 
     fn read(_bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
         todo!("nbt reading not implemented")
@@ -19,7 +19,7 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for NBTBlob {
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &&'a [u8]) -> Self::RefType {
+    fn as_copy_type(t: &&'a [u8]) -> Self::CopyType {
         *t
     }
 }
@@ -27,7 +27,7 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for NBTBlob {
 pub enum GreedyBlob {}
 
 impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
-    type RefType = &'a [u8];
+    type CopyType = &'a [u8];
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
         let ret_bytes = *bytes;
@@ -45,7 +45,7 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &&'a [u8]) -> Self::RefType {
+    fn as_copy_type(t: &&'a [u8]) -> Self::CopyType {
         *t
     }
 }
@@ -54,7 +54,7 @@ pub enum SizedBlob<const MAX_SIZE: usize = 2097152, const SIZE_MULT: usize = 1> 
 impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'a [u8]>
     for SizedBlob<MAX_SIZE, SIZE_MULT>
 {
-    type RefType = &'a [u8];
+    type CopyType = &'a [u8];
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
         let blob_size = VarInt::read(bytes)? as usize;
@@ -97,7 +97,7 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &&'a [u8]) -> Self::RefType {
+    fn as_copy_type(t: &&'a [u8]) -> Self::CopyType {
         *t
     }
 }
@@ -105,7 +105,7 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
 pub enum SizedString<const MAX_SIZE: usize = 32767> {}
 
 impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<MAX_SIZE> {
-    type RefType = &'a str;
+    type CopyType = &'a str;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a str> {
         let string_bytes = SizedBlob::<MAX_SIZE, 4>::read(bytes)?;
@@ -135,13 +135,13 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<M
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &&'a str) -> Self::RefType {
+    fn as_copy_type(t: &&'a str) -> Self::CopyType {
         *t
     }
 }
 
 impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, String> for SizedString<MAX_SIZE> {
-    type RefType = &'a String;
+    type CopyType = &'a String;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<String> {
         Ok(String::from(
@@ -158,7 +158,7 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, String> for SizedString<MA
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &'a String) -> Self::RefType {
+    fn as_copy_type(t: &'a String) -> Self::CopyType {
         t
     }
 }

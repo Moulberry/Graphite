@@ -1,6 +1,5 @@
 use anyhow::bail;
 use command::types::ParseState;
-use minecraft_constants::item::Item;
 use protocol::{
     play::{
         client::{
@@ -16,7 +15,7 @@ use queues::IsQueue;
 
 use crate::{
     gamemode::GameMode,
-    inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
+    inventory::inventory_handler::{InventoryHandler, InventorySlot},
     player::interaction::Interaction,
 };
 
@@ -403,7 +402,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             },
             true,
         );
-
+        
         // Use the swing to perform interactions
         if self.interaction_state.ignore_swing_ticks == 0 {
             if let Some(position) = self.interaction_state.breaking_block {

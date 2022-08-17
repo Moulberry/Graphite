@@ -7,7 +7,7 @@ pub struct SizedArray<S> {
 }
 
 impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for SizedArray<S> {
-    type RefType = &'a Vec<T>;
+    type CopyType = &'a Vec<T>;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Vec<T>> {
         let array_length = VarInt::read(bytes)? as usize;
@@ -27,7 +27,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
     fn get_write_size(entries: &'a Vec<T>) -> usize {
         let mut size: usize = VarInt::get_write_size(entries.len() as i32);
         for entry in entries {
-            size += S::get_write_size(S::maybe_deref(entry));
+            size += S::get_write_size(S::as_copy_type(entry));
         }
         size
     }
@@ -35,13 +35,13 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
     unsafe fn write<'b>(mut bytes: &'b mut [u8], entries: &'a Vec<T>) -> &'b mut [u8] {
         bytes = VarInt::write(bytes, entries.len() as i32);
         for entry in entries {
-            bytes = S::write(bytes, S::maybe_deref(entry));
+            bytes = S::write(bytes, S::as_copy_type(entry));
         }
         bytes
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &'a Vec<T>) -> Self::RefType {
+    fn as_copy_type(t: &'a Vec<T>) -> Self::CopyType {
         t
     }
 }

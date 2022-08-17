@@ -289,14 +289,14 @@ impl InputVariant {
             get_write_size_impl.extend(
                 quote_spanned!(
                     serialize_type_span =>
-                    #serializable_impl::get_write_size(#serializable_impl::maybe_deref(#prefix #field_ident)) +
+                    #serializable_impl::get_write_size(#serializable_impl::as_copy_type(#prefix #field_ident)) +
                 )
             );
 
             write_impl.extend(
                 quote_spanned!(
                     serialize_type_span =>
-                    bytes = #serializable_impl::write(bytes, #serializable_impl::maybe_deref(#prefix #field_ident));
+                    bytes = #serializable_impl::write(bytes, #serializable_impl::as_copy_type(#prefix #field_ident));
                 )
             );
 
@@ -386,7 +386,7 @@ impl Input {
 
                 Ok(quote!(
                     impl <#lifetime> binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
-                        type RefType = &#lifetime #ident;
+                        type CopyType = &#lifetime #ident;
 
                         fn read(bytes: &mut &#lifetime [u8]) -> anyhow::Result<#ident> {
                             #read_impl
@@ -402,11 +402,18 @@ impl Input {
                         }
 
                         unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &#lifetime #ident) -> &'bytes mut [u8] {
+                            debug_assert!(
+                                bytes.len() >= Self::get_write_size(object),
+                                "invariant: slice must contain at least {} bytes to perform write #ident",
+                                Self::get_write_size(object)
+                            );
+
                             #write_impl
                             bytes
                         }
 
-                        fn maybe_deref(t: &#lifetime #ident) -> Self::RefType {
+                        #[inline(always)]
+                        fn as_copy_type(t: &#lifetime #ident) -> Self::CopyType {
                             t
                         }
                     }
@@ -490,7 +497,7 @@ impl Input {
 
                 Ok(quote!(
                     impl <#lifetime> binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
-                        type RefType = &#lifetime #ident;
+                        type CopyType = &#lifetime #ident;
 
                         fn read(bytes: &mut &#lifetime [u8]) -> anyhow::Result<#ident> {
                             let discriminant = <binary::slice_serialization::Single as binary::slice_serialization::SliceSerializable<u8>>::read(bytes)?;
@@ -509,12 +516,19 @@ impl Input {
                         }
 
                         unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &#lifetime #ident) -> &'bytes mut [u8] {
+                            debug_assert!(
+                                bytes.len() >= Self::get_write_size(object),
+                                "invariant: slice must contain at least {} bytes to perform write #ident",
+                                Self::get_write_size(object)
+                            );
+                            
                             match object {
                                 #write_impl
                             }
                         }
 
-                        fn maybe_deref(t: &#lifetime #ident) -> Self::RefType {
+                        #[inline(always)]
+                        fn as_copy_type(t: &#lifetime #ident) -> Self::CopyType {
                             t
                         }
                     }

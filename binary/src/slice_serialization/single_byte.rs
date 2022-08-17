@@ -6,7 +6,7 @@ pub enum Single {}
 macro_rules! single_impl {
     ($typ:tt, $conv_from:tt, $conv_to:tt) => {
         impl SliceSerializable<'_, $typ> for Single {
-            type RefType = $typ;
+            type CopyType = $typ;
 
             fn read(bytes: &mut &[u8]) -> anyhow::Result<$typ> {
                 if bytes.is_empty() {
@@ -35,7 +35,7 @@ macro_rules! single_impl {
             }
 
             #[inline(always)]
-            fn maybe_deref(t: &$typ) -> Self::RefType {
+            fn as_copy_type(t: &$typ) -> Self::CopyType {
                 *t
             }
         }

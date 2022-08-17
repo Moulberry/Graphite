@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> for Option<S> {
-    type RefType = &'a Option<T>;
+    type CopyType = &'a Option<T>;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Option<T>> {
         let is_present = Single::read(bytes)?;
@@ -16,7 +16,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> fo
     #[allow(clippy::needless_borrow)] // maybe_deref is needed for some types
     fn get_write_size(option: &'a Option<T>) -> usize {
         if let Some(inner) = option {
-            1 + S::get_write_size(S::maybe_deref(&inner))
+            1 + S::get_write_size(S::as_copy_type(&inner))
         } else {
             1
         }
@@ -26,7 +26,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> fo
     unsafe fn write<'b>(mut bytes: &'b mut [u8], option: &'a Option<T>) -> &'b mut [u8] {
         if let Some(inner) = option {
             bytes[0] = 1;
-            bytes = S::write(&mut bytes[1..], S::maybe_deref(&inner));
+            bytes = S::write(&mut bytes[1..], S::as_copy_type(&inner));
         } else {
             bytes[0] = 0;
             bytes = &mut bytes[1..];
@@ -35,7 +35,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Option<T>> fo
     }
 
     #[inline(always)]
-    fn maybe_deref(t: &'a Option<T>) -> Self::RefType {
+    fn as_copy_type(t: &'a Option<T>) -> Self::CopyType {
         t
     }
 }
