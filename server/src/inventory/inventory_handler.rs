@@ -1,5 +1,6 @@
 use std::result;
 
+use binary::slice_serialization::NBTBlob;
 use minecraft_constants::item::NoSuchItemError;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::play::server::ContainerSetSlot;
@@ -9,7 +10,6 @@ use thiserror::Error;
 use super::itemstack::ItemStack;
 
 pub trait InventoryHandler: Default {
-    // todo: make generic over InventorySlot
     fn creative_mode_set(
         &mut self,
         index: usize,
@@ -23,7 +23,7 @@ pub trait InventoryHandler: Default {
     ) -> result::Result<(), SlotOutOfBoundsError>;
     fn clear(&mut self, slot: InventorySlot) -> result::Result<(), SlotOutOfBoundsError>;
 
-    fn is_changed(&self, slot: InventorySlot) -> result::Result<bool, SlotOutOfBoundsError>;
+    fn has_changed(&self, slot: InventorySlot) -> result::Result<bool, SlotOutOfBoundsError>;
     fn is_any_changed(&self) -> bool;
     fn write_changes(&mut self, write_buffer: &mut WriteBuffer) -> result::Result<(), ItemTooBig>;
 }
@@ -35,7 +35,7 @@ pub enum ItemSlot {
     Filled(ItemStack),
 }
 
-impl TryFrom<Option<ProtocolItemStack>> for ItemSlot {
+impl<'a> TryFrom<Option<ProtocolItemStack<'a>>> for ItemSlot {
     type Error = NoSuchItemError;
     fn try_from(value: Option<ProtocolItemStack>) -> Result<Self, Self::Error> {
         match value {
@@ -45,8 +45,8 @@ impl TryFrom<Option<ProtocolItemStack>> for ItemSlot {
     }
 }
 
-impl From<&ItemSlot> for Option<ProtocolItemStack> {
-    fn from(value: &ItemSlot) -> Self {
+impl<'a> From<&'a ItemSlot> for Option<ProtocolItemStack<'a>> {
+    fn from(value: &'a ItemSlot) -> Self {
         match value {
             ItemSlot::Filled(itemstack) => Some(itemstack.into()),
             ItemSlot::Empty => None,
@@ -139,14 +139,23 @@ impl InventorySlot {
     }
 }
 
+// Whether the change was triggered by the client or server
+// Changes triggered by the client are not forwarded back to the client
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum ChangeType {
+    None,
+    Client,
+    Server,
+}
+
 enum ChangeState {
     NoChange,
     SingleSlot {
         index: usize,
+        change_type: ChangeType,
     },
     MultiSlot {
-        count: usize,
-        changed: [bool; 46], // todo: maybe don't waste 40 bytes here
+        changed: [ChangeType; 46],
     },
 }
 
@@ -165,7 +174,7 @@ impl InventoryHandler for VanillaPlayerInventory {
             None => ItemSlot::Empty,
         };
         self.slots[index] = slot;
-        self.mark_changed(index);
+        self.mark_changed(index, ChangeType::Client);
 
         Ok(())
     }
@@ -182,52 +191,51 @@ impl InventoryHandler for VanillaPlayerInventory {
     ) -> result::Result<(), SlotOutOfBoundsError> {
         let index = slot.get_index()?;
         self.slots[index] = ItemSlot::Filled(itemstack);
-        self.mark_changed(index);
+        self.mark_changed(index, ChangeType::Server);
         Ok(())
     }
 
     fn clear(&mut self, section: InventorySlot) -> result::Result<(), SlotOutOfBoundsError> {
         let slot = section.get_index()?;
         self.slots[slot] = ItemSlot::Empty;
-        self.mark_changed(slot);
+        self.mark_changed(slot, ChangeType::Server);
         Ok(())
     }
 
-    fn is_changed(&self, slot: InventorySlot) -> result::Result<bool, SlotOutOfBoundsError> {
+    fn has_changed(&self, slot: InventorySlot) -> result::Result<bool, SlotOutOfBoundsError> {
         let check_index = slot.get_index()?;
         match self.change_state {
             ChangeState::NoChange => Ok(false),
-            ChangeState::SingleSlot { index } => Ok(check_index == index),
-            ChangeState::MultiSlot { count: _, changed } => Ok(changed[check_index]),
+            ChangeState::SingleSlot { index, change_type } => {
+                Ok(check_index == index && change_type != ChangeType::None)
+            }
+            ChangeState::MultiSlot { changed } => Ok(changed[check_index] != ChangeType::None),
         }
     }
 
     fn is_any_changed(&self) -> bool {
         match self.change_state {
             ChangeState::NoChange => false,
-            ChangeState::SingleSlot { index: _ }
-            | ChangeState::MultiSlot {
-                count: _,
-                changed: _,
-            } => true,
+            ChangeState::SingleSlot {
+                index: _,
+                change_type: _,
+            }
+            | ChangeState::MultiSlot { changed: _ } => true,
         }
     }
 
     fn write_changes(&mut self, write_buffer: &mut WriteBuffer) -> result::Result<(), ItemTooBig> {
         match self.change_state {
             ChangeState::NoChange => return Ok(()),
-            ChangeState::SingleSlot { index } => {
-                self.send_container_slot(index, write_buffer)?;
+            ChangeState::SingleSlot { index, change_type } => {
+                if change_type == ChangeType::Server {
+                    self.send_container_slot(index, write_buffer)?;
+                }
             }
-            ChangeState::MultiSlot { count, changed } => {
-                if count >= changed.len() {
-                    // send whole inventory
-                    todo!();
-                } else if count != 0 {
-                    for (index, has_changed) in changed.iter().enumerate() {
-                        if *has_changed {
-                            self.send_container_slot(index, write_buffer)?;
-                        }
+            ChangeState::MultiSlot { changed } => {
+                for (index, change_type) in changed.iter().enumerate() {
+                    if *change_type == ChangeType::Server {
+                        self.send_container_slot(index, write_buffer)?;
                     }
                 }
             }
@@ -245,14 +253,7 @@ impl VanillaPlayerInventory {
         index: usize,
         write_buffer: &mut WriteBuffer,
     ) -> result::Result<(), ItemTooBig> {
-        let item = match &self.slots[index] {
-            ItemSlot::Empty => None,
-            ItemSlot::Filled(itemstack) => Some(ProtocolItemStack {
-                item: itemstack.item as _,
-                count: itemstack.count,
-                temp_nbt: 0,
-            }),
-        };
+        let item = (&self.slots[index]).into();
 
         let packet = ContainerSetSlot {
             window_id: 0,
@@ -268,22 +269,26 @@ impl VanillaPlayerInventory {
         }
     }
 
-    fn mark_changed(&mut self, index: usize) {
+    fn mark_changed(&mut self, index: usize, change_type: ChangeType) {
         match &mut self.change_state {
-            ChangeState::NoChange => self.change_state = ChangeState::SingleSlot { index },
-            ChangeState::SingleSlot { index: other_index } => {
+            ChangeState::NoChange => {
+                self.change_state = ChangeState::SingleSlot { index, change_type }
+            }
+            ChangeState::SingleSlot {
+                index: other_index,
+                change_type: other_change_type,
+            } => {
                 if *other_index != index {
-                    let mut changed = [false; 46];
-                    changed[*other_index] = true;
-                    changed[index] = true;
+                    let mut changed = [ChangeType::None; 46];
+                    changed[*other_index] = *other_change_type;
+                    changed[index] = change_type;
 
-                    self.change_state = ChangeState::MultiSlot { count: 2, changed }
+                    self.change_state = ChangeState::MultiSlot { changed }
                 }
             }
-            ChangeState::MultiSlot { count, changed } => {
-                if !changed[index] {
-                    changed[index] = true;
-                    *count += 1;
+            ChangeState::MultiSlot { changed } => {
+                if changed[index] < change_type {
+                    changed[index] = change_type;
                 }
             }
         }

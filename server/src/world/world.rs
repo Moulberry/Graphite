@@ -1,23 +1,28 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::bail;
 use bevy_ecs::{prelude::*, world::EntityMut};
+use binary::slice_serialization::NBTBlob;
 use minecraft_constants::block::BlockProperties;
 use net::network_buffer::WriteBuffer;
-use protocol::play::server::{
-    Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity,
+use protocol::{
+    play::server::{Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity},
+    types::{BlockPosition, Direction},
 };
 
 use crate::{
     entity::{
         components::{BasicEntity, EntitySpawnDefinition, Spinalla, Viewable},
-        position::{Coordinate, Position},
+        position::{Coordinate, Position, Rotation},
     },
     player::{proto_player::ProtoPlayer, Player, PlayerService},
     universe::{EntityId, Universe, UniverseService},
 };
 
-use super::chunk::{BlockStorage, Chunk};
+use super::{
+    chunk::{BlockStorage, Chunk},
+    placement_context::ServerPlacementContext,
+};
 
 // user defined world service trait
 
@@ -233,6 +238,9 @@ impl<W: WorldService> World<W> {
             for chunk in chunk_list {
                 chunk.entity_viewable_buffer.reset();
                 chunk.entity_viewable_buffer.tick_and_maybe_shrink();
+
+                chunk.block_viewable_buffer.reset();
+                chunk.block_viewable_buffer.tick_and_maybe_shrink();
             }
         }
 
@@ -340,7 +348,7 @@ impl<W: WorldService> World<W> {
 
         // Update view position
         let update_view_position_packet = SetChunkCacheCenter { chunk_x, chunk_z };
-        player.write_packet(&update_view_position_packet);
+        player.packets.write_packet(&update_view_position_packet);
 
         // Remove player from old internal chunk lists
         let player_ref = {
@@ -367,10 +375,13 @@ impl<W: WorldService> World<W> {
 
                     if chunk_z >= 0 && chunk_z < W::CHUNKS_Z as _ {
                         let chunk = &mut chunk_list[chunk_z as usize];
-                        chunk.write(&mut player.write_buffer, chunk_x, chunk_z)?;
+                        chunk.write(&mut player.packets.write_buffer, chunk_x, chunk_z)?;
                     } else {
-                        self.empty_chunk
-                            .write(&mut player.write_buffer, chunk_x, chunk_z)?;
+                        self.empty_chunk.write(
+                            &mut player.packets.write_buffer,
+                            chunk_x,
+                            chunk_z,
+                        )?;
                     }
                 }
             } else {
@@ -378,7 +389,7 @@ impl<W: WorldService> World<W> {
                     // todo: only need to send chunks 1 out, not all in render distance
                     let chunk_z = z + chunk_z;
                     self.empty_chunk
-                        .write(&mut player.write_buffer, chunk_x, chunk_z)?;
+                        .write(&mut player.packets.write_buffer, chunk_x, chunk_z)?;
                 }
             }
         }
@@ -394,7 +405,7 @@ impl<W: WorldService> World<W> {
 
         // Safety: closures just need to perform a single write call,
         // they don't rely on the previous state of the closure
-        let player_write_buffer_ptr: *mut WriteBuffer = &mut player.write_buffer as *mut _;
+        let player_write_buffer_ptr: *mut WriteBuffer = &mut player.packets.write_buffer as *mut _;
 
         // Write create packets for now-visible entities and
         // destroy packets for no-longer-visible entities
@@ -413,11 +424,11 @@ impl<W: WorldService> World<W> {
                         .expect("entity in chunk-list must be viewable");
 
                     // Write create into player's buffer
-                    (viewable.fn_create)(&mut player.write_buffer, entity);
+                    (viewable.fn_create)(&mut player.packets.write_buffer, entity);
                 });
 
                 // Create players
-                chunk.write_create_for_players_in_chunk(&mut player.write_buffer);
+                chunk.write_create_for_players_in_chunk(&mut player.packets.write_buffer);
                 chunk.write_to_players_in_chunk(create_bytes);
             },
             |chunk| {
@@ -456,23 +467,6 @@ impl<W: WorldService> World<W> {
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
         position: Position,
     ) -> anyhow::Result<ChunkViewPosition> {
-        let mut heightmap_nbt = quartz_nbt::NbtCompound::new();
-        let mut motion_blocking_nbt = quartz_nbt::NbtList::new();
-        for _ in 0..256 {
-            motion_blocking_nbt.push(0_i64);
-        }
-        heightmap_nbt.insert("MOTION_BLOCKING", motion_blocking_nbt);
-
-        let mut binary: Vec<u8> = Vec::new();
-        quartz_nbt::io::write_nbt(
-            &mut binary,
-            None,
-            &heightmap_nbt,
-            quartz_nbt::io::Flavor::Uncompressed,
-        )
-        .unwrap();
-        binary.shrink_to_fit();
-
         let chunk_x = Chunk::to_chunk_coordinate(position.coord.x);
         let chunk_z = Chunk::to_chunk_coordinate(position.coord.z);
 
@@ -589,17 +583,10 @@ impl<W: WorldService> World<W> {
         //write_buffer: &mut WriteBuffer,
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
     ) -> anyhow::Result<()> {
-        let registry_codec =
-            quartz_nbt::snbt::parse(include_str!("../../../assets/registry_codec.json")).unwrap();
-        let mut binary: Vec<u8> = Vec::new();
-        quartz_nbt::io::write_nbt(
-            &mut binary,
-            None,
-            &registry_codec,
-            quartz_nbt::io::Flavor::Uncompressed,
-        )
+        let nbt = binary::nbt::stringified::from_snbt(include_str!(
+            "../../../assets/registry_codec.json"
+        ))
         .unwrap();
-        binary.shrink_to_fit();
 
         let join_game_packet = Login {
             entity_id: proto_player.entity_id.as_i32(),
@@ -607,7 +594,7 @@ impl<W: WorldService> World<W> {
             gamemode: proto_player.abilities.gamemode as u8,
             previous_gamemode: -1,
             dimension_names: vec!["minecraft:overworld"],
-            registry_codec: &binary,
+            registry_codec: Cow::Owned(nbt.into()),
             dimension_type: "minecraft:overworld",
             dimension_name: "minecraft:overworld",
             hashed_seed: 0, // affects biome noise
@@ -628,6 +615,30 @@ impl<W: WorldService> World<W> {
         }
 
         Ok(())
+    }
+
+    pub fn create_placement_context(
+        &mut self,
+        pos: BlockPosition,
+        face: Direction,
+        click_offset: (f32, f32, f32),
+        placer_rot: Rotation,
+    ) -> ServerPlacementContext<W> {
+        let offset_pos = pos.relative(face);
+
+        let ctx = ServerPlacementContext {
+            interacted_pos: pos,
+            offset_pos,
+            click_offset,
+            face,
+            placer_yaw: placer_rot.yaw,
+            placer_pitch: placer_rot.pitch,
+            world: self,
+            existing_block_id: None,
+            existing_block: None,
+        };
+
+        ctx
     }
 
     pub fn get_required_destroy_ticks(&self, x: i32, y: i32, z: i32, speed: f32) -> Option<f32> {

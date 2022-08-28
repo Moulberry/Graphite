@@ -83,13 +83,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
         // Write the necessary packets to the TCP stream
         self.connection.write_bytes(self.write_buffer.get_written());
 
-        let player = Player::new(
-            service,
-            world,
-            position,
-            view_position,
-            self,
-        );
+        let player = Player::new(service, world, position, view_position, self);
 
         Ok(player)
     }

@@ -1,4 +1,6 @@
+use binary::nbt::CachedNBT;
 use binary::slice_serialization::*;
+use std::borrow::Cow;
 
 use crate::identify_packets;
 use crate::types::{
@@ -29,7 +31,7 @@ identify_packets! {
     // ContainerClose = 0x10,
     // ContainerSetContent = 0x11,
     // ContainerSetData = 0x12,
-    ContainerSetSlot = 0x13,
+    ContainerSetSlot<'_> = 0x13,
     // Cooldown = 0x14,
     // CustomChatCompletions = 0x15,
     CustomPayload<'_> = 0x16,
@@ -93,7 +95,7 @@ identify_packets! {
     SetEntityData<'_> = 0x50,
     // SetEntityLink = 0x51,
     // SetEntityMotion = 0x52,
-    SetEquipment = 0x53,
+    SetEquipment<'_> = 0x53,
     // SetExperience = 0x54,
     // SetHealth = 0x55,
     // SetObjective = 0x56,
@@ -216,11 +218,11 @@ slice_serializable! {
 // Container Set Slot
 slice_serializable! {
     #[derive(Debug)]
-    pub struct ContainerSetSlot {
+    pub struct ContainerSetSlot<'a> {
         pub window_id: i8 as Single,
         pub state_id: i32 as VarInt,
         pub slot: i16 as BigEndian,
-        pub item: Option<ProtocolItemStack>
+        pub item: Option<ProtocolItemStack<'a>>
     }
 }
 
@@ -272,10 +274,10 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct ChunkBlockData<'a> {
-        pub heightmaps: &'a [u8] as NBTBlob,
+        pub heightmaps: Cow<'a, CachedNBT> as NBTBlob,
         pub data: &'a [u8] as SizedBlob,
         pub block_entity_count: i32 as VarInt,
-        // todo: block entities
+        pub block_entity_data: &'a [u8] as WriteOnlyBlob,
         pub trust_edges: bool as Single
     }
 }
@@ -400,7 +402,7 @@ slice_serializable! {
         pub gamemode: u8 as Single,
         pub previous_gamemode: i8 as Single,
         pub dimension_names: Vec<&'a str> as SizedArray<SizedString>,
-        pub registry_codec: &'a [u8] as NBTBlob,
+        pub registry_codec: Cow<'a, CachedNBT> as NBTBlob,
         pub dimension_type: &'a str as SizedString,
         pub dimension_name: &'a str as SizedString,
         pub hashed_seed: u64 as BigEndian,
@@ -565,9 +567,9 @@ slice_serializable! {
 // Set Equipment
 slice_serializable! {
     #[derive(Debug)]
-    pub struct SetEquipment {
+    pub struct SetEquipment<'a> {
         pub entity_id: i32 as VarInt,
-        pub equipment: Vec<(EquipmentSlot, Option<ProtocolItemStack>)> as EquipmentList
+        pub equipment: Vec<(EquipmentSlot, Option<ProtocolItemStack<'a>>)> as EquipmentList
     }
 }
 

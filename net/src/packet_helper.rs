@@ -28,7 +28,7 @@ where
     }
 }
 
-pub fn write_metadata_packet< T>(
+pub fn write_metadata_packet<T>(
     write_buffer: &mut WriteBuffer,
     packet_id: u8,
     entity_id: i32,

@@ -235,8 +235,24 @@ name = "binary"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "macros",
+ "binary_macros",
+ "bytes",
+ "cesu8",
+ "criterion",
+ "hematite-nbt",
+ "quartz_nbt",
+ "rand",
  "thiserror",
+]
+
+[[package]]
+name = "binary_macros"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -585,6 +601,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bevy_ecs",
+ "binary",
  "command",
  "concierge",
  "minecraft_constants",
@@ -719,6 +736,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "hematite-nbt"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "670d0784ee67cfb57393dc1837867d2951f9a59ca7db99a653499c854f745739"
+dependencies = [
+ "byteorder",
+ "cesu8",
+ "flate2",
+ "serde",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -825,16 +854,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "macros"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -1525,6 +1544,9 @@ name = "serde"
 version = "1.0.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc855a42c7967b7c369eb5860f7164ef1f6f81c20c7cc1141f2a604e18723b03"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_cbor"
@@ -1538,9 +1560,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.139"
+version = "1.0.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc1d3230c1de7932af58ad8ffbe1d784bd55efd5a9d84ac24f69c72d83543dfb"
+checksum = "6f2122636b9fe3b81f1cb25099fcf2d3f542cdb1d45940d56c713158884a05da"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1578,7 +1600,6 @@ dependencies = [
  "paste",
  "proptest",
  "protocol",
- "quartz_nbt",
  "queues",
  "rand",
  "readonly",
@@ -1672,6 +1693,19 @@ dependencies = [
 [[package]]
 name = "text_component"
 version = "0.1.0"
+dependencies = [
+ "text_component_macros",
+]
+
+[[package]]
+name = "text_component_macros"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "textwrap"

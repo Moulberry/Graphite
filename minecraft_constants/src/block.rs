@@ -2917,6 +2917,11 @@ pub enum Block {
 #[derive(Debug)]
 pub struct BlockProperties {
 	pub hardness: f32,
+	pub replaceable: bool,
 	pub air: bool,
+	pub is_north_face_sturdy: bool,
+	pub is_east_face_sturdy: bool,
+	pub is_south_face_sturdy: bool,
+	pub is_west_face_sturdy: bool,
 }
 

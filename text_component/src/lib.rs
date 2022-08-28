@@ -23,6 +23,7 @@ impl From<&str> for TextComponent {
         let mut result = String::new();
         result.push_str("{\"text\": \"");
         let mut last_end = 0;
+        // also escape backslashes
         for (start, part) in string.match_indices('"') {
             result.push_str(unsafe { string.get_unchecked(last_end..start) });
             result.push_str("\\\"");
@@ -33,6 +34,17 @@ impl From<&str> for TextComponent {
 
         TextComponent::Owned(result)
     }
+}
+
+pub use text_component_macros::component;
+
+#[test]
+pub fn something() {
+    component!(
+        red! bold! link!("https://twitch.tv/moulberry2") {
+            // "Text " yellow!{"here"} " After" arg
+        }
+    )
 }
 
 /*
@@ -53,6 +65,7 @@ let component = Component::new()
             .with_text("Text")
             .append(Component::new().with_text("here").color("yellow")
             .append(Component::new().with_text("After")))
+            .append(Component::new().with_text(arg)))
     );
 
 */

@@ -101,11 +101,9 @@ impl Abilities {
             }
 
             // Send game mode change
-            packet_helper::write_packet(
-                &mut player.write_buffer,
-                &abilities.create_set_gamemode_packet(),
-            )
-            .expect("packet larger than 2MB");
+            player
+                .packets
+                .write_packet(&abilities.create_set_gamemode_packet());
 
             // Send gamemode change for player info
             let player_info_change_gamemode = PlayerInfo::UpdateGameMode {
@@ -114,12 +112,11 @@ impl Abilities {
                     gamemode: abilities.gamemode as u8,
                 }],
             };
-            packet_helper::write_packet(&mut player.write_buffer, &player_info_change_gamemode)
-                .expect("packet larger than 2MB");
+            player.packets.write_packet(&player_info_change_gamemode);
 
             // Send abilities
             packet_helper::write_packet(
-                &mut player.write_buffer,
+                &mut player.packets.write_buffer,
                 &abilities.create_abilities_packet(),
             )
             .expect("packet larger than 2MB");
@@ -131,11 +128,9 @@ impl Abilities {
             }
         } else if abilities.dirty {
             // Send abilities
-            packet_helper::write_packet(
-                &mut player.write_buffer,
-                &abilities.create_abilities_packet(),
-            )
-            .expect("packet larger than 2MB");
+            player
+                .packets
+                .write_packet(&abilities.create_abilities_packet());
             abilities.dirty = false;
         }
     }

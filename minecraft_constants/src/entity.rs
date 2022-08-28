@@ -132,9 +132,9 @@ pub enum Entity {
 pub struct InvalidMetadataChanges;
 
 pub trait Metadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+    // fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
     fn read_changes(&mut self, bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges>;
-    unsafe fn write_changes<'a>(&mut self, bytes: &'a mut [u8]) -> &'a mut [u8];
+    unsafe fn write_changes<'b>(&mut self, bytes: &'b mut [u8]) -> &'b mut [u8];
     fn get_write_size(&self) -> usize;
 }
 
@@ -297,97 +297,97 @@ impl AllayMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.dancing)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.dancing)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.can_duplicate)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.can_duplicate)
 			},
 			_ => unreachable!()
 		}
@@ -395,9 +395,9 @@ impl AllayMetadata {
 }
 
 impl Metadata for AllayMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -434,12 +434,12 @@ impl Metadata for AllayMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -460,7 +460,7 @@ impl Metadata for AllayMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -556,66 +556,66 @@ impl AreaEffectCloudMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.radius)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.radius)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.color)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.waiting)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.waiting)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -624,9 +624,9 @@ impl AreaEffectCloudMetadata {
 }
 
 impl Metadata for AreaEffectCloudMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -657,12 +657,12 @@ impl Metadata for AreaEffectCloudMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -677,7 +677,7 @@ impl Metadata for AreaEffectCloudMetadata {
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
 				if indices[10] { bytes = self.write_for_index(bytes, 10); }
 				if indices[11] { bytes = self.write_for_index(bytes, 11); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -833,140 +833,140 @@ impl ArmorStandMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.client_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.client_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				{
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.head_pose.0);
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.head_pose.1);
-            <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.head_pose.2)
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.head_pose.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.head_pose.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.head_pose.2)
         }
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				{
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.body_pose.0);
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.body_pose.1);
-            <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.body_pose.2)
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.body_pose.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.body_pose.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.body_pose.2)
         }
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				{
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.left_arm_pose.0);
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.left_arm_pose.1);
-            <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.left_arm_pose.2)
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_arm_pose.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_arm_pose.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_arm_pose.2)
         }
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				{
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.right_arm_pose.0);
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.right_arm_pose.1);
-            <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.right_arm_pose.2)
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_arm_pose.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_arm_pose.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_arm_pose.2)
         }
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				{
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.left_leg_pose.0);
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.left_leg_pose.1);
-            <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.left_leg_pose.2)
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_leg_pose.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_leg_pose.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_leg_pose.2)
         }
 			},
 			21 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 21);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				{
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.right_leg_pose.0);
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.right_leg_pose.1);
-            <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.right_leg_pose.2)
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_leg_pose.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_leg_pose.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_leg_pose.2)
         }
 			},
 			_ => unreachable!()
@@ -975,9 +975,9 @@ impl ArmorStandMetadata {
 }
 
 impl Metadata for ArmorStandMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -1018,12 +1018,12 @@ impl Metadata for ArmorStandMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -1048,7 +1048,7 @@ impl Metadata for ArmorStandMetadata {
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
 				if indices[21] { bytes = self.write_for_index(bytes, 21); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -1138,61 +1138,61 @@ impl ArrowMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pierce_level)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pierce_level)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_effect_color)
 			},
 			_ => unreachable!()
@@ -1201,9 +1201,9 @@ impl ArrowMetadata {
 }
 
 impl Metadata for ArrowMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -1233,12 +1233,12 @@ impl Metadata for ArrowMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -1252,7 +1252,7 @@ impl Metadata for ArrowMetadata {
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
 				if indices[10] { bytes = self.write_for_index(bytes, 10); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -1396,107 +1396,107 @@ impl AxolotlMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.variant)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.playing_dead)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.playing_dead)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.from_bucket)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.from_bucket)
 			},
 			_ => unreachable!()
 		}
@@ -1504,9 +1504,9 @@ impl AxolotlMetadata {
 }
 
 impl Metadata for AxolotlMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -1545,12 +1545,12 @@ impl Metadata for AxolotlMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -1573,7 +1573,7 @@ impl Metadata for AxolotlMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -1699,92 +1699,92 @@ impl BatMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			_ => unreachable!()
 		}
@@ -1792,9 +1792,9 @@ impl BatMetadata {
 }
 
 impl Metadata for BatMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -1830,12 +1830,12 @@ impl Metadata for BatMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -1855,7 +1855,7 @@ impl Metadata for BatMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -1993,101 +1993,101 @@ impl BeeMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.remaining_anger_time)
 			},
 			_ => unreachable!()
@@ -2096,9 +2096,9 @@ impl BeeMetadata {
 }
 
 impl Metadata for BeeMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -2136,12 +2136,12 @@ impl Metadata for BeeMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -2163,7 +2163,7 @@ impl Metadata for BeeMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -2289,92 +2289,92 @@ impl BlazeMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			_ => unreachable!()
 		}
@@ -2382,9 +2382,9 @@ impl BlazeMetadata {
 }
 
 impl Metadata for BlazeMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -2420,12 +2420,12 @@ impl Metadata for BlazeMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -2445,7 +2445,7 @@ impl Metadata for BlazeMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -2559,81 +2559,81 @@ impl BoatMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_type)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_paddle_left)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_paddle_left)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_paddle_right)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_paddle_right)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_bubble_time)
 			},
 			_ => unreachable!()
@@ -2642,9 +2642,9 @@ impl BoatMetadata {
 }
 
 impl Metadata for BoatMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -2678,12 +2678,12 @@ impl Metadata for BoatMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -2701,7 +2701,7 @@ impl Metadata for BoatMetadata {
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -2815,81 +2815,81 @@ impl ChestBoatMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_type)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_paddle_left)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_paddle_left)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_paddle_right)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_paddle_right)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_bubble_time)
 			},
 			_ => unreachable!()
@@ -2898,9 +2898,9 @@ impl ChestBoatMetadata {
 }
 
 impl Metadata for ChestBoatMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -2934,12 +2934,12 @@ impl Metadata for ChestBoatMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -2957,7 +2957,7 @@ impl Metadata for ChestBoatMetadata {
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -3119,121 +3119,121 @@ impl CatMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
 				unimplemented!()
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_lying)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_lying)
 			},
 			21 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 21);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.relax_state_one)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.relax_state_one)
 			},
 			22 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 22);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.collar_color)
 			},
 			_ => unreachable!()
@@ -3242,9 +3242,9 @@ impl CatMetadata {
 }
 
 impl Metadata for CatMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -3286,12 +3286,12 @@ impl Metadata for CatMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -3317,7 +3317,7 @@ impl Metadata for CatMetadata {
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
 				if indices[21] { bytes = self.write_for_index(bytes, 21); }
 				if indices[22] { bytes = self.write_for_index(bytes, 22); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -3443,92 +3443,92 @@ impl CaveSpiderMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			_ => unreachable!()
 		}
@@ -3536,9 +3536,9 @@ impl CaveSpiderMetadata {
 }
 
 impl Metadata for CaveSpiderMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -3574,12 +3574,12 @@ impl Metadata for CaveSpiderMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -3599,7 +3599,7 @@ impl Metadata for CaveSpiderMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -3725,92 +3725,92 @@ impl ChickenMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			_ => unreachable!()
 		}
@@ -3818,9 +3818,9 @@ impl ChickenMetadata {
 }
 
 impl Metadata for ChickenMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -3856,12 +3856,12 @@ impl Metadata for ChickenMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -3881,7 +3881,7 @@ impl Metadata for ChickenMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -4007,92 +4007,92 @@ impl CodMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.from_bucket)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.from_bucket)
 			},
 			_ => unreachable!()
 		}
@@ -4100,9 +4100,9 @@ impl CodMetadata {
 }
 
 impl Metadata for CodMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -4138,12 +4138,12 @@ impl Metadata for CodMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -4163,7 +4163,7 @@ impl Metadata for CodMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -4289,92 +4289,92 @@ impl CowMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			_ => unreachable!()
 		}
@@ -4382,9 +4382,9 @@ impl CowMetadata {
 }
 
 impl Metadata for CowMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -4420,12 +4420,12 @@ impl Metadata for CowMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -4445,7 +4445,7 @@ impl Metadata for CowMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -4583,102 +4583,102 @@ impl CreeperMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.swell_dir)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_powered)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_powered)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_ignited)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_ignited)
 			},
 			_ => unreachable!()
 		}
@@ -4686,9 +4686,9 @@ impl CreeperMetadata {
 }
 
 impl Metadata for CreeperMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -4726,12 +4726,12 @@ impl Metadata for CreeperMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -4753,7 +4753,7 @@ impl Metadata for CreeperMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -4891,101 +4891,101 @@ impl DolphinMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				unimplemented!()
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.got_fish)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.got_fish)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.moistness_level)
 			},
 			_ => unreachable!()
@@ -4994,9 +4994,9 @@ impl DolphinMetadata {
 }
 
 impl Metadata for DolphinMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -5034,12 +5034,12 @@ impl Metadata for DolphinMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -5061,7 +5061,7 @@ impl Metadata for DolphinMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -5205,107 +5205,107 @@ impl DonkeyMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_chest)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_chest)
 			},
 			_ => unreachable!()
 		}
@@ -5313,9 +5313,9 @@ impl DonkeyMetadata {
 }
 
 impl Metadata for DonkeyMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -5354,12 +5354,12 @@ impl Metadata for DonkeyMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -5382,7 +5382,7 @@ impl Metadata for DonkeyMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -5454,46 +5454,46 @@ impl DragonFireballMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -5502,9 +5502,9 @@ impl DragonFireballMetadata {
 }
 
 impl Metadata for DragonFireballMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -5531,12 +5531,12 @@ impl Metadata for DragonFireballMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -5547,7 +5547,7 @@ impl Metadata for DragonFireballMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -5685,102 +5685,102 @@ impl DrownedMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.special_type)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.drowned_conversion)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.drowned_conversion)
 			},
 			_ => unreachable!()
 		}
@@ -5788,9 +5788,9 @@ impl DrownedMetadata {
 }
 
 impl Metadata for DrownedMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -5828,12 +5828,12 @@ impl Metadata for DrownedMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -5855,7 +5855,7 @@ impl Metadata for DrownedMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -5987,96 +5987,96 @@ impl ElderGuardianMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_moving)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_moving)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_attack_target)
 			},
 			_ => unreachable!()
@@ -6085,9 +6085,9 @@ impl ElderGuardianMetadata {
 }
 
 impl Metadata for ElderGuardianMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -6124,12 +6124,12 @@ impl Metadata for ElderGuardianMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -6150,7 +6150,7 @@ impl Metadata for ElderGuardianMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -6234,57 +6234,57 @@ impl EndCrystalMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.show_bottom)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.show_bottom)
 			},
 			_ => unreachable!()
 		}
@@ -6292,9 +6292,9 @@ impl EndCrystalMetadata {
 }
 
 impl Metadata for EndCrystalMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -6323,12 +6323,12 @@ impl Metadata for EndCrystalMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -6341,7 +6341,7 @@ impl Metadata for EndCrystalMetadata {
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -6467,91 +6467,91 @@ impl EnderDragonMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.phase)
 			},
 			_ => unreachable!()
@@ -6560,9 +6560,9 @@ impl EnderDragonMetadata {
 }
 
 impl Metadata for EnderDragonMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -6598,12 +6598,12 @@ impl Metadata for EnderDragonMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -6623,7 +6623,7 @@ impl Metadata for EnderDragonMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -6761,102 +6761,102 @@ impl EndermanMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				unimplemented!()
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.creepy)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.creepy)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.stared_at)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.stared_at)
 			},
 			_ => unreachable!()
 		}
@@ -6864,9 +6864,9 @@ impl EndermanMetadata {
 }
 
 impl Metadata for EndermanMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -6904,12 +6904,12 @@ impl Metadata for EndermanMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -6931,7 +6931,7 @@ impl Metadata for EndermanMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -7051,87 +7051,87 @@ impl EndermiteMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			_ => unreachable!()
 		}
@@ -7139,9 +7139,9 @@ impl EndermiteMetadata {
 }
 
 impl Metadata for EndermiteMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -7176,12 +7176,12 @@ impl Metadata for EndermiteMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -7200,7 +7200,7 @@ impl Metadata for EndermiteMetadata {
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -7230,12 +7230,12 @@ impl EvokerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.spell_casting)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.spell_casting)
 			},
 			_ => unreachable!()
 		}
@@ -7243,9 +7243,9 @@ impl EvokerMetadata {
 }
 
 impl Metadata for EvokerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -7265,16 +7265,16 @@ impl Metadata for EvokerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -7346,46 +7346,46 @@ impl EvokerFangsMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -7394,9 +7394,9 @@ impl EvokerFangsMetadata {
 }
 
 impl Metadata for EvokerFangsMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -7423,12 +7423,12 @@ impl Metadata for EvokerFangsMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -7439,7 +7439,7 @@ impl Metadata for EvokerFangsMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -7511,46 +7511,46 @@ impl ExperienceOrbMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -7559,9 +7559,9 @@ impl ExperienceOrbMetadata {
 }
 
 impl Metadata for ExperienceOrbMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -7588,12 +7588,12 @@ impl Metadata for ExperienceOrbMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -7604,7 +7604,7 @@ impl Metadata for ExperienceOrbMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -7614,7 +7614,7 @@ impl Metadata for ExperienceOrbMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct EyeOfEnderMetadata {
+pub struct EyeOfEnderMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -7624,10 +7624,10 @@ pub struct EyeOfEnderMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl EyeOfEnderMetadata {
+impl<'a> EyeOfEnderMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -7660,7 +7660,7 @@ impl EyeOfEnderMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -7682,51 +7682,51 @@ impl EyeOfEnderMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -7734,10 +7734,10 @@ impl EyeOfEnderMetadata {
 	}
 }
 
-impl Metadata for EyeOfEnderMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for EyeOfEnderMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -7765,12 +7765,12 @@ impl Metadata for EyeOfEnderMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -7782,7 +7782,7 @@ impl Metadata for EyeOfEnderMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -7860,51 +7860,51 @@ impl FallingBlockMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -7913,9 +7913,9 @@ impl FallingBlockMetadata {
 }
 
 impl Metadata for FallingBlockMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -7943,12 +7943,12 @@ impl Metadata for FallingBlockMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -7960,7 +7960,7 @@ impl Metadata for FallingBlockMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -7970,7 +7970,7 @@ impl Metadata for FallingBlockMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct FireworkRocketMetadata {
+pub struct FireworkRocketMetadata<'a> {
 	changes: MetadataChanges<11>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -7980,12 +7980,12 @@ pub struct FireworkRocketMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub id_fireworks_item: protocol::types::ProtocolItemStack,
+	pub id_fireworks_item: protocol::types::ProtocolItemStack<'a>,
 	pub attached_to_target: Option<u32>,
 	pub shot_at_angle: bool,
 }
 
-impl FireworkRocketMetadata {
+impl<'a> FireworkRocketMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -8018,7 +8018,7 @@ impl FireworkRocketMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_id_fireworks_item(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_id_fireworks_item(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.id_fireworks_item = value;
 	}
@@ -8050,72 +8050,72 @@ impl FireworkRocketMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.id_fireworks_item)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				unimplemented!()
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.shot_at_angle)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.shot_at_angle)
 			},
 			_ => unreachable!()
 		}
 	}
 }
 
-impl Metadata for FireworkRocketMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for FireworkRocketMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -8145,12 +8145,12 @@ impl Metadata for FireworkRocketMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -8164,7 +8164,7 @@ impl Metadata for FireworkRocketMetadata {
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
 				if indices[10] { bytes = self.write_for_index(bytes, 10); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -8314,111 +8314,111 @@ impl FoxMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.r#type)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -8427,9 +8427,9 @@ impl FoxMetadata {
 }
 
 impl Metadata for FoxMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -8469,12 +8469,12 @@ impl Metadata for FoxMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -8498,7 +8498,7 @@ impl Metadata for FoxMetadata {
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -8636,101 +8636,101 @@ impl FrogMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
 				unimplemented!()
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -8739,9 +8739,9 @@ impl FrogMetadata {
 }
 
 impl Metadata for FrogMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -8779,12 +8779,12 @@ impl Metadata for FrogMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -8806,7 +8806,7 @@ impl Metadata for FrogMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -8932,92 +8932,92 @@ impl GhastMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_charging)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_charging)
 			},
 			_ => unreachable!()
 		}
@@ -9025,9 +9025,9 @@ impl GhastMetadata {
 }
 
 impl Metadata for GhastMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -9063,12 +9063,12 @@ impl Metadata for GhastMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -9088,7 +9088,7 @@ impl Metadata for GhastMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -9208,87 +9208,87 @@ impl GiantMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			_ => unreachable!()
 		}
@@ -9296,9 +9296,9 @@ impl GiantMetadata {
 }
 
 impl Metadata for GiantMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -9333,12 +9333,12 @@ impl Metadata for GiantMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -9357,7 +9357,7 @@ impl Metadata for GiantMetadata {
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -9367,7 +9367,7 @@ impl Metadata for GiantMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct GlowItemFrameMetadata {
+pub struct GlowItemFrameMetadata<'a> {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -9377,11 +9377,11 @@ pub struct GlowItemFrameMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item: protocol::types::ProtocolItemStack,
+	pub item: protocol::types::ProtocolItemStack<'a>,
 	pub rotation: i32,
 }
 
-impl GlowItemFrameMetadata {
+impl<'a> GlowItemFrameMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -9414,7 +9414,7 @@ impl GlowItemFrameMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item = value;
 	}
@@ -9441,56 +9441,56 @@ impl GlowItemFrameMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.rotation)
 			},
 			_ => unreachable!()
@@ -9498,10 +9498,10 @@ impl GlowItemFrameMetadata {
 	}
 }
 
-impl Metadata for GlowItemFrameMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for GlowItemFrameMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -9530,12 +9530,12 @@ impl Metadata for GlowItemFrameMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -9548,7 +9548,7 @@ impl Metadata for GlowItemFrameMetadata {
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -9674,91 +9674,91 @@ impl GlowSquidMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.dark_ticks_remaining)
 			},
 			_ => unreachable!()
@@ -9767,9 +9767,9 @@ impl GlowSquidMetadata {
 }
 
 impl Metadata for GlowSquidMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -9805,12 +9805,12 @@ impl Metadata for GlowSquidMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -9830,7 +9830,7 @@ impl Metadata for GlowSquidMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -9974,107 +9974,107 @@ impl GoatMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_screaming_goat)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_screaming_goat)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.has_left_horn)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.has_left_horn)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.has_right_horn)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.has_right_horn)
 			},
 			_ => unreachable!()
 		}
@@ -10082,9 +10082,9 @@ impl GoatMetadata {
 }
 
 impl Metadata for GoatMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -10123,12 +10123,12 @@ impl Metadata for GoatMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -10151,7 +10151,7 @@ impl Metadata for GoatMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -10283,96 +10283,96 @@ impl GuardianMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_moving)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_moving)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_attack_target)
 			},
 			_ => unreachable!()
@@ -10381,9 +10381,9 @@ impl GuardianMetadata {
 }
 
 impl Metadata for GuardianMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -10420,12 +10420,12 @@ impl Metadata for GuardianMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -10446,7 +10446,7 @@ impl Metadata for GuardianMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -10578,97 +10578,97 @@ impl HoglinMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.immune_to_zombification)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.immune_to_zombification)
 			},
 			_ => unreachable!()
 		}
@@ -10676,9 +10676,9 @@ impl HoglinMetadata {
 }
 
 impl Metadata for HoglinMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -10715,12 +10715,12 @@ impl Metadata for HoglinMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -10741,7 +10741,7 @@ impl Metadata for HoglinMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -10885,106 +10885,106 @@ impl HorseMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_type_variant)
 			},
 			_ => unreachable!()
@@ -10993,9 +10993,9 @@ impl HorseMetadata {
 }
 
 impl Metadata for HorseMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -11034,12 +11034,12 @@ impl Metadata for HorseMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -11062,7 +11062,7 @@ impl Metadata for HorseMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -11200,102 +11200,102 @@ impl HuskMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.special_type)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.drowned_conversion)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.drowned_conversion)
 			},
 			_ => unreachable!()
 		}
@@ -11303,9 +11303,9 @@ impl HuskMetadata {
 }
 
 impl Metadata for HuskMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -11343,12 +11343,12 @@ impl Metadata for HuskMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -11370,7 +11370,7 @@ impl Metadata for HuskMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -11400,12 +11400,12 @@ impl IllusionerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.spell_casting)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.spell_casting)
 			},
 			_ => unreachable!()
 		}
@@ -11413,9 +11413,9 @@ impl IllusionerMetadata {
 }
 
 impl Metadata for IllusionerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -11435,16 +11435,16 @@ impl Metadata for IllusionerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -11570,92 +11570,92 @@ impl IronGolemMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			_ => unreachable!()
 		}
@@ -11663,9 +11663,9 @@ impl IronGolemMetadata {
 }
 
 impl Metadata for IronGolemMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -11701,12 +11701,12 @@ impl Metadata for IronGolemMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -11726,7 +11726,7 @@ impl Metadata for IronGolemMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -11736,7 +11736,7 @@ impl Metadata for IronGolemMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct ItemMetadata {
+pub struct ItemMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -11746,10 +11746,10 @@ pub struct ItemMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item: protocol::types::ProtocolItemStack,
+	pub item: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl ItemMetadata {
+impl<'a> ItemMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -11782,7 +11782,7 @@ impl ItemMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item = value;
 	}
@@ -11804,51 +11804,51 @@ impl ItemMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item)
 			},
 			_ => unreachable!()
@@ -11856,10 +11856,10 @@ impl ItemMetadata {
 	}
 }
 
-impl Metadata for ItemMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for ItemMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -11887,12 +11887,12 @@ impl Metadata for ItemMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -11904,7 +11904,7 @@ impl Metadata for ItemMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -11914,7 +11914,7 @@ impl Metadata for ItemMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct ItemFrameMetadata {
+pub struct ItemFrameMetadata<'a> {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -11924,11 +11924,11 @@ pub struct ItemFrameMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item: protocol::types::ProtocolItemStack,
+	pub item: protocol::types::ProtocolItemStack<'a>,
 	pub rotation: i32,
 }
 
-impl ItemFrameMetadata {
+impl<'a> ItemFrameMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -11961,7 +11961,7 @@ impl ItemFrameMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item = value;
 	}
@@ -11988,56 +11988,56 @@ impl ItemFrameMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.rotation)
 			},
 			_ => unreachable!()
@@ -12045,10 +12045,10 @@ impl ItemFrameMetadata {
 	}
 }
 
-impl Metadata for ItemFrameMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for ItemFrameMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -12077,12 +12077,12 @@ impl Metadata for ItemFrameMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -12095,7 +12095,7 @@ impl Metadata for ItemFrameMetadata {
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -12105,7 +12105,7 @@ impl Metadata for ItemFrameMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct FireballMetadata {
+pub struct FireballMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -12115,10 +12115,10 @@ pub struct FireballMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl FireballMetadata {
+impl<'a> FireballMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -12151,7 +12151,7 @@ impl FireballMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -12173,51 +12173,51 @@ impl FireballMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -12225,10 +12225,10 @@ impl FireballMetadata {
 	}
 }
 
-impl Metadata for FireballMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for FireballMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -12256,12 +12256,12 @@ impl Metadata for FireballMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -12273,7 +12273,7 @@ impl Metadata for FireballMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -12345,46 +12345,46 @@ impl LeashKnotMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -12393,9 +12393,9 @@ impl LeashKnotMetadata {
 }
 
 impl Metadata for LeashKnotMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -12422,12 +12422,12 @@ impl Metadata for LeashKnotMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -12438,7 +12438,7 @@ impl Metadata for LeashKnotMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -12510,46 +12510,46 @@ impl LightningBoltMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -12558,9 +12558,9 @@ impl LightningBoltMetadata {
 }
 
 impl Metadata for LightningBoltMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -12587,12 +12587,12 @@ impl Metadata for LightningBoltMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -12603,7 +12603,7 @@ impl Metadata for LightningBoltMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -12765,121 +12765,121 @@ impl LlamaMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_chest)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_chest)
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.strength)
 			},
 			21 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 21);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.swag)
 			},
 			22 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 22);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.variant)
 			},
 			_ => unreachable!()
@@ -12888,9 +12888,9 @@ impl LlamaMetadata {
 }
 
 impl Metadata for LlamaMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -12932,12 +12932,12 @@ impl Metadata for LlamaMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -12963,7 +12963,7 @@ impl Metadata for LlamaMetadata {
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
 				if indices[21] { bytes = self.write_for_index(bytes, 21); }
 				if indices[22] { bytes = self.write_for_index(bytes, 22); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -13035,46 +13035,46 @@ impl LlamaSpitMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -13083,9 +13083,9 @@ impl LlamaSpitMetadata {
 }
 
 impl Metadata for LlamaSpitMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -13112,12 +13112,12 @@ impl Metadata for LlamaSpitMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -13128,7 +13128,7 @@ impl Metadata for LlamaSpitMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -13254,91 +13254,91 @@ impl MagmaCubeMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_size)
 			},
 			_ => unreachable!()
@@ -13347,9 +13347,9 @@ impl MagmaCubeMetadata {
 }
 
 impl Metadata for MagmaCubeMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -13385,12 +13385,12 @@ impl Metadata for MagmaCubeMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -13410,7 +13410,7 @@ impl Metadata for MagmaCubeMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -13482,46 +13482,46 @@ impl MarkerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -13530,9 +13530,9 @@ impl MarkerMetadata {
 }
 
 impl Metadata for MarkerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -13559,12 +13559,12 @@ impl Metadata for MarkerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -13575,7 +13575,7 @@ impl Metadata for MarkerMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -13683,77 +13683,77 @@ impl MinecartMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_block)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_offset)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_custom_display)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_custom_display)
 			},
 			_ => unreachable!()
 		}
@@ -13761,9 +13761,9 @@ impl MinecartMetadata {
 }
 
 impl Metadata for MinecartMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -13796,12 +13796,12 @@ impl Metadata for MinecartMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -13818,7 +13818,7 @@ impl Metadata for MinecartMetadata {
 				if indices[11] { bytes = self.write_for_index(bytes, 11); }
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -13926,77 +13926,77 @@ impl ChestMinecartMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_block)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_offset)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_custom_display)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_custom_display)
 			},
 			_ => unreachable!()
 		}
@@ -14004,9 +14004,9 @@ impl ChestMinecartMetadata {
 }
 
 impl Metadata for ChestMinecartMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -14039,12 +14039,12 @@ impl Metadata for ChestMinecartMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -14061,7 +14061,7 @@ impl Metadata for ChestMinecartMetadata {
 				if indices[11] { bytes = self.write_for_index(bytes, 11); }
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -14181,87 +14181,87 @@ impl CommandBlockMinecartMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_block)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_offset)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_custom_display)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_custom_display)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				<SizedString<32767> as SliceSerializable<'_, String>>::write(bytes, &self.id_command_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.id_command_name)
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				<SizedString<32767> as SliceSerializable<'_, String>>::write(bytes, &self.id_last_output)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.id_last_output)
 			},
 			_ => unreachable!()
 		}
@@ -14269,9 +14269,9 @@ impl CommandBlockMinecartMetadata {
 }
 
 impl Metadata for CommandBlockMinecartMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -14306,12 +14306,12 @@ impl Metadata for CommandBlockMinecartMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -14330,7 +14330,7 @@ impl Metadata for CommandBlockMinecartMetadata {
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -14444,82 +14444,82 @@ impl FurnaceMinecartMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_block)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_offset)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_custom_display)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_custom_display)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_fuel)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_fuel)
 			},
 			_ => unreachable!()
 		}
@@ -14527,9 +14527,9 @@ impl FurnaceMinecartMetadata {
 }
 
 impl Metadata for FurnaceMinecartMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -14563,12 +14563,12 @@ impl Metadata for FurnaceMinecartMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -14586,7 +14586,7 @@ impl Metadata for FurnaceMinecartMetadata {
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -14694,77 +14694,77 @@ impl HopperMinecartMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_block)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_offset)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_custom_display)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_custom_display)
 			},
 			_ => unreachable!()
 		}
@@ -14772,9 +14772,9 @@ impl HopperMinecartMetadata {
 }
 
 impl Metadata for HopperMinecartMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -14807,12 +14807,12 @@ impl Metadata for HopperMinecartMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -14829,7 +14829,7 @@ impl Metadata for HopperMinecartMetadata {
 				if indices[11] { bytes = self.write_for_index(bytes, 11); }
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -14937,77 +14937,77 @@ impl SpawnerMinecartMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_block)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_offset)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_custom_display)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_custom_display)
 			},
 			_ => unreachable!()
 		}
@@ -15015,9 +15015,9 @@ impl SpawnerMinecartMetadata {
 }
 
 impl Metadata for SpawnerMinecartMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -15050,12 +15050,12 @@ impl Metadata for SpawnerMinecartMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -15072,7 +15072,7 @@ impl Metadata for SpawnerMinecartMetadata {
 				if indices[11] { bytes = self.write_for_index(bytes, 11); }
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -15180,77 +15180,77 @@ impl TntMinecartMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurt)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_hurtdir)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.id_damage)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.id_damage)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_block)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_display_offset)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_custom_display)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_custom_display)
 			},
 			_ => unreachable!()
 		}
@@ -15258,9 +15258,9 @@ impl TntMinecartMetadata {
 }
 
 impl Metadata for TntMinecartMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -15293,12 +15293,12 @@ impl Metadata for TntMinecartMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -15315,7 +15315,7 @@ impl Metadata for TntMinecartMetadata {
 				if indices[11] { bytes = self.write_for_index(bytes, 11); }
 				if indices[12] { bytes = self.write_for_index(bytes, 12); }
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -15459,107 +15459,107 @@ impl MuleMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_chest)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_chest)
 			},
 			_ => unreachable!()
 		}
@@ -15567,9 +15567,9 @@ impl MuleMetadata {
 }
 
 impl Metadata for MuleMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -15608,12 +15608,12 @@ impl Metadata for MuleMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -15636,7 +15636,7 @@ impl Metadata for MuleMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -15768,97 +15768,97 @@ impl MooshroomMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				<SizedString<32767> as SliceSerializable<'_, String>>::write(bytes, &self.r#type)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.r#type)
 			},
 			_ => unreachable!()
 		}
@@ -15866,9 +15866,9 @@ impl MooshroomMetadata {
 }
 
 impl Metadata for MooshroomMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -15905,12 +15905,12 @@ impl Metadata for MooshroomMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -15931,7 +15931,7 @@ impl Metadata for MooshroomMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -16063,97 +16063,97 @@ impl OcelotMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.trusting)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.trusting)
 			},
 			_ => unreachable!()
 		}
@@ -16161,9 +16161,9 @@ impl OcelotMetadata {
 }
 
 impl Metadata for OcelotMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -16200,12 +16200,12 @@ impl Metadata for OcelotMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -16226,7 +16226,7 @@ impl Metadata for OcelotMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -16304,51 +16304,51 @@ impl PaintingMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 22);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -16357,9 +16357,9 @@ impl PaintingMetadata {
 }
 
 impl Metadata for PaintingMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -16387,12 +16387,12 @@ impl Metadata for PaintingMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -16404,7 +16404,7 @@ impl Metadata for PaintingMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -16566,122 +16566,122 @@ impl PandaMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.unhappy_counter)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.sneeze_counter)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.eat_counter)
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.main_gene)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.main_gene)
 			},
 			21 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 21);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.hidden_gene)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.hidden_gene)
 			},
 			22 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 22);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			_ => unreachable!()
 		}
@@ -16689,9 +16689,9 @@ impl PandaMetadata {
 }
 
 impl Metadata for PandaMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -16733,12 +16733,12 @@ impl Metadata for PandaMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -16764,7 +16764,7 @@ impl Metadata for PandaMetadata {
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
 				if indices[21] { bytes = self.write_for_index(bytes, 21); }
 				if indices[22] { bytes = self.write_for_index(bytes, 22); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -16908,106 +16908,106 @@ impl ParrotMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.variant)
 			},
 			_ => unreachable!()
@@ -17016,9 +17016,9 @@ impl ParrotMetadata {
 }
 
 impl Metadata for ParrotMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -17057,12 +17057,12 @@ impl Metadata for ParrotMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -17085,7 +17085,7 @@ impl Metadata for ParrotMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -17211,91 +17211,91 @@ impl PhantomMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_size)
 			},
 			_ => unreachable!()
@@ -17304,9 +17304,9 @@ impl PhantomMetadata {
 }
 
 impl Metadata for PhantomMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -17342,12 +17342,12 @@ impl Metadata for PhantomMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -17367,7 +17367,7 @@ impl Metadata for PhantomMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -17505,101 +17505,101 @@ impl PigMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.saddle)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.saddle)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.boost_time)
 			},
 			_ => unreachable!()
@@ -17608,9 +17608,9 @@ impl PigMetadata {
 }
 
 impl Metadata for PigMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -17648,12 +17648,12 @@ impl Metadata for PigMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -17675,7 +17675,7 @@ impl Metadata for PigMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -17819,107 +17819,107 @@ impl PiglinMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.immune_to_zombification)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.immune_to_zombification)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_charging_crossbow)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_charging_crossbow)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_dancing)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_dancing)
 			},
 			_ => unreachable!()
 		}
@@ -17927,9 +17927,9 @@ impl PiglinMetadata {
 }
 
 impl Metadata for PiglinMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -17968,12 +17968,12 @@ impl Metadata for PiglinMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -17996,7 +17996,7 @@ impl Metadata for PiglinMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -18122,92 +18122,92 @@ impl PiglinBruteMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.immune_to_zombification)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.immune_to_zombification)
 			},
 			_ => unreachable!()
 		}
@@ -18215,9 +18215,9 @@ impl PiglinBruteMetadata {
 }
 
 impl Metadata for PiglinBruteMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -18253,12 +18253,12 @@ impl Metadata for PiglinBruteMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -18278,7 +18278,7 @@ impl Metadata for PiglinBruteMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -18308,12 +18308,12 @@ impl PillagerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.is_charging_crossbow)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.is_charging_crossbow)
 			},
 			_ => unreachable!()
 		}
@@ -18321,9 +18321,9 @@ impl PillagerMetadata {
 }
 
 impl Metadata for PillagerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -18343,16 +18343,16 @@ impl Metadata for PillagerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -18484,97 +18484,97 @@ impl PolarBearMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.standing)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.standing)
 			},
 			_ => unreachable!()
 		}
@@ -18582,9 +18582,9 @@ impl PolarBearMetadata {
 }
 
 impl Metadata for PolarBearMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -18621,12 +18621,12 @@ impl Metadata for PolarBearMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -18647,7 +18647,7 @@ impl Metadata for PolarBearMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -18725,51 +18725,51 @@ impl TntMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.fuse)
 			},
 			_ => unreachable!()
@@ -18778,9 +18778,9 @@ impl TntMetadata {
 }
 
 impl Metadata for TntMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -18808,12 +18808,12 @@ impl Metadata for TntMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -18825,7 +18825,7 @@ impl Metadata for TntMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -18957,96 +18957,96 @@ impl PufferfishMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.from_bucket)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.from_bucket)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.puff_state)
 			},
 			_ => unreachable!()
@@ -19055,9 +19055,9 @@ impl PufferfishMetadata {
 }
 
 impl Metadata for PufferfishMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -19094,12 +19094,12 @@ impl Metadata for PufferfishMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -19120,7 +19120,7 @@ impl Metadata for PufferfishMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -19252,96 +19252,96 @@ impl RabbitMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.r#type)
 			},
 			_ => unreachable!()
@@ -19350,9 +19350,9 @@ impl RabbitMetadata {
 }
 
 impl Metadata for RabbitMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -19389,12 +19389,12 @@ impl Metadata for RabbitMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -19415,7 +19415,7 @@ impl Metadata for RabbitMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -19439,7 +19439,7 @@ impl RavagerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			_ => unreachable!()
 		}
@@ -19447,9 +19447,9 @@ impl RavagerMetadata {
 }
 
 impl Metadata for RavagerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -19468,15 +19468,15 @@ impl Metadata for RavagerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -19602,92 +19602,92 @@ impl SalmonMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.from_bucket)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.from_bucket)
 			},
 			_ => unreachable!()
 		}
@@ -19695,9 +19695,9 @@ impl SalmonMetadata {
 }
 
 impl Metadata for SalmonMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -19733,12 +19733,12 @@ impl Metadata for SalmonMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -19758,7 +19758,7 @@ impl Metadata for SalmonMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -19890,97 +19890,97 @@ impl SheepMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.wool)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.wool)
 			},
 			_ => unreachable!()
 		}
@@ -19988,9 +19988,9 @@ impl SheepMetadata {
 }
 
 impl Metadata for SheepMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -20027,12 +20027,12 @@ impl Metadata for SheepMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -20053,7 +20053,7 @@ impl Metadata for SheepMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -20191,102 +20191,102 @@ impl ShulkerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				unimplemented!()
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.peek)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.peek)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.color)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.color)
 			},
 			_ => unreachable!()
 		}
@@ -20294,9 +20294,9 @@ impl ShulkerMetadata {
 }
 
 impl Metadata for ShulkerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -20334,12 +20334,12 @@ impl Metadata for ShulkerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -20361,7 +20361,7 @@ impl Metadata for ShulkerMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -20433,46 +20433,46 @@ impl ShulkerBulletMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
@@ -20481,9 +20481,9 @@ impl ShulkerBulletMetadata {
 }
 
 impl Metadata for ShulkerBulletMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -20510,12 +20510,12 @@ impl Metadata for ShulkerBulletMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -20526,7 +20526,7 @@ impl Metadata for ShulkerBulletMetadata {
 				if indices[5] { bytes = self.write_for_index(bytes, 5); }
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -20646,87 +20646,87 @@ impl SilverfishMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			_ => unreachable!()
 		}
@@ -20734,9 +20734,9 @@ impl SilverfishMetadata {
 }
 
 impl Metadata for SilverfishMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -20771,12 +20771,12 @@ impl Metadata for SilverfishMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -20795,7 +20795,7 @@ impl Metadata for SilverfishMetadata {
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -20921,92 +20921,92 @@ impl SkeletonMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.stray_conversion)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.stray_conversion)
 			},
 			_ => unreachable!()
 		}
@@ -21014,9 +21014,9 @@ impl SkeletonMetadata {
 }
 
 impl Metadata for SkeletonMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -21052,12 +21052,12 @@ impl Metadata for SkeletonMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -21077,7 +21077,7 @@ impl Metadata for SkeletonMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -21215,101 +21215,101 @@ impl SkeletonHorseMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -21318,9 +21318,9 @@ impl SkeletonHorseMetadata {
 }
 
 impl Metadata for SkeletonHorseMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -21358,12 +21358,12 @@ impl Metadata for SkeletonHorseMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -21385,7 +21385,7 @@ impl Metadata for SkeletonHorseMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -21511,91 +21511,91 @@ impl SlimeMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_size)
 			},
 			_ => unreachable!()
@@ -21604,9 +21604,9 @@ impl SlimeMetadata {
 }
 
 impl Metadata for SlimeMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -21642,12 +21642,12 @@ impl Metadata for SlimeMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -21667,7 +21667,7 @@ impl Metadata for SlimeMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -21677,7 +21677,7 @@ impl Metadata for SlimeMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct SmallFireballMetadata {
+pub struct SmallFireballMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -21687,10 +21687,10 @@ pub struct SmallFireballMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl SmallFireballMetadata {
+impl<'a> SmallFireballMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -21723,7 +21723,7 @@ impl SmallFireballMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -21745,51 +21745,51 @@ impl SmallFireballMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -21797,10 +21797,10 @@ impl SmallFireballMetadata {
 	}
 }
 
-impl Metadata for SmallFireballMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for SmallFireballMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -21828,12 +21828,12 @@ impl Metadata for SmallFireballMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -21845,7 +21845,7 @@ impl Metadata for SmallFireballMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -21971,92 +21971,92 @@ impl SnowGolemMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pumpkin)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pumpkin)
 			},
 			_ => unreachable!()
 		}
@@ -22064,9 +22064,9 @@ impl SnowGolemMetadata {
 }
 
 impl Metadata for SnowGolemMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -22102,12 +22102,12 @@ impl Metadata for SnowGolemMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -22127,7 +22127,7 @@ impl Metadata for SnowGolemMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -22137,7 +22137,7 @@ impl Metadata for SnowGolemMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct SnowballMetadata {
+pub struct SnowballMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -22147,10 +22147,10 @@ pub struct SnowballMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl SnowballMetadata {
+impl<'a> SnowballMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -22183,7 +22183,7 @@ impl SnowballMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -22205,51 +22205,51 @@ impl SnowballMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -22257,10 +22257,10 @@ impl SnowballMetadata {
 	}
 }
 
-impl Metadata for SnowballMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for SnowballMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -22288,12 +22288,12 @@ impl Metadata for SnowballMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -22305,7 +22305,7 @@ impl Metadata for SnowballMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -22389,57 +22389,57 @@ impl SpectralArrowMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pierce_level)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pierce_level)
 			},
 			_ => unreachable!()
 		}
@@ -22447,9 +22447,9 @@ impl SpectralArrowMetadata {
 }
 
 impl Metadata for SpectralArrowMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -22478,12 +22478,12 @@ impl Metadata for SpectralArrowMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -22496,7 +22496,7 @@ impl Metadata for SpectralArrowMetadata {
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -22622,92 +22622,92 @@ impl SpiderMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			_ => unreachable!()
 		}
@@ -22715,9 +22715,9 @@ impl SpiderMetadata {
 }
 
 impl Metadata for SpiderMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -22753,12 +22753,12 @@ impl Metadata for SpiderMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -22778,7 +22778,7 @@ impl Metadata for SpiderMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -22898,87 +22898,87 @@ impl SquidMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			_ => unreachable!()
 		}
@@ -22986,9 +22986,9 @@ impl SquidMetadata {
 }
 
 impl Metadata for SquidMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -23023,12 +23023,12 @@ impl Metadata for SquidMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -23047,7 +23047,7 @@ impl Metadata for SquidMetadata {
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -23167,87 +23167,87 @@ impl StrayMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			_ => unreachable!()
 		}
@@ -23255,9 +23255,9 @@ impl StrayMetadata {
 }
 
 impl Metadata for StrayMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -23292,12 +23292,12 @@ impl Metadata for StrayMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -23316,7 +23316,7 @@ impl Metadata for StrayMetadata {
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -23460,107 +23460,107 @@ impl StriderMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.boost_time)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.suffocating)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.suffocating)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.saddle)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.saddle)
 			},
 			_ => unreachable!()
 		}
@@ -23568,9 +23568,9 @@ impl StriderMetadata {
 }
 
 impl Metadata for StriderMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -23609,12 +23609,12 @@ impl Metadata for StriderMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -23637,7 +23637,7 @@ impl Metadata for StriderMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -23763,92 +23763,92 @@ impl TadpoleMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.from_bucket)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.from_bucket)
 			},
 			_ => unreachable!()
 		}
@@ -23856,9 +23856,9 @@ impl TadpoleMetadata {
 }
 
 impl Metadata for TadpoleMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -23894,12 +23894,12 @@ impl Metadata for TadpoleMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -23919,7 +23919,7 @@ impl Metadata for TadpoleMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -23929,7 +23929,7 @@ impl Metadata for TadpoleMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct EggMetadata {
+pub struct EggMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -23939,10 +23939,10 @@ pub struct EggMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl EggMetadata {
+impl<'a> EggMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -23975,7 +23975,7 @@ impl EggMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -23997,51 +23997,51 @@ impl EggMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -24049,10 +24049,10 @@ impl EggMetadata {
 	}
 }
 
-impl Metadata for EggMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for EggMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -24080,12 +24080,12 @@ impl Metadata for EggMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -24097,7 +24097,7 @@ impl Metadata for EggMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -24107,7 +24107,7 @@ impl Metadata for EggMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct EnderPearlMetadata {
+pub struct EnderPearlMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -24117,10 +24117,10 @@ pub struct EnderPearlMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl EnderPearlMetadata {
+impl<'a> EnderPearlMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -24153,7 +24153,7 @@ impl EnderPearlMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -24175,51 +24175,51 @@ impl EnderPearlMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -24227,10 +24227,10 @@ impl EnderPearlMetadata {
 	}
 }
 
-impl Metadata for EnderPearlMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for EnderPearlMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -24258,12 +24258,12 @@ impl Metadata for EnderPearlMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -24275,7 +24275,7 @@ impl Metadata for EnderPearlMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -24285,7 +24285,7 @@ impl Metadata for EnderPearlMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct ExperienceBottleMetadata {
+pub struct ExperienceBottleMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -24295,10 +24295,10 @@ pub struct ExperienceBottleMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl ExperienceBottleMetadata {
+impl<'a> ExperienceBottleMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -24331,7 +24331,7 @@ impl ExperienceBottleMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -24353,51 +24353,51 @@ impl ExperienceBottleMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -24405,10 +24405,10 @@ impl ExperienceBottleMetadata {
 	}
 }
 
-impl Metadata for ExperienceBottleMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for ExperienceBottleMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -24436,12 +24436,12 @@ impl Metadata for ExperienceBottleMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -24453,7 +24453,7 @@ impl Metadata for ExperienceBottleMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -24463,7 +24463,7 @@ impl Metadata for ExperienceBottleMetadata {
 
 #[readonly::make]
 #[derive(Default)]
-pub struct PotionMetadata {
+pub struct PotionMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
@@ -24473,10 +24473,10 @@ pub struct PotionMetadata {
 	pub no_gravity: bool,
 	pub pose: protocol::types::Pose,
 	pub ticks_frozen: i32,
-	pub item_stack: protocol::types::ProtocolItemStack,
+	pub item_stack: protocol::types::ProtocolItemStack<'a>,
 }
 
-impl PotionMetadata {
+impl<'a> PotionMetadata<'a> {
 	pub fn set_shared_flags(&mut self, value: u8) {
 		self.changes.mark_dirty(0);
 		self.shared_flags = value;
@@ -24509,7 +24509,7 @@ impl PotionMetadata {
 		self.changes.mark_dirty(7);
 		self.ticks_frozen = value;
 	}
-	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack) {
+	pub fn set_item_stack(&mut self, value: protocol::types::ProtocolItemStack<'a>) {
 		self.changes.mark_dirty(8);
 		self.item_stack = value;
 	}
@@ -24531,51 +24531,51 @@ impl PotionMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
 				protocol::types::ProtocolItemStack::write(bytes, &self.item_stack)
 			},
 			_ => unreachable!()
@@ -24583,10 +24583,10 @@ impl PotionMetadata {
 	}
 }
 
-impl Metadata for PotionMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+impl<'a> Metadata for PotionMetadata<'a> {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -24614,12 +24614,12 @@ impl Metadata for PotionMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -24631,7 +24631,7 @@ impl Metadata for PotionMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -24727,67 +24727,67 @@ impl TridentMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pierce_level)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pierce_level)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_loyalty)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_loyalty)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_foil)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_foil)
 			},
 			_ => unreachable!()
 		}
@@ -24795,9 +24795,9 @@ impl TridentMetadata {
 }
 
 impl Metadata for TridentMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -24828,12 +24828,12 @@ impl Metadata for TridentMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -24848,7 +24848,7 @@ impl Metadata for TridentMetadata {
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
 				if indices[10] { bytes = self.write_for_index(bytes, 10); }
 				if indices[11] { bytes = self.write_for_index(bytes, 11); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -25010,121 +25010,121 @@ impl TraderLlamaMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.id_chest)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.id_chest)
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.strength)
 			},
 			21 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 21);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.swag)
 			},
 			22 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 22);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.variant)
 			},
 			_ => unreachable!()
@@ -25133,9 +25133,9 @@ impl TraderLlamaMetadata {
 }
 
 impl Metadata for TraderLlamaMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -25177,12 +25177,12 @@ impl Metadata for TraderLlamaMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -25208,7 +25208,7 @@ impl Metadata for TraderLlamaMetadata {
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
 				if indices[21] { bytes = self.write_for_index(bytes, 21); }
 				if indices[22] { bytes = self.write_for_index(bytes, 22); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -25340,96 +25340,96 @@ impl TropicalFishMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.from_bucket)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.from_bucket)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_type_variant)
 			},
 			_ => unreachable!()
@@ -25438,9 +25438,9 @@ impl TropicalFishMetadata {
 }
 
 impl Metadata for TropicalFishMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -25477,12 +25477,12 @@ impl Metadata for TropicalFishMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -25503,7 +25503,7 @@ impl Metadata for TropicalFishMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -25665,122 +25665,122 @@ impl TurtleMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				unimplemented!()
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.has_egg)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.has_egg)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.laying_egg)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.laying_egg)
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				unimplemented!()
 			},
 			21 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 21);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.going_home)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.going_home)
 			},
 			22 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 22);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.travelling)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.travelling)
 			},
 			_ => unreachable!()
 		}
@@ -25788,9 +25788,9 @@ impl TurtleMetadata {
 }
 
 impl Metadata for TurtleMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -25832,12 +25832,12 @@ impl Metadata for TurtleMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -25863,7 +25863,7 @@ impl Metadata for TurtleMetadata {
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
 				if indices[21] { bytes = self.write_for_index(bytes, 21); }
 				if indices[22] { bytes = self.write_for_index(bytes, 22); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -25989,92 +25989,92 @@ impl VexMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			_ => unreachable!()
 		}
@@ -26082,9 +26082,9 @@ impl VexMetadata {
 }
 
 impl Metadata for VexMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -26120,12 +26120,12 @@ impl Metadata for VexMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -26145,7 +26145,7 @@ impl Metadata for VexMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -26283,101 +26283,101 @@ impl VillagerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.unhappy_counter)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -26386,9 +26386,9 @@ impl VillagerMetadata {
 }
 
 impl Metadata for VillagerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -26426,12 +26426,12 @@ impl Metadata for VillagerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -26453,7 +26453,7 @@ impl Metadata for VillagerMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -26477,7 +26477,7 @@ impl VindicatorMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			_ => unreachable!()
 		}
@@ -26485,9 +26485,9 @@ impl VindicatorMetadata {
 }
 
 impl Metadata for VindicatorMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -26506,15 +26506,15 @@ impl Metadata for VindicatorMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -26646,96 +26646,96 @@ impl WanderingTraderMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.unhappy_counter)
 			},
 			_ => unreachable!()
@@ -26744,9 +26744,9 @@ impl WanderingTraderMetadata {
 }
 
 impl Metadata for WanderingTraderMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -26783,12 +26783,12 @@ impl Metadata for WanderingTraderMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -26809,7 +26809,7 @@ impl Metadata for WanderingTraderMetadata {
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -26935,91 +26935,91 @@ impl WardenMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.client_anger_level)
 			},
 			_ => unreachable!()
@@ -27028,9 +27028,9 @@ impl WardenMetadata {
 }
 
 impl Metadata for WardenMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -27066,12 +27066,12 @@ impl Metadata for WardenMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -27091,7 +27091,7 @@ impl Metadata for WardenMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -27121,12 +27121,12 @@ impl WitchMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.using_item)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.using_item)
 			},
 			_ => unreachable!()
 		}
@@ -27134,9 +27134,9 @@ impl WitchMetadata {
 }
 
 impl Metadata for WitchMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -27156,16 +27156,16 @@ impl Metadata for WitchMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -27309,106 +27309,106 @@ impl WitherMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.target_a)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.target_b)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.target_c)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.id_inv)
 			},
 			_ => unreachable!()
@@ -27417,9 +27417,9 @@ impl WitherMetadata {
 }
 
 impl Metadata for WitherMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -27458,12 +27458,12 @@ impl Metadata for WitherMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -27486,7 +27486,7 @@ impl Metadata for WitherMetadata {
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -27606,87 +27606,87 @@ impl WitherSkeletonMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			_ => unreachable!()
 		}
@@ -27694,9 +27694,9 @@ impl WitherSkeletonMetadata {
 }
 
 impl Metadata for WitherSkeletonMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -27731,12 +27731,12 @@ impl Metadata for WitherSkeletonMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -27755,7 +27755,7 @@ impl Metadata for WitherSkeletonMetadata {
 				if indices[13] { bytes = self.write_for_index(bytes, 13); }
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -27833,52 +27833,52 @@ impl WitherSkullMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.dangerous)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.dangerous)
 			},
 			_ => unreachable!()
 		}
@@ -27886,9 +27886,9 @@ impl WitherSkullMetadata {
 }
 
 impl Metadata for WitherSkullMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -27916,12 +27916,12 @@ impl Metadata for WitherSkullMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -27933,7 +27933,7 @@ impl Metadata for WitherSkullMetadata {
 				if indices[6] { bytes = self.write_for_index(bytes, 6); }
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -28089,116 +28089,116 @@ impl WolfMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.interested)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.interested)
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.collar_color)
 			},
 			21 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 21);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.remaining_anger_time)
 			},
 			_ => unreachable!()
@@ -28207,9 +28207,9 @@ impl WolfMetadata {
 }
 
 impl Metadata for WolfMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -28250,12 +28250,12 @@ impl Metadata for WolfMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -28280,7 +28280,7 @@ impl Metadata for WolfMetadata {
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
 				if indices[21] { bytes = self.write_for_index(bytes, 21); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -28406,92 +28406,92 @@ impl ZoglinMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			_ => unreachable!()
 		}
@@ -28499,9 +28499,9 @@ impl ZoglinMetadata {
 }
 
 impl Metadata for ZoglinMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -28537,12 +28537,12 @@ impl Metadata for ZoglinMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -28562,7 +28562,7 @@ impl Metadata for ZoglinMetadata {
 				if indices[14] { bytes = self.write_for_index(bytes, 14); }
 				if indices[15] { bytes = self.write_for_index(bytes, 15); }
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -28700,102 +28700,102 @@ impl ZombieMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.special_type)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.drowned_conversion)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.drowned_conversion)
 			},
 			_ => unreachable!()
 		}
@@ -28803,9 +28803,9 @@ impl ZombieMetadata {
 }
 
 impl Metadata for ZombieMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -28843,12 +28843,12 @@ impl Metadata for ZombieMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -28870,7 +28870,7 @@ impl Metadata for ZombieMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -29008,101 +29008,101 @@ impl ZombieHorseMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.id_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.id_flags)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -29111,9 +29111,9 @@ impl ZombieHorseMetadata {
 }
 
 impl Metadata for ZombieHorseMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -29151,12 +29151,12 @@ impl Metadata for ZombieHorseMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -29178,7 +29178,7 @@ impl Metadata for ZombieHorseMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -29328,111 +29328,111 @@ impl ZombieVillagerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.special_type)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.drowned_conversion)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.drowned_conversion)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.converting)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.converting)
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -29441,9 +29441,9 @@ impl ZombieVillagerMetadata {
 }
 
 impl Metadata for ZombieVillagerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -29483,12 +29483,12 @@ impl Metadata for ZombieVillagerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -29512,7 +29512,7 @@ impl Metadata for ZombieVillagerMetadata {
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -29650,102 +29650,102 @@ impl ZombifiedPiglinMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.mob_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.mob_flags)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.baby)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.baby)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.special_type)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.drowned_conversion)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.drowned_conversion)
 			},
 			_ => unreachable!()
 		}
@@ -29753,9 +29753,9 @@ impl ZombifiedPiglinMetadata {
 }
 
 impl Metadata for ZombifiedPiglinMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -29793,12 +29793,12 @@ impl Metadata for ZombifiedPiglinMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -29820,7 +29820,7 @@ impl Metadata for ZombifiedPiglinMetadata {
 				if indices[16] { bytes = self.write_for_index(bytes, 16); }
 				if indices[17] { bytes = self.write_for_index(bytes, 17); }
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -29970,111 +29970,111 @@ impl PlayerMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.living_entity_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.living_entity_flags)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.health)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.health)
 			},
 			10 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.effect_color)
 			},
 			11 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 11);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.effect_ambience)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.effect_ambience)
 			},
 			12 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 12);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.arrow_count)
 			},
 			13 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 13);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.stinger_count)
 			},
 			14 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 10);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				unimplemented!()
 			},
 			15 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.player_absorption)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				<BigEndian as SliceSerializable<f32>>::write(bytes, self.player_absorption)
 			},
 			16 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 16);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.score)
 			},
 			17 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 17);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.player_mode_customisation)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.player_mode_customisation)
 			},
 			18 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.player_main_hand)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.player_main_hand)
 			},
 			19 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 19);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
 				unimplemented!()
 			},
 			20 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 20);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 14);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
 				unimplemented!()
 			},
 			_ => unreachable!()
@@ -30083,9 +30083,9 @@ impl PlayerMetadata {
 }
 
 impl Metadata for PlayerMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -30125,12 +30125,12 @@ impl Metadata for PlayerMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -30154,7 +30154,7 @@ impl Metadata for PlayerMetadata {
 				if indices[18] { bytes = self.write_for_index(bytes, 18); }
 				if indices[19] { bytes = self.write_for_index(bytes, 19); }
 				if indices[20] { bytes = self.write_for_index(bytes, 20); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -30238,57 +30238,57 @@ impl FishingBobberMetadata {
 	}
 
 	#[inline(always)]
-	pub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {
+	pub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {
 		match index {
 			0 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.shared_flags)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+				<Single as SliceSerializable<u8>>::write(bytes, self.shared_flags)
 			},
 			1 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.air_supply)
 			},
 			2 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 2);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.custom_name)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
 			},
 			3 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 3);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.custom_name_visible)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.custom_name_visible)
 			},
 			4 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.silent)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 4);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.silent)
 			},
 			5 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 5);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.no_gravity)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.no_gravity)
 			},
 			6 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 6);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 18);
-				<Single as SliceSerializable<'_, u8>>::write(bytes, self.pose as u8)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
+				<Single as SliceSerializable<u8>>::write(bytes, self.pose as u8)
 			},
 			7 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.ticks_frozen)
 			},
 			8 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 8);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 1);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				VarInt::write(bytes, self.hooked_entity)
 			},
 			9 => {
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 9);
-				bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 7);
-				<Single as SliceSerializable<'_, bool>>::write(bytes, self.biting)
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
+				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
+				<Single as SliceSerializable<bool>>::write(bytes, self.biting)
 			},
 			_ => unreachable!()
 		}
@@ -30296,9 +30296,9 @@ impl FishingBobberMetadata {
 }
 
 impl Metadata for FishingBobberMetadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -30327,12 +30327,12 @@ impl Metadata for FishingBobberMetadata {
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 				if indices[0] { bytes = self.write_for_index(bytes, 0); }
@@ -30345,7 +30345,7 @@ impl Metadata for FishingBobberMetadata {
 				if indices[7] { bytes = self.write_for_index(bytes, 7); }
 				if indices[8] { bytes = self.write_for_index(bytes, 8); }
 				if indices[9] { bytes = self.write_for_index(bytes, 9); }
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;

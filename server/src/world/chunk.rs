@@ -1,5 +1,12 @@
+use std::borrow::Cow;
+
 use bevy_ecs::entity::Entity;
-use binary::slice_serialization::{slice_serializable, BigEndian, GreedyBlob};
+use binary::{
+    nbt::{CachedNBT, NBTNode},
+    slice_serialization::{slice_serializable, BigEndian, GreedyBlob, NBTBlob},
+};
+use bytes::BufMut;
+use minecraft_constants::block::Block;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::{
     play::server::{self, BlockUpdate, ChunkBlockData, ChunkLightData},
@@ -125,7 +132,7 @@ impl Chunk {
     pub(crate) fn create_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
         // Safety: write_create_packet doesn't touch `viewable_self_exclusion_write_buffer`
         let exclusion_write_buffer =
-            unsafe { &mut *(&mut player.viewable_self_exclusion_write_buffer as *mut _) };
+            unsafe { &mut *(&mut player.packets.viewable_self_exclusion_write_buffer as *mut _) };
         player.write_create_packet(exclusion_write_buffer);
 
         // Get ptr to write_packet_bytes function
@@ -158,6 +165,7 @@ impl Chunk {
             if i < 18 && !empty {
                 let chunk_section = ChunkSection::new(
                     16 * 16 * 16,
+                    if i >= 4 { i - 4 } else { 0 },
                     BlockPalettedContainer::filled(1),
                     BiomePalettedContainer::filled(1),
                 );
@@ -166,6 +174,7 @@ impl Chunk {
             } else {
                 let chunk_section = ChunkSection::new(
                     0,
+                    if i >= 4 { i - 4 } else { 0 },
                     BlockPalettedContainer::filled(0),
                     BiomePalettedContainer::filled(1),
                 );
@@ -198,14 +207,20 @@ impl Chunk {
 
         // Write chunk data
         let mut chunk_data = WriteBuffer::new();
-        for block_section in &self.block_sections {
+        let mut block_entity_count = 0;
+        let mut block_entity_data = Vec::new();
+        for block_section in &mut self.block_sections {
             packet_helper::write_slice_serializable(&mut chunk_data, block_section);
+
+            block_entity_count += block_section.block_entities.count() as i32;
+            block_entity_data.put_slice(block_section.block_entities.bytes());
         }
 
         let chunk_block_data = ChunkBlockData {
-            heightmaps: &[10, 0, 0, 0],
+            heightmaps: Cow::Owned(CachedNBT::new()),
             data: chunk_data.get_written(),
-            block_entity_count: 0,
+            block_entity_count,
+            block_entity_data: &block_entity_data,
             trust_edges: true,
         };
 
@@ -319,6 +334,19 @@ impl BlockStorage for Chunk {
         let section = &mut self.block_sections[chunk_y];
         if let Some(old) = section.set_block(section_x as _, section_y as _, section_z as _, block)
         {
+            /*let the_block: &Block = block.try_into().unwrap();
+            match the_block {
+                Block::SkeletonSkull { rotation } => {
+                    section.block_entities.get_or_create_mut(section_x as _, section_y as _, section_z as _, 15);
+                }
+                Block::OakSign { rotation, waterlogged } => {
+                    let block_entity = section.block_entities.get_or_create_mut(section_x as _,
+                            section_y as _, section_z as _, 7);
+                    block_entity.nbt.insert_root("Text1", NBTNode::String("{\"text\": \"Hello World!\"}".into()))
+                }
+                _ => ()
+            }*/
+
             self.invalidate_cache();
 
             packet_helper::write_packet(

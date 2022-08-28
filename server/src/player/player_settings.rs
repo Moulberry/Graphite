@@ -9,7 +9,7 @@ pub struct PlayerSettings {
     pub view_distance: u8,
     pub chat_visibility: ChatVisibility,
     pub chat_colors: bool,
-    pub model_customization: i8,
+    pub model_customization: u8,
     pub arm_position: ArmPosition,
     pub text_filtering_enabled: bool,
     pub show_on_server_list: bool,
@@ -43,7 +43,7 @@ impl PlayerSettings {
         self.view_distance = packet.view_distance;
         self.chat_visibility = packet.chat_visibility;
         self.chat_colors = packet.chat_colors;
-        self.model_customization = packet.model_customization;
+        self.model_customization = unsafe { std::mem::transmute(packet.model_customization) };
         self.arm_position = packet.arm_position;
         self.text_filtering_enabled = packet.text_filtering_enabled;
         self.show_on_server_list = packet.show_on_server_list;

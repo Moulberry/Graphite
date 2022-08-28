@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Deref};
 
 // Coordinate (x, y, z)
 
@@ -29,12 +29,36 @@ impl Vec3f for Coordinate {
 // Rotation (yaw, pitch)
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct AutoFixingRotation(f32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Rotation {
     pub yaw: f32,
     pub pitch: f32,
 }
 
 impl Rotation {
+    pub fn fix(&mut self) {
+        self.yaw %= 360.0;
+        if self.yaw < -180.0 {
+            self.yaw += 360.0;
+        } else if self.yaw > 180.0 {
+            self.yaw -= 360.0;
+        }
+
+        self.pitch %= 360.0;
+        if self.pitch < -180.0 {
+            self.pitch += 360.0;
+        } else if self.pitch > 180.0 {
+            self.pitch -= 360.0;
+        }
+
+        debug_assert!(self.yaw >= -180.0);
+        debug_assert!(self.yaw <= 180.0);
+        debug_assert!(self.pitch >= -180.0);
+        debug_assert!(self.pitch <= 180.0);
+    }
+
     pub fn is_diff_u8(self, other: Rotation) -> bool {
         unsafe {
             self.yaw.to_int_unchecked::<u8>() != other.yaw.to_int_unchecked::<u8>()

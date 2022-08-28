@@ -1,4 +1,4 @@
-use super::{PlayerService, Player};
+use super::{Player, PlayerService};
 
 // Class that defines utility methods on player
 // for easily interacting with flag-based metadata values
@@ -10,7 +10,7 @@ macro_rules! flag_impl {
             pub fn [<is_ $name>](&self) -> bool {
                 self.metadata.$flag & $value != 0
             }
-        
+
             pub fn [<set_ $name>](&mut self, value: bool) {
                 if value {
                     self.metadata.[<set_ $flag>](self.metadata.$flag | $value);
@@ -18,7 +18,7 @@ macro_rules! flag_impl {
                     self.metadata.[<set_ $flag>](self.metadata.$flag & !$value);
                 }
             }
-        );     
+        );
     };
 }
 

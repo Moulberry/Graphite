@@ -1169,4616 +1169,5769 @@ impl Item {
 pub struct ItemProperties {
 	pub max_stack_size: u8,
 	pub use_duration: u32,
+	pub has_corresponding_block: bool,
 }
 
 const ITEM_PROPERTIES_LUT: [ItemProperties; 1152] = [
 	ItemProperties { // air
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // granite
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_granite
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // diorite
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_diorite
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // andesite
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_andesite
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobbled_deepslate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_deepslate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // calcite
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tuff
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dripstone_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // grass_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dirt
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // coarse_dirt
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // podzol
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // rooted_dirt
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mud
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_nylium
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_nylium
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobblestone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_planks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_sapling
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_sapling
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_sapling
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_sapling
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_sapling
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_sapling
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_propagule
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bedrock
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sand
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_sand
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gravel
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // coal_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_coal_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // iron_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_iron_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // copper_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_copper_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gold_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_gold_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // redstone_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_redstone_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // emerald_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_emerald_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lapis_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_lapis_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // diamond_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_diamond_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_gold_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_quartz_ore
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // ancient_debris
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // coal_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // raw_iron_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // raw_copper_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // raw_gold_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // amethyst_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // budding_amethyst
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // iron_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // copper_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gold_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // diamond_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // netherite_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // exposed_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // weathered_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oxidized_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // exposed_cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // weathered_cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oxidized_cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // exposed_cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // weathered_cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oxidized_cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // exposed_cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // weathered_cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oxidized_cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_copper_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_exposed_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_weathered_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_oxidized_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_exposed_cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_weathered_cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_oxidized_cut_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_exposed_cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_weathered_cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_oxidized_cut_copper_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_exposed_cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_weathered_cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // waxed_oxidized_cut_copper_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_roots
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // muddy_mangrove_roots
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_stem
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_stem
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_oak_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_spruce_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_birch_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_jungle_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_acacia_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_dark_oak_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_mangrove_log
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_crimson_stem
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_warped_stem
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_oak_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_spruce_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_birch_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_jungle_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_acacia_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_dark_oak_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_mangrove_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_crimson_hyphae
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stripped_warped_hyphae
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_wood
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_hyphae
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_hyphae
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // azalea_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // flowering_azalea_leaves
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sponge
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // wet_sponge
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tinted_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lapis_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chiseled_sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cut_sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobweb
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // grass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // fern
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // azalea
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // flowering_azalea
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_bush
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // seagrass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sea_pickle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_wool
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dandelion
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // poppy
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_orchid
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // allium
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // azure_bluet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_tulip
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_tulip
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_tulip
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_tulip
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oxeye_daisy
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cornflower
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lily_of_the_valley
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // wither_rose
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spore_blossom
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_mushroom
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_mushroom
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_fungus
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_fungus
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_roots
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_roots
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_sprouts
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // weeping_vines
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // twisting_vines
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sugar_cane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // kelp
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // moss_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // moss_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // hanging_roots
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // big_dripleaf
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // small_dripleaf
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bamboo
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_stone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sandstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cut_sandstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // petrified_oak_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobblestone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mud_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // quartz_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_sandstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cut_red_sandstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purpur_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // prismarine_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // prismarine_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_prismarine_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_quartz
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_red_sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_stone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bookshelf
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_cobblestone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // obsidian
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // torch
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_rod
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chorus_plant
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chorus_flower
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purpur_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purpur_pillar
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purpur_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spawner
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chest
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crafting_table
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // farmland
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // furnace
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // ladder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobblestone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // snow
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // ice
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // snow_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cactus
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // clay
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jukebox
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pumpkin
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // carved_pumpkin
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jack_o_lantern
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // netherrack
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // soul_sand
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // soul_soil
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // basalt
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_basalt
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_basalt
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // soul_torch
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // glowstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // infested_stone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // infested_cobblestone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // infested_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // infested_mossy_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // infested_cracked_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // infested_chiseled_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // infested_deepslate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cracked_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chiseled_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // packed_mud
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mud_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cracked_deepslate_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_tiles
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cracked_deepslate_tiles
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chiseled_deepslate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // reinforced_deepslate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_mushroom_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_mushroom_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mushroom_stem
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // iron_bars
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chain
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // melon
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // vine
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // glow_lichen
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mud_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mycelium
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lily_pad
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cracked_nether_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chiseled_nether_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_brick_fence
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sculk
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sculk_vein
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sculk_catalyst
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sculk_shrieker
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // enchanting_table
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_portal_frame
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_stone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_stone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dragon_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sandstone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // ender_chest
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // emerald_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // command_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // beacon
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobblestone_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_cobblestone_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // prismarine_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_sandstone_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_stone_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // granite_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mud_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // andesite_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_nether_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sandstone_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_stone_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // diorite_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blackstone_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobbled_deepslate_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_deepslate_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_brick_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_tile_wall
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // anvil
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chipped_anvil
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // damaged_anvil
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chiseled_quartz_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // quartz_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // quartz_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // quartz_pillar
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // quartz_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // barrier
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // hay_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_carpet
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // packed_ice
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dirt_path
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sunflower
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lilac
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // rose_bush
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // peony
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tall_grass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // large_fern
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_stained_glass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_stained_glass_pane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // prismarine
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // prismarine_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_prismarine
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // prismarine_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // prismarine_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_prismarine_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sea_lantern
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chiseled_red_sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cut_red_sandstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_sandstone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // repeating_command_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chain_command_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magma_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_wart_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_wart_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_nether_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bone_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // structure_void
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_shulker_box
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_glazed_terracotta
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_concrete
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_concrete_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // turtle_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_tube_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_brain_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_bubble_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_fire_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_horn_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tube_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brain_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bubble_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // fire_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // horn_coral_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tube_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brain_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bubble_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // fire_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // horn_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_brain_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_bubble_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_fire_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_horn_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_tube_coral
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tube_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brain_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bubble_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // fire_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // horn_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_tube_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_brain_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_bubble_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_fire_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dead_horn_coral_fan
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_ice
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // conduit
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_granite_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_red_sandstone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_stone_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_diorite_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_cobblestone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_stone_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_sandstone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_quartz_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // granite_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // andesite_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_nether_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_andesite_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // diorite_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobbled_deepslate_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_deepslate_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_tile_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_granite_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_red_sandstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_stone_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_diorite_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mossy_cobblestone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_stone_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_sandstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smooth_quartz_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // granite_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // andesite_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_nether_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_andesite_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // diorite_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cobbled_deepslate_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_deepslate_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // deepslate_tile_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // scaffolding
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // redstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // redstone_torch
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // redstone_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // repeater
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // comparator
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // piston
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sticky_piston
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // slime_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // honey_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // observer
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // hopper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dispenser
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dropper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lectern
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // target
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lever
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lightning_rod
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // daylight_detector
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sculk_sensor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tripwire_hook
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // trapped_chest
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // tnt
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // redstone_lamp
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // note_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_button
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stone_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_weighted_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // heavy_weighted_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_pressure_plate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // iron_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_door
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // iron_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_trapdoor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // oak_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_fence_gate
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // powered_rail
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // detector_rail
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // rail
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // activator_rail
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // saddle
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // minecart
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chest_minecart
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // furnace_minecart
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // tnt_minecart
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // hopper_minecart
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // carrot_on_a_stick
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // warped_fungus_on_a_stick
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // elytra
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // oak_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // oak_chest_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // spruce_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // spruce_chest_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // birch_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // birch_chest_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // jungle_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // jungle_chest_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // acacia_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // acacia_chest_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // dark_oak_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // dark_oak_chest_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // mangrove_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // mangrove_chest_boat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // structure_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jigsaw
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // turtle_helmet
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // scute
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // flint_and_steel
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // apple
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bow
 		max_stack_size: 1,
 		use_duration: 72000,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // arrow
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // coal
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // charcoal
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // emerald
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // lapis_lazuli
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // quartz
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // amethyst_shard
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // raw_iron
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_ingot
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // raw_copper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // copper_ingot
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // raw_gold
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // gold_ingot
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_ingot
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_scrap
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wooden_sword
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wooden_shovel
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wooden_pickaxe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wooden_axe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wooden_hoe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stone_sword
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stone_shovel
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stone_pickaxe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stone_axe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stone_hoe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_sword
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_shovel
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_pickaxe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_axe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_hoe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_sword
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_shovel
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_pickaxe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_axe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_hoe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_sword
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_shovel
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_pickaxe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_axe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_hoe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_sword
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_shovel
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_pickaxe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_axe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_hoe
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stick
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bowl
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // mushroom_stew
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // string
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // feather
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // gunpowder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wheat_seeds
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // wheat
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bread
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // leather_helmet
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // leather_chestplate
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // leather_leggings
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // leather_boots
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chainmail_helmet
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chainmail_chestplate
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chainmail_leggings
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chainmail_boots
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_helmet
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_chestplate
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_leggings
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_boots
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_helmet
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_chestplate
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_leggings
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_boots
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_helmet
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_chestplate
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_leggings
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_boots
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_helmet
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_chestplate
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_leggings
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // netherite_boots
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // flint
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // porkchop
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cooked_porkchop
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // painting
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_apple
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // enchanted_golden_apple
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // oak_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // spruce_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // birch_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // jungle_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // acacia_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dark_oak_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // mangrove_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crimson_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // warped_sign
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bucket
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // water_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // lava_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // powder_snow_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // snowball
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // leather
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // milk_bucket
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pufferfish_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // salmon_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cod_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // tropical_fish_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // axolotl_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // tadpole_bucket
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // brick
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // clay_ball
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // dried_kelp_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // paper
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // book
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // slime_ball
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // egg
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // compass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // recovery_compass
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bundle
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // fishing_rod
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // clock
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // spyglass
 		max_stack_size: 1,
 		use_duration: 1200,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // glowstone_dust
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cod
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // salmon
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // tropical_fish
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pufferfish
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cooked_cod
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cooked_salmon
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // ink_sac
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // glow_ink_sac
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cocoa_beans
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // orange_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // magenta_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // light_blue_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // yellow_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // lime_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pink_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // gray_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // light_gray_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cyan_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // purple_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // blue_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // brown_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // green_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // red_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // black_dye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bone_meal
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // sugar
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cake
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_bed
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cookie
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // filled_map
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // shears
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // melon_slice
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // dried_kelp
 		max_stack_size: 64,
 		use_duration: 16,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pumpkin_seeds
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // melon_seeds
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // beef
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cooked_beef
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chicken
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cooked_chicken
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // rotten_flesh
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // ender_pearl
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // blaze_rod
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // ghast_tear
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // gold_nugget
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // nether_wart
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // potion
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // glass_bottle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // spider_eye
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // fermented_spider_eye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // blaze_powder
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // magma_cream
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // brewing_stand
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cauldron
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // ender_eye
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // glistering_melon_slice
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // allay_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // axolotl_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bat_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bee_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // blaze_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cat_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cave_spider_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chicken_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cod_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cow_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // creeper_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // dolphin_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // donkey_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // drowned_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // elder_guardian_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // enderman_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // endermite_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // evoker_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // fox_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // frog_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // ghast_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // glow_squid_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // goat_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // guardian_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // hoglin_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // horse_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // husk_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // llama_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // magma_cube_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // mooshroom_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // mule_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // ocelot_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // panda_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // parrot_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // phantom_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pig_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // piglin_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // piglin_brute_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pillager_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // polar_bear_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pufferfish_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // rabbit_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // ravager_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // salmon_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // sheep_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // shulker_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // silverfish_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // skeleton_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // skeleton_horse_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // slime_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // spider_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // squid_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // stray_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // strider_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // tadpole_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // trader_llama_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // tropical_fish_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // turtle_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // vex_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // villager_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // vindicator_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wandering_trader_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // warden_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // witch_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wither_skeleton_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // wolf_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // zoglin_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // zombie_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // zombie_horse_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // zombie_villager_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // zombified_piglin_spawn_egg
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // experience_bottle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // fire_charge
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // writable_book
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // written_book
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // item_frame
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // glow_item_frame
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // flower_pot
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // carrot
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // potato
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // baked_potato
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // poisonous_potato
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // map
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_carrot
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // skeleton_skull
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // wither_skeleton_skull
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // player_head
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // zombie_head
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // creeper_head
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // dragon_head
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // nether_star
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // pumpkin_pie
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // firework_rocket
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // firework_star
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // enchanted_book
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // nether_brick
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // prismarine_shard
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // prismarine_crystals
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // rabbit
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cooked_rabbit
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // rabbit_stew
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // rabbit_foot
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // rabbit_hide
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // armor_stand
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_horse_armor
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // golden_horse_armor
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // diamond_horse_armor
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // leather_horse_armor
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // lead
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // name_tag
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // command_block_minecart
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // mutton
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // cooked_mutton
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // white_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_banner
 		max_stack_size: 16,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // end_crystal
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // chorus_fruit
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // popped_chorus_fruit
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // beetroot
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // beetroot_seeds
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // beetroot_soup
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // dragon_breath
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // splash_potion
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // spectral_arrow
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // tipped_arrow
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // lingering_potion
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // shield
 		max_stack_size: 1,
 		use_duration: 72000,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // totem_of_undying
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // shulker_shell
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // iron_nugget
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // knowledge_book
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // debug_stick
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_13
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_cat
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_blocks
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_chirp
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_far
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_mall
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_mellohi
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_stal
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_strad
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_ward
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_11
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_wait
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_otherside
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_5
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // music_disc_pigstep
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // disc_fragment_5
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // trident
 		max_stack_size: 1,
 		use_duration: 72000,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // phantom_membrane
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // nautilus_shell
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // heart_of_the_sea
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // crossbow
 		max_stack_size: 1,
 		use_duration: 28,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // suspicious_stew
 		max_stack_size: 1,
 		use_duration: 32,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // loom
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // flower_banner_pattern
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // creeper_banner_pattern
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // skull_banner_pattern
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // mojang_banner_pattern
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // globe_banner_pattern
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // piglin_banner_pattern
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // goat_horn
 		max_stack_size: 1,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // composter
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // barrel
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smoker
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blast_furnace
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cartography_table
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // fletching_table
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // grindstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // smithing_table
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // stonecutter
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // bell
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lantern
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // soul_lantern
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // sweet_berries
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // glow_berries
 		max_stack_size: 64,
 		use_duration: 32,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // campfire
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // soul_campfire
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // shroomlight
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // honeycomb
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // bee_nest
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // beehive
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // honey_bottle
 		max_stack_size: 16,
 		use_duration: 40,
+		has_corresponding_block: false,
 	},
 	ItemProperties { // honeycomb_block
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lodestone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // crying_obsidian
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blackstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blackstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blackstone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gilded_blackstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // chiseled_polished_blackstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_brick_slab
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // polished_blackstone_brick_stairs
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cracked_polished_blackstone_bricks
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // respawn_anchor
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // white_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // orange_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // magenta_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_blue_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // yellow_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // lime_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pink_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // gray_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // light_gray_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // cyan_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // purple_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // blue_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // brown_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // green_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // red_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // black_candle
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // small_amethyst_bud
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // medium_amethyst_bud
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // large_amethyst_bud
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // amethyst_cluster
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pointed_dripstone
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // ochre_froglight
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // verdant_froglight
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // pearlescent_froglight
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // frogspawn
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: true,
 	},
 	ItemProperties { // echo_shard
 		max_stack_size: 64,
 		use_duration: 0,
+		has_corresponding_block: false,
 	},
 ];
 
@@ -5793,3 +6946,4 @@ impl TryFrom<u16> for Item {
 		Ok(unsafe { std::mem::transmute(value) })
 	}
 }
+

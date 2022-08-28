@@ -58,7 +58,7 @@ identify_packets! {
     SetCarriedItem = 0x28,
     // SetCommandBlock = 0x29,
     // SetCommandBlockMinecart = 0x2a,
-    SetCreativeModeSlot = 0x2b,
+    SetCreativeModeSlot<'_> = 0x2b,
     // SetJigsawBlock = 0x2c,
     // SetStructureBlock = 0x2d,
     // UpdateSign = 0x2e,
@@ -250,9 +250,9 @@ slice_serializable! {
 // Set Creative Mode Slot
 slice_serializable! {
     #[derive(Debug)]
-    pub struct SetCreativeModeSlot {
+    pub struct SetCreativeModeSlot<'a> {
         pub slot: i16 as BigEndian,
-        pub item: Option<ProtocolItemStack>
+        pub item: Option<ProtocolItemStack<'a>>
     }
 }
 

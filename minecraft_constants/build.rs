@@ -6,11 +6,14 @@ mod block;
 mod entities;
 #[path = "build/item.rs"]
 mod item;
+#[path = "build/placement.rs"]
+mod placement;
 
 fn main() {
-    block::write_block_states().unwrap();
+    let (placement_method_returns, aliases) = block::write_block_states().unwrap();
     item::write_items().unwrap();
     entities::write_entities().unwrap();
+    placement::write_placement(placement_method_returns, aliases).unwrap();
 
     println!("cargo:rerun-if-changed=./data");
     println!("cargo:rerun-if-changed=build.rs");

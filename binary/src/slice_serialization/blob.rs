@@ -1,12 +1,42 @@
+use std::borrow::Cow;
+
+use crate::nbt::{decode, CachedNBT};
+
 use super::*;
 
 pub enum NBTBlob {}
 
-impl<'a> SliceSerializable<'a, &'a [u8]> for NBTBlob {
+impl<'a> SliceSerializable<'a, Cow<'a, CachedNBT>> for NBTBlob {
+    type CopyType = &'a CachedNBT;
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, CachedNBT>> {
+        let nbt = decode::read(bytes)?;
+        Ok(Cow::Owned(nbt.into()))
+    }
+
+    fn get_write_size(data: &CachedNBT) -> usize {
+        data.to_bytes().len()
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &CachedNBT) -> &'b mut [u8] {
+        let to_write = data.to_bytes();
+        bytes[0..to_write.len()].clone_from_slice(to_write);
+        &mut bytes[to_write.len()..]
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'a Cow<'a, CachedNBT>) -> Self::CopyType {
+        t
+    }
+}
+
+pub enum WriteOnlyBlob {}
+
+impl<'a> SliceSerializable<'a, &'a [u8]> for WriteOnlyBlob {
     type CopyType = &'a [u8];
 
-    fn read(_bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
-        todo!("nbt reading not implemented")
+    fn read(_: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
+        panic!("tried to read a WriteOnlyBlob");
     }
 
     fn get_write_size(data: &[u8]) -> usize {

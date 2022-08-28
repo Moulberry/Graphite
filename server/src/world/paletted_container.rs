@@ -17,7 +17,7 @@ pub type BiomePalettedContainer =
 
 #[derive(Debug, Clone)]
 pub struct ArrayContainer<T, const HALF_CAP: usize> {
-    indices: heapless::Vec<T, 16>,
+    indices: heapless::Vec<(T, usize), 16>,
     contents: [u8; HALF_CAP],
 }
 
@@ -71,7 +71,7 @@ where
                     return None;
                 }
 
-                let mut array = Self::filled_array(value);
+                let mut array = Self::filled_array(value, 16 * 16 * 16 - 1);
                 array.set_new(Self::get_index(x, y, z), new_value);
                 self.replace(Self::Array(Box::from(array)));
 
@@ -104,9 +104,9 @@ where
         }
     }
 
-    fn filled_array(single: T) -> ArrayContainer<T, HALF_CAP> {
+    fn filled_array(single: T, count: usize) -> ArrayContainer<T, HALF_CAP> {
         let mut indices = heapless::Vec::new();
-        let _ = indices.push(single);
+        let _ = indices.push((single, count));
 
         ArrayContainer {
             indices,
@@ -127,24 +127,37 @@ where
 {
     fn get(&self, index: usize) -> T {
         let palette_id = self.get_as_palette(index);
-        self.indices[palette_id as usize]
+        self.indices[palette_id as usize].0
     }
 
     fn set(&mut self, index: usize, new_value: T) -> ArraySetResult<T> {
-        for (palette_index, value) in self.indices.iter().enumerate() {
-            if *value == new_value {
-                if let Some(old) = self.set_to_palette(index, palette_index) {
-                    return ArraySetResult::Changed(self.indices[old as usize]);
-                } else {
-                    return ArraySetResult::Unchanged;
-                }
+        for (palette_index, (value, value_count)) in self.indices.iter_mut().enumerate() {
+            if *value_count == 0 {
+                *value = new_value;
+            } else if *value != new_value {
+                continue;
+            }
+
+            if let Some(old) = Self::set_to_palette(&mut self.contents, index, palette_index) {
+                debug_assert_ne!(old as usize, palette_index);
+                *value_count += 1;
+
+                // Decrease old count
+                debug_assert!(self.indices[old as usize].1 >= 1);
+                self.indices[old as usize].1 -= 1;
+
+                return ArraySetResult::Changed(self.indices[old as usize].0);
+            } else {
+                return ArraySetResult::Unchanged;
             }
         }
 
         if self.indices.len() < self.indices.capacity() {
-            let _ = self.indices.push(new_value);
-            if let Some(old) = self.set_to_palette(index, self.indices.len() - 1) {
-                ArraySetResult::Changed(self.indices[old as usize])
+            let _ = self.indices.push((new_value, 1));
+            if let Some(old) =
+                Self::set_to_palette(&mut self.contents, index, self.indices.len() - 1)
+            {
+                ArraySetResult::Changed(self.indices[old as usize].0)
             } else {
                 panic!("couldn't find value in palette, but when setting the value was unchanged")
             }
@@ -155,24 +168,28 @@ where
 
     fn set_new(&mut self, index: usize, new_value: T) {
         if self.indices.len() < self.indices.capacity() {
-            let _ = self.indices.push(new_value);
-            self.set_to_palette(index, self.indices.len() - 1);
+            let _ = self.indices.push((new_value, 1));
+            Self::set_to_palette(&mut self.contents, index, self.indices.len() - 1);
         } else {
-            panic!("Not enough room in palette");
+            panic!("not enough room in palette");
         }
     }
 
     fn get_as_palette(&self, content_index: usize) -> u8 {
         let nibble_pair = self.contents[content_index / 2];
         if content_index % 2 == 0 {
-            nibble_pair & 0b11110000
+            (nibble_pair & 0b11110000) >> 4
         } else {
             nibble_pair & 0b00001111
         }
     }
 
-    fn set_to_palette(&mut self, content_index: usize, palette_index: usize) -> Option<u8> {
-        let nibble_pair = self.contents[content_index / 2];
+    fn set_to_palette(
+        contents: &mut [u8; HALF_CAP],
+        content_index: usize,
+        palette_index: usize,
+    ) -> Option<u8> {
+        let nibble_pair = contents[content_index / 2];
 
         let offset = ((content_index + 1) % 2) * 4;
         let mask = 0b1111 << offset;
@@ -180,8 +197,8 @@ where
         let new_nibble_pair = nibble_pair & (!mask) | ((palette_index as u8) << offset);
 
         if new_nibble_pair != nibble_pair {
-            self.contents[content_index / 2] = new_nibble_pair;
-            Some(nibble_pair & mask)
+            contents[content_index / 2] = new_nibble_pair;
+            Some((nibble_pair & mask) >> offset)
         } else {
             None
         }
@@ -191,7 +208,7 @@ where
 impl<'a, T: 'static, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize>
     SliceSerializable<'a> for PalettedContainer<T, SIDE_LEN, HALF_CAP, DIRECT_LEN>
 where
-    T: Copy + Into<i32>,
+    T: Copy + Into<i32> + std::fmt::Debug,
 {
     type CopyType = &'a Self;
 
@@ -206,18 +223,17 @@ where
     unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &'a Self) -> &'b mut [u8] {
         match data {
             Self::Single(value) => {
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0); // 0 bits per block
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 0); // 0 bits per block
                 bytes = VarInt::write(bytes, (*value).into()); // the block
-                <Single as SliceSerializable<'_, u8>>::write(bytes, 0) // 0 size array
+                <Single as SliceSerializable<u8>>::write(bytes, 0) // 0 size array
             }
             Self::Array(array) => {
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 4); // 4 bits per block
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 4); // 4 bits per block
 
                 // palette
-                bytes =
-                    <Single as SliceSerializable<'_, u8>>::write(bytes, array.indices.len() as _); // palette length
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, array.indices.len() as _); // palette length
                 for entry in &array.indices {
-                    bytes = VarInt::write(bytes, (*entry).into()); // the palette entry
+                    bytes = VarInt::write(bytes, ((*entry).0).into()); // the palette entry
                 }
 
                 // data
@@ -228,7 +244,7 @@ where
             Self::Direct(_direct) => {
                 todo!();
             } /*Self::Direct { data } => {
-                  bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15); // 15 bits per block
+                  bytes = <Single as SliceSerializable<u8>>::write(bytes, 15); // 15 bits per block
 
                   bytes = VarInt::write(bytes, 1024 as i32);
                   bytes[..8192].clone_from_slice(std::mem::transmute::<&[u64; 1024], &[u8; 8192]>(&data));
@@ -315,12 +331,12 @@ impl<'a> SliceSerializable<'a> for PalettedContainer {
     unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &'a Self) -> &'b mut [u8] {
         match data {
             Self::Single { value } => {
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 0); // 0 bits per block
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 0); // 0 bits per block
                 bytes = slice_serialization::VarInt::write(bytes, *value as i32); // the block
-                <Single as SliceSerializable<'_, u8>>::write(bytes, 0) // 0 size array
+                <Single as SliceSerializable<u8>>::write(bytes, 0) // 0 size array
             }
             Self::Direct { data } => {
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 15); // 15 bits per block
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 15); // 15 bits per block
 
                 bytes = VarInt::write(bytes, 1024 as i32);
                 bytes[..8192].clone_from_slice(std::mem::transmute::<&[u64; 1024], &[u8; 8192]>(&data));

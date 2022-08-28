@@ -9,11 +9,13 @@ use serde_derive::Deserialize;
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Item {
-    id: usize,
+    pub id: usize,
     #[serde(default = "get_default_max_stack_size")]
-    max_stack_size: u8,
+    pub max_stack_size: u8,
+    #[serde(default)]
+    pub corresponding_block: String,
     #[serde(default = "get_default_use_duration")]
-    use_duration: u32,
+    pub use_duration: u32,
 }
 
 fn get_default_max_stack_size() -> u8 {
@@ -55,6 +57,7 @@ pub fn write_items() -> anyhow::Result<()> {
     write_buffer.push_str("pub struct ItemProperties {\n");
     write_buffer.push_str("\tpub max_stack_size: u8,\n");
     write_buffer.push_str("\tpub use_duration: u32,\n");
+    write_buffer.push_str("\tpub has_corresponding_block: bool,\n");
     write_buffer.push_str("}\n\n");
 
     writeln!(
@@ -66,6 +69,11 @@ pub fn write_items() -> anyhow::Result<()> {
         writeln!(write_buffer, "\tItemProperties {{ // {}", item_name)?;
         writeln!(write_buffer, "\t\tmax_stack_size: {},", item.max_stack_size)?;
         writeln!(write_buffer, "\t\tuse_duration: {},", item.use_duration)?;
+        writeln!(
+            write_buffer,
+            "\t\thas_corresponding_block: {},",
+            !item.corresponding_block.is_empty()
+        )?;
         write_buffer.push_str("\t},\n");
     }
     write_buffer.push_str("];\n\n");
@@ -86,7 +94,7 @@ pub fn write_items() -> anyhow::Result<()> {
     )?;
     write_buffer.push_str("\t\tOk(unsafe { std::mem::transmute(value) })\n");
     write_buffer.push_str("\t}\n");
-    write_buffer.push('}');
+    write_buffer.push_str("}\n\n");
 
     let mut f = crate::file_src("item.rs");
     f.write_all(write_buffer.as_bytes())?;

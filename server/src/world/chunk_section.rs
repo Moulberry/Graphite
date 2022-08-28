@@ -2,7 +2,10 @@ use std::alloc::Layout;
 
 use binary::slice_serialization::{BigEndian, SliceSerializable};
 
-use super::paletted_container::{BiomePalettedContainer, BlockPalettedContainer};
+use super::{
+    block_entity_storage::BlockEntityStorage,
+    paletted_container::{BiomePalettedContainer, BlockPalettedContainer},
+};
 
 #[derive(Debug)]
 pub struct ChunkTemplate {
@@ -12,10 +15,11 @@ pub struct ChunkTemplate {
 }
 
 impl ChunkTemplate {
-    pub fn get(&'static self) -> ChunkSection {
+    pub fn get(&'static self, section_y: usize) -> ChunkSection {
         ChunkSection {
             non_air_blocks: self.non_air_blocks,
             copy_on_write: true,
+            block_entities: BlockEntityStorage::new(section_y),
             block_palette: &self.block_palette as *const _ as *mut _,
             biome_palette: &self.biome_palette as *const _ as *mut _,
         }
@@ -29,6 +33,8 @@ pub struct ChunkSection {
     // i.e. convert self from Borrowed -> Owned
     copy_on_write: bool,
 
+    pub(crate) block_entities: BlockEntityStorage,
+
     // Serialized values
     non_air_blocks: u16,
     block_palette: *mut BlockPalettedContainer,
@@ -37,11 +43,30 @@ pub struct ChunkSection {
 
 impl ChunkSection {
     pub fn fill_blocks(&mut self, block: u16) -> bool {
+        if block == 0 {
+            self.non_air_blocks = 0;
+        } else {
+            self.non_air_blocks = 16 * 16 * 16;
+        }
+
         self.get_block_palette_mut().fill(block)
     }
 
     pub fn set_block(&mut self, x: u8, y: u8, z: u8, block: u16) -> Option<u16> {
-        self.get_block_palette_mut().set(x, y, z, block)
+        if let Some(previous) = self.get_block_palette_mut().set(x, y, z, block) {
+            debug_assert_ne!(previous, block);
+
+            // Update non_air_block count
+            if previous == 0 {
+                self.non_air_blocks += 1;
+            } else if block == 0 {
+                self.non_air_blocks -= 1;
+            }
+
+            Some(previous)
+        } else {
+            None
+        }
     }
 
     pub fn get_block(&self, x: u8, y: u8, z: u8) -> u16 {
@@ -91,12 +116,14 @@ impl Drop for ChunkSection {
 impl ChunkSection {
     pub fn new(
         non_air_blocks: u16,
+        section_y: usize,
         block_palette: BlockPalettedContainer,
         biome_palette: BiomePalettedContainer,
     ) -> Self {
         Self {
             non_air_blocks,
             copy_on_write: false,
+            block_entities: BlockEntityStorage::new(section_y),
             block_palette: Box::into_raw(Box::from(block_palette)),
             biome_palette: Box::into_raw(Box::from(biome_palette)),
         }
@@ -115,14 +142,14 @@ impl<'a> SliceSerializable<'a> for ChunkSection {
     }
 
     unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &'a Self) -> &'b mut [u8] {
-        bytes = <BigEndian as SliceSerializable<'_, u16>>::write(bytes, data.non_air_blocks);
+        bytes = <BigEndian as SliceSerializable<u16>>::write(bytes, data.non_air_blocks);
         bytes = <BlockPalettedContainer as SliceSerializable>::write(bytes, &*data.block_palette);
         bytes = <BiomePalettedContainer as SliceSerializable>::write(bytes, &*data.biome_palette);
         bytes
     }
 
     fn get_write_size(data: &'a Self) -> usize {
-        <BigEndian as SliceSerializable<'_, u16>>::get_write_size(data.non_air_blocks)
+        <BigEndian as SliceSerializable<u16>>::get_write_size(data.non_air_blocks)
             + unsafe {
                 <BlockPalettedContainer as SliceSerializable>::get_write_size(&*data.block_palette)
                     + <BiomePalettedContainer as SliceSerializable>::get_write_size(

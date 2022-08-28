@@ -1,6 +1,11 @@
-use binary::slice_serialization::{
-    self, slice_serializable, AttemptFrom, BigEndian, Single, SizedArray, SizedBlob, SizedString,
-    SliceSerializable, VarInt,
+use std::borrow::Cow;
+
+use binary::{
+    nbt::CachedNBT,
+    slice_serialization::{
+        self, slice_serializable, AttemptFrom, BigEndian, NBTBlob, Single, SizedArray, SizedBlob,
+        SizedString, SliceSerializable, VarInt,
+    },
 };
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
@@ -102,19 +107,19 @@ pub enum EquipmentSlot {
 
 slice_serializable! {
     #[derive(Debug)]
-    pub struct ProtocolItemStack {
+    pub struct ProtocolItemStack<'a> {
         pub item: i32 as VarInt,
         pub count: i8 as Single,
-        pub temp_nbt: u8 as Single
+        pub nbt: Cow<'a, CachedNBT> as NBTBlob
     }
 }
 
-impl Default for ProtocolItemStack {
+impl<'a> Default for ProtocolItemStack<'a> {
     fn default() -> Self {
         Self {
             item: 1,
             count: 1,
-            temp_nbt: 0,
+            nbt: Cow::Owned(CachedNBT::new()),
         }
     }
 }
@@ -178,7 +183,7 @@ impl SliceSerializable<'_, f32> for ByteRotation {
     }
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<f32> {
-        let byte = <Single as SliceSerializable<u8>>::read(bytes)?;
+        let byte: u8 = Single::read(bytes)?;
         Ok(byte as f32 * 360.0 / 256.0)
     }
 
@@ -204,7 +209,7 @@ impl SliceSerializable<'_, f32> for QuantizedShort {
     }
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<f32> {
-        let short = <BigEndian as SliceSerializable<i16>>::read(bytes)?;
+        let short: i16 = BigEndian::read(bytes)?;
         Ok(short as f32 * 8000.0)
     }
 
@@ -225,6 +230,43 @@ pub struct BlockPosition {
     pub x: i32,
     pub y: i16,
     pub z: i32,
+}
+
+impl BlockPosition {
+    pub fn relative(self, direction: Direction) -> Self {
+        match direction {
+            Direction::Down => Self {
+                x: self.x,
+                y: self.y - 1,
+                z: self.z,
+            },
+            Direction::Up => Self {
+                x: self.x,
+                y: self.y + 1,
+                z: self.z,
+            },
+            Direction::North => Self {
+                x: self.x,
+                y: self.y,
+                z: self.z - 1,
+            },
+            Direction::South => Self {
+                x: self.x,
+                y: self.y,
+                z: self.z + 1,
+            },
+            Direction::West => Self {
+                x: self.x - 1,
+                y: self.y,
+                z: self.z,
+            },
+            Direction::East => Self {
+                x: self.x + 1,
+                y: self.y,
+                z: self.z,
+            },
+        }
+    }
 }
 
 impl SliceSerializable<'_> for BlockPosition {
@@ -249,11 +291,11 @@ impl SliceSerializable<'_> for BlockPosition {
             | ((data.z as i64 & 0x3FFFFFF) << 12)
             | (data.y as i64 & 0xFFF);
 
-        <slice_serialization::BigEndian as SliceSerializable<'_, i64>>::write(bytes, value)
+        <slice_serialization::BigEndian as SliceSerializable<i64>>::write(bytes, value)
     }
 
     fn get_write_size(_: Self) -> usize {
-        <slice_serialization::BigEndian as SliceSerializable<'_, i64>>::get_write_size(0)
+        <slice_serialization::BigEndian as SliceSerializable<i64>>::get_write_size(0)
     }
 }
 
@@ -261,14 +303,18 @@ impl SliceSerializable<'_> for BlockPosition {
 
 pub(crate) enum EquipmentList {}
 
-impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> for EquipmentList {
-    type CopyType = &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>;
+impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack<'a>>)>>
+    for EquipmentList
+{
+    type CopyType = &'a Vec<(EquipmentSlot, Option<ProtocolItemStack<'a>>)>;
 
     fn as_copy_type(t: &'a Vec<(EquipmentSlot, Option<ProtocolItemStack>)>) -> Self::CopyType {
         t
     }
 
-    fn read(_: &mut &'a [u8]) -> anyhow::Result<Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> {
+    fn read(
+        _: &mut &'a [u8],
+    ) -> anyhow::Result<Vec<(EquipmentSlot, Option<ProtocolItemStack<'a>>)>> {
         unimplemented!()
     }
 
@@ -282,12 +328,12 @@ impl<'a> SliceSerializable<'a, Vec<(EquipmentSlot, Option<ProtocolItemStack>)>> 
                 slot_id |= 0b10000000;
             }
 
-            bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, slot_id);
+            bytes = <Single as SliceSerializable<u8>>::write(bytes, slot_id);
             if let Some(stack) = stack {
-                bytes = <Single as SliceSerializable<'_, bool>>::write(bytes, true);
+                bytes = <Single as SliceSerializable<bool>>::write(bytes, true);
                 bytes = ProtocolItemStack::write(bytes, stack);
             } else {
-                bytes = <Single as SliceSerializable<'_, bool>>::write(bytes, false);
+                bytes = <Single as SliceSerializable<bool>>::write(bytes, false);
             }
         }
         bytes
@@ -342,7 +388,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
         match data {
             CommandNode::Root { children } => {
                 let flags = 0; // root type
-                let bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, flags);
+                let bytes = <Single as SliceSerializable<u8>>::write(bytes, flags);
                 SizedArray::<VarInt>::write(bytes, children)
             }
             CommandNode::Literal {
@@ -355,14 +401,14 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 flags |= if *executable { 4 } else { 0 };
                 flags |= if redirect.is_some() { 8 } else { 0 };
 
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, flags);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, flags);
                 bytes = SizedArray::<VarInt>::write(bytes, children);
 
                 if let Some(redirect) = redirect {
                     VarInt::write(bytes, *redirect);
                 }
 
-                <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, name)
+                <SizedString<0> as SliceSerializable<&'_ str>>::write(bytes, name)
             }
             CommandNode::Argument {
                 children,
@@ -377,19 +423,19 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 flags |= if redirect.is_some() { 8 } else { 0 };
                 flags |= if suggestion.is_some() { 16 } else { 0 };
 
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, flags);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, flags);
                 bytes = SizedArray::<VarInt>::write(bytes, children);
 
                 if let Some(redirect) = redirect {
                     VarInt::write(bytes, *redirect);
                 }
 
-                bytes = <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, name);
+                bytes = <SizedString<0> as SliceSerializable<&'_ str>>::write(bytes, name);
 
                 bytes = CommandNodeParser::write(bytes, *parser);
 
                 if let Some(suggestion) = suggestion {
-                    <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(
+                    <SizedString<0> as SliceSerializable<&'_ str>>::write(
                         bytes,
                         (*suggestion).into(),
                     );
@@ -419,7 +465,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 VarInt::get_write_size(children.len() as _) + // children size
                 VARINT_MAX * children.len() + // children
                 redirect.map_or(0, VarInt::get_write_size) + // redirect
-                <SizedString<0> as SliceSerializable<'_, &'_ str>>::get_write_size(name)
+                <SizedString<0> as SliceSerializable<&'_ str>>::get_write_size(name)
                 // name
             }
             CommandNode::Argument {
@@ -435,7 +481,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 VARINT_MAX * children.len() + // children
                 redirect.map_or(0, VarInt::get_write_size) + // redirect
                 (if suggestion.is_some() { 33 } else { 0 }) +
-                <SizedString<0> as SliceSerializable<'_, &'_ str>>::get_write_size(name) + // name
+                <SizedString<0> as SliceSerializable<&'_ str>>::get_write_size(name) + // name
                 CommandNodeParser::get_write_size(*parser) // parser
             }
         }
@@ -618,7 +664,7 @@ impl SliceSerializable<'_> for CommandNodeParser {
     unsafe fn write(mut bytes: &mut [u8], data: Self) -> &mut [u8] {
         let self_id: u8 = data.into();
 
-        bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, self_id);
+        bytes = <Single as SliceSerializable<u8>>::write(bytes, self_id);
         match data {
             CommandNodeParser::Float { min, max } => {
                 write_optional_min_max::<BigEndian, _>(bytes, min, max)
@@ -633,23 +679,23 @@ impl SliceSerializable<'_> for CommandNodeParser {
                 write_optional_min_max::<BigEndian, _>(bytes, min, max)
             }
             CommandNodeParser::String { mode } => {
-                <Single as SliceSerializable<'_, u8>>::write(bytes, mode as u8)
+                <Single as SliceSerializable<u8>>::write(bytes, mode as u8)
             }
             CommandNodeParser::Entity {
                 single,
                 player_only,
             } => {
                 let flags = if single { 1 } else { 0 } | if player_only { 2 } else { 0 };
-                <Single as SliceSerializable<'_, u8>>::write(bytes, flags)
+                <Single as SliceSerializable<u8>>::write(bytes, flags)
             }
             CommandNodeParser::ScoreHolder { allow_many } => {
-                <Single as SliceSerializable<'_, bool>>::write(bytes, allow_many)
+                <Single as SliceSerializable<bool>>::write(bytes, allow_many)
             }
             CommandNodeParser::ResourceOrTag { registry } => {
-                <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, registry)
+                <SizedString<0> as SliceSerializable<&'_ str>>::write(bytes, registry)
             }
             CommandNodeParser::Resource { registry } => {
-                <SizedString<0> as SliceSerializable<'_, &'_ str>>::write(bytes, registry)
+                <SizedString<0> as SliceSerializable<&'_ str>>::write(bytes, registry)
             }
             _ => bytes,
         }
@@ -689,7 +735,7 @@ where
     S: SliceSerializable<'a, T, CopyType = T>,
 {
     let flags: u8 = if min.is_some() { 1 } else { 0 } | if max.is_some() { 2 } else { 0 };
-    bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, flags);
+    bytes = <Single as SliceSerializable<u8>>::write(bytes, flags);
 
     if let Some(min) = min {
         bytes = S::write(bytes, min);

@@ -4,8 +4,8 @@ use protocol::{
     play::{
         client::{
             self, AcceptTeleportation, ClientInformation, CustomPayload, InteractEntity,
-            MovePlayerOnGround, MovePlayerPos, MovePlayerPosRot, MovePlayerRot, PlayerHandAction,
-            PlayerMoveAction, UseItem, UseItemOn, PlayerAbilities,
+            MovePlayerOnGround, MovePlayerPos, MovePlayerPosRot, MovePlayerRot, PlayerAbilities,
+            PlayerHandAction, PlayerMoveAction, UseItem, UseItemOn,
         },
         server::{AnimateEntity, ContainerSetSlot, EntityAnimation},
     },
@@ -216,14 +216,18 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         let mut is_first_use = false;
 
         match packet.hand {
-            Hand::Main => if !self.interaction_state.processed_use_item_mainhand {
-                self.interaction_state.processed_use_item_mainhand = true;
-                is_first_use = true;
-            },
-            Hand::Off => if !self.interaction_state.processed_use_item_offhand {
-                self.interaction_state.processed_use_item_offhand = true;
-                is_first_use = !self.interaction_state.processed_use_item_mainhand;
-            },
+            Hand::Main => {
+                if !self.interaction_state.processed_use_item_mainhand {
+                    self.interaction_state.processed_use_item_mainhand = true;
+                    is_first_use = true;
+                }
+            }
+            Hand::Off => {
+                if !self.interaction_state.processed_use_item_offhand {
+                    self.interaction_state.processed_use_item_offhand = true;
+                    is_first_use = !self.interaction_state.processed_use_item_mainhand;
+                }
+            }
         }
 
         if is_first_use {
@@ -241,13 +245,15 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
                     Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
                     Hand::Off => InventorySlot::OffHand,
                 };
-                if !self.inventory.is_changed(slot).unwrap() {
-                    self.write_packet(&ContainerSetSlot {
+                if !self.inventory.has_changed(slot).unwrap() {
+                    let packet = ContainerSetSlot {
                         window_id: 0,
                         state_id: 0,
                         slot: slot.get_index().unwrap() as _,
                         item: self.inventory.get(slot).unwrap().into(),
-                    });
+                    };
+
+                    self.packets.write_packet(&packet);
                 }
             }
         }
@@ -285,8 +291,8 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
                 Hand::Main => InventorySlot::Hotbar(self.selected_hotbar_slot as _),
                 Hand::Off => InventorySlot::OffHand,
             };
-            if !self.inventory.is_changed(slot).unwrap() {
-                self.write_packet(&ContainerSetSlot {
+            if !self.inventory.has_changed(slot).unwrap() {
+                self.packets.write_packet(&ContainerSetSlot {
                     window_id: 0,
                     state_id: 0,
                     slot: slot.get_index().unwrap() as _,
@@ -325,7 +331,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             MoveAction::ReleaseShiftKey => self.set_shift_key_down(false),
             MoveAction::StopSleeping => {
                 self.metadata.set_sleeping_pos(None);
-            },
+            }
             MoveAction::StartSprinting => self.set_sprinting(true),
             MoveAction::StopSprinting => self.set_sprinting(false),
             MoveAction::StartRidingJump => (),
@@ -344,7 +350,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
                 //         }
                 //     },
                 // }
-            },
+            }
         }
 
         Ok(())
@@ -395,14 +401,14 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         };
 
         // Write animation packet as viewable, excluding self
-        self.write_viewable_packet(
+        self.packets.write_viewable_packet(
             &AnimateEntity {
                 id: self.entity_id.as_i32(),
                 animation,
             },
             true,
         );
-        
+
         // Use the swing to perform interactions
         if self.interaction_state.ignore_swing_ticks == 0 {
             if let Some(position) = self.interaction_state.breaking_block {

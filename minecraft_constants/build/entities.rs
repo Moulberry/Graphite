@@ -43,9 +43,9 @@ pub fn write_entities() -> anyhow::Result<()> {
 pub struct InvalidMetadataChanges;
 
 pub trait Metadata {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+    // fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
     fn read_changes(&mut self, bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges>;
-    unsafe fn write_changes<'a>(&mut self, bytes: &'a mut [u8]) -> &'a mut [u8];
+    unsafe fn write_changes<'b>(&mut self, bytes: &'b mut [u8]) -> &'b mut [u8];
     fn get_write_size(&self) -> usize;
 }
 
@@ -91,9 +91,21 @@ use binary::slice_serialization::*;
 
         let metadata = &entity_data.metadata;
 
+        let mut lifetime = String::new();
+        for (_, metatype) in metadata {
+            if metatype == "item_stack" {
+                lifetime.push_str("<'a>");
+                break;
+            }
+        }
+
         writeln!(write_buffer, "#[readonly::make]")?;
         writeln!(write_buffer, "#[derive(Default)]")?;
-        writeln!(write_buffer, "pub struct {}Metadata {{", pascal_name)?;
+        writeln!(
+            write_buffer,
+            "pub struct {}Metadata{} {{",
+            pascal_name, lifetime
+        )?;
         writeln!(
             write_buffer,
             "\tchanges: MetadataChanges<{}>,",
@@ -114,7 +126,11 @@ use binary::slice_serialization::*;
         }
         write_buffer.push_str("}\n\n");
 
-        writeln!(write_buffer, "impl {}Metadata {{", pascal_name)?;
+        writeln!(
+            write_buffer,
+            "impl{} {}Metadata{} {{",
+            lifetime, pascal_name, lifetime
+        )?;
         for (index, (name, typ)) in metadata.iter().enumerate() {
             writeln!(
                 write_buffer,
@@ -152,7 +168,7 @@ use binary::slice_serialization::*;
         write_buffer.push_str("\t}\n");
 
         write_buffer.push_str("\n\t#[inline(always)]\n");
-        write_buffer.push_str("\tpub unsafe fn write_for_index<'a>(&self, mut bytes: &'a mut [u8], index: usize) -> &'a mut [u8] {\n");
+        write_buffer.push_str("\tpub unsafe fn write_for_index<'b>(&self, mut bytes: &'b mut [u8], index: usize) -> &'b mut [u8] {\n");
         write_buffer.push_str("\t\tmatch index {\n");
         for (index, (name, typ)) in metadata.iter().enumerate() {
             let mut name = name.as_str();
@@ -165,12 +181,12 @@ use binary::slice_serialization::*;
             writeln!(write_buffer, "\t\t\t{} => {{", index)?;
             writeln!(
                 write_buffer,
-                "\t\t\t\tbytes = <Single as SliceSerializable<'_, u8>>::write(bytes, {});",
+                "\t\t\t\tbytes = <Single as SliceSerializable<u8>>::write(bytes, {});",
                 index
             )?;
             writeln!(
                 write_buffer,
-                "\t\t\t\tbytes = <Single as SliceSerializable<'_, u8>>::write(bytes, {});",
+                "\t\t\t\tbytes = <Single as SliceSerializable<u8>>::write(bytes, {});",
                 serialize_id
             )?;
             write_buffer.push_str("\t\t\t\t");
@@ -183,11 +199,15 @@ use binary::slice_serialization::*;
 
         write_buffer.push_str("}\n\n");
 
-        write!(write_buffer, "impl Metadata for {}Metadata {{", pascal_name)?;
+        write!(
+            write_buffer,
+            "impl{} Metadata for {}Metadata{} {{",
+            lifetime, pascal_name, lifetime
+        )?;
         write_buffer.push_str(r#"
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    /*fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
+    }*/
 
     fn read_changes(&mut self, _bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges> {
         unimplemented!();
@@ -216,12 +236,12 @@ use binary::slice_serialization::*;
         }
     }
 
-    unsafe fn write_changes<'a>(&mut self, mut bytes: &'a mut [u8]) -> &'a mut [u8] {
+    unsafe fn write_changes<'b>(&mut self, mut bytes: &'b mut [u8]) -> &'b mut [u8] {
         match self.changes {
             MetadataChanges::NoChanges => {},
             MetadataChanges::SingleChange { index } => {
                 bytes = self.write_for_index(bytes, index);
-                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             },
             MetadataChanges::ManyChanges { indices } => {
 "#,
@@ -235,7 +255,7 @@ use binary::slice_serialization::*;
         }
 
         write_buffer.push_str(
-            r#"                bytes = <Single as SliceSerializable<'_, u8>>::write(bytes, 255);
+            r#"                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
             }
         }
         self.changes = MetadataChanges::NoChanges;
@@ -305,19 +325,29 @@ use binary::slice_serialization::*;
 
 fn serialize_type_to_write(typ: &String, varname: &str) -> String {
     match typ.as_str() {
-        "byte" => format!("<Single as SliceSerializable<'_, u8>>::write(bytes, self.{varname})"),
+        "byte" => format!("<Single as SliceSerializable<u8>>::write(bytes, self.{varname})"),
         "int" => format!("VarInt::write(bytes, self.{varname})"),
-        "float" => format!("<BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.{varname})"),
-        "string" => format!("<SizedString<32767> as SliceSerializable<'_, String>>::write(bytes, &self.{varname})"),
-        "component" => format!("<SizedString<32767> as SliceSerializable<'_, String>>::write(bytes, &self.{varname})"),
-        "optional_component" => format!("<Option<SizedString<32767>> as SliceSerializable<'_, _>>::write(bytes, &self.{varname})"),
-        "item_stack" => format!("protocol::types::ProtocolItemStack::write(bytes, &self.{varname})"),
-        "boolean" => format!("<Single as SliceSerializable<'_, bool>>::write(bytes, self.{varname})"),
-        "rotations" => format!("{{
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.{varname}.0);
-            bytes = <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.{varname}.1);
-            <BigEndian as SliceSerializable<'_, f32>>::write(bytes, self.{varname}.2)
-        }}"),
+        "float" => format!("<BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname})"),
+        "string" => format!(
+            "<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.{varname})"
+        ),
+        "component" => format!(
+            "<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.{varname})"
+        ),
+        "optional_component" => format!(
+            "<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.{varname})"
+        ),
+        "item_stack" => {
+            format!("protocol::types::ProtocolItemStack::write(bytes, &self.{varname})")
+        }
+        "boolean" => format!("<Single as SliceSerializable<bool>>::write(bytes, self.{varname})"),
+        "rotations" => format!(
+            "{{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.2)
+        }}"
+        ),
         "block_pos" => "unimplemented!()".into(),
         "optional_block_pos" => "unimplemented!()".into(),
         "direction" => "unimplemented!()".into(),
@@ -327,12 +357,12 @@ fn serialize_type_to_write(typ: &String, varname: &str) -> String {
         "particle" => "unimplemented!()".into(),
         "villager_data" => "unimplemented!()".into(),
         "optional_unsigned_int" => "unimplemented!()".into(),
-        "pose" => format!("<Single as SliceSerializable<'_, u8>>::write(bytes, self.{varname} as u8)"),
+        "pose" => format!("<Single as SliceSerializable<u8>>::write(bytes, self.{varname} as u8)"),
         "cat_variant" => "unimplemented!()".into(),
         "frog_variant" => "unimplemented!()".into(),
         "optional_global_pos" => "unimplemented!()".into(),
         "painting_variant" => "unimplemented!()".into(),
-        _ => panic!("unknown serialize type: {}", typ)
+        _ => panic!("unknown serialize type: {}", typ),
     }
 }
 
@@ -408,7 +438,7 @@ fn serialize_type_to_rust_type(typ: &String) -> &'static str {
         "string" => "String",
         "component" => "String",
         "optional_component" => "Option<String>",
-        "item_stack" => "protocol::types::ProtocolItemStack",
+        "item_stack" => "protocol::types::ProtocolItemStack<'a>",
         "boolean" => "bool",
         "rotations" => "(f32, f32, f32)",
         "block_pos" => "protocol::types::BlockPosition",

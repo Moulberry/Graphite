@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+
+use binary::nbt::CachedNBT;
 use minecraft_constants::item::{Item, ItemProperties, NoSuchItemError};
 use protocol::types::ProtocolItemStack;
 
@@ -6,6 +9,7 @@ pub struct ItemStack {
     pub(crate) item: Item,
     pub(crate) count: i8,
     pub(crate) properties: &'static ItemProperties,
+    pub(crate) nbt: CachedNBT,
 }
 
 impl PartialEq for ItemStack {
@@ -14,7 +18,7 @@ impl PartialEq for ItemStack {
     }
 }
 
-impl TryFrom<ProtocolItemStack> for ItemStack {
+impl<'a> TryFrom<ProtocolItemStack<'a>> for ItemStack {
     type Error = NoSuchItemError;
     fn try_from(protocol_itemstack: ProtocolItemStack) -> Result<Self, Self::Error> {
         let item = Item::try_from(protocol_itemstack.item as u16)?;
@@ -24,16 +28,17 @@ impl TryFrom<ProtocolItemStack> for ItemStack {
             item,
             properties,
             count: protocol_itemstack.count,
+            nbt: protocol_itemstack.nbt.into_owned(),
         })
     }
 }
 
-impl From<&ItemStack> for ProtocolItemStack {
-    fn from(itemstack: &ItemStack) -> Self {
+impl<'a> From<&'a ItemStack> for ProtocolItemStack<'a> {
+    fn from(itemstack: &'a ItemStack) -> Self {
         ProtocolItemStack {
             item: itemstack.item as _,
             count: itemstack.count,
-            temp_nbt: 0, // todo: implement nbt
+            nbt: Cow::Borrowed(&itemstack.nbt),
         }
     }
 }

@@ -6,4 +6,17 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.57"
 thiserror = "1.0.31"
-macros = { path = "macros" }
+bytes = "1.1.0"
+cesu8 = "1.1.0"
+
+binary_macros = { path = "macros" }
+
+[dev-dependencies]
+criterion = "0.3.6"
+hematite-nbt = "0.5.2"
+quartz_nbt = "0.2.6"
+rand = "0.8.5"
+
+[[bench]]
+name = "binary"
+harness = false

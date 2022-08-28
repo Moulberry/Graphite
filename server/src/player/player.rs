@@ -2,7 +2,11 @@ use std::{mem::ManuallyDrop, ops::Range};
 
 use anyhow::bail;
 use binary::slice_serialization::SliceSerializable;
-use minecraft_constants::entity::{Metadata, PlayerMetadata};
+use minecraft_constants::{
+    block::Block,
+    entity::{Metadata, PlayerMetadata},
+    item::Item,
+};
 use net::{
     network_buffer::WriteBuffer,
     packet_helper::{self, PacketReadResult},
@@ -17,8 +21,8 @@ use protocol::{
         client::PacketHandler,
         server::{
             self, AddPlayer, BlockChangedAck, BlockDestruction, LevelEvent, LevelEventType,
-            PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
-            SetEquipment, TeleportEntity, MoveEntityPosRot,
+            MoveEntityPosRot, PlayerInfo, PlayerInfoAddPlayer, RemoveEntities, RotateHead,
+            SetEquipment, TeleportEntity,
         },
     },
     types::{BlockPosition, EquipmentSlot, GameProfile, Hand, Pose},
@@ -30,7 +34,7 @@ use sticky::Unsticky;
 use text_component::TextComponent;
 
 use crate::{
-    entity::position::{Position, Vec3f, Coordinate},
+    entity::position::{Coordinate, Position, Vec3f},
     gamemode::Abilities,
     inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
     universe::{EntityId, UniverseService},
@@ -41,6 +45,7 @@ use crate::{
 
 use super::{
     interaction::{Interaction, InteractionState},
+    packet_buffer::PacketBuffer,
     player_connection::AbstractConnectionReference,
     player_settings::PlayerSettings,
     proto_player::ProtoPlayer,
@@ -73,8 +78,7 @@ type ConnectionReferenceType<P: PlayerService> =
 pub struct Player<P: PlayerService> {
     world: *mut World<P::WorldServiceType>,
 
-    pub(crate) write_buffer: WriteBuffer,
-    pub(crate) viewable_self_exclusion_write_buffer: WriteBuffer,
+    pub packets: PacketBuffer,
     pub(crate) disconnected: bool,
 
     pub entity_id: EntityId,
@@ -84,7 +88,7 @@ pub struct Player<P: PlayerService> {
     pub settings: PlayerSettings,
     pub profile: GameProfile,
 
-    last_position: Position, // used to check for changes
+    last_position: Position,  // used to check for changes
     synced_coord: Coordinate, // used to calculate correct quantized movement
     pub(crate) client_position: Position,
     pub position: Position,
@@ -118,13 +122,14 @@ impl<P: PlayerService> Player<P> {
         world: &mut World<P::WorldServiceType>,
         position: Position,
         view_position: ChunkViewPosition,
-        proto_player: ProtoPlayer<P::UniverseServiceType>
+        proto_player: ProtoPlayer<P::UniverseServiceType>,
     ) -> Self {
         Self {
             world,
 
-            write_buffer: WriteBuffer::new(),
-            viewable_self_exclusion_write_buffer: WriteBuffer::new(),
+            packets: PacketBuffer::new(),
+            // write_buffer: WriteBuffer::new(),
+            // viewable_self_exclusion_write_buffer: WriteBuffer::new(),
             disconnected: false,
 
             entity_id: proto_player.entity_id,
@@ -196,13 +201,13 @@ impl<P: PlayerService> Player<P> {
                     let bytes = chunk.entity_viewable_buffer.get_written();
 
                     if x == chunk_x && z == chunk_z {
-                        self.write_buffer
-                            .copy_from(&bytes[..self.viewable_exclusion_range.start]);
-                        self.write_buffer
-                            .copy_from(&bytes[self.viewable_exclusion_range.end..]);
+                        self.packets
+                            .write_raw_packets(&bytes[..self.viewable_exclusion_range.start]);
+                        self.packets
+                            .write_raw_packets(&bytes[self.viewable_exclusion_range.end..]);
                         self.viewable_exclusion_range = 0..0;
                     } else {
-                        self.write_buffer.copy_from(bytes);
+                        self.packets.write_raw_packets(bytes);
                     }
                 }
             }
@@ -216,22 +221,25 @@ impl<P: PlayerService> Player<P> {
                     ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
                 {
                     let chunk = &self.get_world().chunks[x as usize][z as usize];
-                    self.write_buffer
-                        .copy_from(chunk.block_viewable_buffer.get_written());
+                    self.packets
+                        .write_raw_packets(chunk.block_viewable_buffer.get_written());
                 }
             }
 
             self.chunk_view_position = self.new_chunk_view_position;
 
             // Write packets from buffer
-            if !self.write_buffer.is_empty() {
+            if !self.packets.write_buffer.is_empty() {
+                // todo: move vec out of the write_buffer, avoid a memcpy here
+
                 // Write bytes into player connection
-                self.connection.write_bytes(self.write_buffer.get_written());
+                self.connection
+                    .write_bytes(self.packets.write_buffer.get_written());
 
                 // Reset the write buffer
-                self.write_buffer.reset();
+                self.packets.write_buffer.reset();
             }
-            self.write_buffer.tick_and_maybe_shrink();
+            self.packets.write_buffer.tick_and_maybe_shrink();
 
             // Return early -- code after here is for TickPhase::Update
             return Ok(());
@@ -263,7 +271,8 @@ impl<P: PlayerService> Player<P> {
         self.update_equipment(selected_hotbar_slot_changed);
 
         // Write inventory packets (note: after equipment changes)
-        self.inventory.write_changes(&mut self.write_buffer)?;
+        self.inventory
+            .write_changes(&mut self.packets.write_buffer)?;
 
         // Write abilities packets (note: after equipment changes)
         Abilities::write_changes(self);
@@ -273,32 +282,39 @@ impl<P: PlayerService> Player<P> {
 
         // Update position
         if self.position != self.last_position {
+            self.position.rot.fix();
             self.handle_movement(self.position, true)?;
         } else {
             // todo: check for moving too fast
+            self.client_position.rot.fix();
             self.handle_movement(self.client_position, false)?;
         }
 
         // Write packets from viewable self-exclusion
         // These packets are seen by those in render distance of this player,
         // but *NOT* this player. This is used for eg. movement
-        if !self.viewable_self_exclusion_write_buffer.is_empty() {
+        if !self.packets.viewable_self_exclusion_write_buffer.is_empty() {
             let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
                 [self.chunk_view_position.z as usize];
             let write_to = &mut chunk.entity_viewable_buffer;
 
             // Copy bytes into viewable buffer
             let start = write_to.len();
-            write_to.copy_from(self.viewable_self_exclusion_write_buffer.get_written());
+            write_to.copy_from(
+                self.packets
+                    .viewable_self_exclusion_write_buffer
+                    .get_written(),
+            );
             let end = write_to.len();
 
             // Set exclusion range
             self.viewable_exclusion_range = start..end;
 
             // Reset the write buffer
-            self.viewable_self_exclusion_write_buffer.reset();
+            self.packets.viewable_self_exclusion_write_buffer.reset();
         }
-        self.viewable_self_exclusion_write_buffer
+        self.packets
+            .viewable_self_exclusion_write_buffer
             .tick_and_maybe_shrink();
 
         Ok(())
@@ -322,7 +338,7 @@ impl<P: PlayerService> Player<P> {
             }
             self.current_keep_alive = rand::thread_rng().next_u64();
 
-            self.write_packet(&server::KeepAlive {
+            self.packets.write_packet(&server::KeepAlive {
                 id: self.current_keep_alive,
             });
         }
@@ -330,7 +346,7 @@ impl<P: PlayerService> Player<P> {
         // Send block change ack
         match self.ack_sequence_up_to {
             Some(sequence) => {
-                self.write_packet(&BlockChangedAck { sequence });
+                self.packets.write_packet(&BlockChangedAck { sequence });
                 self.ack_sequence_up_to = None;
             }
             None => (),
@@ -360,18 +376,14 @@ impl<P: PlayerService> Player<P> {
         // Add MainHand if hotbar slot has changed
         if selected_hotbar_slot_changed {
             let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
-            let held_item = self
-                .inventory
-                .get(slot)
-                .expect("self.selected_hotbar_slot between 0..9");
-
-            equipment_changes.push((EquipmentSlot::MainHand, held_item.into()));
+            equipment_changes.push((EquipmentSlot::MainHand, slot));
         }
+
         // Add other equipment
         if self.inventory.is_any_changed() {
             // Update MainHand
             let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
-            if self.inventory.is_changed(slot).unwrap() {
+            if self.inventory.has_changed(slot).unwrap() {
                 // Abort item usage for main hand
                 if self.interaction_state.using_hand == Some(Hand::Main) {
                     let interaction = self.interaction_state.try_abort_use(false).unwrap();
@@ -380,16 +392,14 @@ impl<P: PlayerService> Player<P> {
 
                 // Update equipment for MainHand, if needed
                 if !selected_hotbar_slot_changed {
-                    let itemslot = self.inventory.get(slot).unwrap();
-                    equipment_changes.push((EquipmentSlot::MainHand, itemslot.into()));
+                    equipment_changes.push((EquipmentSlot::MainHand, slot));
                 }
             }
 
             let mut write_equipment_changes =
                 |inventory: InventorySlot, equipment: EquipmentSlot| {
-                    if self.inventory.is_changed(inventory).unwrap() {
-                        let itemslot = self.inventory.get(inventory).unwrap();
-                        equipment_changes.push((equipment, itemslot.into()));
+                    if self.inventory.has_changed(inventory).unwrap() {
+                        equipment_changes.push((equipment, inventory));
                         true
                     } else {
                         false
@@ -413,10 +423,16 @@ impl<P: PlayerService> Player<P> {
         }
         // Write equipment changes
         if !equipment_changes.is_empty() {
-            self.write_viewable_packet(
+            let mut equipment = Vec::new();
+            for (equipment_slot, inventory) in equipment_changes {
+                let itemslot = self.inventory.get(inventory).unwrap();
+                equipment.push((equipment_slot, itemslot.into()));
+            }
+
+            self.packets.write_viewable_packet(
                 &SetEquipment {
                     entity_id: self.entity_id.as_i32(),
-                    equipment: equipment_changes,
+                    equipment,
                 },
                 true,
             );
@@ -493,7 +509,7 @@ impl<P: PlayerService> Player<P> {
             // todo: maybe force a teleport if a counter is high enough
             // not sure if this is needed, because this code shouldn't result in posititional desync anyways
 
-            if distance_sq < 8.0*8.0 { 
+            if distance_sq < 8.0 * 8.0 {
                 let delta_x = to.coord.x - self.synced_coord.x;
                 let delta_y = to.coord.y - self.synced_coord.y;
                 let delta_z = to.coord.z - self.synced_coord.z;
@@ -517,14 +533,14 @@ impl<P: PlayerService> Player<P> {
                         pitch: to.rot.pitch,
                         on_ground: self.on_ground,
                     };
-                    self.write_viewable_packet(&move_packet, true);
-                    
+                    self.packets.write_viewable_packet(&move_packet, true);
+
                     // Rotate head
                     let rotate_head = RotateHead {
                         entity_id: self.entity_id.as_i32(),
                         head_yaw: to.rot.yaw,
                     };
-                    self.write_viewable_packet(&rotate_head, true);
+                    self.packets.write_viewable_packet(&rotate_head, true);
                 } else {
                     // todo: switch to using MoveEntityPos when MC-255263 is fixed
 
@@ -538,7 +554,7 @@ impl<P: PlayerService> Player<P> {
                         pitch: to.rot.pitch,
                         on_ground: self.on_ground,
                     };
-                    self.write_viewable_packet(&move_packet, true);
+                    self.packets.write_viewable_packet(&move_packet, true);
                 }
             } else {
                 self.synced_coord = to.coord;
@@ -553,7 +569,7 @@ impl<P: PlayerService> Player<P> {
                     pitch: to.rot.pitch,
                     on_ground: self.on_ground,
                 };
-                self.write_viewable_packet(&teleport_packet, true);
+                self.packets.write_viewable_packet(&teleport_packet, true);
 
                 if rot_changed {
                     // Rotate head
@@ -561,7 +577,7 @@ impl<P: PlayerService> Player<P> {
                         entity_id: self.entity_id.as_i32(),
                         head_yaw: to.rot.yaw,
                     };
-                    self.write_viewable_packet(&rotate_head, true);
+                    self.packets.write_viewable_packet(&rotate_head, true);
                 }
             }
 
@@ -579,14 +595,14 @@ impl<P: PlayerService> Player<P> {
                 pitch: to.rot.pitch,
                 on_ground: self.on_ground,
             };
-            self.write_viewable_packet(&teleport_packet, true);
+            self.packets.write_viewable_packet(&teleport_packet, true);
 
             // Rotate head
             let rotate_head = RotateHead {
                 entity_id: self.entity_id.as_i32(),
                 head_yaw: to.rot.yaw,
             };
-            self.write_viewable_packet(&rotate_head, true);
+            self.packets.write_viewable_packet(&rotate_head, true);
         } else {
             return Ok(());
         }
@@ -602,7 +618,7 @@ impl<P: PlayerService> Player<P> {
                 pitch: to.rot.pitch,
                 on_ground: self.on_ground,
             };
-            self.write_packet(&teleport_packet);
+            self.packets.write_packet(&teleport_packet);
         }
 
         self.position = to;
@@ -637,7 +653,12 @@ impl<P: PlayerService> Player<P> {
     }
 
     pub fn get_eye_height(&self) -> f32 {
-        1.62
+        match self.metadata.pose {
+            Pose::Sleeping => 0.2,
+            Pose::Swimming | Pose::FallFlying | Pose::SpinAttack => 0.4,
+            Pose::Sneaking => 1.27,
+            _ => 1.62,
+        }
     }
 
     pub fn get_look_vector(&self) -> Vector<Real> {
@@ -654,7 +675,7 @@ impl<P: PlayerService> Player<P> {
                 .get_world_mut()
                 .set_block(pos.x as _, pos.y as _, pos.z as _, 0)
             {
-                self.write_viewable_packet(
+                self.packets.write_viewable_packet(
                     &LevelEvent {
                         event_type: LevelEventType::ParticlesDestroyBlock,
                         pos,
@@ -668,8 +689,6 @@ impl<P: PlayerService> Player<P> {
     }
 
     pub fn do_default_interaction(&mut self, interaction: Interaction) {
-        println!("Got interaction: {:?}", interaction);
-
         match interaction {
             Interaction::LeftClickBlock {
                 position,
@@ -686,10 +705,44 @@ impl<P: PlayerService> Player<P> {
             Interaction::LeftClickAir => {}
 
             Interaction::RightClickBlock {
-                position: _,
-                face: _,
-                offset: _,
-            } => {}
+                position,
+                face,
+                offset,
+            } => {
+                let slot = InventorySlot::Hotbar(self.selected_hotbar_slot as _);
+                let held_item = self
+                    .inventory
+                    .get(slot)
+                    .expect("self.selected_hotbar_slot between 0..9");
+
+                if let ItemSlot::Filled(itemstack) = held_item {
+                    let item = itemstack.item;
+                    // todo: decrease / change item
+
+                    let world = self.get_world_mut();
+                    if item.get_properties().has_corresponding_block {
+                        if let Some(block) = item.try_place(&mut world.create_placement_context(
+                            position,
+                            face,
+                            offset,
+                            self.position.rot,
+                        )) {
+                            let block_id: u16 = block.to_id();
+                            let relative = position.relative(face);
+                            world.set_block_i32(relative.x, relative.y as _, relative.z, block_id);
+                        }
+                    } else if item == Item::WaterBucket {
+                        // check if clicked block is waterloggable
+                        let relative = position.relative(face);
+                        world.set_block_i32(
+                            relative.x,
+                            relative.y as _,
+                            relative.z,
+                            Block::Water { level: 0 }.to_id(),
+                        );
+                    }
+                }
+            }
             Interaction::RightClickEntity {
                 entity_id: _,
                 offset: _,
@@ -711,7 +764,7 @@ impl<P: PlayerService> Player<P> {
                     self.get_break_speed_multiplier(),
                 ) {
                     // todo: check if the stage changed, only send packet then
-                    self.write_viewable_packet(
+                    self.packets.write_viewable_packet(
                         &BlockDestruction {
                             entity_id: self.entity_id.as_i32(),
                             location: position,
@@ -734,7 +787,7 @@ impl<P: PlayerService> Player<P> {
                 position,
                 break_time: _,
             } => {
-                self.write_viewable_packet(
+                self.packets.write_viewable_packet(
                     &BlockDestruction {
                         entity_id: self.entity_id.as_i32(),
                         location: position,
@@ -781,7 +834,7 @@ impl<P: PlayerService> Player<P> {
     }
 
     pub fn send_message<T: Into<TextComponent>>(&mut self, message: T) {
-        self.write_packet(&server::SystemChat {
+        self.packets.write_packet(&server::SystemChat {
             message: message.into().to_json(),
             overlay: false,
         })
@@ -789,34 +842,6 @@ impl<P: PlayerService> Player<P> {
 
     pub fn disconnect(&mut self) {
         self.disconnected = true;
-    }
-
-    pub fn write_packet<'a, T>(&mut self, packet: &'a T)
-    where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
-    {
-        if packet_helper::write_packet(&mut self.write_buffer, packet).is_err() {
-            // Packet was too big
-            self.disconnect();
-        }
-    }
-
-    pub fn write_viewable_packet<'a, T>(&mut self, packet: &'a T, exclude_self: bool)
-    where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
-    {
-        let write_to = if exclude_self {
-            &mut self.viewable_self_exclusion_write_buffer
-        } else {
-            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
-                [self.chunk_view_position.z as usize];
-            &mut chunk.entity_viewable_buffer
-        };
-
-        if packet_helper::write_packet(write_to, packet).is_err() {
-            // Packet was too big
-            self.disconnect();
-        }
     }
 
     pub(crate) fn fire_interaction(&mut self, interaction: Interaction) {
@@ -869,7 +894,7 @@ impl<P: PlayerService> Player<P> {
     }
 
     pub(crate) fn write_packet_bytes(&mut self, bytes: &[u8]) {
-        self.write_buffer.copy_from(bytes);
+        self.packets.write_buffer.copy_from(bytes);
     }
 
     pub fn handle_packets(&mut self) -> anyhow::Result<u32> {
@@ -891,11 +916,11 @@ impl<P: PlayerService> Player<P> {
 
         // Send contents of write buffer if FAST_PACKET_RESPONSE is enabled
         if P::FAST_PACKET_RESPONSE {
-            let to_write = self.write_buffer.get_written();
+            let to_write = self.packets.write_buffer.get_written();
             if !to_write.is_empty() {
                 self.connection.write_bytes(to_write);
             }
-            self.write_buffer.reset();
+            self.packets.write_buffer.reset();
         }
 
         // Return remaining bytes

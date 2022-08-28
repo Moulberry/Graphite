@@ -224,7 +224,7 @@ impl InputVariant {
                     let has_more_packed = if field_index == self.fields.len() - 1 {
                         false
                     } else {
-                        let next_field = &self.fields[field_index+1];
+                        let next_field = &self.fields[field_index + 1];
                         matches!(next_field.special_instruction, SpecialInstruction::Pack)
                     };
 
@@ -248,7 +248,7 @@ impl InputVariant {
                         write_impl.extend(
                             quote_spanned!(
                                 serialize_type_span =>
-                                bytes = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::write(bytes,
+                                bytes = <binary::slice_serialization::Single as SliceSerializable<u8>>::write(bytes,
                                     #inner_write_impl
                                 );
                             )
@@ -263,7 +263,7 @@ impl InputVariant {
                         read_impl.extend(
                             quote_spanned!(
                                 serialize_type_span =>
-                                let #packed_ident = <binary::slice_serialization::Single as SliceSerializable<'_, u8>>::read(bytes)?;
+                                let #packed_ident = <binary::slice_serialization::Single as SliceSerializable<u8>>::read(bytes)?;
                             )
                         );
 
@@ -521,7 +521,7 @@ impl Input {
                                 "invariant: slice must contain at least {} bytes to perform write #ident",
                                 Self::get_write_size(object)
                             );
-                            
+
                             match object {
                                 #write_impl
                             }

@@ -16,6 +16,7 @@ pub use blob::GreedyBlob;
 pub use blob::NBTBlob;
 pub use blob::SizedBlob;
 pub use blob::SizedString;
+pub use blob::WriteOnlyBlob;
 
 mod primitive;
 pub use primitive::BigEndian;
@@ -59,109 +60,4 @@ pub trait SliceSerializable<'a, T = Self> {
 
 // Macro to generate composite slice_serializables
 
-/*#[macro_export]
-macro_rules! slice_serializable_composite {
-    ( @resolve_wire_type $typ:ty ) => {
-        $typ
-    };
-    { @resolve_wire_type $typ:ty as $wire:ty } => {
-        $wire
-    };
-    { $struct_name:ident$(<$lt:lifetime>)?, $( $field_name:ident : $typ:ty $( as $wire:ty )? ),* $(,)?} => {
-        #[derive(Debug)]
-        pub struct $struct_name$(<$lt>)? {
-            $(pub $field_name: $typ,)*
-        }
-
-        impl <'a> SliceSerializable<'a> for $struct_name$(<$lt>)? {
-            type RefType = &'a $struct_name$(<$lt>)?;
-
-            fn read(bytes: &mut &$($lt)?[u8]) -> anyhow::Result<$struct_name$(<$lt>)?> {
-                Ok($struct_name {
-                    $(
-                        $field_name: <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?)>::read(bytes)?,
-                    )*
-                })
-            }
-
-            fn get_write_size(object: &$($lt)?$struct_name) -> usize {
-                $(
-                    <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::get_write_size(
-                        <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::maybe_deref(&object.$field_name)) +
-                )*
-                0
-            }
-
-            unsafe fn write<'b>(mut bytes: &'b mut [u8], object: &$($lt)?$struct_name) -> &'b mut [u8] {
-                $(
-                    bytes = <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::write(bytes,
-                        <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::maybe_deref(&object.$field_name));
-                )*
-                bytes
-            }
-
-
-            fn maybe_deref(t: &'a $struct_name) -> Self::RefType {
-                t
-            }
-        }
-    };
-}*/
-
-// pub use slice_serializable_composite;
-pub use macros::slice_serializable;
-
-/*#[macro_export]
-macro_rules! slice_serializable_enum {
-    ( @resolve_wire_type $typ:ty ) => {
-        $typ
-    };
-    { @resolve_wire_type $typ:ty as $wire:ty } => {
-        $wire
-    };
-    { $struct_name:ident$(<$lt:lifetime>)?, $( $variant:ident { $( $field_name:ident : $typ:ty $( as $wire:ty )? ),* $(,)? } ),* $(,)?} => {
-        #[derive(Debug)]
-        pub enum $struct_name$(<$lt>)? {
-            $($variant {
-                $(pub $field_name: $typ,)*
-            })*
-        }
-
-        impl <'a> SliceSerializable<'a> for $struct_name$(<$lt>)? {
-            type RefType = &'a $struct_name$(<$lt>)?;
-
-            fn read(bytes: &mut &$($lt)?[u8]) -> anyhow::Result<$struct_name$(<$lt>)?> {
-                let discriminant = <Single as SliceSerializable<u8>>::read(bytes)?;
-
-                Ok($struct_name {
-                    $(
-                        $field_name: <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?)>::read(bytes)?,
-                    )*
-                })
-            }
-
-            fn get_write_size(object: &$($lt)?$struct_name) -> usize {
-                $(
-                    <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::get_write_size(
-                        <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::maybe_deref(&object.$field_name)) +
-                )*
-                0
-            }
-
-            unsafe fn write<'b>(mut bytes: &'b mut [u8], object: &$($lt)?$struct_name) -> &'b mut [u8] {
-                $(
-                    bytes = <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::write(bytes,
-                        <slice_serializable_composite!(@resolve_wire_type $typ $( as $wire )?) as SliceSerializable<$typ>>::maybe_deref(&object.$field_name));
-                )*
-                bytes
-            }
-
-
-            fn maybe_deref(t: &'a $struct_name) -> Self::RefType {
-                t
-            }
-        }
-    };
-}
-
-pub use slice_serializable_composite;*/
+pub use binary_macros::slice_serializable;

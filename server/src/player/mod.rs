@@ -1,8 +1,9 @@
 pub mod interaction;
+pub mod metadata;
+pub mod packet_buffer;
 pub mod player_connection;
 pub mod player_settings;
 pub mod player_vec;
-pub mod metadata;
 pub mod proto_player;
 
 mod player_packet_handler;
