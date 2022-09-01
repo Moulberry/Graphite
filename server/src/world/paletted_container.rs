@@ -1,4 +1,4 @@
-use binary::slice_serialization::{Single, SliceSerializable, VarInt};
+use binary::slice_serialization::{Single, SliceSerializable, VarInt, BigEndian};
 
 const BLOCK_SIDE_LEN: usize = 16;
 const BLOCK_CAPACITY: usize = BLOCK_SIDE_LEN * BLOCK_SIDE_LEN * BLOCK_SIDE_LEN;
@@ -11,9 +11,9 @@ const BIOME_ENTRY_BITS: usize = 4;
 const BIOME_DIRECT_LEN: usize = BIOME_CAPACITY / (64 / BIOME_ENTRY_BITS);
 
 pub type BlockPalettedContainer =
-    PalettedContainer<u16, BLOCK_SIDE_LEN, { BLOCK_CAPACITY / 2 }, BLOCK_DIRECT_LEN>;
+    PalettedContainer<u16, BLOCK_SIDE_LEN, { BLOCK_CAPACITY / 2 }, BLOCK_DIRECT_LEN, BLOCK_ENTRY_BITS>;
 pub type BiomePalettedContainer =
-    PalettedContainer<u8, BIOME_SIDE_LEN, { BIOME_CAPACITY / 2 }, BIOME_DIRECT_LEN>;
+    PalettedContainer<u8, BIOME_SIDE_LEN, { BIOME_CAPACITY / 2 }, BIOME_DIRECT_LEN, BIOME_ENTRY_BITS>;
 
 #[derive(Debug, Clone)]
 pub struct ArrayContainer<T, const HALF_CAP: usize> {
@@ -21,28 +21,25 @@ pub struct ArrayContainer<T, const HALF_CAP: usize> {
     contents: [u8; HALF_CAP],
 }
 
-#[allow(warnings)] // todo: when DirectContainer is used, this must be removed
 #[derive(Debug, Clone)]
-pub struct DirectContainer<T, const DIRECT_LEN: usize> {
-    most_common_type: T,
-    most_common_count: u16,
-    contents: [u64; DIRECT_LEN], // todo: maybe u64 doesnt work because of endianness
+pub struct DirectContainer<const DIRECT_LEN: usize, const DIRECT_BITS: usize> {
+    contents: [u64; DIRECT_LEN],
 }
 
 #[derive(Debug, Clone)]
-pub enum PalettedContainer<T, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize>
+pub enum PalettedContainer<T, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize, const DIRECT_BITS: usize>
 {
     Single(T),
-    Array(Box<ArrayContainer<T, HALF_CAP>>),     // 2kb
-    Direct(Box<DirectContainer<T, DIRECT_LEN>>), // 8kb
+    Array(Box<ArrayContainer<T, HALF_CAP>>),                // 2kb
+    Direct(Box<DirectContainer<DIRECT_LEN, DIRECT_BITS>>),  // 8kb
 }
 
-impl<T, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize>
-    PalettedContainer<T, SIDE_LEN, HALF_CAP, DIRECT_LEN>
+impl<T, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize, const DIRECT_BITS: usize>
+    PalettedContainer<T, SIDE_LEN, HALF_CAP, DIRECT_LEN, DIRECT_BITS>
 where
-    T: Copy + Eq + num::Unsigned,
+    T: Copy + Into<usize> + TryFrom<usize> + Eq + num::Unsigned,
 {
-    pub fn get_index(x: u8, y: u8, z: u8) -> usize {
+    pub fn get_array_index(x: u8, y: u8, z: u8) -> usize {
         debug_assert!(x < SIDE_LEN as _);
         debug_assert!(y < SIDE_LEN as _);
         debug_assert!(z < SIDE_LEN as _);
@@ -58,8 +55,14 @@ where
     pub fn get(&self, x: u8, y: u8, z: u8) -> T {
         match self {
             PalettedContainer::Single(value) => *value,
-            PalettedContainer::Array(array) => array.get(Self::get_index(x, y, z)),
-            PalettedContainer::Direct(_) => todo!(),
+            PalettedContainer::Array(array) => array.get(Self::get_array_index(x, y, z)),
+            PalettedContainer::Direct(direct) => {
+                let index = y as usize * SIDE_LEN * SIDE_LEN + z as usize * SIDE_LEN + x as usize;
+                match direct.get(index).try_into() {
+                    Ok(v) => v,
+                    Err(_) => unreachable!("value must be convertible from usize"),
+                }
+            },
         }
     }
 
@@ -71,20 +74,36 @@ where
                     return None;
                 }
 
-                let mut array = Self::filled_array(value, 16 * 16 * 16 - 1);
-                array.set_new(Self::get_index(x, y, z), new_value);
+                let mut array = Self::filled_array(value, 16 * 16 * 16);
+                array.set(Self::get_array_index(x, y, z), new_value);
                 self.replace(Self::Array(Box::from(array)));
 
                 Some(value)
             }
-            Self::Array(array) => match array.set(Self::get_index(x, y, z), new_value) {
+            Self::Array(array) => match array.set(Self::get_array_index(x, y, z), new_value) {
                 ArraySetResult::Changed(old) => Some(old),
                 ArraySetResult::Unchanged => None,
                 ArraySetResult::OutOfSpace => {
-                    todo!("switch to direct");
+                    let mut direct = array.to_direct::<DIRECT_LEN, DIRECT_BITS>();
+                    
+                    let index = y as usize * SIDE_LEN * SIDE_LEN + z as usize * SIDE_LEN + x as usize;
+                    let ret = direct.set(index, new_value.into()).and_then(|v| match v.try_into() {
+                        Ok(v) => Some(v),
+                        Err(_) => unreachable!("value must be convertible from usize"),
+                    });
+
+                    self.replace(Self::Direct(Box::from(direct)));
+
+                    ret
                 }
             },
-            Self::Direct(_) => todo!(),
+            Self::Direct(direct) => {
+                let index = y as usize * SIDE_LEN * SIDE_LEN + z as usize * SIDE_LEN + x as usize;
+                direct.set(index, new_value.into()).and_then(|v| match v.try_into() {
+                    Ok(v) => Some(v),
+                    Err(_) => unreachable!("value must be convertible from usize"),
+                })
+            },
         }
     }
 
@@ -123,8 +142,58 @@ enum ArraySetResult<T> {
 
 impl<T, const HALF_CAP: usize> ArrayContainer<T, HALF_CAP>
 where
-    T: Copy + Eq + num::Unsigned,
+    T: Copy + Into<usize> + Eq + num::Unsigned,
 {
+    fn to_direct<const DIRECT_LEN: usize, const DIRECT_BITS: usize>(&self) -> DirectContainer<DIRECT_LEN, DIRECT_BITS> {
+        let mut contents = [0_u64; DIRECT_LEN];
+
+        let mut content_index = 0;
+        let mut shift = 0;
+        
+        for i in 0..HALF_CAP/8 {
+            for j in 0..8 {
+                // The order of the entries need to be reversed
+                // We store little-endian, but the protocol wants big-endian
+                let array_index = i*8 + 7-j;
+                let v = self.contents[array_index];
+
+                let first = v & 0b1111;
+                let (first_value, _) = self.indices[first as usize];
+                let first_value = first_value.into() as u64;
+
+                // Make sure the value fits inside DIRECT_BITS
+                debug_assert!(first_value.leading_zeros() >= (64 - DIRECT_BITS) as u32);
+
+                contents[content_index] |= first_value << shift;
+
+                // Increment
+                shift += DIRECT_BITS;
+                if shift + DIRECT_BITS > 64 {
+                    content_index += 1;
+                    shift = 0;
+                }
+
+                let second = v >> 4;
+                let (second_value, _) = self.indices[second as usize];
+                let second_value = second_value.into() as u64;
+
+                // Make sure the value fits inside DIRECT_BITS
+                debug_assert!(second_value.leading_zeros() >= (64 - DIRECT_BITS) as u32);
+
+                contents[content_index] |= second_value << shift;
+
+                // Increment
+                shift += DIRECT_BITS;
+                if shift + DIRECT_BITS > 64 {
+                    content_index += 1;
+                    shift = 0;
+                }
+            }
+        }
+
+        DirectContainer { contents }
+    }
+
     fn get(&self, index: usize) -> T {
         let palette_id = self.get_as_palette(index);
         self.indices[palette_id as usize].0
@@ -157,21 +226,16 @@ where
             if let Some(old) =
                 Self::set_to_palette(&mut self.contents, index, self.indices.len() - 1)
             {
+                // Decrease old count
+                debug_assert!(self.indices[old as usize].1 >= 1);
+                self.indices[old as usize].1 -= 1;
+
                 ArraySetResult::Changed(self.indices[old as usize].0)
             } else {
-                panic!("couldn't find value in palette, but when setting the value was unchanged")
+                unreachable!("couldn't find value in palette, but when setting the value was unchanged")
             }
         } else {
             ArraySetResult::OutOfSpace
-        }
-    }
-
-    fn set_new(&mut self, index: usize, new_value: T) {
-        if self.indices.len() < self.indices.capacity() {
-            let _ = self.indices.push((new_value, 1));
-            Self::set_to_palette(&mut self.contents, index, self.indices.len() - 1);
-        } else {
-            panic!("not enough room in palette");
         }
     }
 
@@ -205,8 +269,51 @@ where
     }
 }
 
-impl<'a, T: 'static, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize>
-    SliceSerializable<'a> for PalettedContainer<T, SIDE_LEN, HALF_CAP, DIRECT_LEN>
+impl<const DIRECT_LEN: usize, const DIRECT_BITS: usize> DirectContainer<DIRECT_LEN, DIRECT_BITS> {
+    fn set(&mut self, index: usize, new_value: usize) -> Option<usize> {
+        let per_array = 64 / DIRECT_BITS;
+        let content_index = index / per_array;
+        let shift_by = DIRECT_BITS * (index % per_array);
+        let mask = (1 << DIRECT_BITS) - 1;
+
+        let new_value = new_value as u64;
+
+        // Make sure the value fits inside DIRECT_BITS
+        debug_assert!(new_value.leading_zeros() >= (64 - DIRECT_BITS) as u32);
+
+        let mut content_value = self.contents[content_index];
+
+        // Extract the old value
+        let old_value = (content_value >> shift_by) & mask;
+        if old_value == new_value {
+            return None;
+        }
+
+        // Update content_value to contain the new value
+        content_value &= !(mask << shift_by);
+        content_value |= (new_value as u64) << shift_by;
+        self.contents[content_index] = content_value;
+
+        Some(old_value as usize)
+    }
+
+    fn get(&self, index: usize) -> usize {
+        let per_array = 64 / DIRECT_BITS;
+        let content_index = index / per_array;
+        let shift_by = DIRECT_BITS * (index % per_array);
+        let mask = (1 << DIRECT_BITS) - 1;
+
+        let content_value = self.contents[content_index];
+        let old_value = (content_value >> shift_by) & mask;
+
+        old_value as usize
+    }
+}
+
+
+
+impl<'a, T: 'static, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize, const DIRECT_BITS: usize>
+    SliceSerializable<'a> for PalettedContainer<T, SIDE_LEN, HALF_CAP, DIRECT_LEN, DIRECT_BITS>
 where
     T: Copy + Into<i32> + std::fmt::Debug,
 {
@@ -223,133 +330,59 @@ where
     unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &'a Self) -> &'b mut [u8] {
         match data {
             Self::Single(value) => {
+                debug_assert!(
+                    bytes.len() >= 5,
+                    "invariant: slice must contain at least 5 bytes to write paletted_container (single)"
+                );
                 bytes = <Single as SliceSerializable<u8>>::write(bytes, 0); // 0 bits per block
-                bytes = VarInt::write(bytes, (*value).into()); // the block
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, (*value).into()); // the block
                 <Single as SliceSerializable<u8>>::write(bytes, 0) // 0 size array
             }
             Self::Array(array) => {
+                debug_assert!(
+                    bytes.len() >= 7 + 3*array.indices.len() + HALF_CAP,
+                    "invariant: slice must contain at least 7+3*array.indices.len()+HALF_CAP bytes to write paletted_container (array)"
+                );
+
                 bytes = <Single as SliceSerializable<u8>>::write(bytes, 4); // 4 bits per block
 
                 // palette
                 bytes = <Single as SliceSerializable<u8>>::write(bytes, array.indices.len() as _); // palette length
                 for entry in &array.indices {
-                    bytes = VarInt::write(bytes, ((*entry).0).into()); // the palette entry
+                    bytes = <VarInt as SliceSerializable<i32>>::write(bytes, ((*entry).0).into()); // the palette entry
                 }
 
                 // data
-                bytes = VarInt::write(bytes, (HALF_CAP / 8) as i32);
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, (HALF_CAP / 8) as i32);
                 bytes[..HALF_CAP].clone_from_slice(&array.contents);
                 &mut bytes[HALF_CAP..]
             }
-            Self::Direct(_direct) => {
-                todo!();
-            } /*Self::Direct { data } => {
-                  bytes = <Single as SliceSerializable<u8>>::write(bytes, 15); // 15 bits per block
+            Self::Direct(direct) => {
+                debug_assert!(
+                    bytes.len() >= 1 + 5 + DIRECT_LEN*8,
+                    "invariant: slice must contain at least 6+DIRECT_LEN*8 bytes to write paletted_container (direct)"
+                );
 
-                  bytes = VarInt::write(bytes, 1024 as i32);
-                  bytes[..8192].clone_from_slice(std::mem::transmute::<&[u64; 1024], &[u8; 8192]>(&data));
-                  &mut bytes[8192..]
-              }*/
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 15); // 15 bits per block
+
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, DIRECT_LEN as i32);
+
+                // todo: is there a more efficient way of doing this?
+                for value in &direct.contents {
+                    bytes = <BigEndian as SliceSerializable<u64>>::write(bytes, *value);
+                }
+
+                bytes
+            }
         }
     }
 
     fn get_write_size(data: &'a Self) -> usize {
         1 + /*bits-per-block*/ match data {
             Self::Single(_) => 3 /*blockstate*/ + 1 /*empty array header*/,
-            Self::Array(_) => 1+std::mem::size_of::<T>()*16 /*palette*/ + HALF_CAP /*contents*/ + 1 /*empty array header*/,
-            Self::Direct(_) => 2 /*array header*/ + DIRECT_LEN*8 /*conents*/,
+            Self::Array(array) => 1+3*array.indices.len() /*palette*/ +
+                5 /*array header*/ + HALF_CAP /*contents*/,
+            Self::Direct(_) => 5 /*array header*/ + DIRECT_LEN*8 /*contents*/,
         }
     }
 }
-
-/*impl PalettedContainer {
-    pub fn fill(&mut self, new_value: u16) -> bool {
-        match self {
-            PalettedContainer::Single { value } => {
-                if *value == new_value {
-                    return false;
-                }
-            },
-            _ => {}
-        }
-
-        // Replace with single
-        self.replace(Self::Single {
-            value: new_value
-        });
-
-        true
-    }
-
-    pub fn set(&mut self, x: u8, y: u8, z: u8, new_value: u16) -> bool {
-        match self {
-            Self::Single { value } => {
-                if *value == new_value {
-                    return false;
-                }
-                let direct = Self::convert_single_to_direct(*value);
-                self.replace(direct);
-            },
-            Self::Direct { data } => {
-                Self::set_direct(x, y, z, new_value, data.as_slice());
-            },
-        }
-        true
-    }
-
-    fn replace(&mut self, new: Self) {
-        unsafe {
-            std::ptr::write(self, new);
-        }
-    }
-
-    fn set_direct(x: u8, y: u8, z: u8, new_value: u16, data: &[u64]) {
-
-    }
-
-    fn convert_single_to_direct(single: u16) -> Self {
-        let single = single as u64;
-        let filled_value = single | (single << 15) | (single << 30) | (single << 45);
-
-        Self::Direct {
-            data: Box::from([filled_value; 1024])
-        }
-    }
-}
-
-impl<'a> SliceSerializable<'a> for PalettedContainer {
-    type RefType = &'a Self;
-
-    fn maybe_deref(t: &'a Self) -> Self::RefType {
-        t
-    }
-
-    fn read(_: &mut &[u8]) -> anyhow::Result<Self> {
-        unimplemented!()
-    }
-
-    unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &'a Self) -> &'b mut [u8] {
-        match data {
-            Self::Single { value } => {
-                bytes = <Single as SliceSerializable<u8>>::write(bytes, 0); // 0 bits per block
-                bytes = slice_serialization::VarInt::write(bytes, *value as i32); // the block
-                <Single as SliceSerializable<u8>>::write(bytes, 0) // 0 size array
-            }
-            Self::Direct { data } => {
-                bytes = <Single as SliceSerializable<u8>>::write(bytes, 15); // 15 bits per block
-
-                bytes = VarInt::write(bytes, 1024 as i32);
-                bytes[..8192].clone_from_slice(std::mem::transmute::<&[u64; 1024], &[u8; 8192]>(&data));
-                &mut bytes[8192..]
-            }
-        }
-    }
-
-    fn get_write_size(data: &'a Self) -> usize {
-        1 + match data {
-            Self::Single { value: _ } => 5 + 1, // varint (block) + array header
-            Self::Direct { data: _ } => 5 + 8192, // varint array header + data
-        }
-    }
-}
-*/

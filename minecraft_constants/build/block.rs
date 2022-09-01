@@ -1,4 +1,5 @@
-use std::fmt::Write as _;
+use std::collections::BTreeSet;
+use std::{fmt::Write as _, collections::BTreeMap};
 use std::io::Write;
 
 use anyhow::bail;
@@ -6,7 +7,7 @@ use convert_case::{Case, Casing};
 use indexmap::IndexMap;
 use serde_derive::Deserialize;
 
-use crate::file_src;
+use crate::{file_src, file_out};
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
@@ -43,7 +44,9 @@ struct BlockAttributes {
     #[serde(default)]
     is_south_face_sturdy: Option<bool>,
     #[serde(default)]
-    is_west_face_sturdy: Option<bool>
+    is_west_face_sturdy: Option<bool>,
+    #[serde(default)]
+    is_up_face_sturdy: Option<bool>
 }
 
 #[derive(Debug, Deserialize)]
@@ -106,11 +109,16 @@ pub fn write_block_states() -> anyhow::Result<(
         }
     }
 
+    let mut block_name_to_state_ids: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+    let mut block_name_to_id: BTreeMap<String, usize> = BTreeMap::new();
+
     let mut block_def = String::new();
     let mut u16_from_block_def = String::new();
+    let mut item_lut = String::new();
     let mut state_lut = String::new();
-    let mut state_properties_lut = String::new();
+    let mut state_attributes_lut = String::new();
     let mut state_count = 0;
+    let mut block_id = 0;
     for (block_name, block) in &blocks {
         let min_state_count = state_count;
         state_count += write_block_state(
@@ -124,67 +132,272 @@ pub fn write_block_states() -> anyhow::Result<(
         )?;
 
         // Block Properties
-        for state_id in min_state_count..state_count {
-            // todo: allow overriding properties for a particular state
-            writeln!(
-                state_properties_lut,
-                "\tBlockProperties {{ // {}",
-                block_name
-            )?;
-
-            let mut hardness = block.attributes.hardness.unwrap_or(0.0);
-            let mut replaceable = block.attributes.replaceable.unwrap_or(false);
-            let mut air = block.attributes.air.unwrap_or(false);
-            let mut is_north_face_sturdy = block.attributes.is_north_face_sturdy.unwrap_or(true);
-            let mut is_east_face_sturdy = block.attributes.is_east_face_sturdy.unwrap_or(true);
-            let mut is_south_face_sturdy = block.attributes.is_south_face_sturdy.unwrap_or(true);
-            let mut is_west_face_sturdy = block.attributes.is_west_face_sturdy.unwrap_or(true);
-
-            let state_attributes = block.state_attributes.get(&state_id.to_string());
-            if let Some(state_attributes) = state_attributes {
-                hardness = state_attributes.hardness.unwrap_or(hardness);
-                replaceable = state_attributes.replaceable.unwrap_or(replaceable);
-                air = state_attributes.air.unwrap_or(air);
-                is_north_face_sturdy = state_attributes.is_north_face_sturdy.unwrap_or(is_north_face_sturdy);
-                is_east_face_sturdy = state_attributes.is_east_face_sturdy.unwrap_or(is_east_face_sturdy);
-                is_south_face_sturdy = state_attributes.is_south_face_sturdy.unwrap_or(is_south_face_sturdy);
-                is_west_face_sturdy = state_attributes.is_west_face_sturdy.unwrap_or(is_west_face_sturdy);
-            }
-
-            writeln!(state_properties_lut, "\t\thardness: {}_f32,", hardness)?;
-            writeln!(state_properties_lut, "\t\treplaceable: {},", replaceable)?;
-            writeln!(state_properties_lut, "\t\tair: {},", air)?;
-            writeln!(state_properties_lut, "\t\tis_north_face_sturdy: {},", is_north_face_sturdy)?;
-            writeln!(state_properties_lut, "\t\tis_east_face_sturdy: {},", is_east_face_sturdy)?;
-            writeln!(state_properties_lut, "\t\tis_south_face_sturdy: {},", is_south_face_sturdy)?;
-            writeln!(state_properties_lut, "\t\tis_west_face_sturdy: {},", is_west_face_sturdy)?;
-
-            state_properties_lut.push_str("\t},\n");
+        let mut item_pascal = block.corresponding_item.replace("minecraft:", "").to_case(Case::Pascal);
+        if item_pascal.is_empty() {
+            item_pascal = "Air".into();
         }
+        for state_id in min_state_count..state_count {
+            writeln!(item_lut, "\t\tcrate::item::Item::{}, // Block: {}", item_pascal, block_name)?;
+
+            if let Some(values) = block_name_to_state_ids.get_mut(&block_name.clone()) {
+                values.push(state_id);
+            } else {
+                let mut values = Vec::new();
+                values.push(state_id);
+                block_name_to_state_ids.insert(block_name.clone(), values);
+            }
+            write_state_attributes(&mut state_attributes_lut, block_name, state_id, block)?;
+        }
+
+        block_name_to_id.insert(block_name.clone(), block_id);
+        block_id += 1;
     }
 
     let mut write_buffer = String::new();
 
-    // Block Into<u16>
-    write_buffer.push_str("impl From<&Block> for u16 {\n");
-    write_buffer.push_str("\tfn from(block: &Block) -> u16 {\n");
-    write_buffer.push_str("\t\tblock.to_id()\n");
-    write_buffer.push_str("\t}\n");
-    write_buffer.push_str("}\n");
+    // Write Main block.rs
+    write_block_rs(&mut write_buffer, block_def)?;
 
-    write_buffer.push_str("impl Block {\n");
-    write_buffer.push_str("\tpub const fn to_id(&self) -> u16 {\n");
-    write_buffer.push_str("\t\tmatch self {\n");
-    write_buffer.push_str(&u16_from_block_def);
-    write_buffer.push_str("\t\t_ => 0\n");
-    write_buffer.push_str("\t\t}\n");
-    write_buffer.push_str("\t}\n");
-    write_buffer.push_str("}\n");
-    let mut f = crate::file_out("block_to_u16.rs");
+    // Block Parameters
+    let mut f = file_src("block_parameter.rs");
+    f.write_all(parameter_writer.get_enum_code().as_bytes())?;
+
+    // Block Tags
+    write_block_tags(block_name_to_state_ids, block_name_to_id, &mut write_buffer)?;
+
+    // Block Into<u16>
+    write_block_to_u16(&mut write_buffer, u16_from_block_def)?;
+
+    // Block TryFrom<u16> + LUT
+    write_u16_to_block(&mut write_buffer, state_count, state_lut)?;
+
+    // Item from u16 + LUT
+    write_state_to_item(&mut write_buffer, state_count, item_lut)?;
+
+    // Block Attributes
+    write_u16_to_attributes(&mut write_buffer, state_count, state_attributes_lut)?;
+
+    Ok((
+        parameter_writer.get_placement_method_returns().clone(),
+        parameter_writer.get_aliases().clone(),
+    ))
+}
+
+fn write_state_to_item(write_buffer: &mut String, state_count: usize, item_lut: String) -> Result<(), anyhow::Error> {
+    writeln!(
+        write_buffer,
+        "const ITEM_LUT: [crate::item::Item; {}] = [",
+        state_count
+    )?;
+    write_buffer.push_str(&item_lut);
+    write_buffer.push_str("];");
+
+    let mut f = file_out("u16_to_item.rs");
     f.write_all(write_buffer.as_bytes())?;
     write_buffer.clear();
 
-    // Block TryFrom<u16> + LUT
+    Ok(())
+}
+
+fn write_block_tags(block_name_to_state_ids: BTreeMap<String, Vec<usize>>, block_name_to_id: BTreeMap<String, usize>, write_buffer: &mut String) -> Result<(), anyhow::Error> {
+    let tags_data = include_str!("../data/tags/block_tags.json");
+    let block_tags: IndexMap<String, IndexMap<String, Vec<String>>> = serde_json::from_str(tags_data)?;
+    let mut tag_name_to_states: IndexMap<String, (BTreeSet<usize>, BTreeSet<usize>, Vec<String>)> = IndexMap::new();
+    for (tag_name, value_map) in block_tags {
+        let tag_name = tag_name.replace("minecraft:", "");
+        if let Some(values) = value_map.get("values") {
+            let mut state_ids_set: BTreeSet<usize> = BTreeSet::new();
+            let mut ids_set: BTreeSet<usize> = BTreeSet::new();
+            let mut references = Vec::new();
+            for value in values {
+                let value = value.replace("minecraft:", "");
+                if value.starts_with("#") {
+                    let tag_reference = value.replace("#", "");
+                    references.push(tag_reference);
+                    continue;
+                }
+                
+                if let Some(states) = block_name_to_state_ids.get(&value) {
+                    state_ids_set.extend(states);
+                } else {
+                    panic!("unable to find {} in block_name_to_state_ids", value);
+                }
+
+                if let Some(id) = block_name_to_id.get(&value) {
+                    ids_set.insert(*id);
+                } else {
+                    panic!("unable to find {} in block_name_to_id", value);
+                }
+            }
+            tag_name_to_states.insert(tag_name.clone(), (state_ids_set, ids_set, references));
+        }
+    }
+    let mut has_some_references = true;
+    while has_some_references {
+        has_some_references = false;
+
+        let cloned = tag_name_to_states.clone();
+
+        for (_, (state_ids, ids, references)) in &mut tag_name_to_states {
+            if !references.is_empty() {
+                let mut new_references = Vec::new();
+
+                has_some_references = true;
+
+                for reference in references.iter() {
+                    if let Some((ref_state_ids, ref_ids, ref_references)) = cloned.get(reference) {
+                        new_references.extend(ref_references.clone());
+                        state_ids.extend(ref_state_ids);
+                        ids.extend(ref_ids);
+                    }
+                }
+
+                *references = new_references;
+            }
+        }
+    }
+    write_buffer.push_str("#[derive(Debug, Clone, Copy)]\n");
+    write_buffer.push_str("pub enum BlockTags {\n");
+    for (tag_name, _) in &tag_name_to_states {
+        let tag_name_pascal = tag_name.replace("/", "_").to_case(Case::Pascal);
+        writeln!(write_buffer, "\t{},", tag_name_pascal)?;
+    }
+    write_buffer.push_str("}\n\n");
+
+    write_buffer.push_str("impl BlockTags {\n");
+    write_buffer.push_str("\tpub fn to_namespace(self) -> &'static str {\n");
+    write_buffer.push_str("\t\tmatch self {\n");
+    for (tag_name, _) in &tag_name_to_states {
+        let tag_name_pascal = tag_name.replace("/", "_").to_case(Case::Pascal);
+        writeln!(write_buffer, "\t\t\tSelf::{} => \"{}\",", tag_name_pascal, tag_name)?;
+    }
+    write_buffer.push_str("\t\t}\n");
+    write_buffer.push_str("\t}\n\n");
+
+    write_buffer.push_str("\tpub fn iter() -> &'static [Self] {\n");
+    write_buffer.push_str("\t\t&[\n");
+    for (tag_name, _) in &tag_name_to_states {
+        let tag_name_pascal = tag_name.replace("/", "_").to_case(Case::Pascal);
+        writeln!(write_buffer, "\t\t\tSelf::{},", tag_name_pascal)?;
+    }
+    write_buffer.push_str("\t\t]\n");
+    write_buffer.push_str("\t}\n");
+
+    write_buffer.push_str("\tpub fn values(self) -> &'static [u16] {\n");
+    write_buffer.push_str("\t\tmatch self {\n");
+    for (tag_name, _) in &tag_name_to_states {
+        let tag_name_pascal = tag_name.replace("/", "_").to_case(Case::Pascal);
+        let tag_name_ss = tag_name.replace("/", "_").to_case(Case::ScreamingSnake);
+        writeln!(write_buffer, "\t\t\tSelf::{} => &{},", tag_name_pascal, tag_name_ss)?;
+    }
+    write_buffer.push_str("\t\t}\n");
+    write_buffer.push_str("\t}\n\n");
+
+    write_buffer.push_str("\tpub fn contains(self, state: u16) -> bool {\n");
+    write_buffer.push_str("\t\tmatch self {\n");
+    for (tag_name, _) in &tag_name_to_states {
+        let tag_name_pascal = tag_name.replace("/", "_").to_case(Case::Pascal);
+        let tag_name_ss = tag_name.replace("/", "_").to_case(Case::ScreamingSnake);
+        writeln!(write_buffer, "\t\t\tSelf::{} => {}_STATES.binary_search(&state).is_ok(),", tag_name_pascal, tag_name_ss)?;
+    }
+    write_buffer.push_str("\t\t}\n");
+    write_buffer.push_str("\t}\n");
+    write_buffer.push_str("}\n\n");
+
+    for (tag_name, (state_ids, ids, _)) in tag_name_to_states {
+        let tag_name_ss = tag_name.replace("/", "_").to_case(Case::ScreamingSnake);
+
+        write!(write_buffer, "pub const {}_STATES: [u16; {}] = [\n\t", tag_name_ss, state_ids.len())?;
+        for value in state_ids {
+            write!(write_buffer, "{}, ", value)?;
+        }
+        write_buffer.push_str("\n];\n");
+
+        write!(write_buffer, "pub const {}: [u16; {}] = [\n\t", tag_name_ss, ids.len())?;
+        for value in ids {
+            write!(write_buffer, "{}, ", value)?;
+        }
+        write_buffer.push_str("\n];\n");
+    }
+
+    let mut f = file_src("tags/block.rs");
+    f.write_all(write_buffer.as_bytes())?;
+    write_buffer.clear();
+    Ok(())
+}
+
+fn write_block_rs(write_buffer: &mut String, block_def: String) -> Result<(), anyhow::Error> {
+    write_buffer.push_str("use crate::block_parameter::*;\n\n");
+    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/block_to_u16.rs\"));\n");
+    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block.rs\"));\n");
+    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_item.rs\"));\n");
+    write_buffer
+        .push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block_attributes.rs\"));\n\n");
+
+    // Item Lookup
+    write_buffer.push_str("pub fn state_to_item(id: u16) -> Result<crate::item::Item, NoSuchBlockError> {\n");
+    write_buffer
+        .push_str("\tif id >= ITEM_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n");
+    write_buffer.push_str("\tOk(ITEM_LUT[id as usize])\n");
+    write_buffer.push_str("}\n");
+
+    // Block Attributes
+    write_buffer.push_str("#[derive(Debug)]\n");
+    write_buffer.push_str("pub struct BlockAttributes {\n");
+    write_buffer.push_str("\tpub hardness: f32,\n");
+    write_buffer.push_str("\tpub replaceable: bool,\n");
+    write_buffer.push_str("\tpub air: bool,\n");
+    write_buffer.push_str("\tpub is_north_face_sturdy: bool,\n");
+    write_buffer.push_str("\tpub is_east_face_sturdy: bool,\n");
+    write_buffer.push_str("\tpub is_south_face_sturdy: bool,\n");
+    write_buffer.push_str("\tpub is_west_face_sturdy: bool,\n");
+    write_buffer.push_str("\tpub is_up_face_sturdy: bool,\n");
+    write_buffer.push_str("}\n\n");
+
+    // Write Error
+    write_buffer.push_str("#[derive(Debug, thiserror::Error)]\n");
+    write_buffer.push_str("#[error(\"No block exists for id: {0}\")]\n");
+    write_buffer.push_str("pub struct NoSuchBlockError(u16);\n\n");
+
+    // State Id to Item
+
+
+    // Write Block Enum
+    write_buffer.push_str("#[derive(Debug, Clone)]\npub enum Block {\n");
+    write_buffer.push_str(&block_def);
+    write_buffer.push_str("}\n\n");
+
+    let mut f = crate::file_src("block.rs");
+    f.write_all(write_buffer.as_bytes())?;
+    write_buffer.clear();
+    Ok(())
+}
+
+fn write_u16_to_attributes(write_buffer: &mut String, state_count: usize, state_attributes_lut: String) -> Result<(), anyhow::Error> {
+    write_buffer.push_str("impl TryFrom<u16> for &BlockAttributes {\n");
+    write_buffer.push_str("\ttype Error = NoSuchBlockError;");
+    write_buffer
+        .push_str("\tfn try_from(id: u16) -> Result<&'static BlockAttributes, Self::Error> {\n");
+    write_buffer.push_str(
+        "\t\tif id >= BLOCK_ATTRIBUTES_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n",
+    );
+    write_buffer.push_str("\t\tOk(&BLOCK_ATTRIBUTES_LUT[id as usize])\n");
+    write_buffer.push_str("\t}\n");
+    write_buffer.push_str("}\n");
+    writeln!(
+        write_buffer,
+        "const BLOCK_ATTRIBUTES_LUT: [BlockAttributes; {}] = [",
+        state_count
+    )?;
+    write_buffer.push_str(&state_attributes_lut);
+    write_buffer.push_str("];");
+    let mut f = crate::file_out("u16_to_block_attributes.rs");
+    f.write_all(write_buffer.as_bytes())?;
+    write_buffer.clear();
+    Ok(())
+}
+
+fn write_u16_to_block(write_buffer: &mut String, state_count: usize, state_lut: String) -> Result<(), anyhow::Error> {
     write_buffer.push_str("impl TryFrom<u16> for &Block {\n");
     write_buffer.push_str("\ttype Error = NoSuchBlockError;");
     write_buffer.push_str("\tfn try_from(id: u16) -> Result<&'static Block, Self::Error> {\n");
@@ -200,72 +413,72 @@ pub fn write_block_states() -> anyhow::Result<(
     )?;
     write_buffer.push_str(&state_lut);
     write_buffer.push_str("];");
+
     let mut f = crate::file_out("u16_to_block.rs");
     f.write_all(write_buffer.as_bytes())?;
     write_buffer.clear();
+    Ok(())
+}
 
-    // Block Properties
-    write_buffer.push_str("impl TryFrom<u16> for &BlockProperties {\n");
-    write_buffer.push_str("\ttype Error = NoSuchBlockError;");
-    write_buffer
-        .push_str("\tfn try_from(id: u16) -> Result<&'static BlockProperties, Self::Error> {\n");
-    write_buffer.push_str(
-        "\t\tif id >= BLOCK_PROPERTIES_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n",
-    );
-    write_buffer.push_str("\t\tOk(&BLOCK_PROPERTIES_LUT[id as usize])\n");
+fn write_block_to_u16(write_buffer: &mut String, u16_from_block_def: String) -> Result<(), anyhow::Error> {
+    write_buffer.push_str("impl From<&Block> for u16 {\n");
+    write_buffer.push_str("\tfn from(block: &Block) -> u16 {\n");
+    write_buffer.push_str("\t\tblock.to_id()\n");
     write_buffer.push_str("\t}\n");
     write_buffer.push_str("}\n");
+    write_buffer.push_str("impl Block {\n");
+    write_buffer.push_str("\tpub const fn to_id(&self) -> u16 {\n");
+    write_buffer.push_str("\t\tmatch self {\n");
+    write_buffer.push_str(&u16_from_block_def);
+    write_buffer.push_str("\t\t_ => 0\n");
+    write_buffer.push_str("\t\t}\n");
+    write_buffer.push_str("\t}\n");
+    write_buffer.push_str("}\n");
+    let mut f = crate::file_out("block_to_u16.rs");
+    f.write_all(write_buffer.as_bytes())?;
+    write_buffer.clear();
+    Ok(())
+}
+
+fn write_state_attributes(state_attributes_lut: &mut String, block_name: &String, state_id: usize, block: &Block) -> Result<(), anyhow::Error> {
     writeln!(
-        write_buffer,
-        "const BLOCK_PROPERTIES_LUT: [BlockProperties; {}] = [",
-        state_count
+        state_attributes_lut,
+        "\tBlockAttributes {{ // {} ({})",
+        block_name, state_id
     )?;
-    write_buffer.push_str(&state_properties_lut);
-    write_buffer.push_str("];");
-    let mut f = crate::file_out("u16_to_block_properties.rs");
-    f.write_all(write_buffer.as_bytes())?;
-    write_buffer.clear();
 
-    // Block Parameters
-    let mut f = file_src("block_parameter.rs");
-    f.write_all(parameter_writer.get_enum_code().as_bytes())?;
-    write_buffer.clear();
+    let mut hardness = block.attributes.hardness.unwrap_or(0.0);
+    let mut replaceable = block.attributes.replaceable.unwrap_or(false);
+    let mut air = block.attributes.air.unwrap_or(false);
+    let mut is_north_face_sturdy = block.attributes.is_north_face_sturdy.unwrap_or(true);
+    let mut is_east_face_sturdy = block.attributes.is_east_face_sturdy.unwrap_or(true);
+    let mut is_south_face_sturdy = block.attributes.is_south_face_sturdy.unwrap_or(true);
+    let mut is_west_face_sturdy = block.attributes.is_west_face_sturdy.unwrap_or(true);
+    let mut is_up_face_sturdy = block.attributes.is_up_face_sturdy.unwrap_or(true);
+    let state_attributes = block.state_attributes.get(&state_id.to_string());
 
-    // Block enum
-    write_buffer.push_str("use crate::block_parameter::*;\n\n");
-    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/block_to_u16.rs\"));\n");
-    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block.rs\"));\n\n");
-    write_buffer
-        .push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block_properties.rs\"));\n\n");
+    if let Some(state_attributes) = state_attributes {
+        hardness = state_attributes.hardness.unwrap_or(hardness);
+        replaceable = state_attributes.replaceable.unwrap_or(replaceable);
+        air = state_attributes.air.unwrap_or(air);
+        is_north_face_sturdy = state_attributes.is_north_face_sturdy.unwrap_or(is_north_face_sturdy);
+        is_east_face_sturdy = state_attributes.is_east_face_sturdy.unwrap_or(is_east_face_sturdy);
+        is_south_face_sturdy = state_attributes.is_south_face_sturdy.unwrap_or(is_south_face_sturdy);
+        is_west_face_sturdy = state_attributes.is_west_face_sturdy.unwrap_or(is_west_face_sturdy);
+        is_up_face_sturdy = state_attributes.is_up_face_sturdy.unwrap_or(is_up_face_sturdy);
+    }
 
-    write_buffer.push_str("#[derive(Debug, thiserror::Error)]\n");
-    write_buffer.push_str("#[error(\"No block exists for id: {0}\")]\n");
-    write_buffer.push_str("pub struct NoSuchBlockError(u16);\n\n");
+    writeln!(state_attributes_lut, "\t\thardness: {}_f32,", hardness)?;
+    writeln!(state_attributes_lut, "\t\treplaceable: {},", replaceable)?;
+    writeln!(state_attributes_lut, "\t\tair: {},", air)?;
+    writeln!(state_attributes_lut, "\t\tis_north_face_sturdy: {},", is_north_face_sturdy)?;
+    writeln!(state_attributes_lut, "\t\tis_east_face_sturdy: {},", is_east_face_sturdy)?;
+    writeln!(state_attributes_lut, "\t\tis_south_face_sturdy: {},", is_south_face_sturdy)?;
+    writeln!(state_attributes_lut, "\t\tis_west_face_sturdy: {},", is_west_face_sturdy)?;
+    writeln!(state_attributes_lut, "\t\tis_up_face_sturdy: {},", is_up_face_sturdy)?;
 
-    write_buffer.push_str("#[derive(Debug)]\npub enum Block {\n");
-    write_buffer.push_str(&block_def);
-    write_buffer.push_str("}\n\n");
-
-    // Block Properties Struct
-    write_buffer.push_str("#[derive(Debug)]\n");
-    write_buffer.push_str("pub struct BlockProperties {\n");
-    write_buffer.push_str("\tpub hardness: f32,\n");
-    write_buffer.push_str("\tpub replaceable: bool,\n");
-    write_buffer.push_str("\tpub air: bool,\n");
-    write_buffer.push_str("\tpub is_north_face_sturdy: bool,\n");
-    write_buffer.push_str("\tpub is_east_face_sturdy: bool,\n");
-    write_buffer.push_str("\tpub is_south_face_sturdy: bool,\n");
-    write_buffer.push_str("\tpub is_west_face_sturdy: bool,\n");
-    write_buffer.push_str("}\n\n");
-
-    let mut f = crate::file_src("block.rs");
-    f.write_all(write_buffer.as_bytes())?;
-    write_buffer.clear();
-
-    Ok((
-        parameter_writer.get_placement_method_returns().clone(),
-        parameter_writer.get_aliases().clone(),
-    ))
+    state_attributes_lut.push_str("\t},\n");
+    Ok(())
 }
 
 fn write_block_state(
@@ -653,7 +866,7 @@ impl ParameterWriter {
     fn get_enum_code(&self) -> String {
         let mut code = String::new();
         for (enum_name, enum_def) in self.code.iter() {
-            code.push_str("#[repr(u8)]\n#[derive(Clone, Copy, Debug)]\npub enum ");
+            code.push_str("#[repr(u8)]\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum ");
             code.push_str(&enum_name.to_case(Case::Pascal));
             code.push_str(enum_def);
         }

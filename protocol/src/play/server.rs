@@ -114,12 +114,12 @@ identify_packets! {
     // TabList = 0x63,
     // TagQuery = 0x64,
     // TakeItemEntity = 0x65,
-    TeleportEntity = 0x66
-    // UpdateAdvancements = 0x65,
-    // UpdateAttributes = 0x66,
-    // UpdateMobEffect = 0x67,
-    // UpdateRecipes = 0x68,
-    // UpdateTags = 0x69,
+    TeleportEntity = 0x66,
+    // UpdateAdvancements = 0x67,
+    // UpdateAttributes = 0x68,
+    // UpdateMobEffect = 0x69,
+    // UpdateRecipes = 0x6f,
+    UpdateTags<'_> = 0x6b
 }
 
 // Add Entity
@@ -602,5 +602,31 @@ slice_serializable! {
         pub yaw: f32 as ByteRotation,
         pub pitch: f32 as ByteRotation,
         pub on_ground: bool as Single
+    }
+}
+
+// Update Tags
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Tag<'a> {
+        // Tag identifier (Vanilla required tags are minecraft:block, minecraft:item, minecraft:fluid, minecraft:entity_type, and minecraft:game_event)
+        pub name: &'a str as SizedString,
+        pub entries: Vec<u16> as SizedArray<VarInt>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct TagRegistry<'a> {
+        // Tag identifier (Vanilla required tags are minecraft:block, minecraft:item, minecraft:fluid, minecraft:entity_type, and minecraft:game_event)
+        pub tag_type: &'a str as SizedString,
+        pub values: Vec<Tag<'a>> as SizedArray<Tag>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct UpdateTags<'a> {
+        pub registries: Vec<TagRegistry<'a>> as SizedArray<TagRegistry>
     }
 }

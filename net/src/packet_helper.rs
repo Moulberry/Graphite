@@ -48,7 +48,7 @@ where
     // write packet data
     // safety: invariant should be satisfied because we allocated at least `get_write_size` bytes
     let contents = &mut bytes[4..];
-    let contents = unsafe { VarInt::write(contents, entity_id) };
+    let contents = unsafe { <VarInt as SliceSerializable<i32>>::write(contents, entity_id) };
     let contents = unsafe { metadata.write_changes(contents) };
     let bytes_written = expected_packet_size - contents.len();
 

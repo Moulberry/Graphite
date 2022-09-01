@@ -6,3 +6,4 @@ pub mod block_parameter;
 pub mod entity;
 pub mod item;
 pub mod placement;
+pub mod tags;

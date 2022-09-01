@@ -326,7 +326,7 @@ use binary::slice_serialization::*;
 fn serialize_type_to_write(typ: &String, varname: &str) -> String {
     match typ.as_str() {
         "byte" => format!("<Single as SliceSerializable<u8>>::write(bytes, self.{varname})"),
-        "int" => format!("VarInt::write(bytes, self.{varname})"),
+        "int" => format!("<VarInt as SliceSerializable<i32>>::write(bytes, self.{varname})"),
         "float" => format!("<BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname})"),
         "string" => format!(
             "<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.{varname})"

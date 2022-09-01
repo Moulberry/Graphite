@@ -39,7 +39,7 @@ use crate::{
     inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
     universe::{EntityId, UniverseService},
     world::{
-        chunk::BlockStorage, ChunkViewPosition, TickPhase, TickPhaseInner, World, WorldService,
+        chunk::BlockStorage, ChunkViewPosition, TickPhase, TickPhaseInner, World, WorldService, block_update,
     },
 };
 
@@ -670,20 +670,34 @@ impl<P: PlayerService> Player<P> {
     }
 
     fn break_block(&mut self, pos: BlockPosition) {
-        if pos.x >= 0 && pos.y >= 0 && pos.z >= 0 {
-            if let Some(old) = self
-                .get_world_mut()
-                .set_block(pos.x as _, pos.y as _, pos.z as _, 0)
-            {
-                self.packets.write_viewable_packet(
-                    &LevelEvent {
-                        event_type: LevelEventType::ParticlesDestroyBlock,
-                        pos,
-                        data: old as _,
-                        global: false,
-                    },
-                    true,
-                );
+        if let Some(old) = self
+            .get_world_mut()
+            .set_block_i32(pos.x as _, pos.y as _, pos.z as _, 0)
+        {
+            self.packets.write_viewable_packet(
+                &LevelEvent {
+                    event_type: LevelEventType::ParticlesDestroyBlock,
+                    pos,
+                    data: old as _,
+                    global: false,
+                },
+                true,
+            );
+
+            // Update neighbors
+            for offset in [(1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 0, 0), (0, -1, 0), (0, 0, -1)] {
+                let x = pos.x + offset.0;
+                let y = pos.y + offset.1;
+                let z = pos.z + offset.2;
+                
+                let block_state_id = self.get_world().get_block_i32(x, y, z);
+                if let Some(block_state_id) = block_state_id {
+                    let block: &Block = block_state_id.try_into().unwrap();
+                    let mut block = block.clone();
+                    if block_update::update(block_state_id, &mut block, x, y, z, self.get_world_mut()) {
+                        self.get_world_mut().set_block_i32(x, y, z, (&block).into());
+                    }
+                }
             }
         }
     }
@@ -721,16 +735,40 @@ impl<P: PlayerService> Player<P> {
 
                     let world = self.get_world_mut();
                     if item.get_properties().has_corresponding_block {
-                        if let Some(block) = item.try_place(&mut world.create_placement_context(
+                        let ctx_and_pos = world.create_placement_context(
                             position,
                             face,
                             offset,
                             self.position.rot,
-                        )) {
-                            let block_id: u16 = block.to_id();
-                            let relative = position.relative(face);
-                            world.set_block_i32(relative.x, relative.y as _, relative.z, block_id);
+                            item
+                        );
+
+                        if let Some(ctx_and_pos) = ctx_and_pos {
+                            let mut ctx = ctx_and_pos.0;
+                            let place_position = ctx_and_pos.1;
+
+                            if let Some(block) = item.try_place(&mut ctx) {
+                                let block_id: u16 = block.to_id();
+                                world.set_block_i32(place_position.x, place_position.y, place_position.z, block_id);
+
+                                // Update neighbors
+                                for offset in [(1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 0, 0), (0, -1, 0), (0, 0, -1)] {
+                                    let x = place_position.x + offset.0;
+                                    let y = place_position.y + offset.1;
+                                    let z = place_position.z + offset.2;
+                                    
+                                    let block_state_id = self.get_world().get_block_i32(x, y, z);
+                                    if let Some(block_state_id) = block_state_id {
+                                        let block: &Block = block_state_id.try_into().unwrap();
+                                        let mut block = block.clone();
+                                        if block_update::update(block_state_id, &mut block, x, y, z, self.get_world_mut()) {
+                                            self.get_world_mut().set_block_i32(x, y, z, (&block).into());
+                                        }
+                                    }
+                                }
+                            }
                         }
+
                     } else if item == Item::WaterBucket {
                         // check if clicked block is waterloggable
                         let relative = position.relative(face);

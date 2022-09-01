@@ -3,10 +3,10 @@ use std::{borrow::Cow, collections::HashMap};
 use anyhow::bail;
 use bevy_ecs::{prelude::*, world::EntityMut};
 use binary::slice_serialization::NBTBlob;
-use minecraft_constants::block::BlockProperties;
+use minecraft_constants::{block::BlockAttributes, tags::block::BlockTags, item::Item};
 use net::network_buffer::WriteBuffer;
 use protocol::{
-    play::server::{Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity},
+    play::server::{Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity, Tag, TagRegistry, UpdateTags},
     types::{BlockPosition, Direction},
 };
 
@@ -578,7 +578,7 @@ impl<W: WorldService> World<W> {
         Ok(chunk_view_position)
     }
 
-    pub(crate) fn write_login_packet(
+    pub(crate) fn write_login_packets(
         &mut self,
         //write_buffer: &mut WriteBuffer,
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
@@ -614,6 +614,25 @@ impl<W: WorldService> World<W> {
             net::packet_helper::write_packet(&mut proto_player.write_buffer, command_packet)?;
         }
 
+        let mut block_registry: Vec<Tag> = Vec::new();
+        for block_tag in BlockTags::iter() {
+            let tag_name = block_tag.to_namespace();
+            let tag_values = block_tag.values();
+            block_registry.push(Tag {
+                name: tag_name,
+                entries: tag_values.into(),
+            })
+        }
+
+        let mut registries: Vec<TagRegistry> = Vec::new();
+        registries.push(TagRegistry {
+            tag_type: "block",
+            values: block_registry,
+        });
+        net::packet_helper::write_packet(&mut proto_player.write_buffer, &UpdateTags {
+            registries,
+        })?;
+
         Ok(())
     }
 
@@ -623,27 +642,49 @@ impl<W: WorldService> World<W> {
         face: Direction,
         click_offset: (f32, f32, f32),
         placer_rot: Rotation,
-    ) -> ServerPlacementContext<W> {
-        let offset_pos = pos.relative(face);
+        placed_item: Item,
+    ) -> Option<(ServerPlacementContext<W>, BlockPosition)> {
+        let block = self.get_block_i32(pos.x, pos.y, pos.z)?;
+        if let Ok(attributes) = <&BlockAttributes>::try_from(block) {
+            let (offset_pos, existing_block_id) = if attributes.replaceable {
+                (pos, block)
+            } else {
+                let offset_pos = pos.relative(face);
+                let offset_block = self.get_block_i32(offset_pos.x, offset_pos.y, offset_pos.z)?;
+                if let Ok(offset_attributes) = <&BlockAttributes>::try_from(offset_block) {
+                    if offset_attributes.replaceable {
+                        (offset_pos, offset_block)
+                    } else {
+                        return None;
+                    }
+                } else {
+                    return None;
+                }
+            };
 
-        let ctx = ServerPlacementContext {
-            interacted_pos: pos,
-            offset_pos,
-            click_offset,
-            face,
-            placer_yaw: placer_rot.yaw,
-            placer_pitch: placer_rot.pitch,
-            world: self,
-            existing_block_id: None,
-            existing_block: None,
-        };
+            let ctx = ServerPlacementContext {
+                interacted_pos: pos,
+                offset_pos,
+                click_offset,
+                face,
+                placer_yaw: placer_rot.yaw,
+                placer_pitch: placer_rot.pitch,
+                placed_item,
+                world: self,
+                existing_block_id: Some(Some(existing_block_id)),
+                existing_block: None
+            };
+    
+            Some((ctx, offset_pos))
+        } else {
+            None
+        }
 
-        ctx
     }
 
     pub fn get_required_destroy_ticks(&self, x: i32, y: i32, z: i32, speed: f32) -> Option<f32> {
         if let Some(block) = self.get_block_i32(x, y, z) {
-            let properties: &BlockProperties = block.try_into().expect("valid block");
+            let properties: &BlockAttributes = block.try_into().expect("valid block");
 
             if properties.air {
                 None

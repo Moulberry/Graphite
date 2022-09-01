@@ -3,7 +3,7 @@
 // Data is provided courtesy of `https://github.com/Minestom/MinestomDataGenerator`
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Face {
 	Floor,
 	Wall,
@@ -11,7 +11,7 @@ pub enum Face {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Instrument {
 	Harp,
 	Basedrum,
@@ -32,7 +32,7 @@ pub enum Instrument {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Facing {
 	North,
 	East,
@@ -43,7 +43,7 @@ pub enum Facing {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
 	North,
 	South,
@@ -52,21 +52,21 @@ pub enum Direction {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Part {
 	Head,
 	Foot,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Half {
 	Top,
 	Bottom,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StairShape {
 	Straight,
 	InnerLeft,
@@ -76,14 +76,14 @@ pub enum StairShape {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UpperOrLower {
 	Upper,
 	Lower,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StraightRailShape {
 	NorthSouth,
 	EastWest,
@@ -94,14 +94,14 @@ pub enum StraightRailShape {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PistonType {
 	Normal,
 	Sticky,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ChestType {
 	Single,
 	Left,
@@ -109,14 +109,14 @@ pub enum ChestType {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Axis2D {
 	X,
 	Z,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WallConnection {
 	None,
 	Low,
@@ -124,7 +124,7 @@ pub enum WallConnection {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WireConnection {
 	Up,
 	Side,
@@ -132,7 +132,7 @@ pub enum WireConnection {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Axis3D {
 	X,
 	Y,
@@ -140,14 +140,14 @@ pub enum Axis3D {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Hinge {
 	Left,
 	Right,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RailShape {
 	NorthSouth,
 	EastWest,
@@ -162,7 +162,7 @@ pub enum RailShape {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Attachment {
 	Floor,
 	Ceiling,
@@ -171,7 +171,7 @@ pub enum Attachment {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DirectionOrDown {
 	Down,
 	North,
@@ -181,7 +181,7 @@ pub enum DirectionOrDown {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SlabType {
 	Top,
 	Bottom,
@@ -189,7 +189,7 @@ pub enum SlabType {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Leaves {
 	None,
 	Small,
@@ -197,14 +197,14 @@ pub enum Leaves {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ComparatorMode {
 	Compare,
 	Subtract,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StructureBlockMode {
 	Save,
 	Load,
@@ -213,7 +213,7 @@ pub enum StructureBlockMode {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Orientation {
 	DownEast,
 	DownNorth,
@@ -230,7 +230,7 @@ pub enum Orientation {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SculkSensorPhase {
 	Inactive,
 	Active,
@@ -238,7 +238,7 @@ pub enum SculkSensorPhase {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Thickness {
 	TipMerge,
 	Tip,
@@ -248,14 +248,14 @@ pub enum Thickness {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VerticalDirection {
 	Up,
 	Down,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Tilt {
 	None,
 	Unstable,

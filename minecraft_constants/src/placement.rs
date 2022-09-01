@@ -19,6 +19,7 @@ pub trait PlacementContext {
 	fn get_facing_look_horizontal_nonreplacable_opposite(&mut self) -> Direction;
 	fn get_facing_look_horizontal_opposite(&mut self) -> Direction;
 	fn get_facing_look_horizontal_plus_90(&mut self) -> Direction;
+	fn get_facing_look_horizontal_survivable(&mut self) -> Direction;
 	fn get_facing_look_horizontal_survivable_opposite(&mut self) -> Direction;
 	fn get_facing_look_opposite(&mut self) -> Facing;
 	fn get_fence_should_connect_east(&mut self) -> bool;
@@ -44,13 +45,13 @@ pub trait PlacementContext {
 	fn get_tripwire_should_connect_north(&mut self) -> bool;
 	fn get_tripwire_should_connect_south(&mut self) -> bool;
 	fn get_tripwire_should_connect_west(&mut self) -> bool;
+	fn has_different_block_above(&mut self) -> bool;
+	fn has_different_block_below(&mut self) -> bool;
+	fn has_different_block_east(&mut self) -> bool;
+	fn has_different_block_north(&mut self) -> bool;
+	fn has_different_block_south(&mut self) -> bool;
+	fn has_different_block_west(&mut self) -> bool;
 	fn has_neighbor_signal(&mut self) -> bool;
-	fn has_same_block_above(&mut self) -> bool;
-	fn has_same_block_below(&mut self) -> bool;
-	fn has_same_block_east(&mut self) -> bool;
-	fn has_same_block_north(&mut self) -> bool;
-	fn has_same_block_south(&mut self) -> bool;
-	fn has_same_block_west(&mut self) -> bool;
 	fn has_smoke_source_below(&mut self) -> bool;
 	fn has_snow_above(&mut self) -> bool;
 	fn is_in_water(&mut self) -> bool;
@@ -779,28 +780,28 @@ impl Item {
 			Item::ChiseledDeepslate => Some(Block::ChiseledDeepslate),
 			Item::ReinforcedDeepslate => Some(Block::ReinforcedDeepslate),
 			Item::BrownMushroomBlock => Some(Block::BrownMushroomBlock {
-				down: ctx.has_same_block_below(),
-				east: ctx.has_same_block_east(),
-				north: ctx.has_same_block_north(),
-				south: ctx.has_same_block_south(),
-				up: ctx.has_same_block_above(),
-				west: ctx.has_same_block_west(),
+				down: ctx.has_different_block_below(),
+				east: ctx.has_different_block_east(),
+				north: ctx.has_different_block_north(),
+				south: ctx.has_different_block_south(),
+				up: ctx.has_different_block_above(),
+				west: ctx.has_different_block_west(),
 			}),
 			Item::RedMushroomBlock => Some(Block::RedMushroomBlock {
-				down: ctx.has_same_block_below(),
-				east: ctx.has_same_block_east(),
-				north: ctx.has_same_block_north(),
-				south: ctx.has_same_block_south(),
-				up: ctx.has_same_block_above(),
-				west: ctx.has_same_block_west(),
+				down: ctx.has_different_block_below(),
+				east: ctx.has_different_block_east(),
+				north: ctx.has_different_block_north(),
+				south: ctx.has_different_block_south(),
+				up: ctx.has_different_block_above(),
+				west: ctx.has_different_block_west(),
 			}),
 			Item::MushroomStem => Some(Block::MushroomStem {
-				down: ctx.has_same_block_below(),
-				east: ctx.has_same_block_east(),
-				north: ctx.has_same_block_north(),
-				south: ctx.has_same_block_south(),
-				up: ctx.has_same_block_above(),
-				west: ctx.has_same_block_west(),
+				down: ctx.has_different_block_below(),
+				east: ctx.has_different_block_east(),
+				north: ctx.has_different_block_north(),
+				south: ctx.has_different_block_south(),
+				up: ctx.has_different_block_above(),
+				west: ctx.has_different_block_west(),
 			}),
 			Item::IronBars => Some(Block::IronBars {
 				east: ctx.get_iron_bars_should_connect_east(),
@@ -1871,7 +1872,7 @@ impl Item {
 			}),
 			Item::TripwireHook => Some(Block::TripwireHook {
 				attached: false,
-				facing: Direction::North,
+				facing: ctx.get_facing_look_horizontal_survivable_opposite(),
 				powered: false,
 			}),
 			Item::TrappedChest => Some(Block::TrappedChest {
@@ -2255,7 +2256,7 @@ impl Item {
 			Item::DriedKelpBlock => Some(Block::DriedKelpBlock),
 			Item::CocoaBeans => Some(Block::Cocoa {
 				age: 0,
-				facing: Direction::North,
+				facing: ctx.get_facing_look_horizontal_survivable(),
 			}),
 			Item::Cake => Some(Block::Cake {
 				bites: 0,

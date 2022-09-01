@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, time::Duration};
 
 use anyhow::bail;
-use binary::slice_serialization;
+use binary::slice_serialization::{self, VarInt, Single};
 use binary::slice_serialization::SliceSerializable;
 use net::{
     network_buffer::WriteBuffer,
@@ -111,7 +111,7 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
         } else if bytes[0..3] == [0xFE, 0x01, 0xFA] {
             bail!("legacy server list ping from 2013 is not supported");
         } else {
-            let packet_id: u8 = slice_serialization::VarInt::read(bytes)?.try_into()?;
+            let packet_id: u8 = Single::read(bytes)?;
             if let Ok(packet_id) = handshake::client::PacketId::try_from(packet_id) {
                 match packet_id {
                     handshake::client::PacketId::Intention => {
@@ -142,7 +142,7 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
         connection: &Connection<Concierge<T>>,
         write_buffer: &mut WriteBuffer,
     ) -> anyhow::Result<bool> {
-        let packet_id: u8 = slice_serialization::VarInt::read(bytes)?.try_into()?;
+        let packet_id: u8 = Single::read(bytes)?;
         if let Ok(packet_id) = status::client::PacketId::try_from(packet_id) {
             match packet_id {
                 status::client::PacketId::StatusRequest => {
@@ -175,7 +175,7 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
         bytes: &mut &[u8],
         write_buffer: &mut WriteBuffer,
     ) -> anyhow::Result<bool> {
-        let packet_id: u8 = slice_serialization::VarInt::read(bytes)?.try_into()?;
+        let packet_id: u8 = Single::read(bytes)?;
         if let Ok(packet_id) = login::client::PacketId::try_from(packet_id) {
             match packet_id {
                 login::client::PacketId::Hello => {

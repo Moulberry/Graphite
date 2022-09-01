@@ -80,7 +80,7 @@ pub enum MoveAction {
     StartFallFlying,
 }
 
-#[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive, Default)]
+#[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive, Default, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Direction {
     #[default]
@@ -228,7 +228,7 @@ impl SliceSerializable<'_, f32> for QuantizedShort {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub struct BlockPosition {
     pub x: i32,
-    pub y: i16,
+    pub y: i32,
     pub z: i32,
 }
 
@@ -281,7 +281,7 @@ impl SliceSerializable<'_> for BlockPosition {
 
         Ok(Self {
             x: (value >> 38) as i32,
-            y: (value << 52 >> 52) as i16,
+            y: (value << 52 >> 52) as i32,
             z: (value << 26 >> 38) as i32,
         })
     }
@@ -405,7 +405,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 bytes = SizedArray::<VarInt>::write(bytes, children);
 
                 if let Some(redirect) = redirect {
-                    VarInt::write(bytes, *redirect);
+                    <VarInt as SliceSerializable<i32>>::write(bytes, *redirect);
                 }
 
                 <SizedString<0> as SliceSerializable<&'_ str>>::write(bytes, name)
@@ -427,7 +427,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 bytes = SizedArray::<VarInt>::write(bytes, children);
 
                 if let Some(redirect) = redirect {
-                    VarInt::write(bytes, *redirect);
+                    <VarInt as SliceSerializable<i32>>::write(bytes, *redirect);
                 }
 
                 bytes = <SizedString<0> as SliceSerializable<&'_ str>>::write(bytes, name);
@@ -452,7 +452,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
         match data {
             CommandNode::Root { children } => {
                 1 + // flags
-                VarInt::get_write_size(children.len() as _) + // children size
+                <VarInt as SliceSerializable<usize>>::get_write_size(children.len()) + // children size
                 VARINT_MAX * children.len() // children
             }
             CommandNode::Literal {
@@ -462,9 +462,9 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 name,
             } => {
                 1 + // flags
-                VarInt::get_write_size(children.len() as _) + // children size
+                <VarInt as SliceSerializable<usize>>::get_write_size(children.len()) + // children size
                 VARINT_MAX * children.len() + // children
-                redirect.map_or(0, VarInt::get_write_size) + // redirect
+                redirect.map_or(0, <VarInt as SliceSerializable<i32>>::get_write_size) + // redirect
                 <SizedString<0> as SliceSerializable<&'_ str>>::get_write_size(name)
                 // name
             }
@@ -477,9 +477,9 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 parser,
             } => {
                 1 + // flags
-                VarInt::get_write_size(children.len() as _) + // children size
+                <VarInt as SliceSerializable<usize>>::get_write_size(children.len()) + // children size
                 VARINT_MAX * children.len() + // children
-                redirect.map_or(0, VarInt::get_write_size) + // redirect
+                redirect.map_or(0, <VarInt as SliceSerializable<i32>>::get_write_size) + // redirect
                 (if suggestion.is_some() { 33 } else { 0 }) +
                 <SizedString<0> as SliceSerializable<&'_ str>>::get_write_size(name) + // name
                 CommandNodeParser::get_write_size(*parser) // parser

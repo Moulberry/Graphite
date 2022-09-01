@@ -307,7 +307,7 @@ impl AllayMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -337,7 +337,7 @@ impl AllayMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -352,7 +352,7 @@ impl AllayMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -362,12 +362,12 @@ impl AllayMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -566,7 +566,7 @@ impl AreaEffectCloudMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -596,7 +596,7 @@ impl AreaEffectCloudMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -606,7 +606,7 @@ impl AreaEffectCloudMetadata {
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.color)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -843,7 +843,7 @@ impl ArmorStandMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -873,7 +873,7 @@ impl ArmorStandMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -888,7 +888,7 @@ impl ArmorStandMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -898,12 +898,12 @@ impl ArmorStandMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -1148,7 +1148,7 @@ impl ArrowMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -1178,7 +1178,7 @@ impl ArrowMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -1193,7 +1193,7 @@ impl ArrowMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_effect_color)
 			},
 			_ => unreachable!()
 		}
@@ -1406,7 +1406,7 @@ impl AxolotlMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -1436,7 +1436,7 @@ impl AxolotlMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -1451,7 +1451,7 @@ impl AxolotlMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -1461,12 +1461,12 @@ impl AxolotlMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -1486,7 +1486,7 @@ impl AxolotlMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.variant)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.variant)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -1709,7 +1709,7 @@ impl BatMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -1739,7 +1739,7 @@ impl BatMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -1754,7 +1754,7 @@ impl BatMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -1764,12 +1764,12 @@ impl BatMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -2003,7 +2003,7 @@ impl BeeMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -2033,7 +2033,7 @@ impl BeeMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -2048,7 +2048,7 @@ impl BeeMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -2058,12 +2058,12 @@ impl BeeMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -2088,7 +2088,7 @@ impl BeeMetadata {
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.remaining_anger_time)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.remaining_anger_time)
 			},
 			_ => unreachable!()
 		}
@@ -2299,7 +2299,7 @@ impl BlazeMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -2329,7 +2329,7 @@ impl BlazeMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -2344,7 +2344,7 @@ impl BlazeMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -2354,12 +2354,12 @@ impl BlazeMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -2569,7 +2569,7 @@ impl BoatMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -2599,17 +2599,17 @@ impl BoatMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -2619,7 +2619,7 @@ impl BoatMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_type)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
@@ -2634,7 +2634,7 @@ impl BoatMetadata {
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_bubble_time)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_bubble_time)
 			},
 			_ => unreachable!()
 		}
@@ -2825,7 +2825,7 @@ impl ChestBoatMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -2855,17 +2855,17 @@ impl ChestBoatMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -2875,7 +2875,7 @@ impl ChestBoatMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_type)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
@@ -2890,7 +2890,7 @@ impl ChestBoatMetadata {
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_bubble_time)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_bubble_time)
 			},
 			_ => unreachable!()
 		}
@@ -3129,7 +3129,7 @@ impl CatMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -3159,7 +3159,7 @@ impl CatMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -3174,7 +3174,7 @@ impl CatMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -3184,12 +3184,12 @@ impl CatMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -3234,7 +3234,7 @@ impl CatMetadata {
 			22 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.collar_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.collar_color)
 			},
 			_ => unreachable!()
 		}
@@ -3453,7 +3453,7 @@ impl CaveSpiderMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -3483,7 +3483,7 @@ impl CaveSpiderMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -3498,7 +3498,7 @@ impl CaveSpiderMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -3508,12 +3508,12 @@ impl CaveSpiderMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -3735,7 +3735,7 @@ impl ChickenMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -3765,7 +3765,7 @@ impl ChickenMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -3780,7 +3780,7 @@ impl ChickenMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -3790,12 +3790,12 @@ impl ChickenMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -4017,7 +4017,7 @@ impl CodMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -4047,7 +4047,7 @@ impl CodMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -4062,7 +4062,7 @@ impl CodMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -4072,12 +4072,12 @@ impl CodMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -4299,7 +4299,7 @@ impl CowMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -4329,7 +4329,7 @@ impl CowMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -4344,7 +4344,7 @@ impl CowMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -4354,12 +4354,12 @@ impl CowMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -4593,7 +4593,7 @@ impl CreeperMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -4623,7 +4623,7 @@ impl CreeperMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -4638,7 +4638,7 @@ impl CreeperMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -4648,12 +4648,12 @@ impl CreeperMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -4668,7 +4668,7 @@ impl CreeperMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.swell_dir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.swell_dir)
 			},
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
@@ -4901,7 +4901,7 @@ impl DolphinMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -4931,7 +4931,7 @@ impl DolphinMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -4946,7 +4946,7 @@ impl DolphinMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -4956,12 +4956,12 @@ impl DolphinMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -4986,7 +4986,7 @@ impl DolphinMetadata {
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.moistness_level)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.moistness_level)
 			},
 			_ => unreachable!()
 		}
@@ -5215,7 +5215,7 @@ impl DonkeyMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -5245,7 +5245,7 @@ impl DonkeyMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -5260,7 +5260,7 @@ impl DonkeyMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -5270,12 +5270,12 @@ impl DonkeyMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -5464,7 +5464,7 @@ impl DragonFireballMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -5494,7 +5494,7 @@ impl DragonFireballMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -5695,7 +5695,7 @@ impl DrownedMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -5725,7 +5725,7 @@ impl DrownedMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -5740,7 +5740,7 @@ impl DrownedMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -5750,12 +5750,12 @@ impl DrownedMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -5775,7 +5775,7 @@ impl DrownedMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.special_type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.special_type)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -5997,7 +5997,7 @@ impl ElderGuardianMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -6027,7 +6027,7 @@ impl ElderGuardianMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -6042,7 +6042,7 @@ impl ElderGuardianMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -6052,12 +6052,12 @@ impl ElderGuardianMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -6077,7 +6077,7 @@ impl ElderGuardianMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_attack_target)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_attack_target)
 			},
 			_ => unreachable!()
 		}
@@ -6244,7 +6244,7 @@ impl EndCrystalMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -6274,7 +6274,7 @@ impl EndCrystalMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -6477,7 +6477,7 @@ impl EnderDragonMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -6507,7 +6507,7 @@ impl EnderDragonMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -6522,7 +6522,7 @@ impl EnderDragonMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -6532,12 +6532,12 @@ impl EnderDragonMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -6552,7 +6552,7 @@ impl EnderDragonMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.phase)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.phase)
 			},
 			_ => unreachable!()
 		}
@@ -6771,7 +6771,7 @@ impl EndermanMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -6801,7 +6801,7 @@ impl EndermanMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -6816,7 +6816,7 @@ impl EndermanMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -6826,12 +6826,12 @@ impl EndermanMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -7061,7 +7061,7 @@ impl EndermiteMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -7091,7 +7091,7 @@ impl EndermiteMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -7106,7 +7106,7 @@ impl EndermiteMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -7116,12 +7116,12 @@ impl EndermiteMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -7356,7 +7356,7 @@ impl EvokerFangsMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -7386,7 +7386,7 @@ impl EvokerFangsMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -7521,7 +7521,7 @@ impl ExperienceOrbMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -7551,7 +7551,7 @@ impl ExperienceOrbMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -7692,7 +7692,7 @@ impl<'a> EyeOfEnderMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -7722,7 +7722,7 @@ impl<'a> EyeOfEnderMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -7870,7 +7870,7 @@ impl FallingBlockMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -7900,7 +7900,7 @@ impl FallingBlockMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -8060,7 +8060,7 @@ impl<'a> FireworkRocketMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -8090,7 +8090,7 @@ impl<'a> FireworkRocketMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -8324,7 +8324,7 @@ impl FoxMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -8354,7 +8354,7 @@ impl FoxMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -8369,7 +8369,7 @@ impl FoxMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -8379,12 +8379,12 @@ impl FoxMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -8404,7 +8404,7 @@ impl FoxMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.r#type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.r#type)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -8646,7 +8646,7 @@ impl FrogMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -8676,7 +8676,7 @@ impl FrogMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -8691,7 +8691,7 @@ impl FrogMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -8701,12 +8701,12 @@ impl FrogMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -8942,7 +8942,7 @@ impl GhastMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -8972,7 +8972,7 @@ impl GhastMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -8987,7 +8987,7 @@ impl GhastMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -8997,12 +8997,12 @@ impl GhastMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -9218,7 +9218,7 @@ impl GiantMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -9248,7 +9248,7 @@ impl GiantMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -9263,7 +9263,7 @@ impl GiantMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -9273,12 +9273,12 @@ impl GiantMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -9451,7 +9451,7 @@ impl<'a> GlowItemFrameMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -9481,7 +9481,7 @@ impl<'a> GlowItemFrameMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -9491,7 +9491,7 @@ impl<'a> GlowItemFrameMetadata<'a> {
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.rotation)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.rotation)
 			},
 			_ => unreachable!()
 		}
@@ -9684,7 +9684,7 @@ impl GlowSquidMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -9714,7 +9714,7 @@ impl GlowSquidMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -9729,7 +9729,7 @@ impl GlowSquidMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -9739,12 +9739,12 @@ impl GlowSquidMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -9759,7 +9759,7 @@ impl GlowSquidMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.dark_ticks_remaining)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.dark_ticks_remaining)
 			},
 			_ => unreachable!()
 		}
@@ -9984,7 +9984,7 @@ impl GoatMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -10014,7 +10014,7 @@ impl GoatMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -10029,7 +10029,7 @@ impl GoatMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -10039,12 +10039,12 @@ impl GoatMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -10293,7 +10293,7 @@ impl GuardianMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -10323,7 +10323,7 @@ impl GuardianMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -10338,7 +10338,7 @@ impl GuardianMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -10348,12 +10348,12 @@ impl GuardianMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -10373,7 +10373,7 @@ impl GuardianMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_attack_target)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_attack_target)
 			},
 			_ => unreachable!()
 		}
@@ -10588,7 +10588,7 @@ impl HoglinMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -10618,7 +10618,7 @@ impl HoglinMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -10633,7 +10633,7 @@ impl HoglinMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -10643,12 +10643,12 @@ impl HoglinMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -10895,7 +10895,7 @@ impl HorseMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -10925,7 +10925,7 @@ impl HorseMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -10940,7 +10940,7 @@ impl HorseMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -10950,12 +10950,12 @@ impl HorseMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -10985,7 +10985,7 @@ impl HorseMetadata {
 			19 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_type_variant)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_type_variant)
 			},
 			_ => unreachable!()
 		}
@@ -11210,7 +11210,7 @@ impl HuskMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -11240,7 +11240,7 @@ impl HuskMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -11255,7 +11255,7 @@ impl HuskMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -11265,12 +11265,12 @@ impl HuskMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -11290,7 +11290,7 @@ impl HuskMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.special_type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.special_type)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -11580,7 +11580,7 @@ impl IronGolemMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -11610,7 +11610,7 @@ impl IronGolemMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -11625,7 +11625,7 @@ impl IronGolemMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -11635,12 +11635,12 @@ impl IronGolemMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -11814,7 +11814,7 @@ impl<'a> ItemMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -11844,7 +11844,7 @@ impl<'a> ItemMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -11998,7 +11998,7 @@ impl<'a> ItemFrameMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -12028,7 +12028,7 @@ impl<'a> ItemFrameMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -12038,7 +12038,7 @@ impl<'a> ItemFrameMetadata<'a> {
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.rotation)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.rotation)
 			},
 			_ => unreachable!()
 		}
@@ -12183,7 +12183,7 @@ impl<'a> FireballMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -12213,7 +12213,7 @@ impl<'a> FireballMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -12355,7 +12355,7 @@ impl LeashKnotMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -12385,7 +12385,7 @@ impl LeashKnotMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -12520,7 +12520,7 @@ impl LightningBoltMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -12550,7 +12550,7 @@ impl LightningBoltMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -12775,7 +12775,7 @@ impl LlamaMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -12805,7 +12805,7 @@ impl LlamaMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -12820,7 +12820,7 @@ impl LlamaMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -12830,12 +12830,12 @@ impl LlamaMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -12870,17 +12870,17 @@ impl LlamaMetadata {
 			20 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.strength)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.strength)
 			},
 			21 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.swag)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.swag)
 			},
 			22 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.variant)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.variant)
 			},
 			_ => unreachable!()
 		}
@@ -13045,7 +13045,7 @@ impl LlamaSpitMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -13075,7 +13075,7 @@ impl LlamaSpitMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -13264,7 +13264,7 @@ impl MagmaCubeMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -13294,7 +13294,7 @@ impl MagmaCubeMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -13309,7 +13309,7 @@ impl MagmaCubeMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -13319,12 +13319,12 @@ impl MagmaCubeMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -13339,7 +13339,7 @@ impl MagmaCubeMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_size)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_size)
 			},
 			_ => unreachable!()
 		}
@@ -13492,7 +13492,7 @@ impl MarkerMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -13522,7 +13522,7 @@ impl MarkerMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -13693,7 +13693,7 @@ impl MinecartMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -13723,17 +13723,17 @@ impl MinecartMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -13743,12 +13743,12 @@ impl MinecartMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_block)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_block)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_offset)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_offset)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
@@ -13936,7 +13936,7 @@ impl ChestMinecartMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -13966,17 +13966,17 @@ impl ChestMinecartMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -13986,12 +13986,12 @@ impl ChestMinecartMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_block)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_block)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_offset)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_offset)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
@@ -14191,7 +14191,7 @@ impl CommandBlockMinecartMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -14221,17 +14221,17 @@ impl CommandBlockMinecartMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -14241,12 +14241,12 @@ impl CommandBlockMinecartMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_block)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_block)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_offset)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_offset)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
@@ -14454,7 +14454,7 @@ impl FurnaceMinecartMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -14484,17 +14484,17 @@ impl FurnaceMinecartMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -14504,12 +14504,12 @@ impl FurnaceMinecartMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_block)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_block)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_offset)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_offset)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
@@ -14704,7 +14704,7 @@ impl HopperMinecartMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -14734,17 +14734,17 @@ impl HopperMinecartMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -14754,12 +14754,12 @@ impl HopperMinecartMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_block)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_block)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_offset)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_offset)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
@@ -14947,7 +14947,7 @@ impl SpawnerMinecartMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -14977,17 +14977,17 @@ impl SpawnerMinecartMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -14997,12 +14997,12 @@ impl SpawnerMinecartMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_block)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_block)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_offset)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_offset)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
@@ -15190,7 +15190,7 @@ impl TntMinecartMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -15220,17 +15220,17 @@ impl TntMinecartMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurt)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurt)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_hurtdir)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_hurtdir)
 			},
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
@@ -15240,12 +15240,12 @@ impl TntMinecartMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_block)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_block)
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_display_offset)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_display_offset)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
@@ -15469,7 +15469,7 @@ impl MuleMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -15499,7 +15499,7 @@ impl MuleMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -15514,7 +15514,7 @@ impl MuleMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -15524,12 +15524,12 @@ impl MuleMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -15778,7 +15778,7 @@ impl MooshroomMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -15808,7 +15808,7 @@ impl MooshroomMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -15823,7 +15823,7 @@ impl MooshroomMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -15833,12 +15833,12 @@ impl MooshroomMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -16073,7 +16073,7 @@ impl OcelotMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -16103,7 +16103,7 @@ impl OcelotMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -16118,7 +16118,7 @@ impl OcelotMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -16128,12 +16128,12 @@ impl OcelotMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -16314,7 +16314,7 @@ impl PaintingMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -16344,7 +16344,7 @@ impl PaintingMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -16576,7 +16576,7 @@ impl PandaMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -16606,7 +16606,7 @@ impl PandaMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -16621,7 +16621,7 @@ impl PandaMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -16631,12 +16631,12 @@ impl PandaMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -16656,17 +16656,17 @@ impl PandaMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.unhappy_counter)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.unhappy_counter)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.sneeze_counter)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.sneeze_counter)
 			},
 			19 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.eat_counter)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.eat_counter)
 			},
 			20 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
@@ -16918,7 +16918,7 @@ impl ParrotMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -16948,7 +16948,7 @@ impl ParrotMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -16963,7 +16963,7 @@ impl ParrotMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -16973,12 +16973,12 @@ impl ParrotMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -17008,7 +17008,7 @@ impl ParrotMetadata {
 			19 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.variant)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.variant)
 			},
 			_ => unreachable!()
 		}
@@ -17221,7 +17221,7 @@ impl PhantomMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -17251,7 +17251,7 @@ impl PhantomMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -17266,7 +17266,7 @@ impl PhantomMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -17276,12 +17276,12 @@ impl PhantomMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -17296,7 +17296,7 @@ impl PhantomMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_size)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_size)
 			},
 			_ => unreachable!()
 		}
@@ -17515,7 +17515,7 @@ impl PigMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -17545,7 +17545,7 @@ impl PigMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -17560,7 +17560,7 @@ impl PigMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -17570,12 +17570,12 @@ impl PigMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -17600,7 +17600,7 @@ impl PigMetadata {
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.boost_time)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.boost_time)
 			},
 			_ => unreachable!()
 		}
@@ -17829,7 +17829,7 @@ impl PiglinMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -17859,7 +17859,7 @@ impl PiglinMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -17874,7 +17874,7 @@ impl PiglinMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -17884,12 +17884,12 @@ impl PiglinMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -18132,7 +18132,7 @@ impl PiglinBruteMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -18162,7 +18162,7 @@ impl PiglinBruteMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -18177,7 +18177,7 @@ impl PiglinBruteMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -18187,12 +18187,12 @@ impl PiglinBruteMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -18494,7 +18494,7 @@ impl PolarBearMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -18524,7 +18524,7 @@ impl PolarBearMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -18539,7 +18539,7 @@ impl PolarBearMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -18549,12 +18549,12 @@ impl PolarBearMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -18735,7 +18735,7 @@ impl TntMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -18765,12 +18765,12 @@ impl TntMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.fuse)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.fuse)
 			},
 			_ => unreachable!()
 		}
@@ -18967,7 +18967,7 @@ impl PufferfishMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -18997,7 +18997,7 @@ impl PufferfishMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -19012,7 +19012,7 @@ impl PufferfishMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -19022,12 +19022,12 @@ impl PufferfishMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -19047,7 +19047,7 @@ impl PufferfishMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.puff_state)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.puff_state)
 			},
 			_ => unreachable!()
 		}
@@ -19262,7 +19262,7 @@ impl RabbitMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -19292,7 +19292,7 @@ impl RabbitMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -19307,7 +19307,7 @@ impl RabbitMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -19317,12 +19317,12 @@ impl RabbitMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -19342,7 +19342,7 @@ impl RabbitMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.r#type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.r#type)
 			},
 			_ => unreachable!()
 		}
@@ -19612,7 +19612,7 @@ impl SalmonMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -19642,7 +19642,7 @@ impl SalmonMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -19657,7 +19657,7 @@ impl SalmonMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -19667,12 +19667,12 @@ impl SalmonMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -19900,7 +19900,7 @@ impl SheepMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -19930,7 +19930,7 @@ impl SheepMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -19945,7 +19945,7 @@ impl SheepMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -19955,12 +19955,12 @@ impl SheepMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -20201,7 +20201,7 @@ impl ShulkerMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -20231,7 +20231,7 @@ impl ShulkerMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -20246,7 +20246,7 @@ impl ShulkerMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -20256,12 +20256,12 @@ impl ShulkerMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -20443,7 +20443,7 @@ impl ShulkerBulletMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -20473,7 +20473,7 @@ impl ShulkerBulletMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			_ => unreachable!()
 		}
@@ -20656,7 +20656,7 @@ impl SilverfishMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -20686,7 +20686,7 @@ impl SilverfishMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -20701,7 +20701,7 @@ impl SilverfishMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -20711,12 +20711,12 @@ impl SilverfishMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -20931,7 +20931,7 @@ impl SkeletonMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -20961,7 +20961,7 @@ impl SkeletonMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -20976,7 +20976,7 @@ impl SkeletonMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -20986,12 +20986,12 @@ impl SkeletonMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -21225,7 +21225,7 @@ impl SkeletonHorseMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -21255,7 +21255,7 @@ impl SkeletonHorseMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -21270,7 +21270,7 @@ impl SkeletonHorseMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -21280,12 +21280,12 @@ impl SkeletonHorseMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -21521,7 +21521,7 @@ impl SlimeMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -21551,7 +21551,7 @@ impl SlimeMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -21566,7 +21566,7 @@ impl SlimeMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -21576,12 +21576,12 @@ impl SlimeMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -21596,7 +21596,7 @@ impl SlimeMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_size)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_size)
 			},
 			_ => unreachable!()
 		}
@@ -21755,7 +21755,7 @@ impl<'a> SmallFireballMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -21785,7 +21785,7 @@ impl<'a> SmallFireballMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -21981,7 +21981,7 @@ impl SnowGolemMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -22011,7 +22011,7 @@ impl SnowGolemMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -22026,7 +22026,7 @@ impl SnowGolemMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -22036,12 +22036,12 @@ impl SnowGolemMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -22215,7 +22215,7 @@ impl<'a> SnowballMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -22245,7 +22245,7 @@ impl<'a> SnowballMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -22399,7 +22399,7 @@ impl SpectralArrowMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -22429,7 +22429,7 @@ impl SpectralArrowMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -22632,7 +22632,7 @@ impl SpiderMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -22662,7 +22662,7 @@ impl SpiderMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -22677,7 +22677,7 @@ impl SpiderMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -22687,12 +22687,12 @@ impl SpiderMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -22908,7 +22908,7 @@ impl SquidMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -22938,7 +22938,7 @@ impl SquidMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -22953,7 +22953,7 @@ impl SquidMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -22963,12 +22963,12 @@ impl SquidMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -23177,7 +23177,7 @@ impl StrayMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -23207,7 +23207,7 @@ impl StrayMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -23222,7 +23222,7 @@ impl StrayMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -23232,12 +23232,12 @@ impl StrayMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -23470,7 +23470,7 @@ impl StriderMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -23500,7 +23500,7 @@ impl StriderMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -23515,7 +23515,7 @@ impl StriderMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -23525,12 +23525,12 @@ impl StriderMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -23550,7 +23550,7 @@ impl StriderMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.boost_time)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.boost_time)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -23773,7 +23773,7 @@ impl TadpoleMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -23803,7 +23803,7 @@ impl TadpoleMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -23818,7 +23818,7 @@ impl TadpoleMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -23828,12 +23828,12 @@ impl TadpoleMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -24007,7 +24007,7 @@ impl<'a> EggMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -24037,7 +24037,7 @@ impl<'a> EggMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -24185,7 +24185,7 @@ impl<'a> EnderPearlMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -24215,7 +24215,7 @@ impl<'a> EnderPearlMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -24363,7 +24363,7 @@ impl<'a> ExperienceBottleMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -24393,7 +24393,7 @@ impl<'a> ExperienceBottleMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -24541,7 +24541,7 @@ impl<'a> PotionMetadata<'a> {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -24571,7 +24571,7 @@ impl<'a> PotionMetadata<'a> {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -24737,7 +24737,7 @@ impl TridentMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -24767,7 +24767,7 @@ impl TridentMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -25020,7 +25020,7 @@ impl TraderLlamaMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -25050,7 +25050,7 @@ impl TraderLlamaMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -25065,7 +25065,7 @@ impl TraderLlamaMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -25075,12 +25075,12 @@ impl TraderLlamaMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -25115,17 +25115,17 @@ impl TraderLlamaMetadata {
 			20 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.strength)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.strength)
 			},
 			21 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.swag)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.swag)
 			},
 			22 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 22);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.variant)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.variant)
 			},
 			_ => unreachable!()
 		}
@@ -25350,7 +25350,7 @@ impl TropicalFishMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -25380,7 +25380,7 @@ impl TropicalFishMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -25395,7 +25395,7 @@ impl TropicalFishMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -25405,12 +25405,12 @@ impl TropicalFishMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -25430,7 +25430,7 @@ impl TropicalFishMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_type_variant)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_type_variant)
 			},
 			_ => unreachable!()
 		}
@@ -25675,7 +25675,7 @@ impl TurtleMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -25705,7 +25705,7 @@ impl TurtleMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -25720,7 +25720,7 @@ impl TurtleMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -25730,12 +25730,12 @@ impl TurtleMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -25999,7 +25999,7 @@ impl VexMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -26029,7 +26029,7 @@ impl VexMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -26044,7 +26044,7 @@ impl VexMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -26054,12 +26054,12 @@ impl VexMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -26293,7 +26293,7 @@ impl VillagerMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -26323,7 +26323,7 @@ impl VillagerMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -26338,7 +26338,7 @@ impl VillagerMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -26348,12 +26348,12 @@ impl VillagerMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -26373,7 +26373,7 @@ impl VillagerMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.unhappy_counter)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.unhappy_counter)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -26656,7 +26656,7 @@ impl WanderingTraderMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -26686,7 +26686,7 @@ impl WanderingTraderMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -26701,7 +26701,7 @@ impl WanderingTraderMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -26711,12 +26711,12 @@ impl WanderingTraderMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -26736,7 +26736,7 @@ impl WanderingTraderMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.unhappy_counter)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.unhappy_counter)
 			},
 			_ => unreachable!()
 		}
@@ -26945,7 +26945,7 @@ impl WardenMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -26975,7 +26975,7 @@ impl WardenMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -26990,7 +26990,7 @@ impl WardenMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -27000,12 +27000,12 @@ impl WardenMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -27020,7 +27020,7 @@ impl WardenMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.client_anger_level)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.client_anger_level)
 			},
 			_ => unreachable!()
 		}
@@ -27319,7 +27319,7 @@ impl WitherMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -27349,7 +27349,7 @@ impl WitherMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -27364,7 +27364,7 @@ impl WitherMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -27374,12 +27374,12 @@ impl WitherMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -27394,22 +27394,22 @@ impl WitherMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.target_a)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.target_a)
 			},
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.target_b)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.target_b)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.target_c)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.target_c)
 			},
 			19 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 19);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.id_inv)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.id_inv)
 			},
 			_ => unreachable!()
 		}
@@ -27616,7 +27616,7 @@ impl WitherSkeletonMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -27646,7 +27646,7 @@ impl WitherSkeletonMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -27661,7 +27661,7 @@ impl WitherSkeletonMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -27671,12 +27671,12 @@ impl WitherSkeletonMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -27843,7 +27843,7 @@ impl WitherSkullMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -27873,7 +27873,7 @@ impl WitherSkullMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -28099,7 +28099,7 @@ impl WolfMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -28129,7 +28129,7 @@ impl WolfMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -28144,7 +28144,7 @@ impl WolfMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -28154,12 +28154,12 @@ impl WolfMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -28194,12 +28194,12 @@ impl WolfMetadata {
 			20 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 20);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.collar_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.collar_color)
 			},
 			21 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 21);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.remaining_anger_time)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.remaining_anger_time)
 			},
 			_ => unreachable!()
 		}
@@ -28416,7 +28416,7 @@ impl ZoglinMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -28446,7 +28446,7 @@ impl ZoglinMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -28461,7 +28461,7 @@ impl ZoglinMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -28471,12 +28471,12 @@ impl ZoglinMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -28710,7 +28710,7 @@ impl ZombieMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -28740,7 +28740,7 @@ impl ZombieMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -28755,7 +28755,7 @@ impl ZombieMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -28765,12 +28765,12 @@ impl ZombieMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -28790,7 +28790,7 @@ impl ZombieMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.special_type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.special_type)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -29018,7 +29018,7 @@ impl ZombieHorseMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -29048,7 +29048,7 @@ impl ZombieHorseMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -29063,7 +29063,7 @@ impl ZombieHorseMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -29073,12 +29073,12 @@ impl ZombieHorseMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -29338,7 +29338,7 @@ impl ZombieVillagerMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -29368,7 +29368,7 @@ impl ZombieVillagerMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -29383,7 +29383,7 @@ impl ZombieVillagerMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -29393,12 +29393,12 @@ impl ZombieVillagerMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -29418,7 +29418,7 @@ impl ZombieVillagerMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.special_type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.special_type)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -29660,7 +29660,7 @@ impl ZombifiedPiglinMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -29690,7 +29690,7 @@ impl ZombifiedPiglinMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -29705,7 +29705,7 @@ impl ZombifiedPiglinMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -29715,12 +29715,12 @@ impl ZombifiedPiglinMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -29740,7 +29740,7 @@ impl ZombifiedPiglinMetadata {
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.special_type)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.special_type)
 			},
 			18 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 18);
@@ -29980,7 +29980,7 @@ impl PlayerMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -30010,7 +30010,7 @@ impl PlayerMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
@@ -30025,7 +30025,7 @@ impl PlayerMetadata {
 			10 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 10);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.effect_color)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.effect_color)
 			},
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
@@ -30035,12 +30035,12 @@ impl PlayerMetadata {
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.arrow_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.arrow_count)
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.stinger_count)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.stinger_count)
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
@@ -30055,7 +30055,7 @@ impl PlayerMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.score)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.score)
 			},
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
@@ -30248,7 +30248,7 @@ impl FishingBobberMetadata {
 			1 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.air_supply)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.air_supply)
 			},
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
@@ -30278,12 +30278,12 @@ impl FishingBobberMetadata {
 			7 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 7);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.ticks_frozen)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.ticks_frozen)
 			},
 			8 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 8);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
-				VarInt::write(bytes, self.hooked_entity)
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.hooked_entity)
 			},
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);

@@ -34,3 +34,31 @@ impl SliceSerializable<'_, i32> for VarInt {
         *t
     }
 }
+
+macro_rules! for_primitive {
+    ($typ:tt) => {
+        impl SliceSerializable<'_, $typ> for VarInt {
+            type CopyType = $typ;
+
+            fn read(bytes: &mut &[u8]) -> anyhow::Result<$typ> {
+                Ok(<VarInt as SliceSerializable<i32>>::read(bytes)? as $typ)
+            }
+
+            fn get_write_size(_: $typ) -> usize {
+                5 // todo: we could calculate the needed bits as a time->space tradeoff. probably not worth?
+            }
+
+            unsafe fn write<'b>(bytes: &'b mut [u8], primitive: $typ) -> &'b mut [u8] {
+                <VarInt as SliceSerializable<i32>>::write(bytes, primitive as i32)
+            }
+
+            #[inline(always)]
+            fn as_copy_type(t: &$typ) -> Self::CopyType {
+                *t
+            }
+        }
+    };
+}
+
+for_primitive!(u16);
+for_primitive!(usize);

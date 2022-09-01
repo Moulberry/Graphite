@@ -58,7 +58,7 @@ impl<U: UniverseService> ProtoPlayer<U> {
         // holdup: implementing dimension ids to be able to differentiate worlds
 
         // todo: if new, send join game
-        world.write_login_packet(&mut self)?;
+        world.write_login_packets(&mut self)?;
         world
             .get_universe()
             .write_brand_packet(&mut self.write_buffer)?;

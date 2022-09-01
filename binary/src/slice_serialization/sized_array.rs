@@ -10,7 +10,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
     type CopyType = &'a Vec<T>;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Vec<T>> {
-        let array_length = VarInt::read(bytes)? as usize;
+        let array_length: usize = VarInt::read(bytes)?;
 
         if array_length == 0 {
             return Ok(vec![]);
@@ -25,7 +25,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
     }
 
     fn get_write_size(entries: &'a Vec<T>) -> usize {
-        let mut size: usize = VarInt::get_write_size(entries.len() as i32);
+        let mut size: usize = <VarInt as SliceSerializable<usize>>::get_write_size(entries.len());
         for entry in entries {
             size += S::get_write_size(S::as_copy_type(entry));
         }
@@ -33,7 +33,7 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
     }
 
     unsafe fn write<'b>(mut bytes: &'b mut [u8], entries: &'a Vec<T>) -> &'b mut [u8] {
-        bytes = VarInt::write(bytes, entries.len() as i32);
+        bytes = <VarInt as SliceSerializable<usize>>::write(bytes, entries.len());
         for entry in entries {
             bytes = S::write(bytes, S::as_copy_type(entry));
         }

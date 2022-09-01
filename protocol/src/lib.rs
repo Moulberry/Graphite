@@ -33,9 +33,8 @@ macro_rules! identify_packets {
         })*
 
         pub fn debug_print_packet(mut bytes: &[u8]) -> String {
-            let packet_id_byte: u8 = binary::slice_serialization::VarInt::read(&mut bytes)
-                .expect("packet must start with varint for the id")
-                .try_into().expect("packet header must fit within a u8");
+            let packet_id_byte: u8 = binary::slice_serialization::Single::read(&mut bytes)
+                .expect("packet must start with varint for the id");
 
             if let Ok(packet_id) = $enum_name::try_from(packet_id_byte) {
                 match packet_id {
@@ -57,9 +56,8 @@ macro_rules! identify_packets {
             F: FnOnce(&mut T),
             T: IdentifiedPacket<PacketId> + 'a
         {
-            let packet_id_byte: u8 = binary::slice_serialization::VarInt::read(&mut bytes)
-                .expect("packet must start with varint for the id")
-                .try_into().expect("packet header must fit within a u8");
+            let packet_id_byte: u8 = binary::slice_serialization::Single::read(&mut bytes)
+                .expect("packet must start with varint for the id");
 
             if let Ok(packet_id) = $enum_name::try_from(packet_id_byte) {
                 match packet_id {
@@ -91,7 +89,7 @@ macro_rules! identify_packets {
             }
 
             fn parse_and_handle(&mut self, mut bytes: &[u8]) -> anyhow::Result<()> {
-                let packet_id_byte: u8 = binary::slice_serialization::VarInt::read(&mut bytes)?.try_into()?;
+                let packet_id_byte: u8 = binary::slice_serialization::Single::read(&mut bytes)?;
 
                 if let Ok(packet_id) = $enum_name::try_from(packet_id_byte) {
                     match packet_id {

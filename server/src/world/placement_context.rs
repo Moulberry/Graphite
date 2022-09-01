@@ -1,11 +1,11 @@
 use minecraft_constants::{
-    block::{Block, BlockProperties, NoSuchBlockError},
-    block_parameter::{self, Axis3D, DirectionOrDown, Facing, Half},
-    placement::PlacementContext,
+    block::{Block, BlockAttributes, NoSuchBlockError, self},
+    block_parameter::{self, Axis3D, DirectionOrDown, Facing, Half, Instrument, RailShape, StraightRailShape, StairShape},
+    placement::PlacementContext, tags::block::BlockTags, item::Item,
 };
 use protocol::types::{BlockPosition, Direction};
 
-use super::{World, WorldService};
+use super::{World, WorldService, block_update};
 
 pub struct ServerPlacementContext<'a, W: WorldService> {
     pub(crate) interacted_pos: BlockPosition,
@@ -14,6 +14,7 @@ pub struct ServerPlacementContext<'a, W: WorldService> {
     pub(crate) face: Direction,
     pub(crate) placer_yaw: f32,
     pub(crate) placer_pitch: f32,
+    pub(crate) placed_item: Item,
 
     pub(crate) world: &'a mut World<W>,
     pub(crate) existing_block_id: Option<Option<u16>>,
@@ -325,10 +326,28 @@ impl<'a, W: WorldService> PlacementContext for ServerPlacementContext<'a, W> {
         }
     }
 
+    fn get_facing_look_horizontal_survivable(&mut self) -> block_parameter::Direction {
+        // todo: check if it is survivable
+        match self.face {
+            Direction::Down => self.get_facing_look_horizontal(),
+            Direction::Up => self.get_facing_look_horizontal(),
+            Direction::North => block_parameter::Direction::South,
+            Direction::South => block_parameter::Direction::North,
+            Direction::West => block_parameter::Direction::East,
+            Direction::East => block_parameter::Direction::West,
+        }
+    }
+
     fn get_facing_look_horizontal_survivable_opposite(&mut self) -> block_parameter::Direction {
         // todo: check if it is survivable
-        // for now, this check has been omitted because its useful for building
-        self.get_facing_look_horizontal_opposite()
+        match self.face {
+            Direction::Down => self.get_facing_look_horizontal_opposite(),
+            Direction::Up => self.get_facing_look_horizontal_opposite(),
+            Direction::North => block_parameter::Direction::North,
+            Direction::South => block_parameter::Direction::South,
+            Direction::West => block_parameter::Direction::West,
+            Direction::East => block_parameter::Direction::East,
+        }
     }
 
     fn get_facing_look_opposite(&mut self) -> Facing {
@@ -336,107 +355,81 @@ impl<'a, W: WorldService> PlacementContext for ServerPlacementContext<'a, W> {
     }
 
     fn get_fence_should_connect_east(&mut self) -> bool {
-        let id = self.get_block_id(
-            self.offset_pos.x + 1,
-            self.offset_pos.y as i32,
-            self.offset_pos.z,
-        );
-        if let Some(id) = id {
-            let properties: Result<&BlockProperties, NoSuchBlockError> = id.try_into();
-            if let Ok(properties) = properties {
-                // todo: check if this is a fence
-                return properties.is_west_face_sturdy
-            }
-        }
-        false
+        block_update::should_fence_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::East, self.world)
     }
 
     fn get_fence_should_connect_north(&mut self) -> bool {
-        let id = self.get_block_id(
-            self.offset_pos.x,
-            self.offset_pos.y as i32,
-            self.offset_pos.z - 1,
-        );
-        if let Some(id) = id {
-            let properties: Result<&BlockProperties, NoSuchBlockError> = id.try_into();
-            if let Ok(properties) = properties {
-                // todo: check if this is a fence
-                return properties.is_south_face_sturdy
-            }
-        }
-        false
+        block_update::should_fence_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::North, self.world)
     }
 
     fn get_fence_should_connect_south(&mut self) -> bool {
-        let id = self.get_block_id(
-            self.offset_pos.x,
-            self.offset_pos.y as i32,
-            self.offset_pos.z + 1,
-        );
-        if let Some(id) = id {
-            let properties: Result<&BlockProperties, NoSuchBlockError> = id.try_into();
-            if let Ok(properties) = properties {
-                // todo: check if this is a fence
-                return properties.is_north_face_sturdy
-            }
-        }
-        false
+        block_update::should_fence_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::South, self.world)
     }
 
     fn get_fence_should_connect_west(&mut self) -> bool {
-        let id = self.get_block_id(
-            self.offset_pos.x - 1,
-            self.offset_pos.y as i32,
-            self.offset_pos.z,
-        );
-        if let Some(id) = id {
-            let properties: Result<&BlockProperties, NoSuchBlockError> = id.try_into();
-            if let Ok(properties) = properties {
-                // todo: check if this is a fence
-                return properties.is_east_face_sturdy
-            }
-        }
-        false
+        block_update::should_fence_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::West, self.world)
     }
 
     fn get_hanging(&mut self) -> bool {
-        todo!()
+        self.face == Direction::Down
     }
 
     fn get_instrument_modifier_below(
         &mut self,
-    ) -> minecraft_constants::block_parameter::Instrument {
-        todo!()
+    ) -> Instrument {
+        Instrument::Harp
     }
 
     fn get_iron_bars_should_connect_east(&mut self) -> bool {
-        todo!()
+        block_update::should_iron_bars_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::East, self.world)
     }
 
     fn get_iron_bars_should_connect_north(&mut self) -> bool {
-        todo!()
+        block_update::should_iron_bars_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::North, self.world)
     }
 
     fn get_iron_bars_should_connect_south(&mut self) -> bool {
-        todo!()
+        block_update::should_iron_bars_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::South, self.world)
     }
 
     fn get_iron_bars_should_connect_west(&mut self) -> bool {
-        todo!()
+        block_update::should_iron_bars_connect(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, 
+            block_parameter::Direction::West, self.world)
     }
 
     fn get_leaves_distance(&mut self) -> u8 {
-        todo!()
+        0
     }
 
-    fn get_rail_shape(&mut self) -> minecraft_constants::block_parameter::RailShape {
-        todo!()
+    fn get_rail_shape(&mut self) -> RailShape {
+        if let Some(shape) = block_update::get_rail_shape(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, self.world) {
+            shape
+        } else {
+            match self.get_facing_look_horizontal() {
+                block_parameter::Direction::North | block_parameter::Direction::South => RailShape::NorthSouth,
+                block_parameter::Direction::East | block_parameter::Direction::West => RailShape::EastWest,
+            }
+        }
     }
 
     fn get_rail_shape_straight(
         &mut self,
-    ) -> minecraft_constants::block_parameter::StraightRailShape {
-        todo!()
+    ) -> StraightRailShape {
+        if let Some(shape) = block_update::get_straight_rail_shape(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, self.world) {
+            shape
+        } else {
+            match self.get_facing_look_horizontal() {
+                block_parameter::Direction::North | block_parameter::Direction::South => StraightRailShape::NorthSouth,
+                block_parameter::Direction::East | block_parameter::Direction::West => StraightRailShape::EastWest,
+            }
+        }
     }
 
     fn get_random_25(&mut self) -> u8 {
@@ -452,76 +445,203 @@ impl<'a, W: WorldService> PlacementContext for ServerPlacementContext<'a, W> {
     }
 
     fn get_scaffold_distance(&mut self) -> u8 {
-        todo!()
+        0
     }
 
     fn get_scaffold_is_bottom(&mut self) -> bool {
-        todo!()
+        let id = self.get_block_id(
+            self.offset_pos.x,
+            self.offset_pos.y as i32 - 1,
+            self.offset_pos.z,
+        );
+        if let Some(id) = id {
+            let properties: Result<&BlockAttributes, NoSuchBlockError> = id.try_into();
+            if let Ok(properties) = properties {
+                return !properties.is_up_face_sturdy
+            }
+        }
+        true
     }
 
-    fn get_stair_shape(&mut self) -> minecraft_constants::block_parameter::StairShape {
-        todo!()
+    fn get_stair_shape(&mut self) -> StairShape {
+        let direction = self.get_facing_look_horizontal();
+        let half = self.get_clicked_half();
+
+        block_update::get_stair_shape(self.offset_pos.x, self.offset_pos.y, self.offset_pos.z, direction, half, self.world)
     }
 
     fn get_tripwire_should_connect_east(&mut self) -> bool {
-        todo!()
+        match self.get_block(
+            self.offset_pos.x + 1,
+            self.offset_pos.y as i32,
+            self.offset_pos.z,
+        ) {
+            Some(Block::TripwireHook { attached: _, facing, powered: _ }) => {
+                return *facing == block_parameter::Direction::West;
+            }
+            Some(Block::Tripwire { attached: _, disarmed: _, east: _, north: _, powered: _, south: _, west: _ }) => {
+                return true;
+            }
+            _ => return false,
+        }
     }
 
     fn get_tripwire_should_connect_north(&mut self) -> bool {
-        todo!()
+        match self.get_block(
+            self.offset_pos.x,
+            self.offset_pos.y as i32,
+            self.offset_pos.z - 1,
+        ) {
+            Some(Block::TripwireHook { attached: _, facing, powered: _ }) => {
+                return *facing == block_parameter::Direction::South;
+            }
+            Some(Block::Tripwire { attached: _, disarmed: _, east: _, north: _, powered: _, south: _, west: _ }) => {
+                return true;
+            }
+            _ => return false,
+        }
     }
 
     fn get_tripwire_should_connect_south(&mut self) -> bool {
-        todo!()
+        match self.get_block(
+            self.offset_pos.x,
+            self.offset_pos.y as i32,
+            self.offset_pos.z + 1,
+        ) {
+            Some(Block::TripwireHook { attached: _, facing, powered: _ }) => {
+                return *facing == block_parameter::Direction::North;
+            }
+            Some(Block::Tripwire { attached: _, disarmed: _, east: _, north: _, powered: _, south: _, west: _ }) => {
+                return true;
+            }
+            _ => return false,
+        }
     }
 
     fn get_tripwire_should_connect_west(&mut self) -> bool {
-        todo!()
+        match self.get_block(
+            self.offset_pos.x - 1,
+            self.offset_pos.y as i32,
+            self.offset_pos.z,
+        ) {
+            Some(Block::TripwireHook { attached: _, facing, powered: _ }) => {
+                return *facing == block_parameter::Direction::East;
+            }
+            Some(Block::Tripwire { attached: _, disarmed: _, east: _, north: _, powered: _, south: _, west: _ }) => {
+                return true;
+            }
+            _ => return false,
+        }
     }
 
     fn has_neighbor_signal(&mut self) -> bool {
         false
     }
 
-    fn has_same_block_above(&mut self) -> bool {
-        todo!()
-    }
-
-    fn has_same_block_below(&mut self) -> bool {
-        todo!()
-    }
-
-    fn has_same_block_east(&mut self) -> bool {
-        todo!()
-    }
-
-    fn has_same_block_north(&mut self) -> bool {
-        todo!()
-    }
-
-    fn has_same_block_south(&mut self) -> bool {
-        todo!()
-    }
-
-    fn has_same_block_west(&mut self) -> bool {
-        todo!()
-    }
-
-    fn has_smoke_source_below(&mut self) -> bool {
-        todo!()
-    }
-
-    fn has_snow_above(&mut self) -> bool {
-        match self.get_block(
+    fn has_different_block_above(&mut self) -> bool {
+        let above_item = self.get_block_id(
             self.offset_pos.x,
             self.offset_pos.y as i32 + 1,
             self.offset_pos.z,
+        ).and_then(|id| block::state_to_item(id).ok());
+
+        if let Some(above_item) = above_item {
+            return above_item != self.placed_item;
+        }
+
+        return true;
+    }
+
+    fn has_different_block_below(&mut self) -> bool {
+        let below_item = self.get_block_id(
+            self.offset_pos.x,
+            self.offset_pos.y as i32 - 1,
+            self.offset_pos.z,
+        ).and_then(|id| block::state_to_item(id).ok());
+
+        if let Some(below_item) = below_item {
+            return below_item != self.placed_item;
+        }
+
+        return true;
+    }
+
+    fn has_different_block_east(&mut self) -> bool {
+        let east_item = self.get_block_id(
+            self.offset_pos.x + 1,
+            self.offset_pos.y as i32,
+            self.offset_pos.z,
+        ).and_then(|id| block::state_to_item(id).ok());
+
+        if let Some(east_item) = east_item {
+            return east_item != self.placed_item;
+        }
+
+        return true;
+    }
+
+    fn has_different_block_north(&mut self) -> bool {
+        let north_item = self.get_block_id(
+            self.offset_pos.x,
+            self.offset_pos.y as i32,
+            self.offset_pos.z - 1,
+        ).and_then(|id| block::state_to_item(id).ok());
+
+        if let Some(north_item) = north_item {
+            return north_item != self.placed_item;
+        }
+
+        return true;
+    }
+
+    fn has_different_block_south(&mut self) -> bool {
+        let south_item = self.get_block_id(
+            self.offset_pos.x,
+            self.offset_pos.y as i32,
+            self.offset_pos.z + 1,
+        ).and_then(|id| block::state_to_item(id).ok());
+
+        if let Some(south_item) = south_item {
+            return south_item != self.placed_item;
+        }
+
+        return true;
+    }
+
+    fn has_different_block_west(&mut self) -> bool {
+        let west_item = self.get_block_id(
+            self.offset_pos.x - 1,
+            self.offset_pos.y as i32,
+            self.offset_pos.z,
+        ).and_then(|id| block::state_to_item(id).ok());
+
+        if let Some(west_item) = west_item {
+            return west_item != self.placed_item;
+        }
+
+        return true;
+    }
+
+    fn has_smoke_source_below(&mut self) -> bool {
+        match self.get_block(
+            self.offset_pos.x,
+            self.offset_pos.y as i32 - 1,
+            self.offset_pos.z,
         ) {
-            Some(Block::SnowBlock) | Some(Block::Snow { layers: _ }) | Some(Block::PowderSnow) => {
+            Some(Block::HayBlock { axis: _ }) => {
                 return true
             }
             _ => return false,
         }
+    }
+
+    fn has_snow_above(&mut self) -> bool {
+        let above = self.get_block(
+            self.offset_pos.x,
+            self.offset_pos.y as i32 + 1,
+            self.offset_pos.z,
+        );
+        return block_update::causes_snowy(above);
     }
 
     fn is_in_water(&mut self) -> bool {

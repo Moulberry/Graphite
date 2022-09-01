@@ -87,7 +87,7 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
     type CopyType = &'a [u8];
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
-        let blob_size = VarInt::read(bytes)? as usize;
+        let blob_size: usize = VarInt::read(bytes)?;
 
         // Validate blob byte-length
         if blob_size > MAX_SIZE * SIZE_MULT {
@@ -106,14 +106,14 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
     }
 
     fn get_write_size(data: &[u8]) -> usize {
-        VarInt::get_write_size(data.len() as i32) + data.len()
+        <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
     }
 
     unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
         let len = data.len();
 
         // 1. write len(blob) as varint header
-        bytes = VarInt::write(bytes, len as i32);
+        bytes = <VarInt as SliceSerializable<usize>>::write(bytes, len);
 
         // 2. write blob itself
         debug_assert!(
@@ -157,7 +157,7 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<M
     }
 
     fn get_write_size(data: &str) -> usize {
-        VarInt::get_write_size(data.len() as i32) + data.len()
+        <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
     }
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &str) -> &'b mut [u8] {
@@ -180,7 +180,7 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, String> for SizedString<MA
     }
 
     fn get_write_size(data: &'a String) -> usize {
-        VarInt::get_write_size(data.len() as i32) + data.len()
+        <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
     }
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &'a String) -> &'b mut [u8] {

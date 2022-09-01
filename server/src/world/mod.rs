@@ -4,6 +4,7 @@ pub mod chunk_section;
 pub mod chunk_view_diff;
 pub mod paletted_container;
 pub mod placement_context;
+pub mod block_update;
 
 // Justification: we re-export world, moving all the `world.rs` code to here would be messy
 #[allow(clippy::module_inception)]

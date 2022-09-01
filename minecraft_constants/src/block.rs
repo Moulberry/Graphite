@@ -6,14 +6,30 @@ use crate::block_parameter::*;
 
 include!(concat!(env!("OUT_DIR"), "/block_to_u16.rs"));
 include!(concat!(env!("OUT_DIR"), "/u16_to_block.rs"));
+include!(concat!(env!("OUT_DIR"), "/u16_to_item.rs"));
+include!(concat!(env!("OUT_DIR"), "/u16_to_block_attributes.rs"));
 
-include!(concat!(env!("OUT_DIR"), "/u16_to_block_properties.rs"));
+pub fn state_to_item(id: u16) -> Result<crate::item::Item, NoSuchBlockError> {
+	if id >= ITEM_LUT.len() as _ { return Err(NoSuchBlockError(id)); }
+	Ok(ITEM_LUT[id as usize])
+}
+#[derive(Debug)]
+pub struct BlockAttributes {
+	pub hardness: f32,
+	pub replaceable: bool,
+	pub air: bool,
+	pub is_north_face_sturdy: bool,
+	pub is_east_face_sturdy: bool,
+	pub is_south_face_sturdy: bool,
+	pub is_west_face_sturdy: bool,
+	pub is_up_face_sturdy: bool,
+}
 
 #[derive(Debug, thiserror::Error)]
 #[error("No block exists for id: {0}")]
 pub struct NoSuchBlockError(u16);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Block {
 	Air,
 	Stone,
@@ -2912,16 +2928,5 @@ pub enum Block {
 	},
 	Frogspawn,
 	ReinforcedDeepslate,
-}
-
-#[derive(Debug)]
-pub struct BlockProperties {
-	pub hardness: f32,
-	pub replaceable: bool,
-	pub air: bool,
-	pub is_north_face_sturdy: bool,
-	pub is_east_face_sturdy: bool,
-	pub is_south_face_sturdy: bool,
-	pub is_west_face_sturdy: bool,
 }
 
