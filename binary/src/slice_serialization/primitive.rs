@@ -59,3 +59,5 @@ for_primitive!(u128, BigEndian, from_be_bytes, to_be_bytes);
 for_primitive!(i128, BigEndian, from_be_bytes, to_be_bytes);
 for_primitive!(f32, BigEndian, from_be_bytes, to_be_bytes);
 for_primitive!(f64, BigEndian, from_be_bytes, to_be_bytes);
+
+for_primitive!(u16, LittleEndian, from_le_bytes, to_le_bytes);

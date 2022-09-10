@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, time::Duration};
 
 use anyhow::bail;
-use binary::slice_serialization::{self, VarInt, Single};
+use binary::slice_serialization::Single;
 use binary::slice_serialization::SliceSerializable;
 use net::{
     network_buffer::WriteBuffer,

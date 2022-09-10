@@ -6,9 +6,9 @@ use anyhow::bail;
 
 pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     let type_id: u8 = Single::read(bytes)?;
-    if type_id == TAG_END_ID {
+    if type_id == TAG_END_ID.0 {
         return Ok(NBT::new());
-    } else if type_id != TAG_COMPOUND_ID {
+    } else if type_id != TAG_COMPOUND_ID.0 {
         bail!("nbt_decode: root must be a compound");
     }
 
@@ -25,11 +25,11 @@ pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
 
 fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8) -> anyhow::Result<usize> {
     debug_assert!(
-        type_id != TAG_END_ID,
+        type_id != TAG_END_ID.0,
         "read_node must not be called with TAG_END"
     );
 
-    let node = match type_id {
+    let node = match TagType(type_id) {
         TAG_BYTE_ID => NBTNode::Byte(Single::read(bytes)?),
         TAG_SHORT_ID => NBTNode::Short(BigEndian::read(bytes)?),
         TAG_INT_ID => NBTNode::Int(BigEndian::read(bytes)?),
@@ -40,7 +40,7 @@ fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8) -> anyhow
         TAG_STRING_ID => NBTNode::String(read_string(bytes)?.into_owned()),
         TAG_LIST_ID => {
             let (type_id, children) = read_list(bytes, nodes)?;
-            NBTNode::List { type_id, children }
+            NBTNode::List { type_id: TagType(type_id), children }
         }
         TAG_COMPOUND_ID => NBTNode::Compound(read_compound(bytes, nodes)?),
         TAG_INT_ARRAY_ID => NBTNode::IntArray(read_int_array(bytes)?),
@@ -56,7 +56,7 @@ fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>) -> anyhow::Result<
 
     loop {
         let type_id: u8 = Single::read(bytes)?;
-        if type_id == TAG_END_ID {
+        if type_id == TAG_END_ID.0 {
             break Ok(children);
         } else {
             let name = read_string(bytes)?;
@@ -106,7 +106,7 @@ fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>) -> anyhow::Result<(u8,
 
     if length <= 0 {
         Ok((type_id, Vec::new()))
-    } else if type_id == TAG_END_ID {
+    } else if type_id == TAG_END_ID.0 {
         bail!("read_list: type cannot be TAG_END for non-zero length list");
     } else {
         let mut children = Vec::with_capacity(length as _);

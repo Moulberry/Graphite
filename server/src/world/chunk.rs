@@ -20,7 +20,6 @@ use super::{
     chunk_section::ChunkSection,
     paletted_container::{BiomePalettedContainer, BlockPalettedContainer},
 };
-
 pub(crate) struct PlayerReference {
     uuid: u128,
     player: *mut (),
@@ -28,10 +27,10 @@ pub(crate) struct PlayerReference {
     fn_create: fn(*mut (), &mut WriteBuffer),
     destroy_buffer: Box<[u8]>,
 }
-
 pub struct Chunk {
     block_sections: Vec<ChunkSection>,
 
+    // todo: is storing chunk_x and chunk_z necessary
     chunk_x: usize,
     chunk_z: usize,
 
@@ -56,6 +55,10 @@ impl Chunk {
     #[inline(always)]
     pub fn to_chunk_coordinate(f: f32) -> i32 {
         (f / Chunk::SECTION_BLOCK_WIDTH_F).floor() as i32
+    }
+
+    pub fn get_block_sections(&self) -> &[ChunkSection] {
+        self.block_sections.as_slice()
     }
 
     pub(crate) fn write_to_players_in_chunk(&mut self, bytes: &[u8]) {
@@ -158,31 +161,7 @@ impl Chunk {
         player.chunk_ref = self.player_refs.insert(reference);
     }
 
-    pub fn new(empty: bool, chunk_x: usize, chunk_z: usize) -> Self {
-        // Setup default block sections
-        let mut block_sections = Vec::new();
-        for i in 0..24 {
-            if i < 18 && !empty {
-                let chunk_section = ChunkSection::new(
-                    16 * 16 * 16,
-                    if i >= 4 { i - 4 } else { 0 },
-                    BlockPalettedContainer::filled(1),
-                    BiomePalettedContainer::filled(1),
-                );
-
-                block_sections.push(chunk_section);
-            } else {
-                let chunk_section = ChunkSection::new(
-                    0,
-                    if i >= 4 { i - 4 } else { 0 },
-                    BlockPalettedContainer::filled(0),
-                    BiomePalettedContainer::filled(1),
-                );
-
-                block_sections.push(chunk_section);
-            }
-        }
-
+    pub fn new(block_sections: Vec<ChunkSection>, chunk_x: usize, chunk_z: usize) -> Self {
         Self {
             block_sections,
             valid_cache: false,
@@ -195,6 +174,34 @@ impl Chunk {
             entities: Slab::new(),
             player_refs: Slab::new(),
         }
+    }
+
+    pub fn new_with_default_chunks(empty: bool, size_y: usize, chunk_x: usize, chunk_z: usize) -> Self {
+        // Setup default block sections
+        let mut block_sections = Vec::new();
+        for i in 0..size_y {
+            if i < size_y/2 && !empty {
+                let chunk_section = ChunkSection::new(
+                    16 * 16 * 16,
+                    i,
+                    BlockPalettedContainer::filled(1),
+                    BiomePalettedContainer::filled(0),
+                );
+
+                block_sections.push(chunk_section);
+            } else {
+                let chunk_section = ChunkSection::new(
+                    0,
+                    i,
+                    BlockPalettedContainer::filled(0),
+                    BiomePalettedContainer::filled(0),
+                );
+
+                block_sections.push(chunk_section);
+            }
+        }
+
+        Self::new(block_sections, chunk_x, chunk_z)
     }
 
     fn invalidate_cache(&mut self) {
@@ -295,7 +302,7 @@ impl BlockStorage for Chunk {
             x / Self::SECTION_BLOCK_WIDTH_I,
             "set_block called on wrong chunk"
         );
-        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
+        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I;
         debug_assert_eq!(
             self.chunk_z,
             z / Self::SECTION_BLOCK_WIDTH_I,
@@ -320,7 +327,7 @@ impl BlockStorage for Chunk {
             x / Self::SECTION_BLOCK_WIDTH_I,
             "set_block called on wrong chunk"
         );
-        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I + 4; // temp: remove + 4 when world limit is set to y = 0
+        let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I;
         debug_assert_eq!(
             self.chunk_z,
             z / Self::SECTION_BLOCK_WIDTH_I,

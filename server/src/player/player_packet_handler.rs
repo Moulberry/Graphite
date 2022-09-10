@@ -377,7 +377,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
                 parse_state.full_span,
             );
             let result = dispatch.dispatch_with(parse_state);
-
+            
             self.send_message(format!("{:?}", result));
         }
 
@@ -401,12 +401,11 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
         };
 
         // Write animation packet as viewable, excluding self
-        self.packets.write_viewable_packet(
+        self.packets.write_self_excluded_viewable_packet(
             &AnimateEntity {
                 id: self.entity_id.as_i32(),
                 animation,
             },
-            true,
         );
 
         // Use the swing to perform interactions

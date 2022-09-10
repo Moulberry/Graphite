@@ -161,13 +161,13 @@ impl FakePlayerConnection {
 }
 
 impl AbstractConnectionReference<DummyUniverseService> for *mut FakePlayerConnection {
-    fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
-        let conn = unsafe { &mut **self };
+    unsafe fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
+        let conn = &mut **self;
         conn.player = player as *mut _;
 
-        // Set ptr to process_disconnection function
+        // Set ptr to handle_disconnect function
         let process_disconnect_ptr = Player::<P>::handle_disconnect as *const ();
-        conn.handle_disconnect = unsafe { std::mem::transmute(process_disconnect_ptr) };
+        conn.handle_disconnect = std::mem::transmute(process_disconnect_ptr);
     }
 
     fn clear_player_pointer(&mut self) {

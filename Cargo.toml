@@ -10,5 +10,6 @@ members = [
     "command",
     "command_derive",
     "text_component",
-    "minecraft_constants"
+    "minecraft_constants",
+    "magma"
 ]

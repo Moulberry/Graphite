@@ -72,8 +72,16 @@ impl BlockEntityStorage {
 
         match self.inner.binary_search_by_key(&key, BlockEntity::get_key) {
             Ok(index) => {
-                // todo: update block_entity_type
-                &mut self.inner[index]
+                let block_entity = &mut self.inner[index];
+
+                // Ensure the type is correct. Reset the NBT if it is not
+                if block_entity.block_entity_type != block_entity_type {
+                    block_entity.block_entity_type = block_entity_type;
+                    let old = std::mem::replace(&mut block_entity.nbt, CachedNBT::new());
+                    std::mem::drop(old);
+                }
+
+                block_entity
             }
             Err(index) => {
                 self.inner.insert(
@@ -96,7 +104,7 @@ impl BlockEntityStorage {
         self.dirty = false;
 
         self.cached_count = 0;
-        self.cached_bytes.truncate(0);
+        self.cached_bytes.clear();
 
         for block_entity in &self.inner {
             self.cached_count += 1;

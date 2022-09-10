@@ -35,7 +35,7 @@ pub fn from_snbt(mut snbt: &str) -> anyhow::Result<NBT> {
     })
 }
 
-fn read_node(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<(usize, u8)> {
+fn read_node(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<(usize, TagType)> {
     let (node, type_id) = match peek_non_whitespace(snbt)? {
         '0'..='9' | '.' | '-' => read_numeric_node(snbt)?,
         '{' => {
@@ -187,7 +187,7 @@ fn read_string(snbt: &mut &str) -> anyhow::Result<String> {
     }
 }
 
-fn read_numeric_node(snbt: &mut &str) -> anyhow::Result<(NBTNode, u8)> {
+fn read_numeric_node(snbt: &mut &str) -> anyhow::Result<(NBTNode, TagType)> {
     let mut has_decimal = false;
     for (index, c) in snbt.char_indices() {
         match c {
@@ -252,7 +252,7 @@ enum PrimArrParseState {
     InNumber { start: usize },
 }
 
-fn read_array_node(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<(NBTNode, u8)> {
+fn read_array_node(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<(NBTNode, TagType)> {
     let next_char = peek_non_whitespace(snbt)?;
     match next_char {
         // Primitive ByteArray

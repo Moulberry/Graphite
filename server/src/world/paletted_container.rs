@@ -17,13 +17,13 @@ pub type BiomePalettedContainer =
 
 #[derive(Debug, Clone)]
 pub struct ArrayContainer<T, const HALF_CAP: usize> {
-    indices: heapless::Vec<(T, usize), 16>,
-    contents: [u8; HALF_CAP],
+    pub indices: heapless::Vec<(T, usize), 16>,
+    pub contents: [u8; HALF_CAP],
 }
 
 #[derive(Debug, Clone)]
 pub struct DirectContainer<const DIRECT_LEN: usize, const DIRECT_BITS: usize> {
-    contents: [u64; DIRECT_LEN],
+    pub contents: [u64; DIRECT_LEN],
 }
 
 #[derive(Debug, Clone)]
@@ -48,6 +48,15 @@ where
         // 15 - x because minecraft expects the data in big endian form
     }
 
+    /// # Safety
+    /// Must maintain all the invariants of ArrayContainer, namely:
+    ///  - The counts of all indices must sum to 4096
+    ///  - The contents must reference a value that exists in indices
+    ///  - The count must match the number of times that value is referenced in contents
+    pub unsafe fn array(indices: heapless::Vec<(T, usize), 16>, contents: [u8; HALF_CAP]) -> Self {
+        Self::Array(Box::from(ArrayContainer{ indices, contents }))
+    }
+
     pub fn filled(value: T) -> Self {
         Self::Single(value)
     }
@@ -60,7 +69,7 @@ where
                 let index = y as usize * SIDE_LEN * SIDE_LEN + z as usize * SIDE_LEN + x as usize;
                 match direct.get(index).try_into() {
                     Ok(v) => v,
-                    Err(_) => unreachable!("value must be convertible from usize"),
+                    Err(_) => T::zero(),
                 }
             },
         }
@@ -74,7 +83,7 @@ where
                     return None;
                 }
 
-                let mut array = Self::filled_array(value, 16 * 16 * 16);
+                let mut array = Self::filled_array(value, SIDE_LEN * SIDE_LEN * SIDE_LEN);
                 array.set(Self::get_array_index(x, y, z), new_value);
                 self.replace(Self::Array(Box::from(array)));
 
@@ -89,7 +98,7 @@ where
                     let index = y as usize * SIDE_LEN * SIDE_LEN + z as usize * SIDE_LEN + x as usize;
                     let ret = direct.set(index, new_value.into()).and_then(|v| match v.try_into() {
                         Ok(v) => Some(v),
-                        Err(_) => unreachable!("value must be convertible from usize"),
+                        Err(_) => None,
                     });
 
                     self.replace(Self::Direct(Box::from(direct)));
@@ -101,7 +110,7 @@ where
                 let index = y as usize * SIDE_LEN * SIDE_LEN + z as usize * SIDE_LEN + x as usize;
                 direct.set(index, new_value.into()).and_then(|v| match v.try_into() {
                     Ok(v) => Some(v),
-                    Err(_) => unreachable!("value must be convertible from usize"),
+                    Err(_) => None,
                 })
             },
         }
@@ -309,8 +318,6 @@ impl<const DIRECT_LEN: usize, const DIRECT_BITS: usize> DirectContainer<DIRECT_L
         old_value as usize
     }
 }
-
-
 
 impl<'a, T: 'static, const SIDE_LEN: usize, const HALF_CAP: usize, const DIRECT_LEN: usize, const DIRECT_BITS: usize>
     SliceSerializable<'a> for PalettedContainer<T, SIDE_LEN, HALF_CAP, DIRECT_LEN, DIRECT_BITS>

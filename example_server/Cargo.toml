@@ -14,6 +14,4 @@ concierge = { path = "../concierge" }
 command = { path = "../command" }
 protocol = { path = "../protocol" }
 minecraft_constants = { path = "../minecraft_constants" }
-
-# temp
-binary = { path = "../binary" }
+magma = { path = "../magma" }

@@ -5,7 +5,6 @@ use protocol::{play::server, IdentifiedPacket};
 pub struct PacketBuffer {
     pub(crate) write_buffer: WriteBuffer,
     pub(crate) viewable_self_exclusion_write_buffer: WriteBuffer,
-    // pub(crate)
 }
 
 impl PacketBuffer {
@@ -27,19 +26,11 @@ impl PacketBuffer {
         let _ = packet_helper::write_packet(&mut self.write_buffer, packet);
     }
 
-    pub fn write_viewable_packet<'a, T>(&mut self, packet: &'a T, exclude_self: bool)
+    pub fn write_self_excluded_viewable_packet<'a, T>(&mut self, packet: &'a T)
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
-        let write_to = if exclude_self {
-            &mut self.viewable_self_exclusion_write_buffer
-        } else {
-            // let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
-            //     [self.chunk_view_position.z as usize];
-            // &mut chunk.entity_viewable_buffer
-            todo!();
-        };
-
+        let write_to = &mut self.viewable_self_exclusion_write_buffer;
         let _ = packet_helper::write_packet(write_to, packet);
     }
 }

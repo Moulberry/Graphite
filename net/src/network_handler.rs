@@ -395,7 +395,7 @@ impl<N: NetworkManagerService> NetworkManager<N> {
         // Start listening on the address `addr`
         let mut accept = None;
         if let Some(addr) = addr {
-            accept = Some(AcceptCount::new(TcpListener::bind(addr)?, 30));
+            accept = Some(AcceptCount::new(TcpListener::bind(addr)?, 16));
         }
 
         // Split the ring into submitter and completion queue

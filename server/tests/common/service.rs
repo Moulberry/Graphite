@@ -36,9 +36,9 @@ pub fn create_player(
 
 pub fn create_universe() -> Pin<Box<Universe<DummyUniverseService>>> {
     let service = DummyUniverseService {
-        the_world: World::new(DummyWorldService {
+        the_world: World::new_with_default_chunks(DummyWorldService {
             players: PlayerVec::new(),
-        }),
+        }, 5, 24, 5),
     };
 
     let pinned = Box::pin(Universe::create_dummy(service));
@@ -78,8 +78,6 @@ pub struct DummyWorldService {
 impl WorldService for DummyWorldService {
     type UniverseServiceType = DummyUniverseService;
 
-    const CHUNKS_X: usize = 5;
-    const CHUNKS_Z: usize = 5;
     const CHUNK_VIEW_DISTANCE: u8 = 8;
     const ENTITY_VIEW_DISTANCE: u8 = 1;
 

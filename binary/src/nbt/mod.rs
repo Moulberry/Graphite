@@ -8,19 +8,22 @@ pub mod stringified;
 
 pub use cached_nbt::CachedNBT;
 
-const TAG_END_ID: u8 = 0;
-const TAG_BYTE_ID: u8 = 1;
-const TAG_SHORT_ID: u8 = 2;
-const TAG_INT_ID: u8 = 3;
-const TAG_LONG_ID: u8 = 4;
-const TAG_FLOAT_ID: u8 = 5;
-const TAG_DOUBLE_ID: u8 = 6;
-const TAG_BYTE_ARRAY_ID: u8 = 7;
-const TAG_STRING_ID: u8 = 8;
-const TAG_LIST_ID: u8 = 9;
-const TAG_COMPOUND_ID: u8 = 10;
-const TAG_INT_ARRAY_ID: u8 = 11;
-const TAG_LONG_ARRAY_ID: u8 = 12;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TagType(pub(crate) u8);
+
+pub const TAG_END_ID: TagType = TagType(0);
+pub const TAG_BYTE_ID: TagType = TagType(1);
+pub const TAG_SHORT_ID: TagType = TagType(2);
+pub const TAG_INT_ID: TagType = TagType(3);
+pub const TAG_LONG_ID: TagType = TagType(4);
+pub const TAG_FLOAT_ID: TagType = TagType(5);
+pub const TAG_DOUBLE_ID: TagType = TagType(6);
+pub const TAG_BYTE_ARRAY_ID: TagType = TagType(7);
+pub const TAG_STRING_ID: TagType = TagType(8);
+pub const TAG_LIST_ID: TagType = TagType(9);
+pub const TAG_COMPOUND_ID: TagType = TagType(10);
+pub const TAG_INT_ARRAY_ID: TagType = TagType(11);
+pub const TAG_LONG_ARRAY_ID: TagType = TagType(12);
 
 #[derive(Clone)]
 pub struct NBT {
@@ -73,6 +76,17 @@ impl NBT {
         }
     }
 
+    pub fn insert(&mut self, node: &mut NBTNode, key: &str, value: NBTNode) {
+        match node {
+            NBTNode::Compound(ref mut compound) => {
+                let idx = self.nodes.len();
+                self.nodes.push(value);
+                compound.insert(key, idx);
+            }
+            _ => panic!("nbt insert: node is not a compound"),
+        }
+    }
+
     pub fn iter<'a>(&'a self, node: &'a NBTNode) -> Option<NBTIterator<'a>> {
         match node {
             NBTNode::List {
@@ -84,6 +98,23 @@ impl NBT {
                 index: 0,
             }),
             _ => None,
+        }
+    }
+
+    pub fn append(&mut self, node: &mut NBTNode, value: NBTNode) {
+        match node {
+            NBTNode::List {
+                type_id,
+                children,
+            } => {
+                if *type_id != value.get_type() {
+                    panic!("nbt append: tag type is incorrect")
+                }
+                let idx = self.nodes.len();
+                self.nodes.push(value);
+                children.push(idx);
+            },
+            _ => panic!("nbt append: node is not a list"),
         }
     }
 }
@@ -99,13 +130,30 @@ pub enum NBTNode {
     Double(f64),
     ByteArray(Vec<i8>),
     String(String),
-    List { type_id: u8, children: Vec<usize> },
+    List { type_id: TagType, children: Vec<usize> },
     Compound(NBTCompound),
     IntArray(Vec<i32>),
     LongArray(Vec<i64>),
 }
 
 impl NBTNode {
+    pub fn get_type(&self) -> TagType {
+        match self {
+            NBTNode::Byte(_) => TAG_BYTE_ID,
+            NBTNode::Short(_) => TAG_SHORT_ID,
+            NBTNode::Int(_) => TAG_INT_ID,
+            NBTNode::Long(_) => TAG_LONG_ID,
+            NBTNode::Float(_) => TAG_FLOAT_ID,
+            NBTNode::Double(_) => TAG_DOUBLE_ID,
+            NBTNode::ByteArray(_) => TAG_BYTE_ARRAY_ID,
+            NBTNode::String(_) => TAG_STRING_ID,
+            NBTNode::List { type_id: _, children: _ } => TAG_LIST_ID,
+            NBTNode::Compound(_) => TAG_COMPOUND_ID,
+            NBTNode::IntArray(_) => TAG_INT_ARRAY_ID,
+            NBTNode::LongArray(_) => TAG_LONG_ARRAY_ID,
+        }
+    }
+
     pub fn as_byte(&self) -> Option<i8> {
         match self {
             NBTNode::Byte(value) => Some(*value),
@@ -198,7 +246,7 @@ impl<'a> Iterator for NBTIterator<'a> {
 }
 
 // Note: Using SmartString instead of String results in worse perf
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NBTCompound(Vec<(String, usize)>);
 
 impl NBTCompound {

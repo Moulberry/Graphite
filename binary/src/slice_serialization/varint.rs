@@ -61,4 +61,5 @@ macro_rules! for_primitive {
 }
 
 for_primitive!(u16);
+for_primitive!(u32);
 for_primitive!(usize);

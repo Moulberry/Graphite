@@ -33,10 +33,9 @@ pub struct ChunkSection {
     // i.e. convert self from Borrowed -> Owned
     copy_on_write: bool,
 
-    pub(crate) block_entities: BlockEntityStorage,
-
     // Serialized values
     non_air_blocks: u16,
+    pub(crate) block_entities: BlockEntityStorage,
     block_palette: *mut BlockPalettedContainer,
     biome_palette: *mut BiomePalettedContainer,
 }
@@ -69,11 +68,15 @@ impl ChunkSection {
         }
     }
 
+    pub fn get_non_air_count(&self) -> u16 {
+        self.non_air_blocks
+    }
+
     pub fn get_block(&self, x: u8, y: u8, z: u8) -> u16 {
         self.get_block_palette().get(x, y, z)
     }
 
-    fn get_block_palette(&self) -> &BlockPalettedContainer {
+    pub fn get_block_palette(&self) -> &BlockPalettedContainer {
         unsafe { &*self.block_palette }
     }
 

@@ -128,8 +128,6 @@ impl<P: PlayerService> Player<P> {
             world,
 
             packets: PacketBuffer::new(),
-            // write_buffer: WriteBuffer::new(),
-            // viewable_self_exclusion_write_buffer: WriteBuffer::new(),
             disconnected: false,
 
             entity_id: proto_player.entity_id,
@@ -189,14 +187,12 @@ impl<P: PlayerService> Player<P> {
             // Entity viewable buffers
             let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
             for x in (chunk_x - view_distance).max(0)
-                ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
+                ..(chunk_x + view_distance + 1).min(chunks.get_size_x() as _)
             {
-                let chunks_list = &chunks[x as usize];
-
                 for z in (chunk_z - view_distance).max(0)
-                    ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
+                    ..(chunk_z + view_distance + 1).min(chunks.get_size_z() as _)
                 {
-                    let chunk = &chunks_list[z as usize];
+                    let chunk = chunks.get(x as usize, z as usize).expect("chunk coords in bounds");
 
                     let bytes = chunk.entity_viewable_buffer.get_written();
 
@@ -215,12 +211,12 @@ impl<P: PlayerService> Player<P> {
             // Block viewable buffers
             let view_distance = P::WorldServiceType::CHUNK_VIEW_DISTANCE as i32;
             for x in (chunk_x - view_distance).max(0)
-                ..(chunk_x + view_distance + 1).min(P::WorldServiceType::CHUNKS_X as _)
+                ..(chunk_x + view_distance + 1).min(chunks.get_size_x() as _)
             {
                 for z in (chunk_z - view_distance).max(0)
-                    ..(chunk_z + view_distance + 1).min(P::WorldServiceType::CHUNKS_Z as _)
+                    ..(chunk_z + view_distance + 1).min(chunks.get_size_z() as _)
                 {
-                    let chunk = &self.get_world().chunks[x as usize][z as usize];
+                    let chunk = self.get_world().chunks.get(x as usize, z as usize).expect("chunk coords in bounds");
                     self.packets
                         .write_raw_packets(chunk.block_viewable_buffer.get_written());
                 }
@@ -294,8 +290,9 @@ impl<P: PlayerService> Player<P> {
         // These packets are seen by those in render distance of this player,
         // but *NOT* this player. This is used for eg. movement
         if !self.packets.viewable_self_exclusion_write_buffer.is_empty() {
-            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
-                [self.chunk_view_position.z as usize];
+            let chunk = self.get_world_mut().chunks
+                .get_mut(self.chunk_view_position.x, self.chunk_view_position.z)
+                .expect("chunk coords in bounds");
             let write_to = &mut chunk.entity_viewable_buffer;
 
             // Copy bytes into viewable buffer
@@ -358,8 +355,9 @@ impl<P: PlayerService> Player<P> {
     fn update_metadata(&mut self) -> anyhow::Result<()> {
         let write_size = self.metadata.get_write_size();
         Ok(if write_size > 0 {
-            let chunk = &mut self.get_world_mut().chunks[self.chunk_view_position.x as usize]
-                [self.chunk_view_position.z as usize];
+            let chunk = self.get_world_mut().chunks
+                .get_mut(self.chunk_view_position.x, self.chunk_view_position.z)
+                .expect("chunk coords in bounds");
 
             packet_helper::write_metadata_packet(
                 &mut chunk.entity_viewable_buffer,
@@ -429,12 +427,11 @@ impl<P: PlayerService> Player<P> {
                 equipment.push((equipment_slot, itemslot.into()));
             }
 
-            self.packets.write_viewable_packet(
+            self.packets.write_self_excluded_viewable_packet(
                 &SetEquipment {
                     entity_id: self.entity_id.as_i32(),
                     equipment,
                 },
-                true,
             );
         }
     }
@@ -533,14 +530,14 @@ impl<P: PlayerService> Player<P> {
                         pitch: to.rot.pitch,
                         on_ground: self.on_ground,
                     };
-                    self.packets.write_viewable_packet(&move_packet, true);
+                    self.packets.write_self_excluded_viewable_packet(&move_packet);
 
                     // Rotate head
                     let rotate_head = RotateHead {
                         entity_id: self.entity_id.as_i32(),
                         head_yaw: to.rot.yaw,
                     };
-                    self.packets.write_viewable_packet(&rotate_head, true);
+                    self.packets.write_self_excluded_viewable_packet(&rotate_head);
                 } else {
                     // todo: switch to using MoveEntityPos when MC-255263 is fixed
 
@@ -554,7 +551,7 @@ impl<P: PlayerService> Player<P> {
                         pitch: to.rot.pitch,
                         on_ground: self.on_ground,
                     };
-                    self.packets.write_viewable_packet(&move_packet, true);
+                    self.packets.write_self_excluded_viewable_packet(&move_packet);
                 }
             } else {
                 self.synced_coord = to.coord;
@@ -569,7 +566,7 @@ impl<P: PlayerService> Player<P> {
                     pitch: to.rot.pitch,
                     on_ground: self.on_ground,
                 };
-                self.packets.write_viewable_packet(&teleport_packet, true);
+                self.packets.write_self_excluded_viewable_packet(&teleport_packet);
 
                 if rot_changed {
                     // Rotate head
@@ -577,7 +574,7 @@ impl<P: PlayerService> Player<P> {
                         entity_id: self.entity_id.as_i32(),
                         head_yaw: to.rot.yaw,
                     };
-                    self.packets.write_viewable_packet(&rotate_head, true);
+                    self.packets.write_self_excluded_viewable_packet(&rotate_head);
                 }
             }
 
@@ -595,14 +592,14 @@ impl<P: PlayerService> Player<P> {
                 pitch: to.rot.pitch,
                 on_ground: self.on_ground,
             };
-            self.packets.write_viewable_packet(&teleport_packet, true);
+            self.packets.write_self_excluded_viewable_packet(&teleport_packet);
 
             // Rotate head
             let rotate_head = RotateHead {
                 entity_id: self.entity_id.as_i32(),
                 head_yaw: to.rot.yaw,
             };
-            self.packets.write_viewable_packet(&rotate_head, true);
+            self.packets.write_self_excluded_viewable_packet(&rotate_head);
         } else {
             return Ok(());
         }
@@ -674,14 +671,13 @@ impl<P: PlayerService> Player<P> {
             .get_world_mut()
             .set_block_i32(pos.x as _, pos.y as _, pos.z as _, 0)
         {
-            self.packets.write_viewable_packet(
+            self.packets.write_self_excluded_viewable_packet(
                 &LevelEvent {
                     event_type: LevelEventType::ParticlesDestroyBlock,
                     pos,
                     data: old as _,
                     global: false,
                 },
-                true,
             );
 
             // Update neighbors
@@ -802,13 +798,12 @@ impl<P: PlayerService> Player<P> {
                     self.get_break_speed_multiplier(),
                 ) {
                     // todo: check if the stage changed, only send packet then
-                    self.packets.write_viewable_packet(
+                    self.packets.write_self_excluded_viewable_packet(
                         &BlockDestruction {
                             entity_id: self.entity_id.as_i32(),
                             location: position,
                             destroy_stage,
-                        },
-                        true,
+                        }
                     );
                 }
 
@@ -825,13 +820,12 @@ impl<P: PlayerService> Player<P> {
                 position,
                 break_time: _,
             } => {
-                self.packets.write_viewable_packet(
+                self.packets.write_self_excluded_viewable_packet(
                     &BlockDestruction {
                         entity_id: self.entity_id.as_i32(),
                         location: position,
                         destroy_stage: -1,
                     },
-                    true,
                 );
             }
 
@@ -976,9 +970,9 @@ impl<P: PlayerService> Player<P> {
 impl<P: PlayerService> Drop for Player<P> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            // Safety: we are dropping the player
-            unsafe {
-                self.get_world_mut().remove_player_from_chunk(self);
+            let chunks = &mut self.get_world_mut().chunks;
+            if let Some(old_chunk) = chunks.get_mut(self.chunk_view_position.x, self.chunk_view_position.z) {
+                old_chunk.destroy_player(self);
             }
 
             if !self.moved_into_proto {
@@ -996,11 +990,12 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
 
     fn update_pointer(&mut self, _: usize) {
         let ptr: *mut Player<P> = self;
-        self.connection.update_player_pointer(ptr);
-
-        let world = self.get_world_mut();
-        let chunk = &mut world.chunks[self.chunk_view_position.x as usize]
-            [self.chunk_view_position.z as usize];
+        // Safety: player pointer is valid, constructed above
+        unsafe { self.connection.update_player_pointer(ptr); }
+        
+        let chunk = self.get_world_mut().chunks
+            .get_mut(self.chunk_view_position.x, self.chunk_view_position.z)
+            .expect("chunk coords in bounds");
         if self.chunk_ref == usize::MAX {
             chunk.create_player(self);
         } else {

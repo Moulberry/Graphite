@@ -1,3 +1,7 @@
+use std::env;
+use std::fs::File;
+use std::io::Read;
+use std::io::Write;
 use std::sync::mpsc::Sender;
 
 use command::brigadier;
@@ -66,9 +70,9 @@ impl ConciergeService for MyConciergeImpl {
 
 fn main() {
     #[brigadier("hello", {10..2000}, {})]
-    fn my_function(player: &mut Player<MyPlayerService>, number: u16, numer2: u8) -> CommandResult {
+    fn my_function(player: &mut Player<MyPlayerService>, number: u16, number2: u8) -> CommandResult {
         println!("number: {}", number);
-        println!("numer2: {}", numer2);
+        println!("number2: {}", number2);
         player.send_message("Hello from my_function");
         Ok(())
     }
@@ -159,6 +163,19 @@ fn main() {
         Ok(())
     }
 
+    #[brigadier("save")]
+    fn save(player: &mut Player<MyPlayerService>) -> CommandResult {
+        let world = player.get_world();
+        let chunks = world.get_chunks();
+        let output = magma::to_magma(chunks, 0);
+
+        let dest_path = env::current_dir().unwrap().join("world.magma");
+        let mut f = File::create(&dest_path).unwrap();
+        f.write_all(output.unwrap().as_slice()).unwrap();
+
+        Ok(())
+    }
+
     #[brigadier("gamemode", {})]
     fn gamemode(player: &mut Player<MyPlayerService>, id: u8) -> CommandResult {
         let gamemode = match id {
@@ -178,15 +195,28 @@ fn main() {
     my_function.merge(fly).unwrap();
     my_function.merge(glow_up).unwrap();
     my_function.merge(gamemode).unwrap();
+    my_function.merge(save).unwrap();
 
     let (dispatcher, packet) =
         command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
     let universe_sender = Universe::create_and_start(
         || MyUniverseService {
-            the_world: World::new(MyWorldService {
-                players: PlayerVec::new(),
-            }),
+            the_world: {
+                let dest_path = env::current_dir().unwrap().join("world.magma");
+                let mut f = File::open(&dest_path).unwrap();
+
+                let mut vec = Vec::new();
+                f.read_to_end(&mut vec).unwrap();
+                let (chunk_list, _) = magma::from_magma(vec.as_slice()).unwrap();
+
+                World::new(MyWorldService {
+                    players: PlayerVec::new(),
+                }, chunk_list)
+                // World::new_with_default_chunks(MyWorldService {
+                //     players: PlayerVec::new(),
+                // }, 6, 24, 6)
+            },
         },
         Some((dispatcher, packet)),
     );
@@ -228,8 +258,6 @@ struct MyWorldService {
 
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
-    const CHUNKS_X: usize = 6;
-    const CHUNKS_Z: usize = 6;
     const CHUNK_VIEW_DISTANCE: u8 = 8;
     const ENTITY_VIEW_DISTANCE: u8 = 1;
 

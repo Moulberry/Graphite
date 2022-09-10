@@ -7,7 +7,9 @@ use crate::universe::{Universe, UniverseService};
 use super::player::{Player, PlayerService};
 
 pub trait AbstractConnectionReference<U: UniverseService> {
-    fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>);
+    /// # Safety
+    /// The `player` pointer passed to this must be valid
+    unsafe fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>);
     fn clear_player_pointer(&mut self);
 
     fn read_bytes(&self) -> &[u8];
@@ -67,7 +69,7 @@ impl<U: UniverseService> AbstractConnectionReference<U> for ConnectionReference<
         }
     }
 
-    fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
+    unsafe fn update_player_pointer<P: PlayerService>(&mut self, player: *mut Player<P>) {
         self.get_connection_mut().1.update_player_pointer(player);
     }
 
@@ -166,7 +168,9 @@ impl<U: UniverseService> PlayerConnection<U> {
         self.player_process_disconnect = None;
     }
 
-    pub(crate) fn update_player_pointer<T: PlayerService>(&mut self, player: *mut Player<T>) {
+    /// # Safety
+    /// The `player` pointer passed to this must be valid
+    pub(crate) unsafe fn update_player_pointer<T: PlayerService>(&mut self, player: *mut Player<T>) {
         debug_assert!(
             !self.is_closing,
             "tried to update connection, but the connection was already closed"
@@ -177,11 +181,11 @@ impl<U: UniverseService> PlayerConnection<U> {
 
         // Set ptr to process_packet function
         let process_packet_ptr = Player::<T>::handle_packets as *const ();
-        self.player_process_packet = Some(unsafe { std::mem::transmute(process_packet_ptr) });
+        self.player_process_packet = Some(std::mem::transmute(process_packet_ptr));
 
         // Set ptr to process_disconnection function
         let process_disconnect_ptr = Player::<T>::handle_disconnect as *const ();
         self.player_process_disconnect =
-            Some(unsafe { std::mem::transmute(process_disconnect_ptr) });
+            Some(std::mem::transmute(process_disconnect_ptr));
     }
 }

@@ -1,27 +1,29 @@
+use super::{chunk::Chunk, chunk_list::ChunkGrid};
+
 #[allow(clippy::too_many_arguments)] // Justification: grouping parameters into a new type would not improve readability
-pub fn for_each_diff_chunks<T, F1, F2>(
+pub fn for_each_diff_chunks<F1, F2>(
     from: (i32, i32),
     to: (i32, i32),
     view_distance: u8,
-    chunks: &mut Vec<Vec<T>>,
+    chunks: &mut ChunkGrid,
     mut new_chunks: F1,
     mut old_chunks: F2,
     max_x: usize,
     max_z: usize,
 ) where
-    F1: FnMut(&mut T),
-    F2: FnMut(&mut T),
+    F1: FnMut(&mut Chunk),
+    F2: FnMut(&mut Chunk),
 {
     // Safety: for_each_diff guarantees that new_chunks and old_chunks share no duplicates
-    let chunks_ptr: *mut Vec<Vec<T>> = chunks as *mut _;
+    let chunks_ptr: *mut ChunkGrid = chunks as *mut _;
 
     for_each_diff_with_min_max(
         (to.0 - from.0, to.1 - from.1),
         view_distance,
-        |x, z| new_chunks(&mut chunks[(from.0 + x) as usize][(from.1 + z) as usize]),
+        |x, z| new_chunks(chunks.get_mut((from.0 + x) as usize, (from.1 + z) as usize).expect("chunk in bounds")),
         |x, z| {
             let chunks = unsafe { &mut *chunks_ptr };
-            old_chunks(&mut chunks[(from.0 + x) as usize][(from.1 + z) as usize])
+            old_chunks(chunks.get_mut((from.0 + x) as usize, (from.1 + z) as usize).expect("chunk in bounds"))
         },
         -from.0,
         -from.1,
