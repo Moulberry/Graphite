@@ -59,7 +59,7 @@ where
     /// If this is false, the server will instead wait for the tick
     ///
     /// Benefit: reduce latency by 50ms for 25% of players
-    /// Drawback: 2x write operations which could potentially strain the server
+    /// Drawback: more write operations which could potentially strain the server
     const FAST_PACKET_RESPONSE: bool = true;
 
     type UniverseServiceType: UniverseService;
