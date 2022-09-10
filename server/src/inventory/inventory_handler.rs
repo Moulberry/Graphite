@@ -1,6 +1,6 @@
 use std::result;
 
-use binary::slice_serialization::NBTBlob;
+
 use minecraft_constants::item::NoSuchItemError;
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::play::server::ContainerSetSlot;

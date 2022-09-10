@@ -1,7 +1,6 @@
 use std::{mem::ManuallyDrop, ops::Range};
 
 use anyhow::bail;
-use binary::slice_serialization::SliceSerializable;
 use minecraft_constants::{
     block::Block,
     entity::{Metadata, PlayerMetadata},
@@ -26,7 +25,6 @@ use protocol::{
         },
     },
     types::{BlockPosition, EquipmentSlot, GameProfile, Hand, Pose},
-    IdentifiedPacket,
 };
 use queues::Buffer;
 use rand::RngCore;
@@ -39,7 +37,7 @@ use crate::{
     inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
     universe::{EntityId, UniverseService},
     world::{
-        chunk::BlockStorage, ChunkViewPosition, TickPhase, TickPhaseInner, World, WorldService, block_update,
+        ChunkViewPosition, TickPhase, TickPhaseInner, World, WorldService, block_update,
     },
 };
 

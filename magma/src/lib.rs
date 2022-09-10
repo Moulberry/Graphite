@@ -1,6 +1,6 @@
 use anyhow::bail;
 use binary::slice_serialization::BigEndian;
-use binary::slice_serialization::GreedyBlob;
+
 use binary::slice_serialization::LittleEndian;
 use binary::slice_serialization::Single;
 use binary::slice_serialization::SliceSerializable;
@@ -8,7 +8,7 @@ use binary::slice_serialization::VarInt;
 use binary::varint;
 use byteorder::ByteOrder;
 use bytes::BufMut;
-use bytes::Buf;
+
 use server::world::chunk::Chunk;
 use server::world::chunk_section::ChunkSection;
 use server::world::paletted_container::BiomePalettedContainer;
@@ -53,7 +53,7 @@ pub fn to_magma(chunks: &ChunkGrid, custom_data: u32) -> Result<Vec<u8>, MagmaEn
         }
         
         for section in sections {
-            let flag_index = out.len();
+            let _flag_index = out.len();
 
             write_block_palette(section.get_block_palette(), section.get_non_air_count(), &mut out)?;
 

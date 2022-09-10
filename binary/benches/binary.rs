@@ -1,4 +1,4 @@
-use std::{time::Duration, collections::{HashSet, BTreeSet}};
+use std::{time::Duration, collections::{HashSet}};
 
 use criterion::{criterion_group, criterion_main, Criterion, black_box};
 use rand::Rng;
@@ -49,10 +49,10 @@ pub fn temp_test(c: &mut Criterion) {
         b.iter(|| {
             for _ in 0..100 {
                 match vec.binary_search(&search_val) {
-                    Ok(index) => {
+                    Ok(_index) => {
                         black_box(true);
                     },
-                    Err(index) => {
+                    Err(_index) => {
                         black_box(false);
                     },
                 }

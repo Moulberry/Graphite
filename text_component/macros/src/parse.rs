@@ -1,4 +1,4 @@
-use std::default;
+
 
 use super::*;
 use crate::tree::RawNode;
@@ -52,8 +52,8 @@ fn parse_one(component: &mut RawComponent, node: RawNode) -> Result<(), MacroErr
             parse_macro(component, name, span, arguments.into_iter().collect())?;
             parse_children(component, children)?;
         }
-        RawNode::Variable { name, span } => (),
-        RawNode::Text { value } => (),
+        RawNode::Variable { name: _, span: _ } => (),
+        RawNode::Text { value: _ } => (),
     }
     Ok(())
 }

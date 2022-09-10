@@ -1,7 +1,7 @@
 use minecraft_constants::{
     block::{Block, BlockAttributes, NoSuchBlockError, self},
     block_parameter::{self, Axis3D, DirectionOrDown, Facing, Half, Instrument, RailShape, StraightRailShape, StairShape},
-    placement::PlacementContext, tags::block::BlockTags, item::Item,
+    placement::PlacementContext, item::Item,
 };
 use protocol::types::{BlockPosition, Direction};
 

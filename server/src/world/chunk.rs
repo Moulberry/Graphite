@@ -2,11 +2,11 @@ use std::borrow::Cow;
 
 use bevy_ecs::entity::Entity;
 use binary::{
-    nbt::{CachedNBT, NBTNode},
-    slice_serialization::{slice_serializable, BigEndian, GreedyBlob, NBTBlob},
+    nbt::{CachedNBT},
+    slice_serialization::{slice_serializable, BigEndian, GreedyBlob},
 };
 use bytes::BufMut;
-use minecraft_constants::block::Block;
+
 use net::{network_buffer::WriteBuffer, packet_helper};
 use protocol::{
     play::server::{self, BlockUpdate, ChunkBlockData, ChunkLightData},

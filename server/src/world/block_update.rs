@@ -1,5 +1,5 @@
 use minecraft_constants::{block::{Block, BlockAttributes, NoSuchBlockError, self}, block_parameter::{RailShape, StraightRailShape, self, Half, StairShape}, tags::block::BlockTags};
-use protocol::types::BlockPosition;
+
 
 use super::{World, WorldService};
 
@@ -99,7 +99,7 @@ pub fn update<W: WorldService>(block_state_id: u16, block: &mut Block, x: i32, y
             return false;
         }
         
-        Block::RedstoneWire { east, north, power, south, west } => todo!(),
+        Block::RedstoneWire { east: _, north: _, power: _, south: _, west: _ } => todo!(),
         
         Block::OakFence { east, north, south, waterlogged: _, west } |
         Block::NetherBrickFence { east, north, south, waterlogged: _, west } |
@@ -256,40 +256,40 @@ pub fn update<W: WorldService>(block_state_id: u16, block: &mut Block, x: i32, y
             return changed;
         }
         
-        Block::CobblestoneWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::MossyCobblestoneWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::BrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::PrismarineWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::RedSandstoneWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::MossyStoneBrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::GraniteWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::StoneBrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::MudBrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::NetherBrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::AndesiteWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::RedNetherBrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::SandstoneWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::EndStoneBrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::DioriteWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::BlackstoneWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::PolishedBlackstoneBrickWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::PolishedBlackstoneWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::CobbledDeepslateWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::PolishedDeepslateWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::DeepslateTileWall { east, north, south, up, waterlogged, west } => todo!(),
-        Block::DeepslateBrickWall { east, north, south, up, waterlogged, west } => todo!(),
+        Block::CobblestoneWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::MossyCobblestoneWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::BrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::PrismarineWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::RedSandstoneWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::MossyStoneBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::GraniteWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::StoneBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::MudBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::NetherBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::AndesiteWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::RedNetherBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::SandstoneWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::EndStoneBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::DioriteWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::BlackstoneWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::PolishedBlackstoneBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::PolishedBlackstoneWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::CobbledDeepslateWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::PolishedDeepslateWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::DeepslateTileWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
+        Block::DeepslateBrickWall { east: _, north: _, south: _, up: _, waterlogged: _, west: _ } => todo!(),
 
-        Block::Tripwire { attached, disarmed, east, north, powered, south, west } => todo!(),
+        Block::Tripwire { attached: _, disarmed: _, east: _, north: _, powered: _, south: _, west: _ } => todo!(),
         
-        Block::PointedDripstone { thickness, vertical_direction, waterlogged } => todo!(),
+        Block::PointedDripstone { thickness: _, vertical_direction: _, waterlogged: _ } => todo!(),
 
-        Block::CaveVines { age, berries } => todo!(),
-        Block::CaveVinesPlant { berries } => todo!(),
+        Block::CaveVines { age: _, berries: _ } => todo!(),
+        Block::CaveVinesPlant { berries: _ } => todo!(),
         
-        Block::BigDripleaf { facing, tilt, waterlogged } => todo!(),
-        Block::BigDripleafStem { facing: Direction, waterlogged: bool } => todo!(),
+        Block::BigDripleaf { facing: _, tilt: _, waterlogged: _ } => todo!(),
+        Block::BigDripleafStem { facing: _, waterlogged: _ } => todo!(),
 
-        Block::Scaffolding { bottom, distance, waterlogged } => todo!(),
+        Block::Scaffolding { bottom: _, distance: _, waterlogged: _ } => todo!(),
 
         _ => return false,
 

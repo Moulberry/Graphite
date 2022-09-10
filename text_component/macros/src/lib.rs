@@ -1,6 +1,6 @@
-use std::iter::Peekable;
 
-use proc_macro2::{Delimiter, Span, TokenStream, TokenTree};
+
+use proc_macro2::{Span, TokenTree};
 
 struct MacroError(Span, String);
 
