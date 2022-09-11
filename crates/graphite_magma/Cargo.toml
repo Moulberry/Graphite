@@ -10,5 +10,5 @@ bytes = "1.1.0"
 heapless = "0.7.15"
 byteorder = "1.4.3"
 
-graphite_binary = { path = "../graphite_binary" }
-graphite_server = { path = "../graphite_server" }
+graphite_binary = { path = "../graphite_binary", version = "0.1.0" }
+graphite_server = { path = "../graphite_server", version = "0.1.0" }

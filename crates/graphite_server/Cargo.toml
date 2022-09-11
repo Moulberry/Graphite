@@ -19,18 +19,18 @@ readonly = "0.2.1"
 parry3d = "0.9.0"
 paste = "1.0.8"
 
-graphite_binary = { path = "../graphite_binary" }
-graphite_net = { path = "../graphite_net" }
-graphite_mc_protocol = { path = "../graphite_mc_protocol" }
-graphite_sticky = { path = "../graphite_sticky" }
-graphite_command = { path = "../graphite_command" }
-graphite_text_component = { path = "../graphite_text_component" }
-graphite_mc_constants = { path = "../graphite_mc_constants" }
+graphite_binary = { path = "../graphite_binary", version = "0.1.0" }
+graphite_net = { path = "../graphite_net", version = "0.1.0" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol", version = "0.1.0" }
+graphite_sticky = { path = "../graphite_sticky", version = "0.1.0" }
+graphite_command = { path = "../graphite_command", version = "0.1.0" }
+graphite_text_component = { path = "../graphite_text_component", version = "0.1.0" }
+graphite_mc_constants = { path = "../graphite_mc_constants", version = "0.1.0" }
 
 [dev-dependencies]
 proptest = "1.0.0"
 criterion = "0.3.6"
-graphite_mc_constants = { path = "../graphite_mc_constants" }
+graphite_mc_constants = { path = "../graphite_mc_constants", version = "0.1.0" }
 
 [[bench]]
 name = "chunk_view_diff"

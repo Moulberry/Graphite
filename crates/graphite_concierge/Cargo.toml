@@ -9,6 +9,6 @@ io-uring = { version = "0.5.2", features = ["unstable"] }
 slab = "0.4.6"
 rand = "0.8.5"
 
-graphite_net = { path = "../graphite_net" }
-graphite_binary = { path = "../graphite_binary" }
-graphite_mc_protocol = { path = "../graphite_mc_protocol" }
+graphite_net = { path = "../graphite_net", version = "0.1.0" }
+graphite_binary = { path = "../graphite_binary", version = "0.1.0" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol", version = "0.1.0" }

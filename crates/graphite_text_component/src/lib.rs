@@ -36,7 +36,7 @@ impl From<&str> for TextComponent {
     }
 }
 
-pub use text_component_macros::component;
+/*pub use text_component_macros::component;
 
 #[test]
 pub fn something() {
@@ -45,7 +45,7 @@ pub fn something() {
             // "Text " yellow!{"here"} " After" arg
         }
     )
-}
+}*/
 
 /*
 

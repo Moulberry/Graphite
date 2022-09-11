@@ -7,8 +7,8 @@ edition = "2021"
 thiserror = "1.0.31"
 num_enum = "0.5.7"
 readonly = "0.2.1"
-graphite_mc_protocol = { path = "../graphite_mc_protocol" }
-graphite_binary = { path = "../graphite_binary" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol", version = "0.1.0" }
+graphite_binary = { path = "../graphite_binary", version = "0.1.0" }
 
 [build-dependencies]
 thiserror = "1.0.31"

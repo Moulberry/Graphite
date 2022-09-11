@@ -1,5 +1,5 @@
 [package]
-name = "command_macros"
+name = "graphite_command_macros"
 version = "0.1.0"
 edition = "2021"
 

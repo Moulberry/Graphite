@@ -60,4 +60,4 @@ pub trait SliceSerializable<'a, T = Self> {
 
 // Macro to generate composite slice_serializables
 
-pub use binary_macros::slice_serializable;
+pub use graphite_binary_macros::slice_serializable;

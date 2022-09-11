@@ -231,16 +231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "binary_macros"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "bit-set"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -353,17 +343,6 @@ dependencies = [
  "bitflags",
  "textwrap",
  "unicode-width",
-]
-
-[[package]]
-name = "command_macros"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "proc-macro2",
- "quote",
- "syn",
- "thiserror",
 ]
 
 [[package]]
@@ -655,14 +634,24 @@ name = "graphite_binary"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "binary_macros",
  "bytes",
  "cesu8",
  "criterion",
+ "graphite_binary_macros",
  "hematite-nbt",
  "quartz_nbt",
  "rand",
  "thiserror",
+]
+
+[[package]]
+name = "graphite_binary_macros"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -672,9 +661,20 @@ dependencies = [
  "anyhow",
  "bytemuck",
  "bytes",
- "command_macros",
+ "graphite_command_macros",
  "graphite_mc_protocol",
  "maplit",
+ "thiserror",
+]
+
+[[package]]
+name = "graphite_command_macros"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
  "thiserror",
 ]
 
@@ -795,9 +795,6 @@ version = "0.1.0"
 [[package]]
 name = "graphite_text_component"
 version = "0.1.0"
-dependencies = [
- "text_component_macros",
-]
 
 [[package]]
 name = "half"
@@ -1721,16 +1718,6 @@ dependencies = [
  "redox_syscall",
  "remove_dir_all",
  "winapi",
-]
-
-[[package]]
-name = "text_component_macros"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
