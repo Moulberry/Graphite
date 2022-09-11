@@ -2,7 +2,7 @@
 name = "graphite_magma"
 version = "0.1.0"
 edition = "2021"
-license = "Apache 2.0"
+license = "Apache-2.0"
 description = "Efficient Minecraft world format for the graphite_minecraft project"
 
 [dependencies]
