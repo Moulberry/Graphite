@@ -2,6 +2,8 @@
 name = "graphite_mc_constants"
 version = "0.1.0"
 edition = "2021"
+license = "Apache 2.0"
+description = "Code-generated constants for Minecraft for the graphite_minecraft project"
 
 [dependencies]
 thiserror = "1.0.31"

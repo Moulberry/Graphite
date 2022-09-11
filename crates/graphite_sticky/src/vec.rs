@@ -2,6 +2,12 @@ use crate::unsticky::Unsticky;
 
 use std::fmt::Debug;
 
+// todo:
+// this was originally designed with the intent of minimizing the number of moves,
+// as such, reallocation was avoided via the usage of buckets, however, this behaviour
+// is no longer desired. This collection can be rewritten to use a single Vec, making sure
+// that every element has Unsticky::update_pointer called when reallocations occur
+
 #[derive(Debug)]
 pub struct StickyVec<T: Unsticky> {
     buckets: Vec<Vec<T>>,

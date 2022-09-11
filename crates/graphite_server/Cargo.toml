@@ -2,6 +2,8 @@
 name = "graphite_server"
 version = "0.1.0"
 edition = "2021"
+license = "Apache 2.0"
+description = "Minecraft server implementation for the graphite_minecraft project"
 
 [dependencies]
 anyhow = "1.0.57"

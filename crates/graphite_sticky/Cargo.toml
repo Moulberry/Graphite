@@ -2,5 +2,7 @@
 name = "graphite_sticky"
 version = "0.1.0"
 edition = "2021"
+license = "Apache 2.0"
+description = "Collections that guarantee the memory-location of its contents for the graphite_minecraft project"
 
 [dependencies]
