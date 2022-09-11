@@ -8,10 +8,10 @@ anyhow = "1.0.57"
 bevy_ecs = "0.7.0"
 rand = "0.8.5"
 
-server = { path = "../server" }
-net = { path = "../net" }
-concierge = { path = "../concierge" }
-command = { path = "../command" }
-protocol = { path = "../protocol" }
-minecraft_constants = { path = "../minecraft_constants" }
-magma = { path = "../magma" }
+graphite_server = { path = "../crates/graphite_server" }
+graphite_net = { path = "../crates/graphite_net" }
+graphite_concierge = { path = "../crates/graphite_concierge" }
+graphite_command = { path = "../crates/graphite_command" }
+graphite_mc_protocol = { path = "../crates/graphite_mc_protocol" }
+graphite_mc_constants = { path = "../crates/graphite_mc_constants" }
+graphite_magma = { path = "../crates/graphite_magma" }

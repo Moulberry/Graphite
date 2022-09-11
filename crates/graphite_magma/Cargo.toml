@@ -1,0 +1,14 @@
+[package]
+name = "graphite_magma"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.57"
+thiserror = "1.0.31"
+bytes = "1.1.0"
+heapless = "0.7.15"
+byteorder = "1.4.3"
+
+graphite_binary = { path = "../graphite_binary" }
+graphite_server = { path = "../graphite_server" }

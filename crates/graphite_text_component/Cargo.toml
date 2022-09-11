@@ -1,0 +1,7 @@
+[package]
+name = "graphite_text_component"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+text_component_macros = { path = "macros" }

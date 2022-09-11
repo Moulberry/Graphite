@@ -231,21 +231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "binary"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "binary_macros",
- "bytes",
- "cesu8",
- "criterion",
- "hematite-nbt",
- "quartz_nbt",
- "rand",
- "thiserror",
-]
-
-[[package]]
 name = "binary_macros"
 version = "0.1.0"
 dependencies = [
@@ -371,20 +356,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "command"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytemuck",
- "bytes",
- "command_derive",
- "maplit",
- "protocol",
- "thiserror",
-]
-
-[[package]]
-name = "command_derive"
+name = "command_macros"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -392,19 +364,6 @@ dependencies = [
  "quote",
  "syn",
  "thiserror",
-]
-
-[[package]]
-name = "concierge"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "binary",
- "io-uring",
- "net",
- "protocol",
- "rand",
- "slab",
 ]
 
 [[package]]
@@ -601,14 +560,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bevy_ecs",
- "command",
- "concierge",
- "magma",
- "minecraft_constants",
- "net",
- "protocol",
+ "graphite_command",
+ "graphite_concierge",
+ "graphite_magma",
+ "graphite_mc_constants",
+ "graphite_mc_protocol",
+ "graphite_net",
+ "graphite_server",
  "rand",
- "server",
 ]
 
 [[package]]
@@ -689,6 +648,155 @@ dependencies = [
  "libc",
  "wasi",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "graphite_binary"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "binary_macros",
+ "bytes",
+ "cesu8",
+ "criterion",
+ "hematite-nbt",
+ "quartz_nbt",
+ "rand",
+ "thiserror",
+]
+
+[[package]]
+name = "graphite_command"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "bytes",
+ "command_macros",
+ "graphite_mc_protocol",
+ "maplit",
+ "thiserror",
+]
+
+[[package]]
+name = "graphite_concierge"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "graphite_binary",
+ "graphite_mc_protocol",
+ "graphite_net",
+ "io-uring",
+ "rand",
+ "slab",
+]
+
+[[package]]
+name = "graphite_magma"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "byteorder",
+ "bytes",
+ "graphite_binary",
+ "graphite_server",
+ "heapless",
+ "thiserror",
+]
+
+[[package]]
+name = "graphite_mc_constants"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "convert_case",
+ "graphite_binary",
+ "graphite_mc_protocol",
+ "indexmap",
+ "num_enum",
+ "readonly",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "graphite_mc_protocol"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "graphite_binary",
+ "num_enum",
+ "paste",
+]
+
+[[package]]
+name = "graphite_minecraft"
+version = "0.1.0"
+dependencies = [
+ "graphite_command",
+ "graphite_concierge",
+ "graphite_magma",
+ "graphite_mc_constants",
+ "graphite_mc_protocol",
+ "graphite_net",
+ "graphite_server",
+]
+
+[[package]]
+name = "graphite_net"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "graphite_binary",
+ "graphite_mc_constants",
+ "graphite_mc_protocol",
+ "io-uring",
+ "libc",
+ "nix",
+ "slab",
+ "thiserror",
+]
+
+[[package]]
+name = "graphite_server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy_ecs",
+ "bytemuck",
+ "bytes",
+ "criterion",
+ "graphite_binary",
+ "graphite_command",
+ "graphite_mc_constants",
+ "graphite_mc_protocol",
+ "graphite_net",
+ "graphite_sticky",
+ "graphite_text_component",
+ "heapless",
+ "io-uring",
+ "num",
+ "parry3d",
+ "paste",
+ "proptest",
+ "queues",
+ "rand",
+ "readonly",
+ "slab",
+ "thiserror",
+]
+
+[[package]]
+name = "graphite_sticky"
+version = "0.1.0"
+
+[[package]]
+name = "graphite_text_component"
+version = "0.1.0"
+dependencies = [
+ "text_component_macros",
 ]
 
 [[package]]
@@ -857,19 +965,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "magma"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "binary",
- "byteorder",
- "bytes",
- "heapless",
- "server",
- "thiserror",
-]
-
-[[package]]
 name = "maplit"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -897,23 +992,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "minecraft_constants"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "binary",
- "convert_case",
- "indexmap",
- "num_enum",
- "protocol",
- "readonly",
- "serde",
- "serde_derive",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -954,21 +1032,6 @@ name = "nb"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "546c37ac5d9e56f55e73b677106873d9d9f5190605e41a856503623648488cae"
-
-[[package]]
-name = "net"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "binary",
- "io-uring",
- "libc",
- "minecraft_constants",
- "nix",
- "protocol",
- "slab",
- "thiserror",
-]
 
 [[package]]
 name = "nix"
@@ -1254,16 +1317,6 @@ dependencies = [
  "regex-syntax",
  "rusty-fork",
  "tempfile",
-]
-
-[[package]]
-name = "protocol"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "binary",
- "num_enum",
- "paste",
 ]
 
 [[package]]
@@ -1594,35 +1647,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bevy_ecs",
- "binary",
- "bytemuck",
- "bytes",
- "command",
- "criterion",
- "heapless",
- "io-uring",
- "minecraft_constants",
- "net",
- "num",
- "parry3d",
- "paste",
- "proptest",
- "protocol",
- "queues",
- "rand",
- "readonly",
- "slab",
- "sticky",
- "text_component",
- "thiserror",
-]
-
-[[package]]
 name = "simba"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1675,10 +1699,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
-name = "sticky"
-version = "0.1.0"
-
-[[package]]
 name = "syn"
 version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1701,13 +1721,6 @@ dependencies = [
  "redox_syscall",
  "remove_dir_all",
  "winapi",
-]
-
-[[package]]
-name = "text_component"
-version = "0.1.0"
-dependencies = [
- "text_component_macros",
 ]
 
 [[package]]

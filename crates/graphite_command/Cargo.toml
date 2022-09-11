@@ -1,0 +1,14 @@
+[package]
+name = "graphite_command"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.57"
+thiserror = "1.0.31"
+bytes = "1.1.0"
+maplit = "1.0.2"
+bytemuck = "1.10.0"
+
+command_macros = { path = "macros" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol" }

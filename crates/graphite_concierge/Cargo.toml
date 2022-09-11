@@ -1,0 +1,14 @@
+[package]
+name = "graphite_concierge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.57"
+io-uring = { version = "0.5.2", features = ["unstable"] }
+slab = "0.4.6"
+rand = "0.8.5"
+
+graphite_net = { path = "../graphite_net" }
+graphite_binary = { path = "../graphite_binary" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol" }

@@ -1,0 +1,37 @@
+[package]
+name = "graphite_server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.57"
+bytes = "1.1.0"
+rand = "0.8.5"
+thiserror = "1.0.31"
+slab = "0.4.6"
+queues = "1.1.0"
+io-uring = { version = "0.5.2", features = ["unstable"] }
+bytemuck = "1.10.0"
+num = "0.4.0"
+heapless = "0.7.15"
+bevy_ecs = "0.7.0"
+readonly = "0.2.1"
+parry3d = "0.9.0"
+paste = "1.0.8"
+
+graphite_binary = { path = "../graphite_binary" }
+graphite_net = { path = "../graphite_net" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol" }
+graphite_sticky = { path = "../graphite_sticky" }
+graphite_command = { path = "../graphite_command" }
+graphite_text_component = { path = "../graphite_text_component" }
+graphite_mc_constants = { path = "../graphite_mc_constants" }
+
+[dev-dependencies]
+proptest = "1.0.0"
+criterion = "0.3.6"
+graphite_mc_constants = { path = "../graphite_mc_constants" }
+
+[[bench]]
+name = "chunk_view_diff"
+harness = false

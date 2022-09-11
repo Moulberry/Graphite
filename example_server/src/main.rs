@@ -3,33 +3,34 @@ use std::fs::File;
 use std::io::Read;
 use std::io::Write;
 use std::sync::mpsc::Sender;
+use std::time::Instant;
 
-use command::brigadier;
-use command::types::CommandResult;
-use concierge::Concierge;
-use concierge::ConciergeService;
-use net::network_handler::UninitializedConnection;
-use protocol::types::GameProfile;
-use protocol::types::Pose;
+use graphite_command::brigadier;
+use graphite_command::types::CommandResult;
+use graphite_concierge::Concierge;
+use graphite_concierge::ConciergeService;
+use graphite_net::network_handler::UninitializedConnection;
+use graphite_mc_protocol::types::GameProfile;
+use graphite_mc_protocol::types::Pose;
 use rand::Rng;
-use server::entity::components::BasicEntity;
-use server::entity::components::PlayerNPC;
-use server::entity::components::Spinalla;
-use server::entity::position::Coordinate;
-use server::entity::position::Position;
-use server::entity::position::Rotation;
-use server::gamemode::GameMode;
-use server::inventory::inventory_handler::VanillaPlayerInventory;
-use server::player::player_connection::ConnectionReference;
-use server::player::player_vec::PlayerVec;
-use server::player::proto_player::ProtoPlayer;
-use server::player::Player;
-use server::player::PlayerService;
-use server::universe::Universe;
-use server::universe::UniverseService;
-use server::world::TickPhase;
-use server::world::World;
-use server::world::WorldService;
+use graphite_server::entity::components::BasicEntity;
+use graphite_server::entity::components::PlayerNPC;
+use graphite_server::entity::components::Spinalla;
+use graphite_server::entity::position::Coordinate;
+use graphite_server::entity::position::Position;
+use graphite_server::entity::position::Rotation;
+use graphite_server::gamemode::GameMode;
+use graphite_server::inventory::inventory_handler::VanillaPlayerInventory;
+use graphite_server::player::player_connection::ConnectionReference;
+use graphite_server::player::player_vec::PlayerVec;
+use graphite_server::player::proto_player::ProtoPlayer;
+use graphite_server::player::Player;
+use graphite_server::player::PlayerService;
+use graphite_server::universe::Universe;
+use graphite_server::universe::UniverseService;
+use graphite_server::world::TickPhase;
+use graphite_server::world::World;
+use graphite_server::world::WorldService;
 
 struct MyConciergeImpl {
     universe_sender: Sender<(UninitializedConnection, GameProfile)>,
@@ -57,7 +58,7 @@ impl ConciergeService for MyConciergeImpl {
     fn accept_player(
         &mut self,
         player_connection: UninitializedConnection,
-        mut concierge_connection: concierge::ConciergeConnection<Self>,
+        mut concierge_connection: graphite_concierge::ConciergeConnection<Self>,
     ) {
         let join_data = (
             player_connection,
@@ -167,7 +168,7 @@ fn main() {
     fn save(player: &mut Player<MyPlayerService>) -> CommandResult {
         let world = player.get_world();
         let chunks = world.get_chunks();
-        let output = magma::to_magma(chunks, 0);
+        let output = graphite_magma::to_magma(chunks, 0);
 
         let dest_path = env::current_dir().unwrap().join("world.magma");
         let mut f = File::create(&dest_path).unwrap();
@@ -198,7 +199,7 @@ fn main() {
     my_function.merge(save).unwrap();
 
     let (dispatcher, packet) =
-        command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
+        graphite_command::minecraft::create_dispatcher_and_brigadier_packet(my_function);
 
     let universe_sender = Universe::create_and_start(
         || MyUniverseService {
@@ -208,7 +209,11 @@ fn main() {
 
                 let mut vec = Vec::new();
                 f.read_to_end(&mut vec).unwrap();
-                let (chunk_list, _) = magma::from_magma(vec.as_slice()).unwrap();
+
+
+                let start = Instant::now();
+                let (chunk_list, _) = graphite_magma::from_magma(vec.as_slice()).unwrap();
+                println!("loading world took: {:?}", Instant::now().duration_since(start));
 
                 World::new(MyWorldService {
                     players: PlayerVec::new(),
