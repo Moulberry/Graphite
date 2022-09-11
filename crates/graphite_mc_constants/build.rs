@@ -10,10 +10,33 @@ mod item;
 mod placement;
 
 fn main() {
+    let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let tags_path = Path::new(&out_dir).join("src/tags/");
+    std::fs::create_dir_all(tags_path).unwrap();
+
     let (placement_method_returns, aliases) = block::write_block_states().unwrap();
     item::write_items().unwrap();
     entities::write_entities().unwrap();
     placement::write_placement(placement_method_returns, aliases).unwrap();
+
+    // Write mod.rs for tags
+    let mut tags_mod_rs = file_src("tags/mod.rs");
+    tags_mod_rs.write_all(b"pub mod block;").unwrap();
+
+    // something
+
+    // Write lib.rs
+    let mut lib_rs = file_src("lib.rs");
+    lib_rs.write_all(
+b"#![allow(dead_code)]
+#![allow(unused_imports)]
+
+pub mod block;
+pub mod block_parameter;
+pub mod entity;
+pub mod item;
+pub mod placement;
+pub mod tags;").unwrap();
 
     println!("cargo:rerun-if-changed=./data");
     println!("cargo:rerun-if-changed=build.rs");
