@@ -7,7 +7,8 @@ description = "Code-generated constants for Minecraft for the graphite_minecraft
 
 exclude = [
     "data/*",
-    "build/*"
+    "build/*",
+    "build.rs"
 ]
 
 [dependencies]
