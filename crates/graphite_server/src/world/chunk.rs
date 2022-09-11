@@ -180,7 +180,7 @@ impl Chunk {
         // Setup default block sections
         let mut block_sections = Vec::new();
         for i in 0..size_y {
-            if i < size_y/2 && !empty {
+            if i < size_y/3 && !empty {
                 let chunk_section = ChunkSection::new(
                     16 * 16 * 16,
                     i,

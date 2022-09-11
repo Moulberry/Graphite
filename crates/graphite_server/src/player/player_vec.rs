@@ -69,9 +69,9 @@ impl<P: PlayerService> PlayerVec<P> {
         Ok(())
     }
 
-    pub fn remove(&mut self, index: usize) -> <Player<P> as Unsticky>::UnstuckType {
+    /*pub fn remove(&mut self, index: usize) -> <Player<P> as Unsticky>::UnstuckType {
         self.players.remove(index)
-    }
+    }*/
 
     pub fn len(&self) -> usize {
         self.players.len()
