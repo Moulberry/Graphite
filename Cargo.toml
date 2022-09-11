@@ -13,15 +13,15 @@ exclude = [
 ]
 
 [dependencies]
-graphite_server = { path = "crates/graphite_server" }
-graphite_concierge = { path = "crates/graphite_concierge" }
-graphite_net = { path = "crates/graphite_net" }
-graphite_mc_protocol = { path = "crates/graphite_mc_protocol" }
-graphite_mc_constants = { path = "crates/graphite_mc_constants" }
+graphite_server = { path = "crates/graphite_server", version = "0.1.0" }
+graphite_concierge = { path = "crates/graphite_concierge", version = "0.1.0" }
+graphite_net = { path = "crates/graphite_net", version = "0.1.0" }
+graphite_mc_protocol = { path = "crates/graphite_mc_protocol", version = "0.1.0" }
+graphite_mc_constants = { path = "crates/graphite_mc_constants", version = "0.1.0" }
 
 # These two can be behind feature flag
-graphite_command = { path = "crates/graphite_command" }
-graphite_magma = { path = "crates/graphite_magma" }
+graphite_command = { path = "crates/graphite_command", version = "0.1.0" }
+graphite_magma = { path = "crates/graphite_magma", version = "0.1.0" }
 
 [workspace]
 members = [
