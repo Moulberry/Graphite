@@ -115,11 +115,10 @@ impl Abilities {
             player.packets.write_packet(&player_info_change_gamemode);
 
             // Send abilities
-            packet_helper::write_packet(
+            packet_helper::try_write_packet(
                 &mut player.packets.write_buffer,
                 &abilities.create_abilities_packet(),
-            )
-            .expect("packet larger than 2MB");
+            );
             abilities.dirty = false;
 
             // Additional packets that the client expects

@@ -23,7 +23,7 @@ impl PacketBuffer {
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
-        let _ = packet_helper::write_packet(&mut self.write_buffer, packet);
+        let _ = packet_helper::try_write_packet(&mut self.write_buffer, packet);
     }
 
     pub fn write_self_excluded_viewable_packet<'a, T>(&mut self, packet: &'a T)
@@ -31,6 +31,6 @@ impl PacketBuffer {
         T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
         let write_to = &mut self.viewable_self_exclusion_write_buffer;
-        let _ = packet_helper::write_packet(write_to, packet);
+        let _ = packet_helper::try_write_packet(write_to, packet);
     }
 }

@@ -1,8 +1,10 @@
 mod unsticky;
-mod vec;
+pub mod vec;
+pub mod map;
 
 pub use unsticky::*;
-pub use vec::*;
+pub use vec::StickyVec;
+pub use map::StickyMap;
 
 #[cfg(test)]
 mod tests;

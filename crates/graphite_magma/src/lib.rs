@@ -86,7 +86,7 @@ pub fn from_magma(mut bytes: &[u8]) -> anyhow::Result<(ChunkGrid, u32)> {
     for z in 0..size_z {
         for x in 0..size_x {
             let mut sections = Vec::new();
-            for y in 0..size_y {
+            for _ in 0..size_y {
                 let flags: u8 = Single::read(&mut bytes)?;
                 
                 let block_flags = flags & 0b11;
@@ -142,11 +142,11 @@ pub fn from_magma(mut bytes: &[u8]) -> anyhow::Result<(ChunkGrid, u32)> {
                      _ => unreachable!()
                 };
 
-                let chunk_section = ChunkSection::new(non_air_blocks, y, block_palette, 
+                let chunk_section = ChunkSection::new(non_air_blocks, block_palette, 
                     BiomePalettedContainer::filled(0));
                 sections.push(chunk_section);
             }
-            chunks.push(Chunk::new(sections, x, z));
+            chunks.push(Chunk::new(sections));
         }
     }
 

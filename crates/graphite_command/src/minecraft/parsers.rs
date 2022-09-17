@@ -19,6 +19,8 @@ pub enum NumericParser {
     U8 { min: u8, max: u8 },
     U16 { min: u16, max: u16 },
     U64 { min: u64, max: u64 },
+    USize { min: usize, max: usize },
+    ISize { min: isize, max: isize },
 }
 
 impl MinecraftParser for NumericParser {
@@ -27,22 +29,32 @@ impl MinecraftParser for NumericParser {
             NumericParser::U8 { min: _, max: _ } => parse_from_string::<u8>,
             NumericParser::U16 { min: _, max: _ } => parse_from_string::<u16>,
             NumericParser::U64 { min: _, max: _ } => parse_from_string::<u64>,
+            NumericParser::USize { min: _, max: _ } => parse_from_string::<usize>,
+            NumericParser::ISize { min: _, max: _ } => parse_from_string::<isize>,
         }
     }
 
     fn get_brigadier_parser(&self) -> CommandNodeParser {
         match self {
             NumericParser::U8 { min, max } => CommandNodeParser::Integer {
-                min: Some(*min as _),
-                max: Some(*max as _),
+                min: (*min).try_into().ok(),
+                max: (*max).try_into().ok(),
             },
             NumericParser::U16 { min, max } => CommandNodeParser::Integer {
-                min: Some(*min as _),
-                max: Some(*max as _),
+                min: (*min).try_into().ok(),
+                max: (*max).try_into().ok(),
             },
-            NumericParser::U64 { min, max } => CommandNodeParser::Integer {
-                min: Some(*min as _),
-                max: Some(*max as _),
+            NumericParser::U64 { min, max } => CommandNodeParser::Long {
+                min: (*min).try_into().ok(),
+                max: (*max).try_into().ok(),
+            },
+            NumericParser::USize { min, max } => CommandNodeParser::Long {
+                min: (*min).try_into().ok(),
+                max: (*max).try_into().ok(),
+            },
+            NumericParser::ISize { min, max } => CommandNodeParser::Long {
+                min: (*min).try_into().ok(),
+                max: (*max).try_into().ok(),
             },
         }
     }

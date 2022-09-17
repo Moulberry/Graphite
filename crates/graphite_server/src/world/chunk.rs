@@ -18,7 +18,7 @@ use crate::player::{Player, PlayerService};
 
 use super::{
     chunk_section::ChunkSection,
-    paletted_container::{BiomePalettedContainer, BlockPalettedContainer},
+    paletted_container::{BiomePalettedContainer, BlockPalettedContainer}, block_entity_storage::BlockEntityStorage,
 };
 pub(crate) struct PlayerReference {
     uuid: u128,
@@ -27,12 +27,10 @@ pub(crate) struct PlayerReference {
     fn_create: fn(*mut (), &mut WriteBuffer),
     destroy_buffer: Box<[u8]>,
 }
+
 pub struct Chunk {
     block_sections: Vec<ChunkSection>,
-
-    // todo: is storing chunk_x and chunk_z necessary
-    chunk_x: usize,
-    chunk_z: usize,
+    pub(crate) block_entities: BlockEntityStorage,
 
     valid_cache: bool,
     cached_block_data: WriteBuffer,
@@ -42,6 +40,22 @@ pub struct Chunk {
     pub(crate) entity_viewable_buffer: WriteBuffer,
     pub(crate) entities: Slab<Entity>,
     player_refs: Slab<PlayerReference>,
+}
+
+impl Clone for Chunk {
+    fn clone(&self) -> Self {
+        Self {
+            block_sections: self.block_sections.clone(),
+            block_entities: self.block_entities.clone(),
+            valid_cache: false,
+            cached_block_data: WriteBuffer::with_min_capacity(0),
+            cached_light_data: WriteBuffer::with_min_capacity(0),
+            block_viewable_buffer: WriteBuffer::with_min_capacity(0),
+            entity_viewable_buffer: WriteBuffer::with_min_capacity(0),
+            entities: Slab::new(),
+            player_refs: Slab::new(),
+        }
+    }
 }
 
 impl Chunk {
@@ -59,6 +73,31 @@ impl Chunk {
 
     pub fn get_block_sections(&self) -> &[ChunkSection] {
         self.block_sections.as_slice()
+    }
+
+    pub(crate) fn expand(&mut self, increase_y: isize) {
+        if increase_y == 0 {
+            return;
+        }
+
+        self.invalidate_cache();
+
+        let abs_increase_y = increase_y.abs() as usize;
+        self.block_sections.reserve_exact(abs_increase_y);
+
+        let empty = ChunkSection::new(
+            0,
+            BlockPalettedContainer::filled(0),
+            BiomePalettedContainer::filled(0),
+        );        
+
+        if increase_y > 0 {
+            for _ in 0..increase_y {
+                self.block_sections.push(empty.clone());
+            }
+        } else {
+            self.block_sections.splice(0..0, std::iter::repeat(empty).take(abs_increase_y));
+        }
     }
 
     pub(crate) fn write_to_players_in_chunk(&mut self, bytes: &[u8]) {
@@ -92,6 +131,24 @@ impl Chunk {
 
         self.entity_viewable_buffer
             .copy_from(&removed.destroy_buffer);
+    }
+
+    pub(crate) fn pop_all_entities(&mut self) -> Slab<Entity> {
+        std::mem::replace(&mut self.entities, Slab::new())
+    }
+
+    pub(crate) fn push_all_entities(&mut self, entities: Slab<Entity>) {
+        assert!(self.entities.is_empty());
+        let _ = std::mem::replace(&mut self.entities, entities);
+    }
+
+    pub(crate) fn pop_all_player_refs(&mut self) -> Slab<PlayerReference> {
+        std::mem::replace(&mut self.player_refs, Slab::new())
+    }
+
+    pub(crate) fn push_all_player_refs(&mut self, refs: Slab<PlayerReference>) {
+        assert!(self.player_refs.is_empty());
+        let _ = std::mem::replace(&mut self.player_refs, refs);
     }
 
     pub(crate) fn pop_player_ref<T: PlayerService>(
@@ -161,47 +218,62 @@ impl Chunk {
         player.chunk_ref = self.player_refs.insert(reference);
     }
 
-    pub fn new(block_sections: Vec<ChunkSection>, chunk_x: usize, chunk_z: usize) -> Self {
+    pub fn new(block_sections: Vec<ChunkSection>) -> Self {
         Self {
             block_sections,
+            block_entities: BlockEntityStorage::new(),
             valid_cache: false,
-            cached_block_data: WriteBuffer::new(),
-            cached_light_data: WriteBuffer::new(),
-            chunk_x,
-            chunk_z,
-            block_viewable_buffer: WriteBuffer::new(),
-            entity_viewable_buffer: WriteBuffer::new(),
+            cached_block_data: WriteBuffer::with_min_capacity(0),
+            cached_light_data: WriteBuffer::with_min_capacity(0),
+            block_viewable_buffer: WriteBuffer::with_min_capacity(0),
+            entity_viewable_buffer: WriteBuffer::with_min_capacity(0),
             entities: Slab::new(),
             player_refs: Slab::new(),
         }
     }
 
-    pub fn new_with_default_chunks(empty: bool, size_y: usize, chunk_x: usize, chunk_z: usize) -> Self {
+    pub fn new_empty(size_y: usize) -> Self {
         // Setup default block sections
-        let mut block_sections = Vec::new();
-        for i in 0..size_y {
-            if i < size_y/3 && !empty {
-                let chunk_section = ChunkSection::new(
-                    16 * 16 * 16,
-                    i,
-                    BlockPalettedContainer::filled(1),
-                    BiomePalettedContainer::filled(0),
-                );
+        let mut block_sections = Vec::with_capacity(size_y);
 
-                block_sections.push(chunk_section);
-            } else {
-                let chunk_section = ChunkSection::new(
-                    0,
-                    i,
-                    BlockPalettedContainer::filled(0),
-                    BiomePalettedContainer::filled(0),
-                );
-
-                block_sections.push(chunk_section);
-            }
+        for _ in 0..size_y {
+            block_sections.push(ChunkSection::new(
+                0,
+                BlockPalettedContainer::filled(0),
+                BiomePalettedContainer::filled(0),
+            ));
         }
 
-        Self::new(block_sections, chunk_x, chunk_z)
+        assert_eq!(block_sections.capacity(), size_y);
+        assert_eq!(block_sections.len(), size_y);
+        Self::new(block_sections)
+    }
+
+    pub fn new_default(size_y: usize) -> Self {
+        // Setup default block sections
+        let mut block_sections = Vec::with_capacity(size_y);
+
+        let filled = ChunkSection::new(
+            16 * 16 * 16,
+            BlockPalettedContainer::filled(1),
+            BiomePalettedContainer::filled(0),
+        );
+        let empty = ChunkSection::new(
+            0,
+            BlockPalettedContainer::filled(0),
+            BiomePalettedContainer::filled(0),
+        );
+
+        for _ in 0..(size_y/3) {
+            block_sections.push(filled.clone());
+        }
+        for _ in (size_y/3)..size_y {
+            block_sections.push(empty.clone());
+        }
+
+        assert_eq!(block_sections.capacity(), size_y);
+        assert_eq!(block_sections.len(), size_y);
+        Self::new(block_sections)
     }
 
     fn invalidate_cache(&mut self) {
@@ -214,20 +286,14 @@ impl Chunk {
 
         // Write chunk data
         let mut chunk_data = WriteBuffer::new();
-        let mut block_entity_count = 0;
-        let mut block_entity_data = Vec::new();
         for block_section in &mut self.block_sections {
             packet_helper::write_slice_serializable(&mut chunk_data, block_section);
-
-            block_entity_count += block_section.block_entities.count() as i32;
-            block_entity_data.put_slice(block_section.block_entities.bytes());
         }
-
         let chunk_block_data = ChunkBlockData {
             heightmaps: Cow::Owned(CachedNBT::new()),
             data: chunk_data.get_written(),
-            block_entity_count,
-            block_entity_data: &block_entity_data,
+            block_entity_count: self.block_entities.count() as i32,
+            block_entity_data: self.block_entities.bytes(),
             trust_edges: true,
         };
 
@@ -240,13 +306,13 @@ impl Chunk {
             block_light_entries: vec![],
         };
 
-        self.cached_block_data.reset();
+        self.cached_block_data.clear();
         graphite_net::packet_helper::write_slice_serializable(
             &mut self.cached_block_data,
             &chunk_block_data,
         );
 
-        self.cached_light_data.reset();
+        self.cached_light_data.clear();
         graphite_net::packet_helper::write_slice_serializable(
             &mut self.cached_light_data,
             &chunk_light_data,
@@ -297,18 +363,7 @@ impl BlockStorage for Chunk {
         let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
         let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
 
-        debug_assert_eq!(
-            self.chunk_x,
-            x / Self::SECTION_BLOCK_WIDTH_I,
-            "set_block called on wrong chunk"
-        );
         let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I;
-        debug_assert_eq!(
-            self.chunk_z,
-            z / Self::SECTION_BLOCK_WIDTH_I,
-            "set_block called on wrong chunk"
-        );
-
         if chunk_y >= self.block_sections.len() {
             return None; // out of bounds
         }
@@ -322,18 +377,7 @@ impl BlockStorage for Chunk {
         let section_y = y % Self::SECTION_BLOCK_WIDTH_I;
         let section_z = z % Self::SECTION_BLOCK_WIDTH_I;
 
-        debug_assert_eq!(
-            self.chunk_x,
-            x / Self::SECTION_BLOCK_WIDTH_I,
-            "set_block called on wrong chunk"
-        );
         let chunk_y = y / Self::SECTION_BLOCK_WIDTH_I;
-        debug_assert_eq!(
-            self.chunk_z,
-            z / Self::SECTION_BLOCK_WIDTH_I,
-            "set_block called on wrong chunk"
-        );
-
         if chunk_y >= self.block_sections.len() {
             return None; // out of bounds
         }
@@ -356,7 +400,7 @@ impl BlockStorage for Chunk {
 
             self.invalidate_cache();
 
-            packet_helper::write_packet(
+            packet_helper::try_write_packet(
                 &mut self.block_viewable_buffer,
                 &BlockUpdate {
                     pos: BlockPosition {
@@ -366,8 +410,7 @@ impl BlockStorage for Chunk {
                     },
                     block_state: block as _,
                 },
-            )
-            .expect("packet exceeds 2MB limit");
+            );
 
             Some(old)
         } else {

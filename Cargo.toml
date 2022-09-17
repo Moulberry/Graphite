@@ -2,7 +2,7 @@
 name = "graphite_minecraft"
 version = "0.1.0"
 edition = "2021"
-license-file = "LICENSE"
+license = "Apache-2.0"
 description = "Library for crafting high-performance Minecraft servers"
 homepage = "https://github.com/Moulberry/Graphite"
 repository = "https://github.com/Moulberry/Graphite"

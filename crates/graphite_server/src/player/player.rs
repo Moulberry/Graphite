@@ -35,7 +35,7 @@ use crate::{
     entity::position::{Coordinate, Position, Vec3f},
     gamemode::Abilities,
     inventory::inventory_handler::{InventoryHandler, InventorySlot, ItemSlot},
-    universe::{EntityId, UniverseService},
+    universe::{EntityId, UniverseService, Universe},
     world::{
         ChunkViewPosition, TickPhase, TickPhaseInner, World, WorldService, block_update,
     },
@@ -71,10 +71,12 @@ where
 #[allow(type_alias_bounds)] // Justification: used as a shortcut to avoid monsterous type
 type ConnectionReferenceType<P: PlayerService> =
     <P::UniverseServiceType as UniverseService>::ConnectionReferenceType;
+#[allow(type_alias_bounds)] // Justification: used as a shortcut to avoid monsterous type
+type TransferFn<P: PlayerService> = Box<dyn FnOnce(&mut World<P::WorldServiceType>, P, ProtoPlayer<P::UniverseServiceType>)>;
 
 // graphite player
 pub struct Player<P: PlayerService> {
-    world: *mut World<P::WorldServiceType>,
+    pub(crate) world: *mut World<P::WorldServiceType>,
 
     pub packets: PacketBuffer,
     pub(crate) disconnected: bool,
@@ -109,6 +111,7 @@ pub struct Player<P: PlayerService> {
 
     moved_into_proto: bool,
     connection: ManuallyDrop<ConnectionReferenceType<P>>,
+    pub(crate) transfer_fn: Option<TransferFn<P>>,
     pub service: ManuallyDrop<P>,
 }
 
@@ -154,6 +157,7 @@ impl<P: PlayerService> Player<P> {
             interaction_state: Default::default(),
 
             current_keep_alive: 0,
+            transfer_fn: None,
             keep_alive_timer: 0,
 
             moved_into_proto: false,
@@ -180,6 +184,9 @@ impl<P: PlayerService> Player<P> {
             let chunk_x = self.chunk_view_position.x as i32;
             let chunk_z = self.chunk_view_position.z as i32;
 
+            // Global viewable buffer
+            self.packets.write_raw_packets(self.get_world().global_write_buffer.get_written());
+            
             let chunks = &self.get_world().chunks;
 
             // Entity viewable buffers
@@ -228,12 +235,8 @@ impl<P: PlayerService> Player<P> {
 
                 // Write bytes into player connection
                 self.connection
-                    .write_bytes(self.packets.write_buffer.get_written());
-
-                // Reset the write buffer
-                self.packets.write_buffer.reset();
+                    .write_bytes(self.packets.write_buffer.pop_written());
             }
-            self.packets.write_buffer.tick_and_maybe_shrink();
 
             // Return early -- code after here is for TickPhase::Update
             return Ok(());
@@ -306,11 +309,8 @@ impl<P: PlayerService> Player<P> {
             self.viewable_exclusion_range = start..end;
 
             // Reset the write buffer
-            self.packets.viewable_self_exclusion_write_buffer.reset();
+            self.packets.viewable_self_exclusion_write_buffer.clear();
         }
-        self.packets
-            .viewable_self_exclusion_write_buffer
-            .tick_and_maybe_shrink();
 
         Ok(())
     }
@@ -623,6 +623,10 @@ impl<P: PlayerService> Player<P> {
         Ok(())
     }
 
+    pub fn transfer(&mut self, func: TransferFn<P>) {
+        self.transfer_fn = Some(func);
+    }
+
     pub fn clip_block_position(&self, position: BlockPosition) -> Option<(f32, f32)> {
         let aabb = AABB::new(
             Point::new(position.x as f32, position.y as f32, position.z as f32),
@@ -884,13 +888,13 @@ impl<P: PlayerService> Player<P> {
         let remove_entity_packet = RemoveEntities {
             entities: vec![self.entity_id.as_i32()],
         };
-        graphite_net::packet_helper::write_packet(write_buffer, &remove_entity_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(write_buffer, &remove_entity_packet);
 
         // Remove Player Info
         let remove_info_packet = PlayerInfo::RemovePlayer {
             uuids: vec![self.profile.uuid],
         };
-        graphite_net::packet_helper::write_packet(write_buffer, &remove_info_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(write_buffer, &remove_info_packet);
     }
 
     pub(crate) fn write_create_packet(&mut self, write_buffer: &mut WriteBuffer) {
@@ -903,7 +907,7 @@ impl<P: PlayerService> Player<P> {
                 signature_data: None,
             }],
         };
-        graphite_net::packet_helper::write_packet(write_buffer, &packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(write_buffer, &packet);
 
         let add_player_packet = AddPlayer {
             id: self.entity_id.as_i32(),
@@ -914,7 +918,7 @@ impl<P: PlayerService> Player<P> {
             yaw: self.position.rot.yaw,
             pitch: self.position.rot.pitch,
         };
-        graphite_net::packet_helper::write_packet(write_buffer, &add_player_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(write_buffer, &add_player_packet);
 
         // todo: head rotation
 
@@ -946,11 +950,9 @@ impl<P: PlayerService> Player<P> {
 
         // Send contents of write buffer if FAST_PACKET_RESPONSE is enabled
         if P::FAST_PACKET_RESPONSE {
-            let to_write = self.packets.write_buffer.get_written();
-            if !to_write.is_empty() {
-                self.connection.write_bytes(to_write);
-            }
-            self.packets.write_buffer.reset();
+            let to_write = self.packets.write_buffer.pop_written();
+            self.connection.write_bytes(to_write);
+            self.packets.write_buffer.clear();
         }
 
         // Return remaining bytes
@@ -969,7 +971,7 @@ impl<P: PlayerService> Drop for Player<P> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
             let chunks = &mut self.get_world_mut().chunks;
-            if let Some(old_chunk) = chunks.get_mut(self.chunk_view_position.x, self.chunk_view_position.z) {
+            if let Some(old_chunk) = chunks.get_mut(self.new_chunk_view_position.x, self.new_chunk_view_position.z) {
                 old_chunk.destroy_player(self);
             }
 
@@ -983,16 +985,16 @@ impl<P: PlayerService> Drop for Player<P> {
     }
 }
 
-unsafe impl<P: PlayerService> Unsticky for Player<P> {
-    type UnstuckType = (ProtoPlayer<P::UniverseServiceType>, P);
+impl<P: PlayerService> Unsticky for Player<P> {
+    type UnstuckType = Option<(ProtoPlayer<P::UniverseServiceType>, P, Option<TransferFn<P>>)>;
 
-    fn update_pointer(&mut self, _: usize) {
+    fn update_pointer(&mut self) {
         let ptr: *mut Player<P> = self;
         // Safety: player pointer is valid, constructed above
         unsafe { self.connection.update_player_pointer(ptr); }
         
         let chunk = self.get_world_mut().chunks
-            .get_mut(self.chunk_view_position.x, self.chunk_view_position.z)
+            .get_mut(self.new_chunk_view_position.x, self.new_chunk_view_position.z)
             .expect("chunk coords in bounds");
         if self.chunk_ref == usize::MAX {
             chunk.create_player(self);
@@ -1002,19 +1004,25 @@ unsafe impl<P: PlayerService> Unsticky for Player<P> {
     }
 
     fn unstick(mut self) -> Self::UnstuckType {
-        self.moved_into_proto = true; // Prevent calling drop on connection and service
+        if self.disconnected || self.moved_into_proto {
+            None
+        } else {
+            self.moved_into_proto = true; // Prevent calling drop on connection and service
 
-        self.connection.clear_player_pointer();
-
-        // Safety: `self.moved_into_proto = true` means that the following values
-        // will not be dropped, so its safe to take them
-        let connection = unsafe { ManuallyDrop::take(&mut self.connection) };
-        let service = unsafe { ManuallyDrop::take(&mut self.service) };
-
-        // Return the ProtoPlayer and Service as a tuple
-        (
-            ProtoPlayer::new(connection, self.profile.clone(), self.entity_id),
-            service,
-        )
+            self.connection.clear_player_pointer();
+    
+            // Safety: `self.moved_into_proto = true` means that the following values
+            // will not be dropped, so its safe to take them
+            let connection = unsafe { ManuallyDrop::take(&mut self.connection) };
+            let service = unsafe { ManuallyDrop::take(&mut self.service) };
+            let transfer_fn = self.transfer_fn.take();
+    
+            // Return the ProtoPlayer and Service as a tuple
+            Some((
+                ProtoPlayer::new(connection, self.profile.clone(), self.entity_id),
+                service,
+                transfer_fn
+            ))
+        }
     }
 }

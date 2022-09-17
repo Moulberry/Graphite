@@ -56,15 +56,15 @@ impl Viewable {
     }
 
     // Update packets
-    pub fn write_viewable_packet<'a, T>(&mut self, packet: &'a T) -> anyhow::Result<bool>
+    pub fn write_viewable_packet<'a, T>(&mut self, packet: &'a T) -> bool
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<server::PacketId> + 'a,
     {
         if let Some(buffer) = unsafe { self.buffer.as_mut() } {
-            packet_helper::write_packet(buffer, packet)?;
-            Ok(true)
+            packet_helper::try_write_packet(buffer, packet);
+            true
         } else {
-            Ok(false)
+            false
         }
     }
 }
@@ -120,7 +120,7 @@ impl EntitySpawnDefinition for BasicEntity {
         let remove_packet = RemoveEntities {
             entities: vec![self.entity_id.as_i32()],
         };
-        graphite_net::packet_helper::write_packet(&mut write_buffer, &remove_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(&mut write_buffer, &remove_packet);
         write_buffer
     }
 
@@ -153,7 +153,7 @@ impl BasicEntity {
             y_vel: 0.0,
             z_vel: 0.0,
         };
-        graphite_net::packet_helper::write_packet(write_buffer, &add_entity_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(write_buffer, &add_entity_packet);
     }
 }
 
@@ -169,13 +169,13 @@ impl EntitySpawnDefinition for PlayerNPC {
         let remove_entity_packet = RemoveEntities {
             entities: vec![self.entity_id.as_i32()],
         };
-        graphite_net::packet_helper::write_packet(&mut write_buffer, &remove_entity_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(&mut write_buffer, &remove_entity_packet);
 
         // Remove Player Info
         let remove_info_packet = PlayerInfo::RemovePlayer {
             uuids: vec![self.uuid],
         };
-        graphite_net::packet_helper::write_packet(&mut write_buffer, &remove_info_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(&mut write_buffer, &remove_info_packet);
 
         write_buffer
     }
@@ -213,7 +213,7 @@ impl PlayerNPC {
                 signature_data: None,
             }],
         };
-        graphite_net::packet_helper::write_packet(write_buffer, &packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(write_buffer, &packet);
 
         let add_player_packet = AddPlayer {
             id: player_npc.entity_id.as_i32(),
@@ -224,6 +224,6 @@ impl PlayerNPC {
             yaw: 0.0,
             pitch: 0.0,
         };
-        graphite_net::packet_helper::write_packet(write_buffer, &add_player_packet).unwrap();
+        graphite_net::packet_helper::try_write_packet(write_buffer, &add_player_packet);
     }
 }

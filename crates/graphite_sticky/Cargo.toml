@@ -6,3 +6,4 @@ license = "Apache-2.0"
 description = "Collections that guarantee the memory-location of its contents for the graphite_minecraft project"
 
 [dependencies]
+hashbrown = "0.12.3"

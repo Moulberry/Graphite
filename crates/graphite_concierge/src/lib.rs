@@ -48,7 +48,6 @@ impl<T: ConciergeService + 'static> ConnectionService for ConciergeConnection<T>
             let packet_read_result = graphite_net::packet_helper::try_read_packet(&mut bytes)?;
             match packet_read_result {
                 PacketReadResult::Complete(bytes) => {
-                    // println!("Request: {:x?}", bytes);
                     should_consume =
                         self.handle_framed_packet(connection, &mut write_buffer, bytes)?;
                 }
@@ -59,10 +58,8 @@ impl<T: ConciergeService + 'static> ConnectionService for ConciergeConnection<T>
 
         let remaining_bytes = bytes.len() as u32;
 
-        let to_write = write_buffer.get_written();
-        if !to_write.is_empty() {
-            connection.write(to_write);
-        }
+        let to_write = write_buffer.into_written();
+        connection.write(to_write);
 
         if should_consume {
             if self.connection_state == ConnectionState::Login {
@@ -150,13 +147,11 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
                     let server_response = StatusResponse {
                         json: &concierge.serverlist_response,
                     };
-                    graphite_net::packet_helper::write_packet(write_buffer, &server_response)?;
+                    graphite_net::packet_helper::try_write_packet(write_buffer, &server_response);
                 }
                 status::client::PacketId::PingRequest => {
                     let ping_request = PingRequest::read_fully(bytes)?;
-                    graphite_net::packet_helper::write_packet(write_buffer, &ping_request)?;
-
-                    // todo: flush write & then close connection, bad actors could create a never ending connection
+                    graphite_net::packet_helper::try_write_packet(write_buffer, &ping_request);
                 }
             }
         } else {
@@ -202,7 +197,7 @@ impl<T: ConciergeService + 'static> ConciergeConnection<T> {
                     let login_success_packet = login::server::LoginSuccess {
                         profile: game_profile,
                     };
-                    graphite_net::packet_helper::write_packet(write_buffer, &login_success_packet)?;
+                    graphite_net::packet_helper::try_write_packet(write_buffer, &login_success_packet);
 
                     // Set game profile
                     self.game_profile = Some(login_success_packet.profile);

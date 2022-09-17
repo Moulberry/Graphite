@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap, marker::PhantomPinned};
 
 use anyhow::bail;
 use bevy_ecs::{prelude::*, world::EntityMut};
@@ -6,9 +6,10 @@ use graphite_binary::nbt::NBTNode;
 use graphite_mc_constants::{block::BlockAttributes, tags::block::BlockTags, item::Item};
 use graphite_net::network_buffer::WriteBuffer;
 use graphite_mc_protocol::{
-    play::server::{Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity, Tag, TagRegistry, UpdateTags},
+    play::server::{Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity, Tag, TagRegistry, UpdateTags, InitializeBorder},
     types::{BlockPosition, Direction},
 };
+use graphite_sticky::Unsticky;
 
 use crate::{
     entity::{
@@ -16,7 +17,7 @@ use crate::{
         position::{Coordinate, Position, Rotation},
     },
     player::{proto_player::ProtoPlayer, Player, PlayerService},
-    universe::{EntityId, Universe, UniverseService},
+    universe::{EntityId, Universe, UniverseService}, ticker::WorldTicker,
 };
 
 use super::{
@@ -36,36 +37,36 @@ pub(crate) enum TickPhaseInner {
 #[repr(transparent)]
 pub struct TickPhase(pub(crate) TickPhaseInner);
 
-pub trait WorldService
+pub trait WorldService: WorldTicker<Self>
 where
     Self: Sized + 'static,
 {
     type UniverseServiceType: UniverseService;
-    const CHUNKS_Y: usize = 24;
+    type ParentWorldServiceType: WorldService;
+
     const CHUNK_VIEW_DISTANCE: u8 = 8;
     const ENTITY_VIEW_DISTANCE: u8 = 8;
+    const SHOW_DEFAULT_WORLD_BORDER: bool = false;
 
     fn handle_player_join(
         world: &mut World<Self>,
         proto_player: ProtoPlayer<Self::UniverseServiceType>,
     );
-    fn initialize(world: &World<Self>);
-    fn get_player_count(world: &World<Self>) -> usize;
-
-    fn tick(world: &mut World<Self>, phase: TickPhase);
 }
 
 // graphite world
 
 pub struct World<W: WorldService + ?Sized> {
     universe: *mut Universe<W::UniverseServiceType>,
+    parent_world: *mut World<W::ParentWorldServiceType>,
 
     pub service: W,
     pub(crate) entities: bevy_ecs::world::World,
     pub(crate) entity_map: HashMap<EntityId, bevy_ecs::entity::Entity>,
+    pub(crate) global_write_buffer: WriteBuffer,
 
     // Don't move -- chunks must be dropped last
-    pub(crate) chunks: ChunkGrid, // todo: don't use Vec<Vec<>>
+    pub(crate) chunks: ChunkGrid,
     empty_chunk: Chunk,
 }
 
@@ -83,45 +84,36 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn new(service: W, chunks: ChunkGrid) -> Self {
+        let size_y = chunks.get_size_y();
         Self {
-            service,
             universe: std::ptr::null_mut(),
-            chunks,
+            parent_world: std::ptr::null_mut(),
+
+            service,
             entities: Default::default(),
             entity_map: Default::default(),
+            global_write_buffer: Default::default(),
 
-            // todo: don't use this, send packets directly instead
-            empty_chunk: Chunk::new_with_default_chunks(true, W::CHUNKS_Y, 0, 0),
+            chunks,
+            empty_chunk: Chunk::new_empty(size_y),
         }
+    }
+
+    pub fn new_with_empty_chunks(service: W, size_x: usize, size_y: usize, size_z: usize) -> Self {
+        Self::new(service, ChunkGrid::new_with_empty_chunks(size_x, size_y, size_z))
     }
 
     pub fn new_with_default_chunks(service: W, size_x: usize, size_y: usize, size_z: usize) -> Self {
-        Self {
-            service,
-            universe: std::ptr::null_mut(),
-            chunks: ChunkGrid::new_with_default_chunks(size_x, size_y, size_z),
-            entities: Default::default(),
-            entity_map: Default::default(),
-
-            // todo: don't use this, send packets directly instead
-            empty_chunk: Chunk::new_with_default_chunks(true, W::CHUNKS_Y, 0, 0),
-        }
+        Self::new(service, ChunkGrid::new_with_default_chunks(size_x, size_y, size_z))
     }
 
-    pub fn initialize(&self, universe: &Universe<W::UniverseServiceType>) {
-        // Justification:
-        // If the universe pointer is null, this struct is in an undefined state
-        // Therefore, any reference that previously existed to this struct
-        // is invalid, so converting the immutable reference to a mutable one
-        // should be sound here
-        unsafe {
-            let self_mut: *mut World<W> = self as *const _ as *mut _;
-            let self_mut_ref: &mut World<W> = self_mut.as_mut().unwrap();
-            assert!(self_mut_ref.universe.is_null(), "cannot initialize twice");
-            self_mut_ref.universe = universe as *const _ as *mut _;
-        }
+    pub fn update_universe_ptr(&mut self, universe: *mut Universe<W::UniverseServiceType>) {
+        self.universe = universe;
+        self.service.update_universe_ptr(universe);
+    }
 
-        W::initialize(self);
+    pub fn update_parent_world_ptr(&mut self, world: *mut World<W::ParentWorldServiceType>) {
+        self.parent_world = world;
     }
 
     pub fn get_entity_mut(&mut self, entity_id: EntityId) -> Option<EntityMut> {
@@ -130,6 +122,24 @@ impl<W: WorldService> World<W> {
         } else {
             None
         }
+    }
+
+    pub fn expand(&mut self, increase_x: isize, increase_y: isize, increase_z: isize) {
+        self.chunks.expand(increase_x, increase_y, increase_z);
+
+        // World Border
+        let border_diameter = (self.chunks.get_size_x().max(self.chunks.get_size_z()) * 16) as f64;
+        let border_packet = InitializeBorder {
+            x: (self.chunks.get_size_x() * 8) as f64,
+            z: (self.chunks.get_size_z() * 8) as f64,
+            old_diameter: border_diameter,
+            new_diameter: border_diameter,
+            speed: 0,
+            portal_teleport_boundary: 29999984,
+            warning_blocks: 0,
+            warning_time: 0
+        };
+        graphite_net::packet_helper::try_write_packet(&mut self.global_write_buffer, &border_packet);
     }
 
     pub fn push_entity<T: Bundle>(
@@ -142,16 +152,12 @@ impl<W: WorldService> World<W> {
         let fn_create = spawn_def.get_spawn_function();
         let destroy_buf = spawn_def.get_despawn_buffer();
 
-        // Compute chunk coordinates
-        let chunk_x = Chunk::to_chunk_coordinate(position.x);
-        let chunk_z = Chunk::to_chunk_coordinate(position.z);
+        // Compute chunk coordinates, clamped to valid coordinates
+        let chunk_x = Chunk::to_chunk_coordinate(position.x).max(0).min(self.chunks.get_size_x() as i32 - 1);
+        let chunk_z = Chunk::to_chunk_coordinate(position.z).max(0).min(self.chunks.get_size_z() as i32 - 1);
 
         // Get the chunk
-        let chunk = self.chunks.get_mut(chunk_x as usize, chunk_z as usize);
-        if chunk.is_none() {
-            return; // todo: return some error so that the caller knows the entity was oob
-        }
-        let chunk = unsafe { chunk.unwrap_unchecked() };
+        let chunk = self.chunks.get_mut(chunk_x as usize, chunk_z as usize).unwrap();
 
         // Spawn the entity in the bevy-ecs world
         let mut entity = self.entities.spawn();
@@ -218,28 +224,26 @@ impl<W: WorldService> World<W> {
                         pitch: spinalla.rotation.pitch,
                         on_ground: true,
                     };
-                    viewable.write_viewable_packet(&teleport).unwrap();
+                    viewable.write_viewable_packet(&teleport);
 
                     let rotate_head = RotateHead {
                         entity_id: test_entity.entity_id.as_i32(),
                         head_yaw: spinalla.rotation.yaw,
                     };
-                    viewable.write_viewable_packet(&rotate_head).unwrap();
+                    viewable.write_viewable_packet(&rotate_head);
                 },
             );
 
         // Tick service (ticks players as well)
-        W::tick(self, TickPhase(TickPhaseInner::Update));
-        W::tick(self, TickPhase(TickPhaseInner::View));
+        self.service.tick(TickPhase(TickPhaseInner::Update));
+        self.service.tick(TickPhase(TickPhaseInner::View));
 
         // Clear viewable buffers
         for chunk in self.chunks.iter_mut() {
-            chunk.entity_viewable_buffer.reset();
-            chunk.entity_viewable_buffer.tick_and_maybe_shrink();
-
-            chunk.block_viewable_buffer.reset();
-            chunk.block_viewable_buffer.tick_and_maybe_shrink();
+            chunk.entity_viewable_buffer.clear();
+            chunk.block_viewable_buffer.clear();
         }
+        self.global_write_buffer.clear();
 
         // let end = Instant::now();
         // let took = end.duration_since(start);
@@ -285,7 +289,7 @@ impl<W: WorldService> World<W> {
                         debug_assert_eq!(id_in_list, id);
                     }
 
-                    temp_write_buffer.reset();
+                    temp_write_buffer.clear();
                     (viewable.fn_create)(&mut temp_write_buffer, entity_ref);
                     let create_bytes = temp_write_buffer.get_written();
                     let destroy_bytes = viewable.destroy_buffer.get_written();
@@ -321,8 +325,8 @@ impl<W: WorldService> World<W> {
         player: &mut Player<P>,
         position: Position,
     ) -> anyhow::Result<()> {
-        let old_chunk_x = player.chunk_view_position.x as i32;
-        let old_chunk_z = player.chunk_view_position.z as i32;
+        let old_chunk_x = player.new_chunk_view_position.x as i32;
+        let old_chunk_z = player.new_chunk_view_position.z as i32;
         let chunk_x = Chunk::to_chunk_coordinate(position.coord.x);
         let chunk_z = Chunk::to_chunk_coordinate(position.coord.z);
 
@@ -330,6 +334,28 @@ impl<W: WorldService> World<W> {
         let out_of_bounds = !self.chunk_coords_in_bounds(chunk_x, chunk_z);
         if same_position || out_of_bounds {
             return Ok(());
+        }
+
+        // Chunk
+        // todo: only send new chunks
+        // holdup: currently using this behaviour for testing, to be able to see the server chunk state
+        let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
+        for x in -view_distance..view_distance + 1 {
+            let chunk_x = x as i32 + chunk_x;
+            for z in -view_distance..view_distance + 1 {
+                let chunk_z = z + chunk_z;
+
+                if let Some(chunk) = self.chunks.get_mut_i32(chunk_x, chunk_z) {
+                    println!("writing chunk data! {},{}", chunk_x, chunk_z);
+                    chunk.write(&mut player.packets.write_buffer, chunk_x, chunk_z)?;
+                } else {
+                    self.empty_chunk.write(
+                        &mut player.packets.write_buffer,
+                        chunk_x,
+                        chunk_z,
+                    )?;
+                }
+            }
         }
 
         // Update view position
@@ -346,27 +372,6 @@ impl<W: WorldService> World<W> {
             x: chunk_x as usize,
             z: chunk_z as usize,
         };
-
-        // Chunk
-        // todo: only send new chunks
-        // holdup: currently using this behaviour for testing, to be able to see the server chunk state
-        let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
-        for x in -view_distance..view_distance + 1 {
-            let chunk_x = x as i32 + chunk_x;
-            for z in -view_distance..view_distance + 1 {
-                let chunk_z = z + chunk_z;
-
-                if let Some(chunk) = self.chunks.get_mut_i32(chunk_x, chunk_z) {
-                    chunk.write(&mut player.packets.write_buffer, chunk_x, chunk_z)?;
-                } else {
-                    self.empty_chunk.write(
-                        &mut player.packets.write_buffer,
-                        chunk_x,
-                        chunk_z,
-                    )?;
-                }
-            }
-        }
 
         // todo: maybe cache this write buffer?
         let mut create_buffer = WriteBuffer::with_min_capacity(64);
@@ -442,21 +447,9 @@ impl<W: WorldService> World<W> {
         &mut self,
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
         position: Position,
-    ) -> anyhow::Result<ChunkViewPosition> {
-        let chunk_x = Chunk::to_chunk_coordinate(position.coord.x);
-        let chunk_z = Chunk::to_chunk_coordinate(position.coord.z);
-
-        let out_of_bounds = chunk_x < 0
-            || chunk_x >= self.chunks.get_size_x() as _
-            || chunk_z < 0
-            || chunk_z >= self.chunks.get_size_z() as _;
-        if out_of_bounds {
-            bail!(
-                "position (chunk_x: {}, chunk_z: {}) was out of bounds for this world",
-                chunk_x,
-                chunk_z
-            );
-        }
+    ) -> ChunkViewPosition {
+        let chunk_x = Chunk::to_chunk_coordinate(position.coord.x).max(0).min(self.chunks.get_size_x() as i32 - 1);
+        let chunk_z = Chunk::to_chunk_coordinate(position.coord.z).max(0).min(self.chunks.get_size_z() as i32 - 1);
 
         let chunk_view_position = ChunkViewPosition {
             x: chunk_x as _,
@@ -471,13 +464,36 @@ impl<W: WorldService> World<W> {
                 let chunk_z = z + chunk_view_position.z as i32;
 
                 if let Some(chunk) = self.chunks.get_mut_i32(chunk_x, chunk_z) {
-                    chunk.write(&mut proto_player.write_buffer, chunk_x, chunk_z)?;
+                    chunk.write(&mut proto_player.write_buffer, chunk_x, chunk_z).unwrap();
                 } else {
                     self.empty_chunk
-                        .write(&mut proto_player.write_buffer, chunk_x, chunk_z)?;
+                        .write(&mut proto_player.write_buffer, chunk_x, chunk_z).unwrap();
                 }
             }
         }
+
+        // Update view position
+        let update_view_position_packet = SetChunkCacheCenter {
+            chunk_x: chunk_view_position.x as _,
+            chunk_z: chunk_view_position.z as _,
+        };
+        graphite_net::packet_helper::try_write_packet(
+            &mut proto_player.write_buffer,
+            &update_view_position_packet,
+        );
+
+        // Position
+        let position_packet = PlayerPosition {
+            x: position.coord.x as _,
+            y: position.coord.y as _,
+            z: position.coord.z as _,
+            yaw: position.rot.yaw,
+            pitch: position.rot.pitch,
+            relative_arguments: 0,
+            id: 0,
+            dismount_vehicle: false,
+        };
+        graphite_net::packet_helper::try_write_packet(&mut proto_player.write_buffer, &position_packet);
 
         // Entities
         let view_distance = W::ENTITY_VIEW_DISTANCE as i32;
@@ -505,154 +521,21 @@ impl<W: WorldService> World<W> {
             }
         }
 
-        // Update view position
-        let update_view_position_packet = SetChunkCacheCenter {
-            chunk_x: chunk_view_position.x as _,
-            chunk_z: chunk_view_position.z as _,
+        // World Border
+        let border_diameter = (self.chunks.get_size_x().max(self.chunks.get_size_z()) * 16) as f64;
+        let border_packet = InitializeBorder {
+            x: (self.chunks.get_size_x() * 8) as f64,
+            z: (self.chunks.get_size_z() * 8) as f64,
+            old_diameter: border_diameter,
+            new_diameter: border_diameter,
+            speed: 0,
+            portal_teleport_boundary: 29999984,
+            warning_blocks: 0,
+            warning_time: 0
         };
-        graphite_net::packet_helper::write_packet(
-            &mut proto_player.write_buffer,
-            &update_view_position_packet,
-        )?;
+        graphite_net::packet_helper::try_write_packet(&mut proto_player.write_buffer, &border_packet);
 
-        // Position
-        let position_packet = PlayerPosition {
-            x: position.coord.x as _,
-            y: position.coord.y as _,
-            z: position.coord.z as _,
-            yaw: position.rot.yaw,
-            pitch: position.rot.pitch,
-            relative_arguments: 0,
-            id: 0,
-            dismount_vehicle: false,
-        };
-        graphite_net::packet_helper::write_packet(&mut proto_player.write_buffer, &position_packet)?;
-
-        Ok(chunk_view_position)
-    }
-
-    pub(crate) fn write_login_packets(
-        &mut self,
-        //write_buffer: &mut WriteBuffer,
-        proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
-    ) -> anyhow::Result<()> {
-        let mut nbt = graphite_binary::nbt::NBT::new();
-
-        // Write minecraft:chat_type (empty)
-        let chat_type_values = NBTNode::List { type_id: graphite_binary::nbt::TAG_COMPOUND_ID, children: Vec::new() };
-        let mut chat_type = NBTNode::Compound(Default::default());
-        nbt.insert(&mut chat_type, "type", NBTNode::String("minecraft:chat_type".into()));
-        nbt.insert(&mut chat_type, "value", chat_type_values);
-        nbt.insert_root("minecraft:chat_type", chat_type);
-
-        // Write minecraft:dimension_type
-        let mut my_dimension = NBTNode::Compound(Default::default());
-        nbt.insert(&mut my_dimension, "ambient_light", NBTNode::Float(1.0));
-        nbt.insert(&mut my_dimension, "natural", NBTNode::Byte(1));
-        nbt.insert(&mut my_dimension, "min_y", NBTNode::Int(0));
-        nbt.insert(&mut my_dimension, "height", NBTNode::Int(384));
-        // nbt.insert(&mut my_dimension, "fixed_time", NBTNode::Long(0));
-        // nbt.insert(&mut my_dimension, "effects", NBTNode::Byte(0));
-
-        // These values don't affect the client, only the server. The values are meaningless
-        nbt.insert(&mut my_dimension, "piglin_safe", NBTNode::Byte(0));
-        nbt.insert(&mut my_dimension, "has_raids", NBTNode::Byte(0));
-        nbt.insert(&mut my_dimension, "monster_spawn_light_level", NBTNode::Int(0));
-        nbt.insert(&mut my_dimension, "monster_spawn_block_light_limit", NBTNode::Int(0));
-        nbt.insert(&mut my_dimension, "infiniburn", NBTNode::String("#minecraft:infiniburn_overworld".into()));
-        nbt.insert(&mut my_dimension, "respawn_anchor_works", NBTNode::Byte(0));
-        nbt.insert(&mut my_dimension, "has_skylight", NBTNode::Byte(0));
-        nbt.insert(&mut my_dimension, "bed_works", NBTNode::Byte(0));
-        nbt.insert(&mut my_dimension, "logical_height", NBTNode::Int(384));
-        nbt.insert(&mut my_dimension, "coordinate_scale", NBTNode::Double(1.0));
-        nbt.insert(&mut my_dimension, "ultrawarm", NBTNode::Byte(0));
-        nbt.insert(&mut my_dimension, "has_ceiling", NBTNode::Byte(0));
-
-        let mut my_dimension_entry = NBTNode::Compound(Default::default());
-        nbt.insert(&mut my_dimension_entry, "name", NBTNode::String("graphite:default_dimension".into()));
-        nbt.insert(&mut my_dimension_entry, "id", NBTNode::Int(0));
-        nbt.insert(&mut my_dimension_entry, "element", my_dimension);
-
-        let mut dimension_type_values = NBTNode::List { type_id: graphite_binary::nbt::TAG_COMPOUND_ID, children: Vec::new() };
-        nbt.append(&mut dimension_type_values, my_dimension_entry);
-
-        let mut dimension_type = NBTNode::Compound(Default::default());
-        nbt.insert(&mut dimension_type, "type", NBTNode::String("minecraft:dimension_type".into()));
-        nbt.insert(&mut dimension_type, "value", dimension_type_values);
-        nbt.insert_root("minecraft:dimension_type", dimension_type);
-
-        // Write minecraft:worldgen/biome
-        let mut my_biome_effects = NBTNode::Compound(Default::default());
-        nbt.insert(&mut my_biome_effects, "sky_color", NBTNode::Int(0x78a7ff));
-        nbt.insert(&mut my_biome_effects, "water_fog_color", NBTNode::Int(0x050533));
-        nbt.insert(&mut my_biome_effects, "water_color", NBTNode::Int(0x3f76e4));
-        nbt.insert(&mut my_biome_effects, "fog_color", NBTNode::Int(0xc0d8ff));
-
-        let mut my_biome = NBTNode::Compound(Default::default());
-        nbt.insert(&mut my_biome, "precipitation", NBTNode::String("rain".into()));
-        nbt.insert(&mut my_biome, "temperature", NBTNode::Float(0.8));
-        nbt.insert(&mut my_biome, "downfall", NBTNode::Float(0.4));
-        nbt.insert(&mut my_biome, "effects", my_biome_effects);
-
-        let mut my_biome_entry = NBTNode::Compound(Default::default());
-        nbt.insert(&mut my_biome_entry, "name", NBTNode::String("minecraft:plains".into()));
-        nbt.insert(&mut my_biome_entry, "id", NBTNode::Int(0));
-        nbt.insert(&mut my_biome_entry, "element", my_biome);
-
-        let mut biome_type_values = NBTNode::List { type_id: graphite_binary::nbt::TAG_COMPOUND_ID, children: Vec::new() };
-        nbt.append(&mut biome_type_values, my_biome_entry);
-
-        let mut biome_type = NBTNode::Compound(Default::default());
-        nbt.insert(&mut biome_type, "type", NBTNode::String("minecraft:worldgen/biome".into()));
-        nbt.insert(&mut biome_type, "value", biome_type_values);
-        nbt.insert_root("minecraft:worldgen/biome", biome_type);
-
-        let join_game_packet = Login {
-            entity_id: proto_player.entity_id.as_i32(),
-            is_hardcore: proto_player.hardcore,
-            gamemode: proto_player.abilities.gamemode as u8,
-            previous_gamemode: -1,
-            dimension_names: vec!["graphite:default_dimension"],
-            registry_codec: Cow::Owned(nbt.into()),
-            dimension_type: "graphite:default_dimension",
-            dimension_name: "graphite:default_dimension",
-            hashed_seed: 0, // affects biome noise
-            max_players: 0, // unused
-            view_distance: W::CHUNK_VIEW_DISTANCE as _,
-            simulation_distance: W::ENTITY_VIEW_DISTANCE as _,
-            reduced_debug_info: false,
-            enable_respawn_screen: false,
-            is_debug: false,
-            is_flat: false,
-            death_location: None,
-        };
-
-        graphite_net::packet_helper::write_packet(&mut proto_player.write_buffer, &join_game_packet)?;
-
-        if let Some(command_packet) = &self.get_universe().command_packet {
-            graphite_net::packet_helper::write_packet(&mut proto_player.write_buffer, command_packet)?;
-        }
-
-        let mut block_registry: Vec<Tag> = Vec::new();
-        for block_tag in BlockTags::iter() {
-            let tag_name = block_tag.to_namespace();
-            let tag_values = block_tag.values();
-            block_registry.push(Tag {
-                name: tag_name,
-                entries: tag_values.into(),
-            })
-        }
-
-        let mut registries: Vec<TagRegistry> = Vec::new();
-        registries.push(TagRegistry {
-            tag_type: "block",
-            values: block_registry,
-        });
-        graphite_net::packet_helper::write_packet(&mut proto_player.write_buffer, &UpdateTags {
-            registries,
-        })?;
-
-        Ok(())
+        chunk_view_position
     }
 
     pub fn create_placement_context(
@@ -753,6 +636,19 @@ impl<W: WorldService> World<W> {
             return None;
         }
         self.get_block(x as _, y as _, z as _)
+    }
+}
+
+impl<W: WorldService + ?Sized> Unsticky for World<W> {
+    type UnstuckType = Self;
+
+    fn update_pointer(&mut self) {
+        let self_ptr = self as *mut _;
+        self.service.update_children_ptr(self_ptr);
+    }
+
+    fn unstick(self) -> Self::UnstuckType {
+        self
     }
 }
 

@@ -10,6 +10,7 @@ anyhow = "1.0.57"
 thiserror = "1.0.31"
 bytes = "1.1.0"
 cesu8 = "1.1.0"
+leb128 = "0.2.5"
 
 graphite_binary_macros = { path = "macros", version = "0.1.0" }
 

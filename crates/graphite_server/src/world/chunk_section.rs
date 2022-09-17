@@ -15,11 +15,10 @@ pub struct ChunkTemplate {
 }
 
 impl ChunkTemplate {
-    pub fn get(&'static self, section_y: usize) -> ChunkSection {
+    pub fn get(&'static self) -> ChunkSection {
         ChunkSection {
             non_air_blocks: self.non_air_blocks,
             copy_on_write: true,
-            block_entities: BlockEntityStorage::new(section_y),
             block_palette: &self.block_palette as *const _ as *mut _,
             biome_palette: &self.biome_palette as *const _ as *mut _,
         }
@@ -35,9 +34,21 @@ pub struct ChunkSection {
 
     // Serialized values
     non_air_blocks: u16,
-    pub(crate) block_entities: BlockEntityStorage,
     block_palette: *mut BlockPalettedContainer,
     biome_palette: *mut BiomePalettedContainer,
+}
+
+impl Clone for ChunkSection {
+    fn clone(&self) -> Self {
+        let mut chunk = Self {
+            copy_on_write: self.copy_on_write.clone(),
+            non_air_blocks: self.non_air_blocks.clone(),
+            block_palette: self.block_palette.clone(),
+            biome_palette: self.biome_palette.clone()
+        };
+        chunk.perform_copy();
+        chunk
+    }
 }
 
 impl ChunkSection {
@@ -119,14 +130,12 @@ impl Drop for ChunkSection {
 impl ChunkSection {
     pub fn new(
         non_air_blocks: u16,
-        section_y: usize,
         block_palette: BlockPalettedContainer,
         biome_palette: BiomePalettedContainer,
     ) -> Self {
         Self {
             non_air_blocks,
             copy_on_write: false,
-            block_entities: BlockEntityStorage::new(section_y),
             block_palette: Box::into_raw(Box::from(block_palette)),
             biome_palette: Box::into_raw(Box::from(biome_palette)),
         }

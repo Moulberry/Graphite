@@ -13,7 +13,7 @@ pub trait AbstractConnectionReference<U: UniverseService> {
     fn clear_player_pointer(&mut self);
 
     fn read_bytes(&self) -> &[u8];
-    fn write_bytes(&mut self, bytes: &[u8]);
+    fn write_bytes(&mut self, bytes: Vec<u8>);
 
     fn new_from_connection(
         connection_slab: &mut ConnectionSlab<Universe<U>>,
@@ -85,7 +85,7 @@ impl<U: UniverseService> AbstractConnectionReference<U> for ConnectionReference<
         self.get_connection().0.read_bytes()
     }
 
-    fn write_bytes(&mut self, bytes: &[u8]) {
+    fn write_bytes(&mut self, bytes: Vec<u8>) {
         self.get_connection_mut().0.write(bytes);
     }
 }
@@ -95,7 +95,7 @@ impl<U: UniverseService> Drop for ConnectionReference<U> {
     fn drop(&mut self) {
         if !self.closed {
             let (connection, player_connection) = self.get_connection_mut();
-            player_connection.teardown();
+            player_connection.clear_player_pointer();
             connection.request_close();
         }
     }
@@ -117,7 +117,7 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
 
     fn on_receive(
         &mut self,
-        _: &mut Connection<Self::NetworkManagerServiceType>,
+        connection: &mut Connection<Self::NetworkManagerServiceType>,
     ) -> anyhow::Result<u32> {
         debug_assert!(
             !self.is_closing,
@@ -128,7 +128,7 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
             // Call handle_packet on player, via fn ptr
             handle_packet(self.player_ptr)
         } else {
-            panic!("data was read from connection, but player wasn't created");
+            return Ok(connection.read_bytes().len() as _);
         }
     }
 
@@ -140,8 +140,6 @@ impl<U: UniverseService> ConnectionService for PlayerConnection<U> {
         if let Some(handle_disconnect) = self.player_process_disconnect {
             // Call handle_disconnect on player, via fn ptr
             handle_disconnect(self.player_ptr);
-        } else {
-            panic!("connection was closed by remote, but player wasn't created");
         }
     }
 }
@@ -155,12 +153,6 @@ impl<U: UniverseService> PlayerConnection<U> {
             player_process_packet: None,
             player_process_disconnect: None,
         }
-    }
-
-    pub(crate) fn teardown(&mut self) {
-        self.is_closing = true;
-        self.player_process_packet = None;
-        self.player_process_disconnect = None;
     }
 
     pub(crate) fn clear_player_pointer(&mut self) {

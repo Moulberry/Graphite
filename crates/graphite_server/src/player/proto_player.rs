@@ -6,7 +6,7 @@ use crate::{
 };
 use graphite_net::{network_buffer::WriteBuffer, packet_helper};
 use graphite_mc_protocol::{
-    play::server::{PlayerInfo, PlayerInfoAddPlayer},
+    play::server::{PlayerInfo, PlayerInfoAddPlayer, Respawn},
     types::GameProfile,
 };
 
@@ -57,12 +57,6 @@ impl<U: UniverseService> ProtoPlayer<U> {
         // i.e. the player had it's PlayerService changed
         // holdup: implementing dimension ids to be able to differentiate worlds
 
-        // todo: if new, send join game
-        world.write_login_packets(&mut self)?;
-        world
-            .get_universe()
-            .write_brand_packet(&mut self.write_buffer)?;
-
         // Send player info
         let add_player_info = PlayerInfo::AddPlayer {
             values: vec![PlayerInfoAddPlayer {
@@ -73,15 +67,41 @@ impl<U: UniverseService> ProtoPlayer<U> {
                 signature_data: None,
             }],
         };
-        packet_helper::write_packet(&mut self.write_buffer, &add_player_info)?;
+        packet_helper::try_write_packet(&mut self.write_buffer, &add_player_info);
+
+        /*let respawn = Respawn {
+            dimension_type: "graphite:default_dimension",
+            dimension_name: "graphite:default_dimension",
+            hashed_seed: 0,
+            gamemode: self.abilities.gamemode as u8,
+            previous_gamemode: -1,
+            is_debug: false,
+            is_flat: false,
+            copy_metadata: false,
+            death_location: None,
+        };
+        packet_helper::try_write_packet(&mut self.write_buffer, &respawn);
+
+        let respawn = Respawn {
+            dimension_type: "graphite:default_dimension2",
+            dimension_name: "graphite:default_dimension2",
+            hashed_seed: 0,
+            gamemode: self.abilities.gamemode as u8,
+            previous_gamemode: -1,
+            is_debug: false,
+            is_flat: false,
+            copy_metadata: false,
+            death_location: None,
+        };
+        packet_helper::try_write_packet(&mut self.write_buffer, &respawn);*/
 
         // todo: if dim changed, send dimension changed
         // todo: else, don't send
 
-        let view_position = world.initialize_view_position(&mut self, position)?;
+        let view_position = world.initialize_view_position(&mut self, position);
 
         // Write the necessary packets to the TCP stream
-        self.connection.write_bytes(self.write_buffer.get_written());
+        self.connection.write_bytes(self.write_buffer.pop_written());
 
         let player = Player::new(service, world, position, view_position, self);
 

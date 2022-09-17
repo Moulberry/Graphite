@@ -1,24 +1,14 @@
-const DEFAULT_MIN_SIZE: usize = 1024;
-
 #[derive(Clone, Debug)]
 pub struct WriteBuffer {
-    min_size: usize,
     vec: Vec<u8>,
     write_index: usize,
-    shrink_counter: usize,
-    current_requested_capacity: usize,
-    max_requested_capacity: usize,
 }
 
 impl Default for WriteBuffer {
     fn default() -> Self {
         Self {
-            min_size: DEFAULT_MIN_SIZE,
-            vec: Vec::with_capacity(DEFAULT_MIN_SIZE),
+            vec: Vec::new(),
             write_index: 0,
-            current_requested_capacity: 0,
-            max_requested_capacity: 0,
-            shrink_counter: 0,
         }
     }
 }
@@ -26,14 +16,14 @@ impl Default for WriteBuffer {
 // todo: add tests for this type
 
 impl WriteBuffer {
+    pub fn new() -> WriteBuffer {
+        Default::default()
+    }
+
     pub fn with_min_capacity(min_capacity: usize) -> WriteBuffer {
         Self {
-            min_size: min_capacity,
             vec: Vec::with_capacity(min_capacity),
             write_index: 0,
-            current_requested_capacity: 0,
-            max_requested_capacity: 0,
-            shrink_counter: 0,
         }
     }
 
@@ -52,29 +42,15 @@ impl WriteBuffer {
         self.vec
     }
 
-    // todo: remove this function and make every invocation specify the min capacity
-    pub fn new() -> WriteBuffer {
-        Default::default()
-    }
-
-    pub fn tick_and_maybe_shrink(&mut self) {
-        self.shrink_counter += 1;
-
-        if self.shrink_counter > 100 {
-            self.shrink_counter = 0;
-
-            self.vec.shrink_to(self.max_requested_capacity);
-            self.max_requested_capacity = self.min_size;
-        }
-    }
-
-    pub fn reset(&mut self) {
-        if self.current_requested_capacity > self.max_requested_capacity {
-            self.max_requested_capacity = self.current_requested_capacity;
-        }
-
-        self.current_requested_capacity = 0;
+    pub fn clear(&mut self) {
         self.write_index = 0;
+    }
+
+    pub fn pop_written(&mut self) -> Vec<u8> {
+        let mut popped = std::mem::replace(&mut self.vec, Vec::new());
+        unsafe { popped.set_len(self.write_index); }
+        self.write_index = 0;
+        popped
     }
 
     pub fn get_written(&self) -> &[u8] {
@@ -83,9 +59,8 @@ impl WriteBuffer {
     }
 
     pub fn get_unwritten(&mut self, capacity: usize) -> &mut [u8] {
-        self.current_requested_capacity = self.write_index + capacity; // mark the current utilization
-
-        self.vec.reserve(self.current_requested_capacity);
+        let current_requested_capacity = self.write_index + capacity;
+        self.vec.reserve(current_requested_capacity);
 
         unsafe {
             let ptr = self.vec.as_mut_ptr().add(self.write_index);

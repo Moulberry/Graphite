@@ -43,7 +43,7 @@ identify_packets! {
     // ForgetLevelChunk = 0x1c,
     GameEvent = 0x1d,
     // HorseScreenOpen = 0x1e,
-    // InitializeBorder = 0x1f,
+    InitializeBorder = 0x1f,
     KeepAlive = 0x20,
     LevelChunkWithLight<'_> = 0x21,
     LevelEvent = 0x22,
@@ -74,7 +74,7 @@ identify_packets! {
     RemoveEntities = 0x3b,
     // RemoveMobEffect = 0x3c,
     // ResourcePack = 0x3d,
-    // Respawn = 0x3e,
+    Respawn<'_> = 0x3e,
     RotateHead = 0x3f,
     // SectionBlocksUpdate = 0x40,
     // SelectAdvancementTab = 0x41,
@@ -262,6 +262,21 @@ slice_serializable! {
     }
 }
 
+// Initialize World Border
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct InitializeBorder {
+        pub x: f64 as BigEndian,
+        pub z: f64 as BigEndian,
+        pub old_diameter: f64 as BigEndian,
+        pub new_diameter: f64 as BigEndian,
+        pub speed: i64 as VarInt,
+        pub portal_teleport_boundary: i32 as VarInt,
+        pub warning_blocks: i32 as VarInt,
+        pub warning_time: i32 as VarInt,
+    }
+}
+
 // Keep Alive
 slice_serializable! {
     #[derive(Debug)]
@@ -413,7 +428,7 @@ slice_serializable! {
         pub enable_respawn_screen: bool as Single,
         pub is_debug: bool as Single,
         pub is_flat: bool as Single,
-        pub death_location: Option<BlockPosition>
+        pub death_location: Option<BlockPosition> // todo: this is wrong, also needs identifier
     }
 }
 
@@ -543,6 +558,22 @@ slice_serializable! {
         pub relative_arguments: u8 as Single,
         pub id: i32 as VarInt,
         pub dismount_vehicle: bool as Single
+    }
+}
+
+// Respawn
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Respawn<'a> {
+        pub dimension_type: &'a str as SizedString,
+        pub dimension_name: &'a str as SizedString,
+        pub hashed_seed: u64 as BigEndian,
+        pub gamemode: u8 as Single,
+        pub previous_gamemode: i8 as Single,
+        pub is_debug: bool as Single,
+        pub is_flat: bool as Single,
+        pub copy_metadata: bool as Single,
+        pub death_location: Option<BlockPosition> // todo: this is wrong, also needs identifier
     }
 }
 

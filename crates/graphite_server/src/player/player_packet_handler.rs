@@ -372,7 +372,7 @@ impl<P: PlayerService> client::PacketHandler for Player<P> {
             parse_state.push_ref(self, parse_state.full_span);
             parse_state.push_arg(
                 unsafe {
-                    std::mem::transmute::<std::any::TypeId, u64>(std::any::Any::type_id(self))
+                    std::mem::transmute::<std::any::TypeId, u64>(std::any::TypeId::of::<P>())
                 },
                 parse_state.full_span,
             );

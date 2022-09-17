@@ -191,7 +191,7 @@ pub struct Connection<N: NetworkManagerService> {
 
     self_index: u16,
     fd: AutoclosingFd,
-    write_buffers: Slab<Box<[u8]>>,
+    write_buffers: Slab<Vec<u8>>,
 
     close_requested: bool,
     connection_redirect: Option<FnConnectionRedirect<N>>,
@@ -252,8 +252,10 @@ impl<N: NetworkManagerService> Connection<N> {
         }
     }
 
-    pub fn write(&mut self, bytes: &[u8]) {
-        let bytes: Box<[u8]> = Box::from(bytes);
+    pub fn write(&mut self, bytes: Vec<u8>) {
+        if bytes.is_empty() {
+            return;
+        }
 
         // get length and pointer for ffi
         let bytes_len = bytes.len();
@@ -358,10 +360,10 @@ pub fn start<T: NetworkManagerService>(service: T, addr: Option<&str>) -> anyhow
 pub fn start_with_init<T: NetworkManagerService>(
     service: T,
     addr: Option<&str>,
-    initialize: impl Fn(&NetworkManager<T>),
+    initialize: impl Fn(&mut NetworkManager<T>),
 ) -> anyhow::Result<()> {
     let mut network_manager = NetworkManager::new(service)?;
-    initialize(&network_manager);
+    initialize(&mut network_manager);
     network_manager.start(addr)?;
     Ok(())
 }

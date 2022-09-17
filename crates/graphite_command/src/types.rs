@@ -173,4 +173,5 @@ pub enum CommandDispatchResult {
     UnknownCommand,
     IncompleteCommand,
     TooManyArguments,
+    UnknownPlayerService
 }

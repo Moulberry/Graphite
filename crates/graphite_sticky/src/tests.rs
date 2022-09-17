@@ -14,37 +14,19 @@ fn insert() {
     }
 
     assert_eq!(sticky_vec.len(), 1000);
-
-    std::mem::forget(sticky_vec); // i32 doesn't implement unsticky, we don't care for this test
-}
-
-#[test]
-fn get_bucket_index() {
-    for i in 0..7 {
-        assert_eq!(StickyVec::<MyStickyType>::get_bucket_index(i), 0);
-    }
-    for i in 8..23 {
-        assert_eq!(StickyVec::<MyStickyType>::get_bucket_index(i), 1);
-    }
-    for i in 24..55 {
-        assert_eq!(StickyVec::<MyStickyType>::get_bucket_index(i), 2);
-    }
-    for i in 56..120 {
-        assert_eq!(StickyVec::<MyStickyType>::get_bucket_index(i), 3);
-    }
 }
 
 #[derive(Debug)]
 struct MyStickyType(usize);
-unsafe impl Unsticky for MyStickyType {
+impl Unsticky for MyStickyType {
     type UnstuckType = usize;
 
     fn unstick(self) -> Self::UnstuckType {
         self.0
     }
 
-    fn update_pointer(&mut self, index: usize) {
-        self.0 = index;
+    fn update_pointer(&mut self) {
+        // self.0 = index;
     }
 }
 
@@ -58,8 +40,9 @@ fn remove_descending() {
 
     assert_eq!(sticky_vec.len(), 1000);
 
+    // todo: test should fail because update_pointer no longer takes index
     for index in 0..1000 {
-        assert_eq!(999 - index, sticky_vec.remove(999 - index));
+        assert_eq!(999 - index, sticky_vec.swap_remove(999 - index));
     }
 
     assert_eq!(sticky_vec.len(), 0);
@@ -76,7 +59,7 @@ fn remove_ascending() {
     assert_eq!(sticky_vec.len(), 1000);
 
     for _ in 0..1000 {
-        assert!(0 == sticky_vec.remove(0));
+        assert!(0 == sticky_vec.swap_remove(0));
     }
 
     assert_eq!(sticky_vec.len(), 0);
@@ -146,7 +129,7 @@ fn remove_random() {
         1, 27, 26, 31, 17, 21, 8, 9, 13, 12, 12, 12, 17, 2, 4, 6, 14, 5, 4, 16, 7, 9, 3, 13, 8, 12,
         1, 0, 9, 0, 4, 7, 6, 5, 1, 1, 1, 1, 0,
     ] {
-        assert_eq!(index, sticky_vec.remove(index));
+        assert_eq!(index, sticky_vec.swap_remove(index));
     }
 
     assert_eq!(sticky_vec.len(), 0);
@@ -155,7 +138,6 @@ fn remove_random() {
 #[derive(Debug)]
 struct PanicOnModuloDrop {
     original_index: usize,
-    current_index: usize,
     should_be_dropped: bool,
     drop_counter: Rc<AtomicUsize>,
 }
@@ -170,11 +152,11 @@ impl Drop for PanicOnModuloDrop {
         }
     }
 }
-unsafe impl Unsticky for PanicOnModuloDrop {
+impl Unsticky for PanicOnModuloDrop {
     type UnstuckType = Self;
 
-    fn update_pointer(&mut self, index: usize) {
-        self.current_index = index;
+    fn update_pointer(&mut self) {
+        // self.current_index = index;
     }
 
     fn unstick(self) -> Self::UnstuckType {
@@ -195,7 +177,6 @@ fn retain_modulo() {
             for i in 0..count {
                 sticky_vec.push(PanicOnModuloDrop {
                     original_index: i,
-                    current_index: i,
                     should_be_dropped: i % modulo != eq,
                     drop_counter: drop_counter.clone(),
                 });
@@ -210,12 +191,49 @@ fn retain_modulo() {
                 count
             );
 
-            sticky_vec.enumerate_mut(|index, e| {
+            for (index, e) in sticky_vec.iter_mut().enumerate() {
                 assert_eq!(e.original_index % modulo, eq);
-                assert_eq!(e.current_index, index);
-            });
+                assert_eq!(e.should_be_dropped, false);
+                e.should_be_dropped = true;
+            }
+        }
+    }
+}
 
-            std::mem::forget(sticky_vec); // don't drop contents
+#[test]
+fn drain_filter_modulo() {
+    let count = 1000;
+
+    for modulo in 0..20 {
+        for eq in 0..modulo {
+            let drop_counter = Rc::new(AtomicUsize::new(0));
+
+            let mut sticky_vec = StickyVec::new();
+
+            for i in 0..count {
+                sticky_vec.push(PanicOnModuloDrop {
+                    original_index: i,
+                    should_be_dropped: i % modulo != eq,
+                    drop_counter: drop_counter.clone(),
+                });
+            }
+
+            assert_eq!(sticky_vec.len(), count);
+
+            for drained in sticky_vec.drain_filter(|e| e.original_index % modulo != eq) {
+                assert!(drained.should_be_dropped);
+            }
+
+            assert_eq!(
+                sticky_vec.len() + drop_counter.load(std::sync::atomic::Ordering::Relaxed),
+                count
+            );
+
+            for e in sticky_vec.iter_mut() {
+                assert_eq!(e.original_index % modulo, eq);
+                assert_eq!(e.should_be_dropped, false);
+                e.should_be_dropped = true;
+            }
         }
     }
 }

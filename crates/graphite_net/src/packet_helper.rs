@@ -131,6 +131,16 @@ where
     Ok(())
 }
 
+pub fn try_write_packet<'a, I: Debug, T>(
+    write_buffer: &mut WriteBuffer,
+    packet: &'a T,
+)
+where
+    T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
+{
+    let _ = write_custom_packet(write_buffer, packet.get_packet_id_as_u8(), packet);
+}
+
 pub fn write_packet<'a, I: Debug, T>(
     write_buffer: &mut WriteBuffer,
     packet: &'a T,

@@ -1,27 +1,15 @@
-use crate::unsticky::Unsticky;
+use std::{iter::Enumerate, slice::{Iter, IterMut}};
 
-use std::fmt::Debug;
-
-// todo:
-// this was originally designed with the intent of minimizing the number of moves,
-// as such, reallocation was avoided via the usage of buckets, however, this behaviour
-// is no longer desired. This collection can be rewritten to use a single Vec, making sure
-// that every element has Unsticky::update_pointer called when reallocations occur
+use crate::Unsticky;
 
 #[derive(Debug)]
 pub struct StickyVec<T: Unsticky> {
-    buckets: Vec<Vec<T>>,
-    len: usize,
-    next: usize,
+    inner: Vec<T>
 }
 
 impl<T: Unsticky> Default for StickyVec<T> {
     fn default() -> Self {
-        Self {
-            buckets: Default::default(),
-            len: 0,
-            next: 0,
-        }
+        Self { inner: Default::default() }
     }
 }
 
@@ -31,112 +19,44 @@ impl<T: Unsticky> StickyVec<T> {
     }
 
     pub fn len(&self) -> usize {
-        self.len
+        self.inner.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len == 0
+        self.inner.is_empty()
     }
 
-    pub fn push(&mut self, t: T) -> usize {
-        debug_assert!(self.buckets.len() >= self.next);
-
-        // Allocate the bucket if needed
-        if self.buckets.len() == self.next {
-            self.buckets
-                .push(Vec::with_capacity(Self::get_capacity_for_index(self.next)));
-        }
-
-        // Get the next bucket
-        let mut bucket = &mut self.buckets[self.next];
-        let len = bucket.len();
-
-        debug_assert!(len < bucket.capacity(), "push should never reallocate");
-
-        // Push the element into `current_vec`
-        self.len += 1;
-        bucket.push(t);
-
-        // Return sticky pointer to pushed element
-        let actual_index = bucket.capacity() - 8 + len;
-        let ptr: &mut T = &mut bucket[len];
-        ptr.update_pointer(actual_index);
-
-        // Move to next chunk if we just filled `current_vec`
-        if len == bucket.capacity() - 1 {
-            self.next += 1;
-
-            while self.buckets.len() < self.next {
-                bucket = &mut self.buckets[self.next];
-                if bucket.len() < bucket.capacity() {
-                    break;
-                }
+    pub fn push(&mut self, value: T) {
+        let before_capacity = self.inner.capacity();
+        self.inner.push(value);
+        if before_capacity != self.inner.capacity() {
+            // Reallocation occured, update pointer of all children
+            for child_ref in &mut self.inner {
+                child_ref.update_pointer();
             }
+        } else {
+            // No reallocation occured, just update pointer of the new element
+            let last_index = self.inner.len() - 1;
+            self.inner[last_index].update_pointer();
         }
-
-        actual_index
     }
 
-    pub fn get(&self, index: usize) -> &T {
-        assert!(index < self.len);
-
-        let bucket_index = Self::get_bucket_index(index);
-        let bucket = &self.buckets[bucket_index];
-
-        let index_in_bucket = index + 8 - bucket.capacity();
-        &bucket[index_in_bucket]
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.inner.get(index)
     }
 
-    pub fn get_mut(&mut self, index: usize) -> &mut T {
-        assert!(index < self.len);
-
-        let bucket_index = Self::get_bucket_index(index);
-        let bucket = &mut self.buckets[bucket_index];
-
-        let index_in_bucket = index + 8 - bucket.capacity();
-        &mut bucket[index_in_bucket]
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        self.inner.get_mut(index)
     }
 
-    pub fn remove(&mut self, index: usize) -> T::UnstuckType {
-        assert!(index < self.len);
+    pub fn swap_remove(&mut self, index: usize) -> T::UnstuckType {
+        let removed = self.inner.swap_remove(index).unstick();
 
-        let last_bucket_index = self.buckets.len() - 1;
-        let last_element_in_last_bucket = self.buckets[last_bucket_index].pop().unwrap();
-
-        // Remove the last bucket if it is empty
-        if self.buckets[last_bucket_index].is_empty() {
-            self.buckets.remove(last_bucket_index);
+        if index < self.inner.len() {
+            self.inner[index].update_pointer();
         }
 
-        if index == self.len - 1 {
-            self.next = last_bucket_index;
-            self.len -= 1;
-            return last_element_in_last_bucket.unstick();
-        }
-
-        let bucket_index = Self::get_bucket_index(index);
-        let bucket = &mut self.buckets[bucket_index];
-
-        unsafe {
-            let index_in_bucket = index + 8 - bucket.capacity();
-            let dst = bucket.as_mut_ptr().add(index_in_bucket);
-
-            // Read the value
-            let value = std::ptr::read(dst);
-
-            // Move `last_element_in_last_bucket` into the space previously occupied by `value`
-            // panic!("index in bucket: {}, bucket id: {}", index_in_bucket, bucket_index);
-            std::ptr::copy_nonoverlapping(&last_element_in_last_bucket, dst, 1);
-            std::mem::forget(last_element_in_last_bucket); // Don't call drop
-
-            // Update the pointer on the element we swapped in
-            dst.as_mut().unwrap().update_pointer(index);
-
-            self.next = bucket_index;
-            self.len -= 1;
-
-            value.unstick()
-        }
+        removed
     }
 
     pub fn retain<F>(&mut self, mut f: F)
@@ -146,156 +66,217 @@ impl<T: Unsticky> StickyVec<T> {
         self.retain_mut(|elem| f(elem));
     }
 
-    pub fn retain_mut<F>(&mut self, mut f: F)
+    pub fn retain_mut<F>(&mut self, f: F)
     where
         F: FnMut(&mut T) -> bool,
     {
-        let mut total_index: usize = 0;
+        let len = self.inner.len();
+        let guard = RetainGuard {
+            f,
+            vec: &mut self.inner,
+            index: 0,
+            len,
+            should_swap: true,
+        };
+        guard.retain();
+    }
 
-        let mut bucket_index: usize = 0;
-        while bucket_index < self.buckets.len() {
-            let bucket: *mut Vec<T> = &mut self.buckets[bucket_index];
-            let mut bucket_count = self.buckets.len();
-            let mut bucket_length = unsafe { bucket.as_ref().unwrap() }.len();
+    pub fn drain_filter<'a, F>(&'a mut self, f: F) -> DrainFilter<'a, T, F>
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        let len = self.inner.len();
+        DrainFilter { f, vec: &mut self.inner, forwards: true, index: 0, len }
+    }
 
-            let mut item_index: usize = 0;
-            while item_index < bucket_length {
-                let item_ptr: *mut T =
-                    unsafe { bucket.as_mut().unwrap().as_mut_ptr().add(item_index) };
+    pub fn iter(&self) -> Iter<T> {
+        self.inner.iter()
+    }
 
-                if !f(unsafe { item_ptr.as_mut().unwrap() }) {
-                    self.len -= 1;
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        self.inner.iter_mut()
+    }
+}
 
-                    // Find suitable element for swap
-                    'find_suitable: loop {
-                        let bucket_index_last = bucket_count - 1;
-                        if bucket_index_last == bucket_index {
-                            // Check if we are already in the last bucket
-                            loop {
-                                bucket_length -= 1;
-                                if item_index == bucket_length {
-                                    // This was the last item!
-                                    if bucket_length == 0 {
-                                        // Bucket would be empty, lets just remove the entire bucket
-                                        bucket_count -= 1;
-                                        self.buckets.truncate(bucket_count);
-                                    } else {
-                                        // Truncate the bucket to the desired (non-zero) length
-                                        unsafe { bucket.as_mut().unwrap() }.truncate(bucket_length);
-                                    }
-                                    return;
-                                } else {
-                                    debug_assert!(bucket_length > item_index);
+struct RetainGuard<'a, T, F>
+where
+    T: Unsticky,
+    F: FnMut(&mut T) -> bool
+{
+    f: F,
+    vec: &'a mut Vec<T>,
+    should_swap: bool,
+    index: usize,
+    len: usize
+}
 
-                                    let item_last =
-                                        &mut unsafe { bucket.as_mut().unwrap() }[bucket_length];
+impl<'a, T, F> Drop for RetainGuard<'a, T, F>
+where
+    T: Unsticky,
+    F: FnMut(&mut T) -> bool
+{
+    fn drop(&mut self) {
+        if self.len > 0 && self.index < self.len - 1 && self.should_swap {
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    self.vec.as_mut_ptr().add(self.len - 1), 
+                    self.vec.as_mut_ptr().add(self.index), 
+                    1
+                );   
+            }
+            self.len -= 1;
+        }
+        unsafe { self.vec.set_len(self.len); }
+    }
+}
 
-                                    // Check last item
-                                    if f(item_last) {
-                                        // Swap into item_index
-                                        unsafe {
-                                            std::ptr::drop_in_place(item_ptr);
-                                            std::ptr::copy_nonoverlapping(item_last, item_ptr, 1);
-                                            bucket.as_mut().unwrap().truncate(bucket_length + 1);
-                                            bucket.as_mut().unwrap().set_len(bucket_length);
-                                            item_ptr.as_mut().unwrap().update_pointer(total_index);
-                                        }
-                                        break 'find_suitable;
-                                    } else {
-                                        // Drop item and continue
-                                        self.len -= 1;
-                                    }
-                                }
-                            }
-                        } else {
-                            let bucket_last = &mut self.buckets[bucket_index_last];
-                            let mut bucket_last_length = bucket_last.len();
+impl<'a, T, F> RetainGuard<'a, T, F>
+where
+    T: Unsticky,
+    F: FnMut(&mut T) -> bool
+{
+    fn retain(mut self) {
+        while self.index < self.len {
+            let item_ptr = unsafe { self.vec.as_mut_ptr().add(self.index) };
 
-                            while bucket_last_length > 0 {
-                                let item_last = &mut bucket_last[bucket_last_length - 1];
+            // Check if item should be removed
+            if !(self.f)(unsafe { &mut *item_ptr }) {
+                // Drop it
+                debug_assert!(self.should_swap);
+                unsafe { std::ptr::drop_in_place(item_ptr); }
+                self.len -= 1;
 
-                                if f(item_last) {
-                                    // Swap into item_index
-                                    unsafe {
-                                        std::ptr::drop_in_place(item_ptr);
-                                        std::ptr::copy_nonoverlapping(item_last, item_ptr, 1);
-                                        bucket_last.truncate(bucket_last_length);
-                                        bucket_last.set_len(bucket_last_length - 1);
-                                        item_ptr.as_mut().unwrap().update_pointer(total_index);
-                                    }
-                                    break 'find_suitable;
-                                } else {
-                                    bucket_last_length -= 1;
-                                    self.len -= 1;
-                                }
-                            }
+                // Find suitable element for swap
+                while self.len > self.index {
+                    let end_item_ptr = unsafe { self.vec.as_mut_ptr().add(self.len) };
 
-                            // Last bucket is now empty, lets just remove the entire bucket
-                            bucket_count -= 1;
-                            self.buckets.truncate(bucket_count);
+                    // Check if end item should also be removed
+                    if !(self.f)(unsafe { &mut *end_item_ptr}) {
+                        // Drop end item, continue trying to find suitable element
+                        debug_assert!(self.should_swap);
+                        unsafe { std::ptr::drop_in_place(end_item_ptr); }
+                        self.len -= 1;
+                        continue;
+                    } else {
+                        // Found suitable candidate for swap
+                        unsafe {
+                            // Copy the candidate into the item's position
+                            std::ptr::copy_nonoverlapping(end_item_ptr, item_ptr, 1);
+                            // Update the pointer of the candidate, in the position of the previous item
+                            self.should_swap = false;
+                            (&mut *item_ptr).update_pointer();
+                            self.should_swap = true;
                         }
+                        break;
                     }
                 }
-                total_index += 1;
-                item_index += 1;
             }
-            bucket_index += 1;
+
+            self.index += 1;
         }
     }
+}
 
-    pub fn for_each<F>(&self, mut f: F)
-    where
-        F: FnMut(&T),
-    {
-        self.enumerate(|_, e| f(e));
-    }
+pub struct DrainFilter<'a, T, F>
+where
+    T: Unsticky,
+    F: FnMut(&mut T) -> bool
+{
+    f: F,
+    vec: &'a mut Vec<T>,
+    forwards: bool,
+    index: usize,
+    len: usize
+}
 
-    pub fn for_each_mut<F>(&mut self, mut f: F)
-    where
-        F: FnMut(&mut T),
-    {
-        self.enumerate_mut(|_, e| f(e));
-    }
+impl<'a, T, F> Drop for DrainFilter<'a, T, F>
+where
+    T: Unsticky,
+    F: FnMut(&mut T) -> bool
+{
+    fn drop(&mut self) {
+        if !self.forwards {
+            while self.index < self.len {
+                let item = &mut self.vec[self.len];
 
-    pub fn enumerate<F>(&self, mut f: F)
-    where
-        F: FnMut(usize, &T),
-    {
-        let mut overall_index = 0;
-        for bucket_index in 0..self.buckets.len() {
-            // Iterate through buckets
-            let bucket = &self.buckets[bucket_index];
+                if (self.f)(item) {
+                    self.len -= 1;
+                    unsafe {
+                        std::ptr::drop_in_place(item as *mut T);
+                    }
+                } else {
+                    unsafe { 
+                        std::ptr::copy_nonoverlapping(
+                            item,
+                            self.vec.as_mut_ptr().add(self.index),
+                            1
+                        );
+                    }
 
-            // Iterate through items in bucket
-            for item in bucket {
-                f(overall_index, item); // Call function
-                overall_index += 1;
+                    self.forwards = true;
+                    self.index += 1;
+
+                    (&mut self.vec[self.index - 1]).update_pointer();
+                }
             }
         }
+
+        let guard = RetainGuard {
+            f: |t| !(self.f)(t),
+            vec: self.vec,
+            should_swap: true,
+            index: self.index,
+            len: self.len,
+        };
+        guard.retain();
     }
+}
 
-    pub fn enumerate_mut<F>(&mut self, mut f: F)
-    where
-        F: FnMut(usize, &mut T),
-    {
-        let mut overall_index = 0;
-        for bucket_index in 0..self.buckets.len() {
-            // Iterate through buckets
-            let bucket = &mut self.buckets[bucket_index];
+impl<'a, T, F> Iterator for DrainFilter<'a, T, F>
+where
+    T: Unsticky,
+    F: FnMut(&mut T) -> bool
+{
+    type Item = T::UnstuckType;
 
-            // Iterate through items in bucket
-            for item in bucket {
-                f(overall_index, item); // Call function
-                overall_index += 1;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.forwards {
+            while self.index < self.len {
+                let item = &mut self.vec[self.index];
+
+                if (self.f)(item) {
+                    self.forwards = false;
+                    self.len -= 1;
+                    return Some(unsafe { std::ptr::read(item as *mut T) }.unstick())
+                } else {
+                    self.index += 1;
+                }
+            }
+        } else {
+            if self.index < self.len {
+                let item = &mut self.vec[self.len];
+
+                if (self.f)(item) {
+                    self.len -= 1;
+                    return Some(unsafe { std::ptr::read(item as *mut T) }.unstick())
+                } else {
+                    unsafe { 
+                        std::ptr::copy_nonoverlapping(
+                            item,
+                            self.vec.as_mut_ptr().add(self.index),
+                            1
+                        );
+                    }
+
+                    self.forwards = true;
+                    self.index += 1;
+
+                    (&mut self.vec[self.index - 1]).update_pointer();
+
+                    return self.next();
+                }
             }
         }
-    }
-
-    pub(crate) fn get_bucket_index(index: usize) -> usize {
-        std::mem::size_of::<usize>() * 8 - 4 - (index + 8).leading_zeros() as usize
-    }
-
-    fn get_capacity_for_index(index: usize) -> usize {
-        1 << (index + 3)
+        None
     }
 }

@@ -126,9 +126,7 @@ impl FakePlayerConnection {
                 log!("Found packet with id: 0x{:x}", packet_bytes[0]);
 
                 let mut temp = WriteBuffer::new();
-                if packet_helper::write_packet(&mut temp, packet).is_err() {
-                    panic!("packet was too big");
-                }
+                packet_helper::write_packet(&mut temp, packet).unwrap();
                 let expected_bytes = &temp.get_written()[3..]; // remove the size header
 
                 if packet_bytes == expected_bytes {
@@ -150,9 +148,7 @@ impl FakePlayerConnection {
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<play::client::PacketId> + 'a,
     {
-        if packet_helper::write_packet(&mut self.incoming_bytes, packet).is_err() {
-            panic!("packet was too big");
-        }
+        packet_helper::write_packet(&mut self.incoming_bytes, packet).unwrap();
 
         let bytes_remaining = Player::handle_packets(unsafe { &mut *self.player })?;
         assert_eq!(bytes_remaining, 0); // Player must have handled the entire packet

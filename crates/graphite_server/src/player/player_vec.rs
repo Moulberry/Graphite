@@ -1,9 +1,7 @@
-use graphite_sticky::Unsticky;
-
 use crate::{
     entity::position::Position,
     error::UninitializedError,
-    world::{TickPhase, World},
+    world::{TickPhase, World, TickPhaseInner},
 };
 
 use super::{
@@ -13,6 +11,8 @@ use super::{
 
 pub struct PlayerVec<P: PlayerService> {
     players: graphite_sticky::StickyVec<Player<P>>,
+    locked: bool,
+    delayed_add: Vec<(ProtoPlayer<P::UniverseServiceType>, P, Position)>,
     world: *mut World<P::WorldServiceType>,
 }
 
@@ -20,6 +20,8 @@ impl<P: PlayerService> Default for PlayerVec<P> {
     fn default() -> Self {
         Self {
             players: Default::default(),
+            locked: false,
+            delayed_add: Default::default(),
             world: std::ptr::null_mut(),
         }
     }
@@ -30,17 +32,12 @@ impl<P: PlayerService> PlayerVec<P> {
         Default::default()
     }
 
-    pub fn initialize(&self, world: &World<P::WorldServiceType>) {
-        // Justification:
-        // If the world pointer is null, this struct is in an undefined state
-        // Therefore, any reference that previously existed to this struct
-        // is invalid, so converting the immutable reference to a mutable one
-        // should be sound here
-        unsafe {
-            let self_mut: *mut PlayerVec<P> = self as *const _ as *mut _;
-            let self_mut_ref: &mut PlayerVec<P> = self_mut.as_mut().unwrap();
-            assert!(self_mut_ref.world.is_null(), "cannot initialize twice");
-            self_mut_ref.world = world as *const _ as *mut _;
+    pub fn update_world_ptr(&mut self, world: *mut World<P::WorldServiceType>) {
+        self.world = world;
+
+        // Update all the world refs of the players inside this player vec
+        for player in self.players.iter_mut() {
+            player.world = self.world;
         }
     }
 
@@ -48,7 +45,7 @@ impl<P: PlayerService> PlayerVec<P> {
         unsafe { self.world.as_mut() }.ok_or_else(|| UninitializedError.into())
     }
 
-    pub fn get_by_index(&self, index: usize) -> &Player<P> {
+    pub fn get_by_index(&self, index: usize) -> Option<&Player<P>> {
         self.players.get(index)
     }
 
@@ -62,16 +59,17 @@ impl<P: PlayerService> PlayerVec<P> {
             return Err(UninitializedError.into());
         }
 
+        if self.locked {
+            self.delayed_add.push((proto_player, service, position));
+            return Ok(());
+        }
+
         let world = self.get_world()?;
         let player = proto_player.create_player(service, world, position)?;
         self.players.push(player);
 
         Ok(())
     }
-
-    /*pub fn remove(&mut self, index: usize) -> <Player<P> as Unsticky>::UnstuckType {
-        self.players.remove(index)
-    }*/
 
     pub fn len(&self) -> usize {
         self.players.len()
@@ -82,7 +80,42 @@ impl<P: PlayerService> PlayerVec<P> {
     }
 
     pub fn tick(&mut self, tick_phase: TickPhase) {
-        self.players
-            .retain_mut(|player| player.tick(tick_phase).is_ok());
+        if let Some(world) = unsafe { self.world.as_mut() } {
+            match tick_phase.0 {
+                TickPhaseInner::Update => {
+                    self.locked = true;
+                    self.tick_players_update(tick_phase, world);
+                    self.locked = false;
+                }
+                TickPhaseInner::View => {
+                    self.locked = true;
+                    self.players
+                        .retain_mut(|player| player.tick(tick_phase).is_ok());
+                    self.locked = false;
+
+                    // It is important that new players are added after View,
+                    // otherwise a player may see themselves despawn
+                    for (proto_player, service, position) in self.delayed_add.drain(..) {
+                        if let Ok(player) = proto_player.create_player(service, world, position) {
+                            self.players.push(player);
+                        }
+                    }
+                }
+            }
+        }        
+    }
+
+    fn tick_players_update(&mut self, tick_phase: TickPhase, world: &mut World<<P as PlayerService>::WorldServiceType>) {
+        let filter = |player: &mut Player<P>| {
+            player.tick(tick_phase).is_err() || player.transfer_fn.is_some()
+        };
+        
+        for unstuck in self.players.drain_filter(filter) {
+            if let Some((proto_player, old_service, transfer_fn)) = unstuck {
+                if let Some(transfer_fn) = transfer_fn {
+                    transfer_fn(world, old_service, proto_player)
+                }
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@ use graphite_server::{
     inventory::inventory_handler::VanillaPlayerInventory,
     player::{player_vec::PlayerVec, PlayerService},
     universe::{Universe, UniverseService},
-    world::{TickPhase, World, WorldService},
+    world::{TickPhase, World, WorldService}, UniverseTicker,
 };
 use std::pin::Pin;
 
@@ -46,9 +46,11 @@ pub fn create_universe() -> Pin<Box<Universe<DummyUniverseService>>> {
     pinned
 }
 
+#[derive(UniverseTicker)]
 pub struct DummyUniverseService {
     pub the_world: World<DummyWorldService>,
 }
+
 impl UniverseService for DummyUniverseService {
     type ConnectionReferenceType = *mut FakePlayerConnection;
 
@@ -57,18 +59,6 @@ impl UniverseService for DummyUniverseService {
         proto_player: graphite_server::player::proto_player::ProtoPlayer<Self>,
     ) {
         universe.service.the_world.handle_player_join(proto_player);
-    }
-
-    fn initialize(universe: &Universe<Self>) {
-        universe.service.the_world.initialize(universe);
-    }
-
-    fn tick(universe: &mut Universe<Self>) {
-        universe.service.the_world.tick();
-    }
-
-    fn get_player_count(universe: &Universe<Self>) -> usize {
-        DummyWorldService::get_player_count(&universe.service.the_world)
     }
 }
 
@@ -101,18 +91,6 @@ impl WorldService for DummyWorldService {
                 },
             )
             .unwrap();
-    }
-
-    fn initialize(world: &World<Self>) {
-        world.service.players.initialize(world);
-    }
-
-    fn tick(world: &mut World<Self>, phase: TickPhase) {
-        world.service.players.tick(phase);
-    }
-
-    fn get_player_count(world: &World<Self>) -> usize {
-        world.service.players.len()
     }
 }
 

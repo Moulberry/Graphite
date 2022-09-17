@@ -241,7 +241,10 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
     if !has_correct_first_argument {
-        throw_error!(id => "first argument of command function must be of type `&mut Player<?>`");
+        throw_error!(id => "first argument of command function must be of type `&mut Player<P>`");
+    }
+    if generic_player_types.is_empty() {
+        throw_error!(id => "unknown generic types for player argument");
     }
 
     let function_argument_count = input.sig.arguments.len() - 1;
@@ -436,6 +439,14 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
                                 (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
                                     process_num_arg(quote!(u64), quote!(U64), deconstruct_index.clone(), modifiers))
                             }
+                            "usize" => {
+                                (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
+                                    process_num_arg(quote!(usize), quote!(USize), deconstruct_index.clone(), modifiers))
+                            }
+                            "isize" => {
+                                (parser_num, parser_expr, parser_validate) = check_result!(type_path.span(), id =>
+                                    process_num_arg(quote!(isize), quote!(ISize), deconstruct_index.clone(), modifiers))
+                            }
                             _ => {
                                 throw_error!(ty.span(), id => "type does not correspond to a known Brigadier argument")
                             }
@@ -485,24 +496,23 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     }
 
-    let mut player_type_match_variants = quote!();
-    let mut player_type_match_inner = quote!();
+    let mut player_type_checks = quote!();
 
     for (index, player_type) in generic_player_types.iter().enumerate() {
-        let player_ty_identifier = format!("player_type_{}", index);
-        let player_ty_identifier: proc_macro2::TokenStream = player_ty_identifier.parse().unwrap();
-
-        player_type_match_variants = quote!(
-            #player_type_match_variants
-            let #player_ty_identifier = std::any::TypeId::of::<#player_type>();
-        );
-
-        player_type_match_inner = quote!(
-            #player_type_match_inner
-            #player_ty_identifier => {
-                graphite_command::types::CommandDispatchResult::Success(#id(unsafe { &mut *(std::mem::transmute::<*mut (), *mut Player<#player_type>>(data.0) )}, #parse_function_data_args_deconstruct))
-            }
-        );
+        if index == 0 {
+            player_type_checks = quote!(
+                if data.1 == std::any::TypeId::of::<#player_type>() {
+                    graphite_command::types::CommandDispatchResult::Success(#id(unsafe { &mut *(std::mem::transmute::<*mut (), *mut Player<#player_type>>(data.0) )}, #parse_function_data_args_deconstruct))
+                }
+            );
+        } else {
+            player_type_checks = quote!(
+                #player_type_checks
+                else if data.1 == std::any::TypeId::of::<#player_type>() {
+                    graphite_command::types::CommandDispatchResult::Success(#id(unsafe { &mut *(std::mem::transmute::<*mut (), *mut Player<#player_type>>(data.0) )}, #parse_function_data_args_deconstruct))
+                }
+            );
+        }
     }
 
     // Create parse function (raw bytes => arguments => command function)
@@ -517,12 +527,9 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             #parse_function_validate_args
 
-            #player_type_match_variants
-            match data.1 {
-                #player_type_match_inner
-                _ => {
-                    panic!("Unknown player type executed command `{}`", stringify!(#id));
-                }
+            #player_type_checks else {
+                // panic!("Unknown player type executed command `{}`", stringify!(#id));
+                graphite_command::types::CommandDispatchResult::UnknownPlayerService
             }
         }
     );

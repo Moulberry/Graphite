@@ -1,5 +1,9 @@
 use std::slice;
 
+use graphite_net::network_buffer::WriteBuffer;
+
+use crate::world::{chunk_section::ChunkSection, block_entity_storage::BlockEntityStorage};
+
 use super::chunk::Chunk;
 
 pub struct ChunkGrid {
@@ -19,13 +23,12 @@ impl ChunkGrid {
         }
     }
 
-    pub fn new_with_default_chunks(size_x: usize, size_y: usize, size_z: usize) -> Self {
+    pub fn new_with_empty_chunks(size_x: usize, size_y: usize, size_z: usize) -> Self {
         let mut chunks = Vec::with_capacity(size_x * size_z);
 
-        for z in 0..size_z {
-            for x in 0..size_x {
-                chunks.push(Chunk::new_with_default_chunks(false, size_y, x, z));
-            }
+        let base_chunk = Chunk::new_empty(size_y);
+        for _ in 0..size_z*size_x {
+            chunks.push(base_chunk.clone());
         }
 
         Self {
@@ -33,6 +36,133 @@ impl ChunkGrid {
             size_y: 24,
             size_z,
             chunks
+        }
+    }
+
+    pub fn new_with_default_chunks(size_x: usize, size_y: usize, size_z: usize) -> Self {
+        let mut chunks = Vec::with_capacity(size_x * size_z);
+
+        let chunk = Chunk::new_default(size_y);
+        for _ in 0..size_z*size_x {
+            chunks.push(chunk.clone());
+        }
+
+        Self {
+            size_x,
+            size_y: 24,
+            size_z,
+            chunks
+        }
+    }
+
+    pub fn expand(&mut self, increase_x: isize, increase_y: isize, increase_z: isize) {
+        let new_size_y = (self.size_y as isize + increase_y).max(1) as usize;
+
+        if increase_y != 0 {
+            for chunk in self.iter_mut() {
+                chunk.expand(increase_y);
+            }
+            self.size_y = new_size_y;
+        }
+
+        let empty = Chunk::new_empty(new_size_y);
+
+        if increase_x != 0 {
+            // X = New value
+            // _ =  Uninitialized
+            // - =  Old Value
+            
+            // 1. (start) ------------
+            // 2. (reverse exact) ------------___
+            // 3. (i = 0) ---------_----X
+            // 4. (i = 1) ----_----X----X
+            // 5. (i = 2) ----X----X----X
+
+            // note: a negative value of increase_x does not reduce the size,
+            // instead it expands the front
+            // eg. X----X----X----
+
+            assert_eq!(self.chunks.len(), self.size_x * self.size_z);
+
+            let abs_increase_x = increase_x.abs() as usize;
+            let new_size_x = self.size_x + abs_increase_x;
+            let new_chunk_count = abs_increase_x * self.size_z;
+            self.chunks.reserve_exact(new_chunk_count);
+
+            let end_offset = if increase_x > 0 { 0 } else { 1 };
+            let inv_end_offset = 1 - end_offset;
+
+            for i in (0..self.size_z).rev() {
+                unsafe {
+                    // Copy existing chunks from (start..start+size_x) to (end..end+size_x)
+                    let start = i * self.size_x;
+                    let end = (i + end_offset) * new_size_x - self.size_x * end_offset;
+                    let src = self.chunks.as_mut_ptr().add(start);
+                    let dst = self.chunks.as_mut_ptr().add(end);
+                    std::ptr::copy(src, dst, self.size_x);
+
+                    // Put new chunks (end..end+abs_increase_x)
+                    let end = (i + inv_end_offset) * new_size_x - abs_increase_x * inv_end_offset;
+                    let mut dst = self.chunks.as_mut_ptr().add(end);
+
+                    for _ in 0..abs_increase_x {
+                        std::ptr::write(dst, empty.clone());
+                        dst = dst.add(1);
+                    }
+                }
+            }
+
+            let old_len = self.chunks.len();
+
+            unsafe {
+                self.chunks.set_len(self.chunks.len() + new_chunk_count);
+            }
+            self.size_x = new_size_x;
+
+            if increase_x < 0 {
+                // Move the chunk references
+                for i in 0..old_len {
+                    let chunk = &mut self.chunks[i + new_chunk_count];
+                    let refs = chunk.pop_all_player_refs();
+                    let entities = chunk.pop_all_entities();
+
+                    let new_chunk = &mut self.chunks[i];
+                    new_chunk.push_all_player_refs(refs);
+                    new_chunk.push_all_entities(entities);
+
+                }
+            }
+            
+        }
+
+        if increase_z != 0 {
+            let abs_increase_z = increase_z.abs() as usize;
+            let new_chunks = abs_increase_z * self.size_x;
+
+            let old_len = self.chunks.len();
+            
+            self.chunks.reserve_exact(new_chunks);
+
+            if increase_z > 0 {
+                for _ in 0..new_chunks {
+                    self.chunks.push(empty.clone());
+                }
+            } else {
+                self.chunks.splice(0..0, std::iter::repeat(empty).take(new_chunks));
+
+                // Move the chunk references
+                for i in 0..old_len {
+                    let chunk = &mut self.chunks[i + new_chunks];
+                    let refs = chunk.pop_all_player_refs();
+                    let entities = chunk.pop_all_entities();
+
+                    let new_chunk = &mut self.chunks[i];
+                    new_chunk.push_all_player_refs(refs);
+                    new_chunk.push_all_entities(entities);
+                }
+            }
+
+            self.size_z = self.size_z + increase_z.abs() as usize;
         }
     }
 

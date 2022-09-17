@@ -639,6 +639,7 @@ dependencies = [
  "criterion",
  "graphite_binary_macros",
  "hematite-nbt",
+ "leb128",
  "quartz_nbt",
  "rand",
  "thiserror",
@@ -773,6 +774,7 @@ dependencies = [
  "graphite_mc_constants",
  "graphite_mc_protocol",
  "graphite_net",
+ "graphite_server_macros",
  "graphite_sticky",
  "graphite_text_component",
  "heapless",
@@ -789,8 +791,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "graphite_server_macros"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "graphite_sticky"
 version = "0.1.0"
+dependencies = [
+ "hashbrown 0.12.3",
+]
 
 [[package]]
 name = "graphite_text_component"
@@ -826,6 +841,9 @@ name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+dependencies = [
+ "ahash",
+]
 
 [[package]]
 name = "heapless"
@@ -929,6 +947,12 @@ name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
+name = "leb128"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 
 [[package]]
 name = "libc"
