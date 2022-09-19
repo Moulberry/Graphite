@@ -35,6 +35,12 @@ pub(crate) enum TickPhaseInner {
 #[repr(transparent)]
 pub struct TickPhase(pub(crate) TickPhaseInner);
 
+impl TickPhase {
+    pub fn is_update(&self) -> bool {
+        self.0 == TickPhaseInner::Update
+    }
+}
+
 pub trait WorldService: WorldTicker<Self>
 where
     Self: Sized + 'static,
@@ -305,10 +311,10 @@ impl<W: WorldService> World<W> {
                         (chunk_x, chunk_z),
                         W::ENTITY_VIEW_DISTANCE,
                         &mut self.chunks,
-                        |chunk| {
+                        |chunk, _, _| {
                             chunk.write_to_players_in_chunk(create_bytes);
                         },
-                        |chunk| {
+                        |chunk, _, _| {
                             chunk.write_to_players_in_chunk(destroy_bytes);
                         },
                         size_x,
@@ -342,8 +348,8 @@ impl<W: WorldService> World<W> {
         }
 
         // Chunk
-        // todo: only send new chunks
-        // holdup: currently using this behaviour for testing, to be able to see the server chunk state
+        // this sends all chunks in view distance, useful for debugging client<->server world inconsistencies
+        /*
         let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
         for x in -view_distance..view_distance + 1 {
             let chunk_x = x as i32 + chunk_x;
@@ -361,6 +367,69 @@ impl<W: WorldService> World<W> {
                 }
             }
         }
+        */
+
+        // Safety: closures just need to perform a single write call,
+        // they don't rely on the previous state of the closure
+        let player_write_buffer_ptr: *mut WriteBuffer = &mut player.packets.write_buffer as *mut _;
+
+        // Send chunks that have changed
+        let size_x = self.chunks.size_x();
+        let size_z = self.chunks.size_z();
+        super::chunk_view_diff::for_each_diff_chunks(
+            (old_chunk_x, old_chunk_z),
+            (chunk_x, chunk_z),
+            W::CHUNK_VIEW_DISTANCE,
+            &mut self.chunks,
+            |chunk, x, z| {
+                let x = x as i32;
+                let z = z as i32;
+
+                let _ = chunk.write(&mut player.packets.write_buffer, x, z);
+
+                if x == size_x as i32 - 1 {
+                    let _ = self.empty_chunk.write(&mut player.packets.write_buffer, x + 1, z);
+                }
+                if x == 0 {
+                    let _ = self.empty_chunk.write(&mut player.packets.write_buffer, -1, z);
+                }
+                if z == size_z as i32 - 1 {
+                    let _ = self.empty_chunk.write(&mut player.packets.write_buffer, x, z + 1);
+                }
+                if z == 0 {
+                    let _ = self.empty_chunk.write(&mut player.packets.write_buffer, x, -1);
+                }
+            },
+            |_, x, z| {
+                let x = x as i32;
+                let z = z as i32;
+
+                // Access the write_buffer from the ptr
+                let write_buffer = unsafe { &mut *player_write_buffer_ptr };
+
+                let unload = ForgetLevelChunk { chunk_x: x, chunk_z: z };
+                graphite_net::packet_helper::try_write_packet(write_buffer, &unload);
+
+                if x == size_x as i32 - 1 {
+                    let unload = ForgetLevelChunk { chunk_x: x + 1, chunk_z: z };
+                    graphite_net::packet_helper::try_write_packet(write_buffer, &unload);
+                }
+                if x == 0 {
+                    let unload = ForgetLevelChunk { chunk_x: -1, chunk_z: z };
+                    graphite_net::packet_helper::try_write_packet(write_buffer, &unload);
+                }
+                if z == size_z as i32 - 1 {
+                    let unload = ForgetLevelChunk { chunk_x: x, chunk_z: z + 1 };
+                    graphite_net::packet_helper::try_write_packet(write_buffer, &unload);
+                }
+                if z == 0 {
+                    let unload = ForgetLevelChunk { chunk_x: x, chunk_z: -1 };
+                    graphite_net::packet_helper::try_write_packet(write_buffer, &unload);
+                }
+            },
+            size_x,
+            size_z,
+        );
 
         // Update view position
         let update_view_position_packet = SetChunkCacheCenter { chunk_x, chunk_z };
@@ -386,20 +455,14 @@ impl<W: WorldService> World<W> {
         player.write_destroy_packet(&mut destroy_buffer);
         let destroy_bytes = destroy_buffer.get_written();
 
-        // Safety: closures just need to perform a single write call,
-        // they don't rely on the previous state of the closure
-        let player_write_buffer_ptr: *mut WriteBuffer = &mut player.packets.write_buffer as *mut _;
-
         // Write create packets for now-visible entities and
         // destroy packets for no-longer-visible entities
-        let size_x = self.chunks.size_x();
-        let size_z = self.chunks.size_z();
         super::chunk_view_diff::for_each_diff_chunks(
             (old_chunk_x, old_chunk_z),
             (chunk_x, chunk_z),
             W::ENTITY_VIEW_DISTANCE,
             &mut self.chunks,
-            |chunk| {
+            |chunk, _, _| {
                 // Get all entities in chunk
                 chunk.entities.iter().for_each(|(_, id)| {
                     // Get viewable component
@@ -415,10 +478,8 @@ impl<W: WorldService> World<W> {
                 // Create players
                 chunk.write_create_for_players_in_chunk(&mut player.packets.write_buffer);
                 chunk.write_to_players_in_chunk(create_bytes);
-
-                // todo: send chunk packet here
             },
-            |chunk| {
+            |chunk, _, _| {
                 // Access the write_buffer from the ptr
                 let write_buffer = unsafe { &mut *player_write_buffer_ptr };
 
@@ -437,8 +498,6 @@ impl<W: WorldService> World<W> {
                 // Destroy players
                 chunk.write_destroy_for_players_in_chunk(write_buffer);
                 chunk.write_to_players_in_chunk(destroy_bytes);
-
-                // todo: send chunk packet here
             },
             size_x,
             size_z,
@@ -489,16 +548,22 @@ impl<W: WorldService> World<W> {
 
         // Chunk Data
         let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
-        for x in -view_distance..view_distance + 1 {
-            let chunk_x = x + chunk_view_position.x as i32;
-            for z in -view_distance..view_distance + 1 {
-                let chunk_z = z + chunk_view_position.z as i32;
+        for x in (chunk_x-view_distance).max(0)..(chunk_x+view_distance+1).min(self.chunks.size_x() as _) {
+            for z in (chunk_z-view_distance).max(0)..(chunk_z+view_distance+1).min(self.chunks.size_z() as _) {
+                let chunk = self.chunks.get_mut_i32(x, z).expect("chunk coords in bounds");
+                chunk.write(&mut proto_player.write_buffer, x, z).unwrap();
 
-                if let Some(chunk) = self.chunks.get_mut_i32(chunk_x, chunk_z) {
-                    chunk.write(&mut proto_player.write_buffer, chunk_x, chunk_z).unwrap();
-                } else {
-                    self.empty_chunk
-                        .write(&mut proto_player.write_buffer, chunk_x, chunk_z).unwrap();
+                if x == self.chunks.size_x() as i32 - 1 {
+                    let _ = self.empty_chunk.write(&mut proto_player.write_buffer, x + 1, z);
+                }
+                if x == 0 {
+                    let _ = self.empty_chunk.write(&mut proto_player.write_buffer, -1, z);
+                }
+                if z == self.chunks.size_z() as i32 - 1 {
+                    let _ = self.empty_chunk.write(&mut proto_player.write_buffer, x, z + 1);
+                }
+                if z == 0 {
+                    let _ = self.empty_chunk.write(&mut proto_player.write_buffer, x, -1);
                 }
             }
         }

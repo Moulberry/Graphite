@@ -160,18 +160,22 @@ impl ChunkGrid {
         }
     }
 
+    #[inline]
     pub fn size_x(&self) -> usize {
         self.size_x
     }
 
+    #[inline]
     pub fn size_y(&self) -> usize {
         self.size_y
     }
 
+    #[inline]
     pub fn size_z(&self) -> usize {
         self.size_z
     }
 
+    #[inline]
     pub fn dimensions(&self) -> (usize, usize, usize) {
         (self.size_x, self.size_y, self.size_z)
     }

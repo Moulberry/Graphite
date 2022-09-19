@@ -98,6 +98,8 @@ impl<U: UniverseService> ProtoPlayer<U> {
         // todo: if dim changed, send dimension changed
         // todo: else, don't send
 
+        // todo: send new render distance
+
         let view_position = world.initialize_view_position(&mut self, position);
 
         // Write the necessary packets to the TCP stream
