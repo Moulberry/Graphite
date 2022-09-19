@@ -14,7 +14,7 @@ pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
 
     let mut nodes = Vec::new();
     let name = read_string(bytes)?;
-    let children = read_compound(bytes, &mut nodes)?;
+    let children = read_compound(bytes, &mut nodes, 0)?;
 
     Ok(NBT {
         root_name: name.into_owned(),
@@ -23,7 +23,7 @@ pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     })
 }
 
-fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8) -> anyhow::Result<usize> {
+fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8, depth: usize) -> anyhow::Result<usize> {
     debug_assert!(
         type_id != TAG_END_ID.0,
         "read_node must not be called with TAG_END"
@@ -39,10 +39,20 @@ fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8) -> anyhow
         TAG_BYTE_ARRAY_ID => NBTNode::ByteArray(read_byte_array(bytes)?),
         TAG_STRING_ID => NBTNode::String(read_string(bytes)?.into_owned()),
         TAG_LIST_ID => {
-            let (type_id, children) = read_list(bytes, nodes)?;
+            if depth > 512 {
+                bail!("tried to read NBT tag with too high complexity, depth > 512")
+            }
+
+            let (type_id, children) = read_list(bytes, nodes, depth + 1)?;
             NBTNode::List { type_id: TagType(type_id), children }
         }
-        TAG_COMPOUND_ID => NBTNode::Compound(read_compound(bytes, nodes)?),
+        TAG_COMPOUND_ID => {
+            if depth > 512 {
+                bail!("tried to read NBT tag with too high complexity, depth > 512")
+            }
+
+            NBTNode::Compound(read_compound(bytes, nodes, depth + 1)?)
+        },
         TAG_INT_ARRAY_ID => NBTNode::IntArray(read_int_array(bytes)?),
         TAG_LONG_ARRAY_ID => NBTNode::LongArray(read_long_array(bytes)?),
         _ => bail!("unknown type id: {}", type_id),
@@ -51,7 +61,7 @@ fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8) -> anyhow
     Ok(nodes.len() - 1)
 }
 
-fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>) -> anyhow::Result<NBTCompound> {
+fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize) -> anyhow::Result<NBTCompound> {
     let mut children = NBTCompound(Vec::new());
 
     loop {
@@ -60,7 +70,7 @@ fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>) -> anyhow::Result<
             break Ok(children);
         } else {
             let name = read_string(bytes)?;
-            let node = read_node(bytes, nodes, type_id)?;
+            let node = read_node(bytes, nodes, type_id, depth)?;
 
             match children.binary_search(name.as_ref()) {
                 Ok(_) => bail!("read_compound: duplicate key"),
@@ -99,7 +109,7 @@ fn read_string<'a>(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, str>> {
     Ok(cesu8::from_java_cesu8(str_bytes)?)
 }
 
-fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>) -> anyhow::Result<(u8, Vec<usize>)> {
+fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize) -> anyhow::Result<(u8, Vec<usize>)> {
     let type_id: u8 = Single::read(bytes)?;
 
     let length: i32 = BigEndian::read(bytes)?;
@@ -112,7 +122,7 @@ fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>) -> anyhow::Result<(u8,
         let mut children = Vec::with_capacity(length as _);
 
         for _ in 0..length {
-            children.push(read_node(bytes, nodes, type_id)?);
+            children.push(read_node(bytes, nodes, type_id, depth)?);
         }
 
         Ok((type_id, children))
