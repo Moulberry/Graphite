@@ -12,6 +12,8 @@ use graphite_concierge::ConciergeService;
 use graphite_net::network_handler::UninitializedConnection;
 use graphite_mc_protocol::types::GameProfile;
 use graphite_mc_protocol::types::Pose;
+use graphite_server::UniverseTicker;
+use graphite_server::WorldTicker;
 use rand::Rng;
 use graphite_server::entity::components::BasicEntity;
 use graphite_server::entity::components::PlayerNPC;
@@ -90,7 +92,7 @@ fn main() {
                 entity_type: entity_type as _,
             };
 
-            /*let entity = (Spinalla {
+            let entity = (Spinalla {
                 direction: (
                     rand::thread_rng().gen_range(-1.0..1.0),
                     rand::thread_rng().gen_range(-1.0..1.0),
@@ -99,7 +101,7 @@ fn main() {
                     yaw: 0.0,
                     pitch: 0.0,
                 },
-            },);*/
+            },);
 
             player.get_world_mut().push_entity(
                 (),
@@ -231,6 +233,7 @@ fn main() {
 
 // universe
 
+#[derive(UniverseTicker)]
 struct MyUniverseService {
     the_world: World<MyWorldService>,
 }
@@ -241,28 +244,18 @@ impl UniverseService for MyUniverseService {
     fn handle_player_join(universe: &mut Universe<Self>, proto_player: ProtoPlayer<Self>) {
         universe.service.the_world.handle_player_join(proto_player);
     }
-
-    fn initialize(universe: &Universe<Self>) {
-        universe.service.the_world.initialize(universe);
-    }
-
-    fn tick(universe: &mut Universe<Self>) {
-        universe.service.the_world.tick();
-    }
-
-    fn get_player_count(universe: &Universe<Self>) -> usize {
-        MyWorldService::get_player_count(&universe.service.the_world)
-    }
 }
 
 // world
 
+#[derive(WorldTicker)]
 struct MyWorldService {
     players: PlayerVec<MyPlayerService>,
 }
 
 impl WorldService for MyWorldService {
     type UniverseServiceType = MyUniverseService;
+    type ParentWorldServiceType = Self;
     const CHUNK_VIEW_DISTANCE: u8 = 8;
     const ENTITY_VIEW_DISTANCE: u8 = 1;
 
@@ -292,18 +285,6 @@ impl WorldService for MyWorldService {
                 },
             )
             .unwrap();
-    }
-
-    fn initialize(world: &World<Self>) {
-        world.service.players.initialize(world);
-    }
-
-    fn tick(world: &mut World<Self>, tick_phase: TickPhase) {
-        world.service.players.tick(tick_phase);
-    }
-
-    fn get_player_count(world: &World<Self>) -> usize {
-        world.service.players.len()
     }
 }
 

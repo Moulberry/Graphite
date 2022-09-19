@@ -5,7 +5,7 @@ use graphite_server::{
     inventory::inventory_handler::VanillaPlayerInventory,
     player::{player_vec::PlayerVec, PlayerService},
     universe::{Universe, UniverseService},
-    world::{TickPhase, World, WorldService}, UniverseTicker,
+    world::{TickPhase, World, WorldService}, UniverseTicker, ticker::*, WorldTicker,
 };
 use std::pin::Pin;
 
@@ -41,8 +41,9 @@ pub fn create_universe() -> Pin<Box<Universe<DummyUniverseService>>> {
         }, 5, 24, 5),
     };
 
-    let pinned = Box::pin(Universe::create_dummy(service));
-    DummyUniverseService::initialize(&pinned);
+    let mut pinned = Box::pin(Universe::create_dummy(service));
+    let ptr = &mut *pinned.as_mut() as *mut _;
+    pinned.service.update_children_ptr(ptr);
     pinned
 }
 
@@ -62,11 +63,14 @@ impl UniverseService for DummyUniverseService {
     }
 }
 
+#[derive(WorldTicker)]
 pub struct DummyWorldService {
     pub players: PlayerVec<DummyPlayerService>,
 }
+
 impl WorldService for DummyWorldService {
     type UniverseServiceType = DummyUniverseService;
+    type ParentWorldServiceType = Self;
 
     const CHUNK_VIEW_DISTANCE: u8 = 8;
     const ENTITY_VIEW_DISTANCE: u8 = 1;

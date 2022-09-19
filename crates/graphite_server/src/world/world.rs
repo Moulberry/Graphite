@@ -760,6 +760,10 @@ impl<W: WorldService> World<W> {
         }
         self.get_block(x as _, y as _, z as _)
     }
+
+    pub fn initialize(&mut self) {
+        self.update_pointer();
+    }
 }
 
 impl<W: WorldService + ?Sized> Unsticky for World<W> {

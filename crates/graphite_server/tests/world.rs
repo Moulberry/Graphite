@@ -5,7 +5,7 @@ use graphite_server::{
         components::{BasicEntity, Viewable},
         position::Coordinate,
     },
-    universe::{EntityId, Universe, UniverseService},
+    universe::{EntityId, Universe, UniverseService}, ticker::UniverseTicker,
 };
 
 mod common;
@@ -94,7 +94,7 @@ fn spawn_entity_close() {
     let entity_id = spawn_entity_at(&mut universe, entity_position);
 
     // (1) Player receives AddEntity on the 1st tick
-    DummyUniverseService::tick(&mut universe);
+    universe.service.tick();
     conn.assert_outgoing_as::<AddEntity, _>(|packet| {
         assert_eq!(packet.id, entity_id.as_i32());
         assert_eq!(packet.entity_type, 6);
@@ -113,7 +113,7 @@ fn spawn_entity_close() {
     move_entity_to(&mut universe, entity_id, entity_position);
 
     // (2) Player receives RemoveEntity on the 2nd tick
-    DummyUniverseService::tick(&mut universe);
+    universe.service.tick();
     conn.assert_outgoing(&RemoveEntities {
         entities: vec![entity_id.as_i32()],
     });
@@ -142,7 +142,7 @@ fn spawn_entity_far() {
     let entity_id = spawn_entity_at(&mut universe, entity_position);
 
     // (1) Player *DOES NOT* receive AddEntity on the 1st tick
-    DummyUniverseService::tick(&mut universe);
+    universe.service.tick();
     conn.assert_none_outgoing();
 
     // (b) Move the entity within viewing distance
@@ -154,7 +154,7 @@ fn spawn_entity_far() {
     move_entity_to(&mut universe, entity_id, entity_position);
 
     // (2) Player *DOES* receive AddEntity on the 2nd tick
-    DummyUniverseService::tick(&mut universe);
+    universe.service.tick();
     conn.assert_outgoing_as::<AddEntity, _>(|packet| {
         assert_eq!(packet.id, entity_id.as_i32());
         assert_eq!(packet.entity_type, 6);
@@ -215,7 +215,7 @@ fn spawn_entity_before() {
         z: 31.0,
     };
     move_entity_to(&mut universe, entity_id, entity_position);
-    DummyUniverseService::tick(&mut universe); // Tick to update entity position
+    universe.service.tick(); // Tick to update entity position
 
     // (e) Connect a player at far away location
     let mut conn = common::create_player(&mut universe);

@@ -54,8 +54,7 @@ impl FakePlayerConnection {
     }
 
     pub fn skip_all_outgoing(&mut self) {
-        println!("self has ptr: {:?}", self as *mut _);
-        self.outgoing_bytes.reset();
+        self.outgoing_bytes.clear();
     }
 
     pub fn skip_outgoing(&mut self, packet_id: u8) {
@@ -66,7 +65,7 @@ impl FakePlayerConnection {
             packet_helper::try_read_packet(&mut bytes).expect("invalid packet was sent to player");
 
         // Remove the packet from the buffer
-        self.outgoing_bytes.reset();
+        self.outgoing_bytes.clear();
         self.outgoing_bytes.copy_from(&bytes);
 
         match packet_bytes {
@@ -94,7 +93,7 @@ impl FakePlayerConnection {
             packet_helper::try_read_packet(&mut bytes).expect("invalid packet was sent to player");
 
         // Remove the packet from the buffer
-        self.outgoing_bytes.reset();
+        self.outgoing_bytes.clear();
         self.outgoing_bytes.copy_from(&bytes);
 
         match packet_bytes {
@@ -118,7 +117,7 @@ impl FakePlayerConnection {
             packet_helper::try_read_packet(&mut bytes).expect("invalid packet was sent to player");
 
         // Remove the packet from the buffer
-        self.outgoing_bytes.reset();
+        self.outgoing_bytes.clear();
         self.outgoing_bytes.copy_from(&bytes);
 
         match packet_bytes {
@@ -175,9 +174,9 @@ impl AbstractConnectionReference<DummyUniverseService> for *mut FakePlayerConnec
         conn.incoming_bytes.get_written()
     }
 
-    fn write_bytes(&mut self, bytes: &[u8]) {
+    fn write_bytes(&mut self, bytes: Vec<u8>) {
         let conn = unsafe { &mut **self };
-        conn.outgoing_bytes.copy_from(bytes)
+        conn.outgoing_bytes.copy_from(&bytes)
     }
 
     fn new_from_connection(_: &mut ConnectionSlab<Universe<DummyUniverseService>>, _: u16) -> Self {

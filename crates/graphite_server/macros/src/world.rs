@@ -72,7 +72,7 @@ fn parse_field(ty: syn::Type, field_ident: syn::Ident, method_update_universe_pt
                 *method_update_children_ptr = quote! {
                     #method_update_children_ptr
                     self.#field_ident.update_parent_world_ptr(world);
-                    self.#field_ident.update_pointer();
+                    self.#field_ident.initialize();
                 };
             // todo: add WorldVec
             } else if last == "WorldMap" {

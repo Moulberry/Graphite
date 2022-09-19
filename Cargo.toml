@@ -8,10 +8,6 @@ homepage = "https://github.com/Moulberry/Graphite"
 repository = "https://github.com/Moulberry/Graphite"
 readme = "README.md"
 
-exclude = [
-    "example_server/*",
-]
-
 [dependencies]
 graphite_server = { path = "crates/graphite_server", version = "0.1.0" }
 graphite_concierge = { path = "crates/graphite_concierge", version = "0.1.0" }
