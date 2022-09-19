@@ -642,6 +642,7 @@ dependencies = [
  "leb128",
  "quartz_nbt",
  "rand",
+ "serde_nbt",
  "thiserror",
 ]
 
@@ -1665,6 +1666,19 @@ dependencies = [
  "itoa 1.0.2",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_nbt"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "463ae434dcc5759ef460fb6f4784c6bff284282ea4d1b311735714798641e069"
+dependencies = [
+ "byteorder",
+ "cesu8",
+ "indexmap",
+ "serde",
+ "smallvec",
 ]
 
 [[package]]

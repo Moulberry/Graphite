@@ -1,4 +1,4 @@
-use std::result;
+use std::{result, collections::HashMap};
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -9,10 +9,25 @@ use syn::{
     parse_macro_input,
     punctuated::Punctuated,
     spanned::Spanned,
-    token, LitStr, ReturnType, Token,
+    token, LitStr, ReturnType, Token, Generics, WhereClause,
 };
 
 // Parse types for #[brigadier]
+
+struct BrigadierPlayersInput {
+    pub arguments: Punctuated<syn::Type, Token![,]>
+}
+
+impl Parse for BrigadierPlayersInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let content;
+        parenthesized!(content in input);
+
+        Ok(Self {
+            arguments: Punctuated::parse_terminated(&content)?
+        })
+    }
+}
 
 #[derive(Debug)]
 struct SimpleArg {
@@ -30,10 +45,21 @@ impl Parse for SimpleArg {
     }
 }
 
+impl ToTokens for SimpleArg {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let ident = &self.ident;
+        let ty = &self.ty;
+
+        tokens.extend(quote!(#ident: #ty));
+    }
+}
+
 struct CommandSignature {
     pub ident: syn::Ident,
+    pub generics: Generics,
     pub arguments: Punctuated<SimpleArg, Token![,]>,
     pub output: ReturnType,
+    pub where_clause: Option<WhereClause>
 }
 
 impl Parse for CommandSignature {
@@ -41,27 +67,54 @@ impl Parse for CommandSignature {
         let _fn_token: Token![fn] = input.parse()?;
         let ident = input.parse()?;
 
+        let generics = input.parse()?;
+
         let content;
         parenthesized!(content in input);
 
         Ok(Self {
             ident,
+            generics,
             arguments: Punctuated::parse_terminated(&content)?,
             output: input.parse()?,
+            where_clause: input.parse()?
         })
     }
 }
 
+impl ToTokens for CommandSignature {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let ident = &self.ident;
+        let generics = &self.generics;
+        let arguments = &self.arguments;
+        let output = &self.output;
+        let where_clause = &self.where_clause;
+
+        tokens.extend(quote!(fn #ident #generics (#arguments) #output #where_clause));
+    }
+}
+
 struct CommandFn {
+    pub attrs: Vec<syn::Attribute>,
     pub sig: CommandSignature,
-    pub _block: syn::Block,
+    pub block: syn::Block,
+}
+
+impl ToTokens for CommandFn {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let attrs = &self.attrs;
+        let sig = &self.sig;
+        let block = &self.block;
+        tokens.extend(quote!(#(#attrs)* #sig #block));
+    }
 }
 
 impl Parse for CommandFn {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
+            attrs: input.call(syn::Attribute::parse_outer)?,
             sig: input.parse()?,
-            _block: input.parse()?,
+            block: input.parse()?,
         })
     }
 }
@@ -212,12 +265,85 @@ fn check_player_type_and_get_generic(type_path: &syn::TypePath) -> Option<syn::T
 #[proc_macro_attribute]
 pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
     let cloned_item = item.clone();
-    let input = parse_macro_input!(cloned_item as CommandFn);
+    let mut input = parse_macro_input!(cloned_item as CommandFn);
     let attributes = parse_macro_input!(attr as BrigadierAttributes);
 
-    let id = input.sig.ident;
+    let id = input.sig.ident.clone();
 
     let mut generic_player_types = vec![];
+    let mut resolved_bounds = HashMap::new();
+
+    for generic in &input.sig.generics.params {
+        match generic {
+            syn::GenericParam::Type(ty) => {
+                resolved_bounds.insert(ty.ident.clone(), ty.bounds.clone());
+            },
+            _ => ()
+        }
+    }
+
+    if let Some(where_clause) = &input.sig.generics.where_clause {
+        add_from_where_clause(where_clause.clone(), &mut resolved_bounds);
+    }
+
+    if let Some(where_clause) = &input.sig.where_clause {
+        add_from_where_clause(where_clause.clone(), &mut resolved_bounds);
+    }
+
+    let mut attribute_parse_error = None;
+    let mut brigadier_players = Vec::new();
+    input.attrs.retain(|attr| {
+        if attr.path.segments[0].ident == "brigadier_players" {
+            let tokens: proc_macro::TokenStream = attr.tokens.clone().into();
+
+            match syn::parse_macro_input::parse::<BrigadierPlayersInput>(tokens) {
+                Ok(input) => {
+                    brigadier_players = input.arguments.iter().cloned().collect();
+                },
+                Err(err) => attribute_parse_error = Some(err),
+            }
+            false
+        } else {
+            true
+        }
+    });
+
+    if let Some(err) = attribute_parse_error {
+        return err.to_compile_error().into();
+    }
+
+    let mut generic_bounds_verification = quote!();
+
+    'resolved: for (ident, bounds) in &resolved_bounds {
+        for bound in bounds {
+            match bound {
+                syn::TypeParamBound::Trait(t) => {
+                    let segments = &t.path.segments;
+                    let last = &segments[segments.len() - 1];
+                    if last.ident == "PlayerService" {
+                        
+                        generic_bounds_verification = quote!(
+                            #generic_bounds_verification
+                            fn check<T: #bounds>(){}
+                        );
+
+                        for player in &brigadier_players {
+                            let spanned = quote::quote_spanned!(player.span() => check::<#player>(););
+
+                            generic_bounds_verification = quote!(
+                                #generic_bounds_verification
+                                #spanned
+                            )
+                        }
+
+                        continue 'resolved;
+                    }
+                },
+                _ => ()
+            }
+        }
+        throw_error!(ident.span(), id => "missing `PlayerService` trait bound, arbitrary generics are not supported here");
+    }
 
     // Validate first argument
     let has_correct_first_argument = if input.sig.arguments.is_empty() {
@@ -229,7 +355,14 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
             syn::Type::Reference(ref_ty) => match &*ref_ty.elem {
                 syn::Type::Path(type_path) => {
                     if let Some(generic_type) = check_player_type_and_get_generic(type_path) {
-                        generic_player_types.push(generic_type);
+                        if !brigadier_players.is_empty() {
+                            for player in brigadier_players {
+                                generic_player_types.push(player);
+                            }
+                        } else {
+                            generic_player_types.push(generic_type);
+                        }
+
                         true
                     } else {
                         false
@@ -514,6 +647,9 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
             );
         }
     }
+    // player_type_checks = quote!(
+    //     if false {graphite_command::types::CommandDispatchResult::UnknownPlayerService}
+    // );
 
     // Create parse function (raw bytes => arguments => command function)
     let parse_function = quote!(
@@ -534,11 +670,38 @@ pub fn brigadier(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     );
 
-    let mut tokens = TokenStream::new();
-    tokens.extend::<TokenStream>(item);
-    tokens.extend::<TokenStream>(parse_function.into());
-    tokens.extend::<TokenStream>(dispatch_node.into());
-    tokens
+    let mut tokens = proc_macro2::TokenStream::new();
+    if !generic_bounds_verification.is_empty() {
+        tokens.extend(quote!(
+            {
+                #generic_bounds_verification
+            }
+        ))
+    }
+    input.to_tokens(&mut tokens);
+    tokens.extend(parse_function);
+    tokens.extend(dispatch_node);
+    tokens.into()
+}
+
+fn add_from_where_clause(where_clause: WhereClause, resolved_bounds: &mut HashMap<proc_macro2::Ident, Punctuated<syn::TypeParamBound, token::Add>>) {
+    for where_predicate in where_clause.predicates {
+        match where_predicate {
+            syn::WherePredicate::Type(ty) => {
+                match ty.bounded_ty {
+                    syn::Type::Path(path) => {
+                        if path.path.segments.len() == 1 {
+                            let segment = &path.path.segments[0];
+                            let ident = segment.ident.clone();
+                            resolved_bounds.insert(ident, ty.bounds);
+                        }
+                    }
+                    _ => (),
+                }
+            },
+            _ => (),
+        }
+    }
 }
 
 fn process_num_arg(

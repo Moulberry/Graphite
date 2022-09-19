@@ -73,7 +73,7 @@ pub fn temp_test(c: &mut Criterion) {
 criterion_group!(
     name = nbt;
     config = Criterion::default().sample_size(500).measurement_time(Duration::from_secs(5));
-    targets = temp_test/*nbt::nbt_parse_bigtest, nbt::nbt_write_bigtest, nbt::nbt_find_bigtest,
-                nbt::nbt_to_snbt_bigtest, nbt::nbt_from_snbt_bigtest*/
+    targets = nbt::nbt_parse_bigtest, nbt::nbt_write_bigtest, nbt::nbt_find_bigtest,
+                nbt::nbt_to_snbt_bigtest, nbt::nbt_from_snbt_bigtest
 );
 criterion_main!(nbt);

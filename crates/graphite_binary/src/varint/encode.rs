@@ -29,5 +29,9 @@ pub fn i32_raw(num: i32) -> ([u8; 8], usize) {
 }
 
 pub fn needed_bytes(num: i32) -> usize {
-    (32 - num.leading_zeros() as usize) / 8 + 1
+    if num == 0 {
+        1
+    } else {
+        (31 - num.leading_zeros() as usize) / 7 + 1
+    }
 }

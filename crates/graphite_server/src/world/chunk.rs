@@ -5,7 +5,6 @@ use graphite_binary::{
     nbt::{CachedNBT},
     slice_serialization::{slice_serializable, BigEndian, GreedyBlob},
 };
-use bytes::BufMut;
 
 use graphite_net::{network_buffer::WriteBuffer, packet_helper};
 use graphite_mc_protocol::{
@@ -118,7 +117,7 @@ impl Chunk {
         }
     }
 
-    pub(crate) fn destroy_player<T: PlayerService>(&mut self, player: &mut Player<T>) {
+    pub(crate) fn destroy_player<T: PlayerService>(&mut self, player: &Player<T>) {
         let ref_index = player.chunk_ref;
 
         let removed = self
@@ -317,6 +316,26 @@ impl Chunk {
             &mut self.cached_light_data,
             &chunk_light_data,
         );
+    }
+
+    pub fn write_into_self(&mut self, chunk_x: i32, chunk_z: i32) -> anyhow::Result<()> {
+        if !self.valid_cache {
+            self.compute_cache();
+        }
+
+        let composite = DirectLevelChunkWithLight {
+            chunk_x,
+            chunk_z,
+            chunk_block_data: self.cached_block_data.get_written(),
+            chunk_light_data: self.cached_light_data.get_written(),
+        };
+
+        let packet_id = server::PacketId::LevelChunkWithLight as u8;
+        graphite_net::packet_helper::write_custom_packet(
+            &mut self.block_viewable_buffer,
+            packet_id, 
+            &composite
+        )
     }
 
     pub fn write(

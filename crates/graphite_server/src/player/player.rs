@@ -192,10 +192,10 @@ impl<P: PlayerService> Player<P> {
             // Entity viewable buffers
             let view_distance = P::WorldServiceType::ENTITY_VIEW_DISTANCE as i32;
             for x in (chunk_x - view_distance).max(0)
-                ..(chunk_x + view_distance + 1).min(chunks.get_size_x() as _)
+                ..(chunk_x + view_distance + 1).min(chunks.size_x() as _)
             {
                 for z in (chunk_z - view_distance).max(0)
-                    ..(chunk_z + view_distance + 1).min(chunks.get_size_z() as _)
+                    ..(chunk_z + view_distance + 1).min(chunks.size_z() as _)
                 {
                     let chunk = chunks.get(x as usize, z as usize).expect("chunk coords in bounds");
 
@@ -216,10 +216,10 @@ impl<P: PlayerService> Player<P> {
             // Block viewable buffers
             let view_distance = P::WorldServiceType::CHUNK_VIEW_DISTANCE as i32;
             for x in (chunk_x - view_distance).max(0)
-                ..(chunk_x + view_distance + 1).min(chunks.get_size_x() as _)
+                ..(chunk_x + view_distance + 1).min(chunks.size_x() as _)
             {
                 for z in (chunk_z - view_distance).max(0)
-                    ..(chunk_z + view_distance + 1).min(chunks.get_size_z() as _)
+                    ..(chunk_z + view_distance + 1).min(chunks.size_z() as _)
                 {
                     let chunk = self.get_world().chunks.get(x as usize, z as usize).expect("chunk coords in bounds");
                     self.packets
@@ -970,10 +970,7 @@ impl<P: PlayerService> Player<P> {
 impl<P: PlayerService> Drop for Player<P> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            let chunks = &mut self.get_world_mut().chunks;
-            if let Some(old_chunk) = chunks.get_mut(self.new_chunk_view_position.x, self.new_chunk_view_position.z) {
-                old_chunk.destroy_player(self);
-            }
+            self.get_world_mut().remove_player(self, self.new_chunk_view_position);
 
             if !self.moved_into_proto {
                 unsafe {

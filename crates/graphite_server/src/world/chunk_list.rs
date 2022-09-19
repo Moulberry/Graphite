@@ -1,9 +1,4 @@
 use std::slice;
-
-use graphite_net::network_buffer::WriteBuffer;
-
-use crate::world::{chunk_section::ChunkSection, block_entity_storage::BlockEntityStorage};
-
 use super::chunk::Chunk;
 
 pub struct ChunkGrid {
@@ -72,15 +67,15 @@ impl ChunkGrid {
             // _ =  Uninitialized
             // - =  Old Value
             
-            // 1. (start) ------------
-            // 2. (reverse exact) ------------___
-            // 3. (i = 0) ---------_----X
-            // 4. (i = 1) ----_----X----X
-            // 5. (i = 2) ----X----X----X
+            // 1. (start)   ----,----,----
+            // 2. (reserve) ----,----,----___
+            // 3. (i = 0)   ----,----,__----X
+            // 4. (i = 1)   ----,_----X,----X
+            // 5. (i = 2)   ----X,----X,----X
 
             // note: a negative value of increase_x does not reduce the size,
             // instead it expands the front
-            // eg. X----X----X----
+            // eg. X----,X----,X----
 
             assert_eq!(self.chunks.len(), self.size_x * self.size_z);
 
@@ -122,14 +117,13 @@ impl ChunkGrid {
             if increase_x < 0 {
                 // Move the chunk references
                 for i in 0..old_len {
-                    let chunk = &mut self.chunks[i + new_chunk_count];
+                    let chunk = &mut self.chunks[i + abs_increase_x];
                     let refs = chunk.pop_all_player_refs();
                     let entities = chunk.pop_all_entities();
 
                     let new_chunk = &mut self.chunks[i];
                     new_chunk.push_all_player_refs(refs);
                     new_chunk.push_all_entities(entities);
-
                 }
             }
             
@@ -166,15 +160,15 @@ impl ChunkGrid {
         }
     }
 
-    pub fn get_size_x(&self) -> usize {
+    pub fn size_x(&self) -> usize {
         self.size_x
     }
 
-    pub fn get_size_y(&self) -> usize {
+    pub fn size_y(&self) -> usize {
         self.size_y
     }
 
-    pub fn get_size_z(&self) -> usize {
+    pub fn size_z(&self) -> usize {
         self.size_z
     }
 

@@ -40,7 +40,7 @@ identify_packets! {
     // Disconnect = 0x19,
     // EntityEvent = 0x1a,
     // Explode = 0x1b,
-    // ForgetLevelChunk = 0x1c,
+    ForgetLevelChunk = 0x1c,
     GameEvent = 0x1d,
     // HorseScreenOpen = 0x1e,
     InitializeBorder = 0x1f,
@@ -232,6 +232,15 @@ slice_serializable! {
     pub struct CustomPayload<'a> {
         pub channel: &'a str as SizedString,
         pub data: &'a [u8] as GreedyBlob
+    }
+}
+
+// Forget Level Chunk
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ForgetLevelChunk {
+        pub chunk_x: i32 as BigEndian,
+        pub chunk_z: i32 as BigEndian
     }
 }
 

@@ -1,12 +1,10 @@
-use std::{borrow::Cow, collections::HashMap, marker::PhantomPinned};
+use std::collections::HashMap;
 
-use anyhow::bail;
 use bevy_ecs::{prelude::*, world::EntityMut};
-use graphite_binary::nbt::NBTNode;
-use graphite_mc_constants::{block::BlockAttributes, tags::block::BlockTags, item::Item};
+use graphite_mc_constants::{block::BlockAttributes, item::Item};
 use graphite_net::network_buffer::WriteBuffer;
 use graphite_mc_protocol::{
-    play::server::{Login, PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity, Tag, TagRegistry, UpdateTags, InitializeBorder},
+    play::server::{PlayerPosition, RotateHead, SetChunkCacheCenter, TeleportEntity, InitializeBorder, ForgetLevelChunk},
     types::{BlockPosition, Direction},
 };
 use graphite_sticky::Unsticky;
@@ -84,7 +82,6 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn new(service: W, chunks: ChunkGrid) -> Self {
-        let size_y = chunks.get_size_y();
         Self {
             universe: std::ptr::null_mut(),
             parent_world: std::ptr::null_mut(),
@@ -94,8 +91,8 @@ impl<W: WorldService> World<W> {
             entity_map: Default::default(),
             global_write_buffer: Default::default(),
 
+            empty_chunk: Chunk::new_empty(chunks.size_y()),
             chunks,
-            empty_chunk: Chunk::new_empty(size_y),
         }
     }
 
@@ -125,21 +122,29 @@ impl<W: WorldService> World<W> {
     }
 
     pub fn expand(&mut self, increase_x: isize, increase_y: isize, increase_z: isize) {
+        self.empty_chunk.expand(increase_y);
         self.chunks.expand(increase_x, increase_y, increase_z);
 
-        // World Border
-        let border_diameter = (self.chunks.get_size_x().max(self.chunks.get_size_z()) * 16) as f64;
-        let border_packet = InitializeBorder {
-            x: (self.chunks.get_size_x() * 8) as f64,
-            z: (self.chunks.get_size_z() * 8) as f64,
-            old_diameter: border_diameter,
-            new_diameter: border_diameter,
-            speed: 0,
-            portal_teleport_boundary: 29999984,
-            warning_blocks: 0,
-            warning_time: 0
-        };
-        graphite_net::packet_helper::try_write_packet(&mut self.global_write_buffer, &border_packet);
+        if increase_x < 0 || increase_y < 0 || increase_z < 0 {
+            for (x, z, chunk) in self.chunks.enumerate_mut() {
+                chunk.write_into_self(x as _, z as _).unwrap();
+            }
+        }
+
+        // Remove World Border
+        if W::SHOW_DEFAULT_WORLD_BORDER {
+            let border_packet = InitializeBorder {
+                x: 0.0,
+                z: 0.0,
+                old_diameter: 29999984.0,
+                new_diameter: 29999984.0,
+                speed: 0,
+                portal_teleport_boundary: 29999984,
+                warning_blocks: 0,
+                warning_time: 0
+            };
+            graphite_net::packet_helper::try_write_packet(&mut self.global_write_buffer, &border_packet);
+        }
     }
 
     pub fn push_entity<T: Bundle>(
@@ -153,8 +158,8 @@ impl<W: WorldService> World<W> {
         let destroy_buf = spawn_def.get_despawn_buffer();
 
         // Compute chunk coordinates, clamped to valid coordinates
-        let chunk_x = Chunk::to_chunk_coordinate(position.x).max(0).min(self.chunks.get_size_x() as i32 - 1);
-        let chunk_z = Chunk::to_chunk_coordinate(position.z).max(0).min(self.chunks.get_size_z() as i32 - 1);
+        let chunk_x = Chunk::to_chunk_coordinate(position.x).max(0).min(self.chunks.size_x() as i32 - 1);
+        let chunk_z = Chunk::to_chunk_coordinate(position.z).max(0).min(self.chunks.size_z() as i32 - 1);
 
         // Get the chunk
         let chunk = self.chunks.get_mut(chunk_x as usize, chunk_z as usize).unwrap();
@@ -251,8 +256,8 @@ impl<W: WorldService> World<W> {
     }
 
     fn update_viewable_entities(&mut self) {
-        let size_x = self.chunks.get_size_x();
-        let size_z = self.chunks.get_size_z();
+        let size_x = self.chunks.size_x();
+        let size_z = self.chunks.size_z();
 
         let mut temp_write_buffer = WriteBuffer::with_min_capacity(64);
 
@@ -346,7 +351,6 @@ impl<W: WorldService> World<W> {
                 let chunk_z = z + chunk_z;
 
                 if let Some(chunk) = self.chunks.get_mut_i32(chunk_x, chunk_z) {
-                    println!("writing chunk data! {},{}", chunk_x, chunk_z);
                     chunk.write(&mut player.packets.write_buffer, chunk_x, chunk_z)?;
                 } else {
                     self.empty_chunk.write(
@@ -388,8 +392,8 @@ impl<W: WorldService> World<W> {
 
         // Write create packets for now-visible entities and
         // destroy packets for no-longer-visible entities
-        let size_x = self.chunks.get_size_x();
-        let size_z = self.chunks.get_size_z();
+        let size_x = self.chunks.size_x();
+        let size_z = self.chunks.size_z();
         super::chunk_view_diff::for_each_diff_chunks(
             (old_chunk_x, old_chunk_z),
             (chunk_x, chunk_z),
@@ -411,6 +415,8 @@ impl<W: WorldService> World<W> {
                 // Create players
                 chunk.write_create_for_players_in_chunk(&mut player.packets.write_buffer);
                 chunk.write_to_players_in_chunk(create_bytes);
+
+                // todo: send chunk packet here
             },
             |chunk| {
                 // Access the write_buffer from the ptr
@@ -431,6 +437,8 @@ impl<W: WorldService> World<W> {
                 // Destroy players
                 chunk.write_destroy_for_players_in_chunk(write_buffer);
                 chunk.write_to_players_in_chunk(destroy_bytes);
+
+                // todo: send chunk packet here
             },
             size_x,
             size_z,
@@ -440,7 +448,30 @@ impl<W: WorldService> World<W> {
         let new_chunk = self.chunks.get_mut_i32(chunk_x, chunk_z).expect("chunk coords in bounds");
         new_chunk.push_player_ref(player, player_ref);
 
+        // World Border
+        if W::SHOW_DEFAULT_WORLD_BORDER {
+            let border_packet = self.make_default_world_border(chunk_z, chunk_x);
+            player.packets.write_packet(&border_packet);
+        }
+
         Ok(())
+    }
+
+    pub(crate) fn remove_player<P: PlayerService>(&mut self, player: &mut Player<P>, view_position: ChunkViewPosition) {
+        if let Some(old_chunk) = self.chunks.get_mut(view_position.x, view_position.z) {
+            old_chunk.destroy_player(player);
+        }
+
+        let view_distance = W::CHUNK_VIEW_DISTANCE as i32;
+        for x in -view_distance..view_distance + 1 {
+            let chunk_x = x + view_position.x as i32;
+            for z in -view_distance..view_distance + 1 {
+                let chunk_z = z + view_position.z as i32;
+
+                let unload = ForgetLevelChunk { chunk_x, chunk_z };
+                player.packets.write_packet(&unload);
+            }
+        }
     }
 
     pub(crate) fn initialize_view_position(
@@ -448,8 +479,8 @@ impl<W: WorldService> World<W> {
         proto_player: &mut ProtoPlayer<W::UniverseServiceType>,
         position: Position,
     ) -> ChunkViewPosition {
-        let chunk_x = Chunk::to_chunk_coordinate(position.coord.x).max(0).min(self.chunks.get_size_x() as i32 - 1);
-        let chunk_z = Chunk::to_chunk_coordinate(position.coord.z).max(0).min(self.chunks.get_size_z() as i32 - 1);
+        let chunk_x = Chunk::to_chunk_coordinate(position.coord.x).max(0).min(self.chunks.size_x() as i32 - 1);
+        let chunk_z = Chunk::to_chunk_coordinate(position.coord.z).max(0).min(self.chunks.size_z() as i32 - 1);
 
         let chunk_view_position = ChunkViewPosition {
             x: chunk_x as _,
@@ -522,20 +553,47 @@ impl<W: WorldService> World<W> {
         }
 
         // World Border
-        let border_diameter = (self.chunks.get_size_x().max(self.chunks.get_size_z()) * 16) as f64;
-        let border_packet = InitializeBorder {
-            x: (self.chunks.get_size_x() * 8) as f64,
-            z: (self.chunks.get_size_z() * 8) as f64,
-            old_diameter: border_diameter,
-            new_diameter: border_diameter,
+        if W::SHOW_DEFAULT_WORLD_BORDER {
+            let border_packet = self.make_default_world_border(chunk_z, chunk_x);
+            graphite_net::packet_helper::try_write_packet(&mut proto_player.write_buffer, &border_packet);
+        }
+
+        chunk_view_position
+    }
+
+    fn make_default_world_border(&mut self, chunk_z: i32, chunk_x: i32) -> InitializeBorder {
+        let size_x = self.chunks.size_x();
+        let size_z = self.chunks.size_z();
+
+        let mut x = (size_x * 8) as f64;
+        let mut z = (size_z * 8) as f64;
+        let mut diameter = (size_x * 16) as f64;
+
+        if size_x < size_z {
+            diameter = (size_z * 16) as f64;
+            if chunk_x <= (size_x as i32)/2 {
+                x = z;
+            } else {
+                x = x * 2.0 - z;
+            }
+        } else if size_z < size_x {
+            if chunk_z <= (size_z as i32)/2 {
+                z = x;
+            } else {
+                z = z * 2.0 - x;
+            }
+        }
+
+        InitializeBorder {
+            x,
+            z,
+            old_diameter: diameter,
+            new_diameter: diameter,
             speed: 0,
             portal_teleport_boundary: 29999984,
             warning_blocks: 0,
             warning_time: 0
-        };
-        graphite_net::packet_helper::try_write_packet(&mut proto_player.write_buffer, &border_packet);
-
-        chunk_view_position
+        }
     }
 
     pub fn create_placement_context(
@@ -617,7 +675,7 @@ impl<W: WorldService> World<W> {
 
     #[inline(always)]
     fn chunk_coords_in_bounds(&self, chunk_x: i32, chunk_z: i32) -> bool {
-        chunk_x >= 0 && chunk_x < self.chunks.get_size_x() as _ && chunk_z >= 0 && chunk_z < self.chunks.get_size_z() as _
+        chunk_x >= 0 && chunk_x < self.chunks.size_x() as _ && chunk_z >= 0 && chunk_z < self.chunks.size_z() as _
     }
 
     pub fn get_chunks(&self) -> &ChunkGrid {

@@ -56,7 +56,6 @@ impl<U: UniverseService> Universe<U> {
         connection_ref: U::ConnectionReferenceType,
         profile: GameProfile,
     ) {
-        let entity_id = self.new_entity_id();
         let mut proto_player = ProtoPlayer::new(connection_ref, profile, self.new_entity_id());
 
         self.write_login_packets(&mut proto_player);
@@ -179,11 +178,21 @@ impl<U: UniverseService> Universe<U> {
             })
         }
 
+        // let mut fluid_registry: Vec<Tag> = Vec::new();
+        // fluid_registry.push(Tag {
+        //     name: "minecraft:water",
+        //     entries: vec![0],
+        // });
+
         let mut registries: Vec<TagRegistry> = Vec::new();
         registries.push(TagRegistry {
             tag_type: "block",
             values: block_registry,
         });
+        /*registries.push(TagRegistry {
+            tag_type: "fluid",
+            values: fluid_registry,
+        });*/
         graphite_net::packet_helper::try_write_packet(&mut proto_player.write_buffer, &UpdateTags {
             registries,
         });
