@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use super::*;
 use crate::slice_serialization::{BigEndian, Single, SliceSerializable};
+use byteorder::ByteOrder;
 use anyhow::bail;
 
 pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
@@ -93,8 +94,8 @@ fn read_byte_array(bytes: &mut &[u8]) -> anyhow::Result<Vec<i8>> {
     let (arr_bytes, rest_bytes) = bytes.split_at(length as _);
     *bytes = rest_bytes;
 
-    let vec: Vec<u8> = arr_bytes.into();
-    Ok(unsafe { std::mem::transmute(vec) })
+    let arr_bytes: &[i8] = unsafe { std::mem::transmute(arr_bytes) };
+    Ok(arr_bytes.into())
 }
 
 fn read_string<'a>(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, str>> {
@@ -137,10 +138,9 @@ fn read_int_array(bytes: &mut &[u8]) -> anyhow::Result<Vec<i32>> {
         bail!("read_int_array: not enough bytes to read int array");
     }
 
-    let mut values = Vec::with_capacity(length as _);
-    for _ in 0..length {
-        values.push(BigEndian::read(bytes)?);
-    }
+    let length = length as usize;
+    let mut values = vec![0; length];
+    byteorder::BigEndian::read_i32_into(&bytes[..length*4], values.as_mut_slice());
     Ok(values)
 }
 
@@ -152,9 +152,8 @@ fn read_long_array(bytes: &mut &[u8]) -> anyhow::Result<Vec<i64>> {
         bail!("read_long_array: not enough bytes to read long array");
     }
 
-    let mut values = Vec::with_capacity(length as _);
-    for _ in 0..length {
-        values.push(BigEndian::read(bytes)?);
-    }
+    let length = length as usize;
+    let mut values = vec![0; length];
+    byteorder::BigEndian::read_i64_into(&bytes[..length*8], values.as_mut_slice());
     Ok(values)
 }
