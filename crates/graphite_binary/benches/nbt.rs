@@ -4,7 +4,6 @@ use criterion::{black_box, Criterion};
 
 use nbt as hematite_nbt;
 use quartz_nbt::io::Flavor;
-use serde_nbt::Value;
 
 pub fn nbt_parse_bigtest(c: &mut Criterion) {
     let input = include_bytes!("../../../assets/bigtest.nbt");
@@ -20,9 +19,7 @@ pub fn nbt_parse_bigtest(c: &mut Criterion) {
     c.bench_function("valence_parse_bigtest", |b| {
         b.iter(|| {
             let input = black_box(input);
-
-            let mut cursor = Cursor::new(input);
-            let nbt: Value = serde_nbt::binary::from_reader(cursor).unwrap();
+            let nbt = valence_nbt::from_binary_slice(&mut input.as_slice()).unwrap();
             black_box(nbt);
         })
     });
@@ -60,13 +57,12 @@ pub fn nbt_write_bigtest(c: &mut Criterion) {
         })
     });
 
-    let cursor = Cursor::new(input);
-    let nbt: Value = serde_nbt::binary::from_reader(cursor).unwrap();
+    let nbt = valence_nbt::from_binary_slice(&mut input.as_slice()).unwrap();
     c.bench_function("valence_write_bigtest", |b| {
         b.iter(|| {
             let nbt = black_box(&nbt);
             let mut written = Vec::new();
-            serde_nbt::binary::to_writer(&mut written, nbt).unwrap();
+            valence_nbt::to_binary_writer(&mut written, &nbt.0, &nbt.1).unwrap();
             black_box(written);
         })
     });
@@ -153,25 +149,21 @@ pub fn nbt_find_bigtest(c: &mut Criterion) {
         })
     });
 
-    let cursor = Cursor::new(input);
-    let nbt: Value = serde_nbt::binary::from_reader(cursor).unwrap();
+    let (nbt, _) = valence_nbt::from_binary_slice(&mut input.as_slice()).unwrap();
     c.bench_function("valence_find_bigtest", |b| {
         b.iter(|| {
             let nbt = black_box(&nbt);
-            match nbt {
-                serde_nbt::Value::Compound(map) => match map.get("nested compound test").unwrap() {
-                    serde_nbt::Value::Compound(map) => match map.get("egg").unwrap() {
-                        serde_nbt::Value::Compound(map) => match map.get("value").unwrap() {
-                            serde_nbt::Value::Float(value) => {
-                                black_box(value);
-                            }
-                            _ => panic!("not a Float"),
-                        },
-                        _ => panic!("not a Compound"),
+            match &nbt["nested compound test"] {
+                valence_nbt::Value::Compound(map) => match &map["egg"] {
+                    valence_nbt::Value::Compound(map) => match &map["value"] {
+                        valence_nbt::Value::Float(value) => {
+                            black_box(value);
+                        }
+                        _ => panic!("not a Float"),
                     },
                     _ => panic!("not a Compound"),
-                }
-                _ => panic!("not a Compound")
+                },
+                _ => panic!("not a Compound"),
             }
             
         })
