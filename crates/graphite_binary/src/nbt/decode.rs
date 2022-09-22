@@ -28,6 +28,7 @@ pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     })
 }
 
+#[inline]
 fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8, depth: usize, size: &mut usize) -> anyhow::Result<usize> {
     debug_assert!(
         type_id != TAG_END_ID.0,
@@ -107,6 +108,7 @@ fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize, size
     }
 }
 
+#[inline]
 fn read_byte_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i8>> {
     let length: i32 = BigEndian::read(bytes)?;
     if length < 0 {
@@ -128,6 +130,7 @@ fn read_byte_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i8
     Ok(arr_bytes.into())
 }
 
+#[inline]
 fn read_string<'a>(bytes: &mut &'a [u8], size: &mut usize) -> anyhow::Result<Cow<'a, str>> {
     let length: u16 = BigEndian::read(bytes)?;
     if bytes.len() < length as _ {
@@ -153,6 +156,8 @@ fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize, size: &m
 
     if length <= 0 {
         Ok((type_id, Vec::new()))
+    } else if bytes.len() < length as _ {
+        bail!("read_list: not enough bytes to read list");
     } else if type_id == TAG_END_ID.0 {
         bail!("read_list: type cannot be TAG_END for non-zero length list");
     } else {
@@ -173,6 +178,7 @@ fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize, size: &m
     }
 }
 
+#[inline]
 fn read_int_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i32>> {
     let length: i32 = BigEndian::read(bytes)?;
     if length < 0 {
@@ -192,6 +198,7 @@ fn read_int_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i32
     Ok(values)
 }
 
+#[inline]
 fn read_long_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i64>> {
     let length: i32 = BigEndian::read(bytes)?;
     if length < 0 {
