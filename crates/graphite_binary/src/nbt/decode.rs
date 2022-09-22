@@ -5,6 +5,8 @@ use crate::slice_serialization::{BigEndian, Single, SliceSerializable};
 use byteorder::ByteOrder;
 use anyhow::bail;
 
+const DECODE_CAPACITY: usize = 2_097_152;
+
 pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     let type_id: u8 = Single::read(bytes)?;
     if type_id == TAG_END_ID.0 {
@@ -13,9 +15,11 @@ pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
         bail!("nbt_decode: root must be a compound");
     }
 
+    let mut size = 0;
+
     let mut nodes = Vec::new();
-    let name = read_string(bytes)?;
-    let children = read_compound(bytes, &mut nodes, 0)?;
+    let name = read_string(bytes, &mut size)?;
+    let children = read_compound(bytes, &mut nodes, 0, &mut size)?;
 
     Ok(NBT {
         root_name: name.into_owned(),
@@ -24,27 +28,45 @@ pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     })
 }
 
-fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8, depth: usize) -> anyhow::Result<usize> {
+fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8, depth: usize, size: &mut usize) -> anyhow::Result<usize> {
     debug_assert!(
         type_id != TAG_END_ID.0,
         "read_node must not be called with TAG_END"
     );
 
     let node = match TagType(type_id) {
-        TAG_BYTE_ID => NBTNode::Byte(Single::read(bytes)?),
-        TAG_SHORT_ID => NBTNode::Short(BigEndian::read(bytes)?),
-        TAG_INT_ID => NBTNode::Int(BigEndian::read(bytes)?),
-        TAG_LONG_ID => NBTNode::Long(BigEndian::read(bytes)?),
-        TAG_FLOAT_ID => NBTNode::Float(BigEndian::read(bytes)?),
-        TAG_DOUBLE_ID => NBTNode::Double(BigEndian::read(bytes)?),
-        TAG_BYTE_ARRAY_ID => NBTNode::ByteArray(read_byte_array(bytes)?),
-        TAG_STRING_ID => NBTNode::String(read_string(bytes)?.into_owned()),
+        TAG_BYTE_ID => {
+            *size += 1;
+            NBTNode::Byte(Single::read(bytes)?)
+        },
+        TAG_SHORT_ID => {
+            *size += 2;
+            NBTNode::Short(BigEndian::read(bytes)?)
+        },
+        TAG_INT_ID => {
+            *size += 4;
+            NBTNode::Int(BigEndian::read(bytes)?)
+        },
+        TAG_LONG_ID => {
+            *size += 8;
+            NBTNode::Long(BigEndian::read(bytes)?)
+        },
+        TAG_FLOAT_ID => {
+            *size += 4;
+            NBTNode::Float(BigEndian::read(bytes)?)
+        },
+        TAG_DOUBLE_ID => {
+            *size += 8;
+            NBTNode::Double(BigEndian::read(bytes)?)
+        },
+        TAG_BYTE_ARRAY_ID => NBTNode::ByteArray(read_byte_array(bytes, size)?),
+        TAG_STRING_ID => NBTNode::String(read_string(bytes, size)?.into_owned()),
         TAG_LIST_ID => {
             if depth > 512 {
                 bail!("tried to read NBT tag with too high complexity, depth > 512")
             }
 
-            let (type_id, children) = read_list(bytes, nodes, depth + 1)?;
+            let (type_id, children) = read_list(bytes, nodes, depth + 1, size)?;
             NBTNode::List { type_id: TagType(type_id), children }
         }
         TAG_COMPOUND_ID => {
@@ -52,17 +74,17 @@ fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8, depth: us
                 bail!("tried to read NBT tag with too high complexity, depth > 512")
             }
 
-            NBTNode::Compound(read_compound(bytes, nodes, depth + 1)?)
+            NBTNode::Compound(read_compound(bytes, nodes, depth + 1, size)?)
         },
-        TAG_INT_ARRAY_ID => NBTNode::IntArray(read_int_array(bytes)?),
-        TAG_LONG_ARRAY_ID => NBTNode::LongArray(read_long_array(bytes)?),
+        TAG_INT_ARRAY_ID => NBTNode::IntArray(read_int_array(bytes, size)?),
+        TAG_LONG_ARRAY_ID => NBTNode::LongArray(read_long_array(bytes, size)?),
         _ => bail!("unknown type id: {}", type_id),
     };
     nodes.push(node);
     Ok(nodes.len() - 1)
 }
 
-fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize) -> anyhow::Result<NBTCompound> {
+fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize, size: &mut usize) -> anyhow::Result<NBTCompound> {
     let mut children = NBTCompound(Vec::new());
 
     loop {
@@ -70,8 +92,10 @@ fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize) -> a
         if type_id == TAG_END_ID.0 {
             break Ok(children);
         } else {
-            let name = read_string(bytes)?;
-            let node = read_node(bytes, nodes, type_id, depth)?;
+            *size += 8;
+
+            let name = read_string(bytes, size)?;
+            let node = read_node(bytes, nodes, type_id, depth, size)?;
 
             match children.binary_search(name.as_ref()) {
                 Ok(_) => bail!("read_compound: duplicate key"),
@@ -83,34 +107,46 @@ fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize) -> a
     }
 }
 
-fn read_byte_array(bytes: &mut &[u8]) -> anyhow::Result<Vec<i8>> {
+fn read_byte_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i8>> {
     let length: i32 = BigEndian::read(bytes)?;
     if length < 0 {
         bail!("read_byte_array: length cannot be negative");
     } else if bytes.len() < length as _ {
         bail!("read_byte_array: not enough bytes to read byte array");
     }
+    let length = length as usize;
 
-    let (arr_bytes, rest_bytes) = bytes.split_at(length as _);
+    *size += length;
+    if *size > DECODE_CAPACITY {
+        bail!("read_byte_array: nbt too large, capacity reached")
+    }
+
+    let (arr_bytes, rest_bytes) = bytes.split_at(length);
     *bytes = rest_bytes;
 
     let arr_bytes: &[i8] = unsafe { std::mem::transmute(arr_bytes) };
     Ok(arr_bytes.into())
 }
 
-fn read_string<'a>(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, str>> {
+fn read_string<'a>(bytes: &mut &'a [u8], size: &mut usize) -> anyhow::Result<Cow<'a, str>> {
     let length: u16 = BigEndian::read(bytes)?;
     if bytes.len() < length as _ {
         bail!("read_string: not enough bytes to read string");
     }
+    let length = length as usize;
 
-    let (str_bytes, rest_bytes) = bytes.split_at(length as _);
+    *size += length + 24;
+    if *size > DECODE_CAPACITY {
+        bail!("read_string: nbt too large, capacity reached")
+    }
+
+    let (str_bytes, rest_bytes) = bytes.split_at(length);
     *bytes = rest_bytes;
 
     Ok(cesu8::from_java_cesu8(str_bytes)?)
 }
 
-fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize) -> anyhow::Result<(u8, Vec<usize>)> {
+fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize, size: &mut usize) -> anyhow::Result<(u8, Vec<usize>)> {
     let type_id: u8 = Single::read(bytes)?;
 
     let length: i32 = BigEndian::read(bytes)?;
@@ -120,39 +156,56 @@ fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize) -> anyho
     } else if type_id == TAG_END_ID.0 {
         bail!("read_list: type cannot be TAG_END for non-zero length list");
     } else {
-        let mut children = Vec::with_capacity(length as _);
+        let length = length as usize;
+
+        *size += length * 8;
+        if *size > DECODE_CAPACITY {
+            bail!("read_list: nbt too large, capacity reached")
+        }
+
+        let mut children = Vec::with_capacity(length);
 
         for _ in 0..length {
-            children.push(read_node(bytes, nodes, type_id, depth)?);
+            children.push(read_node(bytes, nodes, type_id, depth, size)?);
         }
 
         Ok((type_id, children))
     }
 }
 
-fn read_int_array(bytes: &mut &[u8]) -> anyhow::Result<Vec<i32>> {
+fn read_int_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i32>> {
     let length: i32 = BigEndian::read(bytes)?;
     if length < 0 {
         bail!("read_int_array: length cannot be negative");
     } else if bytes.len() < (length as usize) * 4 {
         bail!("read_int_array: not enough bytes to read int array");
     }
-
     let length = length as usize;
+
+    *size += length * 4;
+    if *size > DECODE_CAPACITY {
+        bail!("read_int_array: nbt too large, capacity reached")
+    }
+
     let mut values = vec![0; length];
     byteorder::BigEndian::read_i32_into(&bytes[..length*4], values.as_mut_slice());
     Ok(values)
 }
 
-fn read_long_array(bytes: &mut &[u8]) -> anyhow::Result<Vec<i64>> {
+fn read_long_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i64>> {
     let length: i32 = BigEndian::read(bytes)?;
     if length < 0 {
         bail!("read_long_array: length cannot be negative");
     } else if bytes.len() < (length as usize) * 8 {
         bail!("read_long_array: not enough bytes to read long array");
     }
-
     let length = length as usize;
+
+    *size += length * 8;
+    if *size > DECODE_CAPACITY {
+        bail!("read_long_array: nbt too large, capacity reached")
+    }
+
     let mut values = vec![0; length];
     byteorder::BigEndian::read_i64_into(&bytes[..length*8], values.as_mut_slice());
     Ok(values)
