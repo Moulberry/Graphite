@@ -359,7 +359,7 @@ where
 
                 // palette
                 bytes = <Single as SliceSerializable<u8>>::write(bytes, array.indices.len() as _); // palette length
-                for (entry, count) in &array.indices {
+                for (entry, _) in &array.indices {
                     bytes = <VarInt as SliceSerializable<i32>>::write(bytes, (*entry).into()); // the palette entry
                 }
 
