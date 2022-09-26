@@ -8,11 +8,13 @@
 - [x] Command dispatch system
 - [x] Viewable objects (entities)
 - [x] Allow multiple players to connect (and see each other)
-- [ ] Base lib crate that reexports everything
-- [ ] ItemStacks with NBT
+- [x] Base lib crate that reexports everything
+- [x] ItemStacks with NBT
+- [ ] Add layer for modifying the NBT of items easily
 - [x] Player Input Handling (Left/Right Click Air/Block)
 - [ ] TextComponent things & macro
-- [ ] Allow chunk/world modification
+- [x] Allow chunk/world modification
+- [ ] Complete missing block placement (walls, double blocks, candles, etc.)
 - [ ] "Extras" subproject - raycasting, collision, ...
 
 # Subprojects
