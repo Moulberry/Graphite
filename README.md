@@ -1,4 +1,4 @@
-# Graphite
+# Graphite -- CURRENTLY ON HIATUS
 
 1.19.1 Minecraft Server
 
