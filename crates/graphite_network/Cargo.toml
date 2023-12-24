@@ -1,0 +1,9 @@
+[package]
+name = "graphite_network"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Networking loop for Graphite server"
+
+[dependencies]
+mio = { version = "0.8.10", features = ["os-poll", "net"] }

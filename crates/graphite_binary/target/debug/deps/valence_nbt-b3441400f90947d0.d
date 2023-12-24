@@ -1,0 +1,11 @@
+/Users/james/MinecraftModding/Graphite2/crates/graphite_binary/target/debug/deps/libvalence_nbt-b3441400f90947d0.rmeta: /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/lib.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/compound.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/error.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/from_binary_slice.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/to_binary_writer.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/value.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/tag.rs
+
+/Users/james/MinecraftModding/Graphite2/crates/graphite_binary/target/debug/deps/valence_nbt-b3441400f90947d0.d: /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/lib.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/compound.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/error.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/from_binary_slice.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/to_binary_writer.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/value.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/tag.rs
+
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/lib.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/compound.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/error.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/from_binary_slice.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/to_binary_writer.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/value.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/valence_nbt-0.1.2/src/tag.rs:

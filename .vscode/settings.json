@@ -1,0 +1,8 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./crates/graphite_mc_protocol/Cargo.toml",
+        "./crates/graphite_concierge/Cargo.toml",
+        "./Cargo.toml",
+        "./crates/graphite_network/Cargo.toml"
+    ]
+}

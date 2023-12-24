@@ -1,0 +1,15 @@
+[package]
+name = "graphite_binary_macros"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Proceedural macros for graphite_binary"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+anyhow = "1.0.57"
+proc-macro2 = "1.0.40"
+syn = { version = "1.0.98", features = ["parsing", "extra-traits"] }
+quote = "1.0.20"

@@ -1,0 +1,16 @@
+[package]
+name = "graphite_concierge"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Concierge service for the graphite_minecraft project"
+
+[dependencies]
+anyhow = "1.0.57"
+message-io = "0.18.0"
+mio = { version = "0.8.10", features = ["os-poll", "net"] }
+
+graphite_binary = { path = "../graphite_binary" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol" }
+graphite_network = { path = "../graphite_network" }
+slab = "0.4.9"

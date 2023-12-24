@@ -1,0 +1,27 @@
+[package]
+name = "graphite_binary"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Efficient binary serialization for the graphite_minecraft project"
+
+[dependencies]
+anyhow = "1.0.57"
+thiserror = "1.0.31"
+bytes = "1.1.0"
+cesu8 = "1.1.0"
+byteorder = "1.4.3"
+leb128 = "0.2.5"
+
+graphite_binary_macros = { path = "macros", version = "0.1.0" }
+
+[dev-dependencies]
+criterion = "0.3.6"
+hematite-nbt = "0.5.2"
+quartz_nbt = "0.2.6"
+valence_nbt = "0.1.0"
+rand = "0.8.5"
+
+[[bench]]
+name = "binary"
+harness = false

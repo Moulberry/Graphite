@@ -1,0 +1,12 @@
+/Users/james/MinecraftModding/Graphite2/crates/graphite_binary/target/debug/deps/libnbt-e987c5e6ebed5052.rmeta: /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/lib.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/blob.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/error.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/raw.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/value.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/macros.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/de.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/ser.rs
+
+/Users/james/MinecraftModding/Graphite2/crates/graphite_binary/target/debug/deps/nbt-e987c5e6ebed5052.d: /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/lib.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/blob.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/error.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/raw.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/value.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/macros.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/de.rs /Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/ser.rs
+
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/lib.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/blob.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/error.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/raw.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/value.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/macros.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/de.rs:
+/Users/james/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hematite-nbt-0.5.2/src/ser.rs:

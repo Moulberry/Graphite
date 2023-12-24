@@ -1,0 +1,13 @@
+[package]
+name = "graphite_mc_protocol"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Implementation of the Minecraft protocol for the graphite_minecraft project"
+
+[dependencies]
+anyhow = "1.0.57"
+num_enum = "0.5.7"
+paste = "1.0.7"
+
+graphite_binary = { path = "../graphite_binary", version = "0.1.0" }
