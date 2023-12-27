@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 pub mod handshake;
 pub mod login;
+pub mod configuration;
 pub mod play;
 pub mod status;
 pub mod types;

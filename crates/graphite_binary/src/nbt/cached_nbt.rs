@@ -68,7 +68,7 @@ impl CachedNBT {
             inner.bytes_dirty = false;
             inner.bytes.truncate(0);
 
-            encode::write_into(&inner.nbt, &mut inner.bytes);
+            encode::write_any_into(&inner.nbt, &mut inner.bytes);
         }
 
         // &[0]

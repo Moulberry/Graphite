@@ -2,6 +2,7 @@
     "rust-analyzer.linkedProjects": [
         "./crates/graphite_mc_protocol/Cargo.toml",
         "./crates/graphite_concierge/Cargo.toml",
+        "./crates/graphite_core_server/Cargo.toml",
         "./Cargo.toml",
         "./crates/graphite_network/Cargo.toml"
     ]

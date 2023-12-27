@@ -6,4 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+mio = { version = "0.8.10", features = ["os-poll", "net"] }
+
 graphite_concierge = { path = "./crates/graphite_concierge" }
+graphite_network = { path = "./crates/graphite_network" }
+graphite_core_server = { path = "./crates/graphite_core_server" }

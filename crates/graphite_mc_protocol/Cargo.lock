@@ -42,6 +42,7 @@ dependencies = [
  "cesu8",
  "graphite_binary_macros",
  "leb128",
+ "paste",
  "thiserror",
 ]
 

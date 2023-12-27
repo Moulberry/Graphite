@@ -1,10 +1,13 @@
-use std::{fmt::Debug, result};
+use std::{fmt::Debug, result, ptr::NonNull};
 
 mod cached_nbt;
 pub mod decode;
 pub mod encode;
 mod pretty;
 pub mod stringified;
+
+mod reference;
+pub use reference::{NBTRef, NBTRefMut, ListRef, CompoundRef, ListRefMut, CompoundRefMut};
 
 pub use cached_nbt::CachedNBT;
 
@@ -42,6 +45,64 @@ impl Debug for NBT {
     }
 }
 
+macro_rules! insert {
+    ($name:ident, $value_type:ty, $node:ident) => {
+        paste::paste! {
+            pub fn [<insert_ $name>](&mut self, key: &str, value: $value_type) {
+                self.insert_node(key, NBTNode::$node(value));
+            }
+        }
+    }
+}
+
+macro_rules! find {
+    ($name:ident, $value_type:ty, $node:ident) => {
+        paste::paste! {
+            pub fn [<find_ $name>](&self, key: &str) -> Option<&$value_type> {
+                let idx = self.find_idx(key)?;
+                match self.get_node(idx) {
+                    NBTNode::$node(value) => Some(value),
+                    _ => None
+                }
+            }
+        }
+    }
+}
+
+macro_rules! find_mut {
+    ($name:ident, $value_type:ty, $node:ident) => {
+        paste::paste! {
+            pub fn [<find_ $name _mut>](&mut self, key: &str) -> Option<&mut $value_type> {
+                let idx = self.find_idx(key)?;
+                match self.get_node_mut(idx) {
+                    NBTNode::$node(value) => Some(value),
+                    _ => None
+                }
+            }
+        }
+    }
+}
+
+macro_rules! enumerate_basic_types {
+    ($macro:path) => {
+        $macro!(byte, i8, Byte);
+        $macro!(short, i16, Short);
+        $macro!(int, i32, Int);
+        $macro!(long, i64, Long);
+        $macro!(float, f32, Float);
+        $macro!(double, f64, Double);
+        $macro!(byte_array, Vec<i8>, ByteArray);
+        $macro!(string, String, String);
+        $macro!(int_array, Vec<i32>, IntArray);
+        $macro!(long_array, Vec<i64>, LongArray);
+    }
+}
+
+pub(crate) use enumerate_basic_types;
+pub(crate) use insert;
+pub(crate) use find;
+pub(crate) use find_mut;
+
 impl NBT {
     pub fn new() -> NBT {
         Self::new_named(String::new())
@@ -55,72 +116,223 @@ impl NBT {
         }
     }
 
-    pub fn find_root(&self, key: &str) -> Option<&NBTNode> {
-        let idx = self.root_children.find(key)?;
-        Some(&self.nodes[idx])
-    }
-
-    pub fn insert_root(&mut self, key: &str, value: NBTNode) {
+    fn insert_node(&mut self, key: &str, node: NBTNode) -> usize {
         let idx = self.nodes.len();
-        self.nodes.push(value);
+        self.nodes.push(node);
         self.root_children.insert(key, idx);
+
+        // todo: delete previous node if this is replacing something
+
+        idx
     }
 
-    pub fn find(&self, node: &NBTNode, key: &str) -> Option<&NBTNode> {
-        match node {
-            NBTNode::Compound(compound) => {
-                let index = compound.find(key)?;
-                Some(&self.nodes[index])
-            }
-            _ => None,
-        }
+    fn find_idx(&self, key: &str) -> Option<usize> {
+        self.root_children.find(key)
     }
 
-    pub fn insert(&mut self, node: &mut NBTNode, key: &str, value: NBTNode) {
-        match node {
-            NBTNode::Compound(ref mut compound) => {
-                let idx = self.nodes.len();
-                self.nodes.push(value);
-                compound.insert(key, idx);
-            }
-            _ => panic!("nbt insert: node is not a compound"),
-        }
+    fn get_node(&self, idx: usize) -> &NBTNode {
+        &self.nodes[idx]
     }
 
-    pub fn iter<'a>(&'a self, node: &'a NBTNode) -> Option<NBTIterator<'a>> {
-        match node {
-            NBTNode::List {
-                type_id: _,
-                children,
-            } => Some(NBTIterator {
-                nbt: self,
-                indices: children,
-                index: 0,
-            }),
-            _ => None,
-        }
+    fn get_node_mut(&mut self, idx: usize) -> &mut NBTNode {
+        &mut self.nodes[idx]
     }
 
-    pub fn append(&mut self, node: &mut NBTNode, value: NBTNode) {
-        match node {
-            NBTNode::List {
-                type_id,
-                children,
-            } => {
-                if *type_id != value.get_type() {
-                    panic!("nbt append: tag type is incorrect")
-                }
-                let idx = self.nodes.len();
-                self.nodes.push(value);
-                children.push(idx);
+    fn get_reference(&self, node_idx: usize) -> NBTRef<'_> {
+        match self.get_node(node_idx) {
+            NBTNode::Byte(value) => NBTRef::Byte(value),
+            NBTNode::Short(value) => NBTRef::Short(value),
+            NBTNode::Int(value) => NBTRef::Int(value),
+            NBTNode::Long(value) => NBTRef::Long(value),
+            NBTNode::Float(value) => NBTRef::Float(value),
+            NBTNode::Double(value) => NBTRef::Double(value),
+            NBTNode::ByteArray(value) => NBTRef::ByteArray(value),
+            NBTNode::String(value) => NBTRef::String(value),
+            NBTNode::List { type_id: _, children: _ } => {
+                NBTRef::List(ListRef { nbt: self, node_idx })
             },
-            _ => panic!("nbt append: node is not a list"),
+            NBTNode::Compound(_) => {
+                NBTRef::Compound(CompoundRef { nbt: self, node_idx })
+            },
+            NBTNode::IntArray(value) => NBTRef::IntArray(value),
+            NBTNode::LongArray(value) => NBTRef::LongArray(value),
         }
     }
+
+    fn get_mutable_reference(&mut self, node_idx: usize) -> NBTRefMut<'_> {
+        // Ptr shenanigans because https://github.com/rust-lang/rust/issues/54663
+        let mut nbt_ptr: NonNull<NBT> = self.into();
+
+        match self.get_node_mut(node_idx) {
+            NBTNode::Byte(value) => NBTRefMut::Byte(value),
+            NBTNode::Short(value) => NBTRefMut::Short(value),
+            NBTNode::Int(value) => NBTRefMut::Int(value),
+            NBTNode::Long(value) => NBTRefMut::Long(value),
+            NBTNode::Float(value) => NBTRefMut::Float(value),
+            NBTNode::Double(value) => NBTRefMut::Double(value),
+            NBTNode::ByteArray(value) => NBTRefMut::ByteArray(value),
+            NBTNode::String(value) => NBTRefMut::String(value),
+            NBTNode::List { type_id: _, children: _ } => {
+                NBTRefMut::List(ListRefMut { nbt: unsafe { nbt_ptr.as_mut() }, node_idx })
+            },
+            NBTNode::Compound(_) => {
+                NBTRefMut::Compound(CompoundRefMut { nbt: unsafe { nbt_ptr.as_mut() }, node_idx })
+            },
+            NBTNode::IntArray(value) => NBTRefMut::IntArray(value),
+            NBTNode::LongArray(value) => NBTRefMut::LongArray(value),
+        }
+    }
+
+    enumerate_basic_types!(insert);
+    enumerate_basic_types!(find);
+    enumerate_basic_types!(find_mut);
+
+    pub fn create_list(&mut self, key: &str, type_id: TagType) -> ListRefMut<'_> {
+        let idx = self.insert_node(key, NBTNode::List { type_id, children: Default::default() });
+
+        ListRefMut {
+            nbt: self,
+            node_idx: idx
+        }
+    }
+
+    pub fn create_compound(&mut self, key: &str) -> CompoundRefMut<'_> {
+        let idx = self.insert_node(key, NBTNode::Compound(Default::default()));
+
+        CompoundRefMut {
+            nbt: self,
+            node_idx: idx
+        }
+    }
+
+    pub fn find_list(&self, key: &str, type_id: TagType) -> Option<ListRef<'_>> {
+        let idx = self.find_idx(key)?;
+        match self.get_node(idx) {
+            NBTNode::List { type_id: list_type_id, children: _ } if *list_type_id == type_id => {
+                Some(ListRef {
+                    nbt: self,
+                    node_idx: idx
+                })
+            },
+            _ => None
+        }
+    }
+
+    pub fn find_compound(&self, key: &str) -> Option<CompoundRef<'_>> {
+        let idx = self.find_idx(key)?;
+        match self.get_node(idx) {
+            NBTNode::Compound(_) => {
+                Some(CompoundRef {
+                    nbt: self,
+                    node_idx: idx
+                })
+            },
+            _ => None
+        }
+    }
+
+    pub fn find_list_mut(&mut self, key: &str, type_id: TagType) -> Option<ListRefMut<'_>> {
+        let idx = self.find_idx(key)?;
+        match self.get_node(idx) {
+            NBTNode::List { type_id: list_type_id, children: _ } if *list_type_id == type_id => {
+                Some(ListRefMut {
+                    nbt: self,
+                    node_idx: idx
+                })
+            },
+            _ => None
+        }
+    }
+
+    pub fn find_compound_mut(&mut self, key: &str) -> Option<CompoundRefMut<'_>> {
+        let idx = self.find_idx(key)?;
+        match self.get_node(idx) {
+            NBTNode::Compound(_) => {
+                Some(CompoundRefMut {
+                    nbt: self,
+                    node_idx: idx
+                })
+            },
+            _ => None
+        }
+    }
+
+    pub fn find(&self, key: &str) -> Option<NBTRef<'_>> {
+        let idx = self.find_idx(key)?;
+        Some(self.get_reference(idx))
+    }
+
+    pub fn find_mut(&mut self, key: &str) -> Option<NBTRefMut<'_>> {
+        let idx = self.find_idx(key)?;
+        Some(self.get_mutable_reference(idx))
+    }
+
+    // pub fn find_root(&self, key: &str) -> Option<&NBTNode> {
+    //     let idx = self.root_children.find(key)?;
+    //     Some(&self.nodes[idx])
+    // }
+
+    // pub fn insert_root(&mut self, key: &str, value: NBTNode) {
+    //     let idx = self.nodes.len();
+    //     self.nodes.push(value);
+    //     self.root_children.insert(key, idx);
+    // }
+
+    // pub fn find(&self, node: &NBTNode, key: &str) -> Option<&NBTNode> {
+    //     match node {
+    //         NBTNode::Compound(compound) => {
+    //             let index = compound.find(key)?;
+    //             Some(&self.nodes[index])
+    //         }
+    //         _ => None,
+    //     }
+    // }
+
+    // pub fn insert(&mut self, node: &mut NBTNode, key: &str, value: NBTNode) {
+    //     match node {
+    //         NBTNode::Compound(ref mut compound) => {
+    //             let idx = self.nodes.len();
+    //             self.nodes.push(value);
+    //             compound.insert(key, idx);
+    //         }
+    //         _ => panic!("nbt insert: node is not a compound"),
+    //     }
+    // }
+
+    // pub fn iter<'a>(&'a self, node: &'a NBTNode) -> Option<NBTIterator<'a>> {
+    //     match node {
+    //         NBTNode::List {
+    //             type_id: _,
+    //             children,
+    //         } => Some(NBTIterator {
+    //             nbt: self,
+    //             indices: children,
+    //             index: 0,
+    //         }),
+    //         _ => None,
+    //     }
+    // }
+
+    // pub fn append(&mut self, node: &mut NBTNode, value: NBTNode) {
+    //     match node {
+    //         NBTNode::List {
+    //             type_id,
+    //             children,
+    //         } => {
+    //             if *type_id != value.get_type() {
+    //                 panic!("nbt append: tag type is incorrect")
+    //             }
+    //             let idx = self.nodes.len();
+    //             self.nodes.push(value);
+    //             children.push(idx);
+    //         },
+    //         _ => panic!("nbt append: node is not a list"),
+    //     }
+    // }
 }
 
 #[derive(Debug, Clone)]
-pub enum NBTNode {
+enum NBTNode {
     // 32 bytes
     Byte(i8),
     Short(i16),
@@ -153,101 +365,31 @@ impl NBTNode {
             NBTNode::LongArray(_) => TAG_LONG_ARRAY_ID,
         }
     }
-
-    pub fn as_byte(&self) -> Option<i8> {
-        match self {
-            NBTNode::Byte(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    pub fn as_short(&self) -> Option<i16> {
-        match self {
-            NBTNode::Short(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    pub fn as_int(&self) -> Option<i32> {
-        match self {
-            NBTNode::Int(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    pub fn as_long(&self) -> Option<i64> {
-        match self {
-            NBTNode::Long(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    pub fn as_float(&self) -> Option<f32> {
-        match self {
-            NBTNode::Float(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    pub fn as_double(&self) -> Option<f64> {
-        match self {
-            NBTNode::Double(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    pub fn as_byte_array(&self) -> Option<&Vec<i8>> {
-        match self {
-            NBTNode::ByteArray(value) => Some(value),
-            _ => None,
-        }
-    }
-
-    pub fn as_string(&self) -> Option<&String> {
-        match self {
-            NBTNode::String(value) => Some(value),
-            _ => None,
-        }
-    }
-
-    pub fn as_int_array(&self) -> Option<&Vec<i32>> {
-        match self {
-            NBTNode::IntArray(value) => Some(value),
-            _ => None,
-        }
-    }
-
-    pub fn as_long_array(&self) -> Option<&Vec<i64>> {
-        match self {
-            NBTNode::LongArray(value) => Some(value),
-            _ => None,
-        }
-    }
 }
 
-pub struct NBTIterator<'a> {
-    nbt: &'a NBT,
-    indices: &'a [usize],
-    index: usize,
-}
+// pub struct NBTIterator<'a> {
+//     nbt: &'a NBT,
+//     indices: &'a [usize],
+//     index: usize,
+// }
 
-impl<'a> Iterator for NBTIterator<'a> {
-    type Item = &'a NBTNode;
+// impl<'a> Iterator for NBTIterator<'a> {
+//     type Item = &'a NBTNode;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.indices.len() {
-            None
-        } else {
-            let next = &self.nbt.nodes[self.indices[self.index]];
-            self.index += 1;
-            Some(next)
-        }
-    }
-}
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if self.index >= self.indices.len() {
+//             None
+//         } else {
+//             let next = &self.nbt.nodes[self.indices[self.index]];
+//             self.index += 1;
+//             Some(next)
+//         }
+//     }
+// }
 
 // Note: Using SmartString instead of String results in worse perf
 #[derive(Debug, Clone, Default)]
-pub struct NBTCompound(Vec<(String, usize)>);
+struct NBTCompound(Vec<(String, usize)>);
 
 impl NBTCompound {
     fn find(&self, key: &str) -> Option<usize> {
@@ -299,9 +441,9 @@ fn read_and_write_test() {
 
     let input = include_bytes!("../../../../assets/bigtest.nbt");
     let nbt = decode::read(&mut input.as_slice()).unwrap();
-    let input = encode::write(&nbt);
+    let input = encode::write_named(&nbt);
     let nbt = decode::read(&mut input.as_slice()).unwrap();
-
+    
     assert_eq!(nbt.root_name.as_str(), "Level");
     verify_bigtest_nbt(&nbt);
 }
@@ -324,110 +466,109 @@ fn verify_bigtest_nbt(nbt: &NBT) {
         // TAG_Compound('Level'): 11 entries
         {
             // TAG_Compound('nested compound test'): 2 entries
-            let nested = nbt.find_root("nested compound test").unwrap();
+            let nested = nbt.find_compound("nested compound test").unwrap();
 
             {
                 // TAG_Compound('egg'): 2 entries
-                let egg = nbt.find(nested, "egg").unwrap();
+                let egg = nested.find_compound("egg").unwrap();
 
                 // TAG_String('name'): 'Eggbert'
-                let name = nbt.find(egg, "name").unwrap();
+                let name = egg.find("name").unwrap();
                 assert_eq!(name.as_string(), Some(&"Eggbert".into()));
 
                 // TAG_Float('value'): 0.5
-                let value = nbt.find(egg, "value").unwrap();
-                assert_eq!(value.as_float(), Some(0.5))
+                let value = egg.find("value").unwrap();
+                assert_eq!(value.as_float(), Some(&0.5))
             }
 
             {
                 // TAG_Compound('ham'): 2 entries
-                let ham = nbt.find(nested, "ham").unwrap();
+                let ham = nested.find_compound("ham").unwrap();
 
                 // TAG_String('name'): 'Hampus'
-                let name = nbt.find(ham, "name").unwrap();
+                let name = ham.find("name").unwrap();
                 assert_eq!(name.as_string(), Some(&"Hampus".into()));
 
                 // TAG_Float('value'): 0.75
-                let value = nbt.find(ham, "value").unwrap();
-                assert_eq!(value.as_float(), Some(0.75))
+                let value = ham.find("value").unwrap();
+                assert_eq!(value.as_float(), Some(&0.75))
             }
         }
 
         // TAG_Int('intTest'): 2147483647
-        let int_test = nbt.find_root("intTest").unwrap();
-        assert_eq!(int_test.as_int(), Some(2147483647));
+        let int_test = nbt.find("intTest").unwrap();
+        assert_eq!(int_test.as_int(), Some(&2147483647));
 
         // TAG_Byte('byteTest'): 127
-        let byte_test = nbt.find_root("byteTest").unwrap();
-        assert_eq!(byte_test.as_byte(), Some(127));
+        let byte_test = nbt.find("byteTest").unwrap();
+        assert_eq!(byte_test.as_byte(), Some(&127));
 
         // TAG_String('stringTest'): 'HELLO WORLD THIS IS A TEST STRING \xc5\xc4\xd6!'
-        let string_test = nbt.find_root("stringTest").unwrap();
+        let string_test = nbt.find("stringTest").unwrap();
         assert_eq!(
             string_test.as_string(),
             Some(&"HELLO WORLD THIS IS A TEST STRING \u{c5}\u{c4}\u{d6}!".into())
         );
 
         // TAG_List('listTest (long)'): 5 entries
-        let list_test = nbt.find_root("listTest (long)").unwrap();
-        let mut list_test_iter = nbt.iter(list_test).unwrap();
-        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(11));
-        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(12));
-        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(13));
-        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(14));
-        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(15));
+        let list_test = nbt.find_list("listTest (long)", TAG_LONG_ID).unwrap();
+        let mut list_test_iter = list_test.iter();
+        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(&11));
+        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(&12));
+        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(&13));
+        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(&14));
+        assert_eq!(list_test_iter.next().unwrap().as_long(), Some(&15));
         assert!(list_test_iter.next().is_none());
 
         // TAG_Double('doubleTest'): 0.49312871321823148
-        let double_test = nbt.find_root("doubleTest").unwrap();
-        assert_eq!(double_test.as_double(), Some(0.49312871321823148));
+        let double_test = nbt.find("doubleTest").unwrap();
+        assert_eq!(double_test.as_double(), Some(&0.49312871321823148));
 
         // TAG_Float('floatTest'): 0.49823147058486938
-        let float_test = nbt.find_root("floatTest").unwrap();
-        assert_eq!(float_test.as_float(), Some(0.49823147058486938));
+        let float_test = nbt.find("floatTest").unwrap();
+        assert_eq!(float_test.as_float(), Some(&0.49823147058486938));
 
         // TAG_Long('longTest'): 9223372036854775807L
-        let long_test = nbt.find_root("longTest").unwrap();
-        assert_eq!(long_test.as_long(), Some(9223372036854775807));
+        let long_test = nbt.find("longTest").unwrap();
+        assert_eq!(long_test.as_long(), Some(&9223372036854775807));
 
         // TAG_Short('shortTest'): 32767
-        let short_test = nbt.find_root("shortTest").unwrap();
-        assert_eq!(short_test.as_short(), Some(32767));
+        let short_test = nbt.find("shortTest").unwrap();
+        assert_eq!(short_test.as_short(), Some(&32767));
 
         // TAG_List('listTest (compound)'): 5 entries
-        let list_test = nbt.find_root("listTest (compound)").unwrap();
-        let mut list_test_iter = nbt.iter(list_test).unwrap();
+        let list_test = nbt.find_list("listTest (compound)", TAG_COMPOUND_ID).unwrap();
+        let mut list_test_iter = list_test.iter();
         {
             // TAG_Compound(None): 2 entries
-            let first = list_test_iter.next().unwrap();
+            let first = list_test_iter.next().unwrap().as_compound().unwrap();
 
             // TAG_Long('created-on'): 1264099775885L
-            let created_on = nbt.find(first, "created-on").unwrap();
-            assert_eq!(created_on.as_long(), Some(1264099775885));
+            let created_on = first.find("created-on").unwrap();
+            assert_eq!(created_on.as_long(), Some(&1264099775885));
 
             // TAG_String('name'): 'Compound tag #0'
-            let name = nbt.find(first, "name").unwrap();
+            let name = first.find("name").unwrap();
             assert_eq!(name.as_string(), Some(&"Compound tag #0".into()));
         }
         {
             // TAG_Compound(None): 2 entries
-            let second = list_test_iter.next().unwrap();
+            let second = list_test_iter.next().unwrap().as_compound().unwrap();
 
             // TAG_Long('created-on'): 1264099775885L
-            let created_on = nbt.find(second, "created-on").unwrap();
-            assert_eq!(created_on.as_long(), Some(1264099775885));
+            let created_on = second.find("created-on").unwrap();
+            assert_eq!(created_on.as_long(), Some(&1264099775885));
 
             // TAG_String('name'): 'Compound tag #1'
-            let name = nbt.find(second, "name").unwrap();
+            let name = second.find("name").unwrap();
             assert_eq!(name.as_string(), Some(&"Compound tag #1".into()));
         }
         assert!(list_test_iter.next().is_none());
 
         // TAG_Byte_Array('byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))'): [1000 bytes]
-        let byte_array_test = nbt.find_root("byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))").unwrap();
-        let bytes: &[i8] = byte_array_test.as_byte_array().unwrap();
-        assert_eq!(bytes.len(), 1000);
-        for (index, value) in bytes.iter().enumerate() {
+        let byte_array = nbt.find_byte_array("byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))").unwrap();
+        assert_eq!(byte_array.len(), 1000);
+        for (index, value) in byte_array.iter().enumerate() {
             let expected = (index * index * 255 + index * 7) % 100;
             assert_eq!(*value, expected as i8);
         }

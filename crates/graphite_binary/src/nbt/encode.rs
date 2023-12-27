@@ -2,15 +2,26 @@ use super::*;
 
 use bytes::BufMut;
 
-pub fn write(nbt: &NBT) -> Vec<u8> {
+pub fn write_named(nbt: &NBT) -> Vec<u8> {
     let mut vec = Vec::new();
-    write_into(nbt, &mut vec);
+    write_named_into(nbt, &mut vec);
     vec
 }
 
-pub fn write_into(nbt: &NBT, vec: &mut Vec<u8>) {
+pub fn write_named_into(nbt: &NBT, vec: &mut Vec<u8>) {
     vec.push(TAG_COMPOUND_ID.0);
     write_string(vec, &nbt.root_name);
+    write_compound(vec, &nbt.nodes, &nbt.root_children);
+}
+
+pub fn write_any(nbt: &NBT) -> Vec<u8> {
+    let mut vec = Vec::new();
+    write_any_into(nbt, &mut vec);
+    vec
+}
+
+pub fn write_any_into(nbt: &NBT, vec: &mut Vec<u8>) {
+    vec.push(TAG_COMPOUND_ID.0);
     write_compound(vec, &nbt.nodes, &nbt.root_children);
 }
 

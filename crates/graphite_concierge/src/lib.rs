@@ -1,72 +1,121 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::net::ToSocketAddrs;
+use std::borrow::{Borrow, Cow};
+use std::cell::{UnsafeCell, RefCell};
+use std::io::Write;
+use std::net::{ToSocketAddrs, SocketAddr, Ipv4Addr, IpAddr};
+use std::pin::Pin;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use anyhow::bail;
 use graphite_binary::slice_serialization::{Single, SliceSerializable};
-use graphite_mc_protocol::{handshake};
-use graphite_mc_protocol::handshake::client::Intention;
-use graphite_network::{NetworkHandlerService, Connection, FramedPacketHandler};
-use message_io::network::{ResourceId};
+use graphite_mc_protocol::login::serverbound::Hello;
+use graphite_mc_protocol::status::serverbound::PingRequest;
+use graphite_mc_protocol::status::clientbound::{StatusResponse, PongResponse};
+use graphite_mc_protocol::types::GameProfile;
+use graphite_mc_protocol::{handshake, status, login};
+use graphite_mc_protocol::handshake::serverbound::Intention;
+use graphite_network::{NetworkHandlerService, Connection, FramedPacketHandler, PacketBuffer, HandleAction};
+use mio::net::TcpStream;
 use slab::Slab;
-
-struct Concierge {
-    client_states: HashMap<ResourceId, ClientState>
-}
 
 enum Phase {
     Initial,
     Status,
-    Login
+    Login,
+    LoginWaitForAck
 }
 
-const BUFFER_SIZE: usize = 2097148;
-
 struct ClientState {
-    connection: Rc<RefCell<Connection<ConciergeNetworkHandlerService>>>,
+    connection: Rc<RefCell<Connection>>,
+    packet_buffer: PacketBuffer,
+    concierge: *mut Concierge,
     phase: Phase,
 
     protocol_version: i32,
     connected_host: String,
     connected_port: u16,
+    username: String,
+    uuid: u128,
 
     received_status: bool,
 
     idx: Option<usize>
 }
 
-impl FramedPacketHandler<ConciergeNetworkHandlerService> for ClientState {
-    fn handle(&mut self, net: &mut ConciergeNetworkHandlerService, data: &[u8]) {
+// todo: only keep connections for 10 seconds
+
+impl FramedPacketHandler for ClientState {
+    fn handle(&mut self, data: &[u8]) -> HandleAction {
         println!("Client state: received {}", String::from_utf8_lossy(data));
+
+        let result = match self.phase {
+            Phase::Initial => {
+                handle_intention(self, data)
+            },
+            Phase::Status => {
+                handle_status(self, data)
+            },
+            Phase::Login => {
+                handle_login(self, data)
+            },
+            Phase::LoginWaitForAck => {
+                handle_login_wait_for_ack(self, data)
+            },
+        };
+        match result {
+            Ok(action) => action,
+            Err(error) => if cfg!(debug_assertions) {
+                panic!("Encountered error in Concierge: {}", error);
+            } else {
+                HandleAction::Disconnect
+            },
+        }
     }
 
-    fn disconnected(&mut self, net: &mut ConciergeNetworkHandlerService) {
+    fn disconnected(&mut self) {
         println!("Client state: disconnected");
-        net.client_states.remove(self.idx.unwrap());
-
+        unsafe { self.concierge.as_mut() }.unwrap().client_states.remove(self.idx.unwrap());
     }
 }
 
-#[derive(Default)]
-struct ConciergeNetworkHandlerService {
-    client_states: Slab<Rc<RefCell<ClientState>>>
+pub struct LoginInformation {
+    pub username: String,
+    pub uuid: u128
 }
 
-impl NetworkHandlerService for ConciergeNetworkHandlerService {
-    fn accept_new_connection(&mut self, connection: Rc<RefCell<Connection<ConciergeNetworkHandlerService>>>) {
-        let state = Rc::new(RefCell::new(ClientState {
+impl From<SocketAddr> for LoginInformation {
+    fn from(_: SocketAddr) -> Self {
+        panic!("unable to convert SocketAddr to LoginInformation")
+    }
+}
+
+struct Concierge {
+    client_states: Slab<Rc<UnsafeCell<ClientState>>>,
+    sender: Box<dyn FnMut(LoginInformation, TcpStream)>,
+    status: Arc<Mutex<String>>
+}
+
+impl NetworkHandlerService for Pin<Box<Concierge>> {
+    const MAXIMUM_PACKET_SIZE: usize = 2097151;
+    type ExtraData = SocketAddr;
+
+    fn accept_new_connection(&mut self, _address: SocketAddr, connection: Rc<RefCell<Connection>>) {
+        let state = Rc::new(UnsafeCell::new(ClientState {
             connection: connection.clone(),
+            packet_buffer: PacketBuffer::new(),
+            concierge: self.as_mut().get_mut(),
             phase: Phase::Initial,
             protocol_version: 0,
             connected_host: String::new(),
             connected_port: 0,
+            username: String::new(),
+            uuid: 0,
             received_status: false,
             idx: None
         }));
 
         let idx = self.client_states.insert(state.clone());
-        state.borrow_mut().idx = Some(idx);
+        unsafe { state.get().as_mut() }.unwrap().idx = Some(idx);
 
         connection.borrow_mut().set_handler(state.clone());
 
@@ -74,87 +123,39 @@ impl NetworkHandlerService for ConciergeNetworkHandlerService {
     }
 }
 
-pub fn listen(addr: impl ToSocketAddrs) {
+pub fn listen(addr: impl ToSocketAddrs, sender: Box<dyn FnMut(LoginInformation, TcpStream)>, status: Arc<Mutex<String>>) {
     let mut handler = graphite_network::NetworkHandler::new(
-        ConciergeNetworkHandlerService::default()
-    );
-    handler.listen(addr).unwrap();
+        Box::pin(Concierge {
+            client_states: Slab::new(),
+            sender,
+            status
+        }),
+        addr
+    ).unwrap();
+    handler.listen().unwrap();
 }
 
-// // Read incoming network events.
-// listener.for_each(move |event| match event {
-//     node::NodeEvent::Network(net_event) => match net_event {
-//         NetEvent::Connected(_, _) => unreachable!(),
-//         NetEvent::Accepted(endpoint, _id) => {
-//             concierge.client_states.insert(endpoint.resource_id(), ClientState::default());
-
-//             println!("Client connected: {}", endpoint.resource_id());
-//             handler.signals().send_with_timer(Signal::TimeoutHandshake(endpoint.resource_id()), Duration::from_secs(10));
-//         },
-//         NetEvent::Message(endpoint, mut data) => {
-//             println!("Received {} ({} bytes): {}", endpoint.resource_id(), data.len(), String::from_utf8_lossy(data));
-
-//             if let Some(client_state) = concierge.client_states.get_mut(&mut endpoint.resource_id()) {
-//                 let result = match client_state.phase {
-//                     Phase::Initial => {
-//                         handle_intention(client_state, &mut data)
-//                     },
-//                     Phase::Status => {
-//                         handle_status(&handler, endpoint, &mut buffer, client_state, &mut data)
-//                     },
-//                     Phase::Login => todo!(),
-//                 };
-//                 match result {
-//                     Ok(disconnect) => if disconnect {
-//                         concierge.client_states.remove(&endpoint.resource_id());
-//                         handler.network().remove(endpoint.resource_id());
-//                     },
-//                     Err(error) => if cfg!(debug_assertions) {
-//                         panic!("Encountered error in Concierge: {}", error);
-//                     } else {
-//                         concierge.client_states.remove(&endpoint.resource_id());
-//                         handler.network().remove(endpoint.resource_id());
-//                     },
-//                 }
-//             } else {
-//                 handler.network().remove(endpoint.resource_id());
-//             }
-//         },
-//         NetEvent::Disconnected(endpoint) => {
-//             concierge.client_states.remove(&endpoint.resource_id());
-//             println!("Client disconnected: {}", endpoint.resource_id()) // Tcp or Ws
-//         },
-//     },
-//     node::NodeEvent::Signal(signal) => match signal {
-//         Signal::TimeoutHandshake(resource_id) => {
-//             concierge.client_states.remove(&resource_id);
-//             let removed = handler.network().remove(resource_id);
-//             println!("Tried to remove: {}, {}", resource_id, removed) // Tcp or Ws
-//         }
-//     },
-// });
-
-fn handle_intention(client_state: &mut ClientState, bytes: &mut &[u8]) -> anyhow::Result<bool> {
+fn handle_intention(client_state: &mut ClientState, mut bytes: &[u8]) -> anyhow::Result<HandleAction> {
     if bytes.len() < 3 {
         bail!("Insufficient bytes for handshake");
     } else if bytes[0..3] == [0xFE, 0x01, 0xFA] {
         bail!("Legacy server list ping is not supported");
     } else {
-        let packet_id: u8 = Single::read(bytes)?;
-        if let Ok(packet_id) = handshake::client::PacketId::try_from(packet_id) {
+        let packet_id: u8 = Single::read(&mut bytes)?;
+        if let Ok(packet_id) = handshake::serverbound::PacketId::try_from(packet_id) {
             match packet_id {
-                handshake::client::PacketId::Intention => {
-                    let intention_packet = Intention::read_fully(bytes)?;
+                handshake::serverbound::PacketId::Intention => {
+                    let intention_packet = Intention::read_fully(&mut bytes)?;
                     println!("Read intention packet: {:?}", intention_packet);
 
                     match intention_packet.intention {
-                        handshake::client::IntentionType::Status => {
+                        handshake::serverbound::IntentionType::Status => {
                             client_state.connected_host = intention_packet.host_name.to_string();
                             client_state.connected_port = intention_packet.port;
                             client_state.protocol_version = intention_packet.protocol_version;
                             client_state.phase = Phase::Status;
                         },
-                        handshake::client::IntentionType::Login => {
+                        handshake::serverbound::IntentionType::Login => {
                             client_state.phase = Phase::Login;
                         },
                     }
@@ -168,87 +169,117 @@ fn handle_intention(client_state: &mut ClientState, bytes: &mut &[u8]) -> anyhow
         }
     }
 
-    Ok(false)
+    Ok(HandleAction::Continue)
 }
 
-// fn handle_status(node_handler: &NodeHandler<Signal>, endpoint: Endpoint, buffer: &mut Vec<u8>,
-//         client_state: &mut ClientState, bytes: &mut &[u8]) -> anyhow::Result<bool> {
-//     let packet_id: u8 = Single::read(bytes)?;
-//     if let Ok(packet_id) = status::client::PacketId::try_from(packet_id) {
-//         match packet_id {
-//             status::client::PacketId::StatusRequest => {
-//                 if client_state.received_status {
-//                     return Ok(true);
-//                 }
+fn handle_status(client_state: &mut ClientState, mut bytes: &[u8]) -> anyhow::Result<HandleAction> {
+    let packet_id: u8 = Single::read(&mut bytes)?;
+    if let Ok(packet_id) = status::serverbound::PacketId::try_from(packet_id) {
+        match packet_id {
+            status::serverbound::PacketId::StatusRequest => {
+                if client_state.received_status {
+                    return Ok(HandleAction::Disconnect);
+                }
+                client_state.received_status = true;
 
-//                 let status_response = StatusResponse {
-//                     json: r#"{
-//                         "version": {
-//                             "name": "1.20.4",
-//                             "protocol": 765
-//                         },
-//                         "players": {
-//                             "max": 100,
-//                             "online": 5,
-//                             "sample": [
-//                                 {
-//                                     "name": "thinkofdeath",
-//                                     "id": "4566e69f-c907-48ee-8d71-d7ba5aa00d20"
-//                                 }
-//                             ]
-//                         },
-//                         "description": {
-//                             "text": "Hello world"
-//                         },
-//                         "favicon": "data:image/png;base64,<data>",
-//                         "enforcesSecureChat": true,
-//                         "previewsChat": true
-//                     }"#,
-//                 };
+                let status_str =  unsafe { client_state.concierge.as_mut() }.unwrap().status.lock().unwrap();
 
-//                 send_packet(node_handler, endpoint, buffer, &status_response)?;
-//             }
-//             status::client::PacketId::PingRequest => {
-//                 let ping_request = PingRequest::read_fully(bytes)?;
-//                 let pong_response = PongResponse {
-//                     time: ping_request.time
-//                 };
+                let status_response = StatusResponse {
+                    json: status_str.as_str(),
+                };
 
-//                 send_packet(node_handler, endpoint, buffer, &pong_response)?;
+                client_state.packet_buffer.write_packet(&status_response)?;
 
-//                 return Ok(true);
-//             }
-//         }
-//     } else {
-//         bail!(
-//             "Unknown packet_id {} during status",
-//             packet_id
-//         );
-//     }
+                drop(status_str);
 
-//     Ok(false)
-// }
+                client_state.connection.borrow_mut().send(client_state.packet_buffer.pop_written());
+            }
+            status::serverbound::PacketId::PingRequest => {
+                let ping_request = PingRequest::read_fully(&mut bytes)?;
+                let pong_response = PongResponse {
+                    time: ping_request.time
+                };
 
-// fn send_packet<'a, I: std::fmt::Debug, T>(
-//     node_handler: &NodeHandler<Signal>, endpoint: Endpoint, buffer: &mut Vec<u8>,
-//     packet: &'a T,
-// ) -> anyhow::Result<()>
-// where
-//     T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
-// {
-//     let write_size = T::get_write_size(T::as_copy_type(&packet));
-//     if write_size > BUFFER_SIZE {
-//         bail!("Packet too large");
-//     }
+                client_state.packet_buffer.write_packet(&pong_response)?;
 
-//     let buffer_len = buffer.len();
-//     let slice_after_writing = unsafe { T::write(&mut buffer[1..], T::as_copy_type(&packet)) };
-//     let bytes_written = buffer_len - slice_after_writing.len();
+                client_state.connection.borrow_mut().send(client_state.packet_buffer.pop_written());
 
-//     buffer[0] = packet.get_packet_id_as_u8();
+                return Ok(HandleAction::Disconnect);
+            }
+        }
+    } else {
+        bail!(
+            "Unknown packet_id {} during status",
+            packet_id
+        );
+    }
 
-//     let data = &buffer[0..bytes_written];
-//     node_handler.network().send(endpoint, data);
+    Ok(HandleAction::Continue)
+}
 
-//     Ok(())
-// }
+fn handle_login(client_state: &mut ClientState, mut bytes: &[u8]) -> anyhow::Result<HandleAction> {
+    let packet_id: u8 = Single::read(&mut bytes)?;
+    if let Ok(packet_id) = login::serverbound::PacketId::try_from(packet_id) {
+        match packet_id {
+            login::serverbound::PacketId::Hello => {
+                let hello = Hello::read_fully(&mut bytes)?;
+
+                // Send login success
+                let login_success = login::clientbound::LoginSuccess {
+                    profile: GameProfile {
+                        uuid: hello.uuid,
+                        username: Cow::Borrowed(hello.username.borrow()),
+                        properties: vec![],
+                    },
+                };
+
+                client_state.packet_buffer.write_packet(&login_success)?;
+
+                client_state.connection.borrow_mut().send(client_state.packet_buffer.pop_written());
+
+                // Save information
+                client_state.uuid = hello.uuid;
+                client_state.username = hello.username.into_owned();
+                client_state.phase = Phase::LoginWaitForAck;
+
+                Ok(HandleAction::Continue)
+            },
+            login::serverbound::PacketId::LoginAcknowledged => {
+                Ok(HandleAction::Disconnect)
+            }
+        }
+    } else {
+        bail!(
+            "Unknown packet_id {} during login",
+            packet_id
+        );
+    }
+}
+
+fn handle_login_wait_for_ack(client_state: &mut ClientState, mut bytes: &[u8]) -> anyhow::Result<HandleAction> {
+    let packet_id: u8 = Single::read(&mut bytes)?;
+    if let Ok(packet_id) = login::serverbound::PacketId::try_from(packet_id) {
+        match packet_id {
+            login::serverbound::PacketId::Hello => {
+                Ok(HandleAction::Disconnect)
+            },
+            login::serverbound::PacketId::LoginAcknowledged => {
+                // Redirect connection
+                let concierge = unsafe { client_state.concierge.as_mut() }.unwrap();
+                let login_information = LoginInformation {
+                    username: std::mem::take(&mut client_state.username),
+                    uuid: client_state.uuid
+                };
+
+                Ok(HandleAction::Transfer(Box::new(move |stream: TcpStream| {
+                    (concierge.sender)(login_information, stream);
+                })))
+            }
+        }
+    } else {
+        bail!(
+            "Unknown packet_id {} during login",
+            packet_id
+        );
+    }
+}

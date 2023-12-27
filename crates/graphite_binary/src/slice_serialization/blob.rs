@@ -170,6 +170,27 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<M
     }
 }
 
+impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, Cow<'a, str>> for SizedString<MAX_SIZE> {
+    type CopyType = &'a str;
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, str>> {
+        Ok(Cow::Borrowed(<SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::read(bytes)?))
+    }
+
+    fn get_write_size(data: &'a str) -> usize {
+        <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &'a str) -> &'b mut [u8] {
+        <SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::write(bytes, data)
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'a Cow<'a, str>) -> Self::CopyType {
+        t
+    }
+}
+
 impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, String> for SizedString<MAX_SIZE> {
     type CopyType = &'a String;
 

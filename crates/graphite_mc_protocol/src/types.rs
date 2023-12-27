@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::borrow::{Cow, Borrow};
 
 use graphite_binary::{
     nbt::CachedNBT,
@@ -130,19 +130,19 @@ impl<'a> Default for ProtocolItemStack<'a> {
 // client is "textures", for the skin of the player
 slice_serializable! {
     #[derive(Debug, Clone)]
-    pub struct GameProfileProperty {
-        pub id: String as SizedString,
-        pub value: String as SizedString,
-        pub signature: Option<String> as Option<SizedString>
+    pub struct GameProfileProperty<'a> {
+        pub id: Cow<'a, str> as SizedString,
+        pub value: Cow<'a, str> as SizedString,
+        pub signature: Option<&'a str> as Option<SizedString>
     }
 }
 
 slice_serializable! {
     #[derive(Debug, Clone)]
-    pub struct GameProfile {
+    pub struct GameProfile<'a> {
         pub uuid: u128 as BigEndian,
-        pub username: String as SizedString<16>,
-        pub properties: Vec<GameProfileProperty> as SizedArray<GameProfileProperty>
+        pub username: Cow<'a, str> as SizedString<16>,
+        pub properties: Vec<GameProfileProperty<'a>> as SizedArray<GameProfileProperty>
     }
 }
 
@@ -296,6 +296,41 @@ impl SliceSerializable<'_> for BlockPosition {
 
     fn get_write_size(_: Self) -> usize {
         <slice_serialization::BigEndian as SliceSerializable<i64>>::get_write_size(0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct GlobalPosition<'a> {
+    pub dimension: Cow<'a, str>,
+    pub position: BlockPosition,
+}
+
+impl <'a> SliceSerializable<'a> for GlobalPosition<'a> {
+    type CopyType = &'a GlobalPosition<'a>;
+
+    fn as_copy_type(t: &'a Self) -> Self::CopyType {
+        t
+    }
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Self> {
+        let dimension = <slice_serialization::SizedString as SliceSerializable<&'a str>>::read(bytes)?;
+        let position = BlockPosition::read(bytes)?;
+
+        Ok(Self {
+            dimension: Cow::Borrowed(dimension),
+            position
+        })
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+        bytes = <slice_serialization::SizedString as SliceSerializable<&str>>::write(bytes, &data.dimension);
+        bytes = BlockPosition::write(bytes, data.position);
+        bytes
+    }
+
+    fn get_write_size(data: Self::CopyType) -> usize {
+        <slice_serialization::SizedString as SliceSerializable<&str>>::get_write_size(&data.dimension) +
+            BlockPosition::get_write_size(data.position)
     }
 }
 

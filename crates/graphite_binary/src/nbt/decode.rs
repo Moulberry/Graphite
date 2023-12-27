@@ -12,7 +12,7 @@ pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     if type_id == TAG_END_ID.0 {
         return Ok(NBT::new());
     } else if type_id != TAG_COMPOUND_ID.0 {
-        bail!("nbt_decode: root must be a compound");
+        bail!("nbt_decode: root must be a compound, got type_id = {type_id}");
     }
 
     let mut size = 0;
