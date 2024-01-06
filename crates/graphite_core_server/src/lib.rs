@@ -1,25 +1,57 @@
-use std::{pin::Pin, rc::Rc, cell::{UnsafeCell, RefCell}, borrow::Cow};
+use std::{pin::Pin, rc::Rc, cell::{UnsafeCell, RefCell}, borrow::Cow, ptr::NonNull, time::Duration};
 
 use graphite_binary::nbt;
 use graphite_concierge::LoginInformation;
-use graphite_mc_protocol::{configuration::{self, serverbound::PacketHandler}, play::{self, clientbound::GameEventType}};
+use graphite_mc_protocol::{configuration::{self, serverbound::PacketHandler}};
 use graphite_network::{NetworkHandlerService, Connection, NetworkHandler, TcpStreamSender, FramedPacketHandler, HandleAction, PacketBuffer};
 use registry::Registries;
 use slab::Slab;
+use world::{GenericWorld, WorldExtension, World, chunk_section::ChunkSection, ChunkList};
+// use world::{World, WorldExtension};
 
 pub mod registry;
+pub mod world;
+pub mod player;
+pub mod entity;
+pub mod types;
+pub mod inventory;
 
-pub struct CoreServer {
-    configuring_players: Slab<Rc<UnsafeCell<ConfiguringPlayer>>>,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Behaviour {
+    Vanilla,
+    Pass
 }
 
-pub struct ConfiguringPlayer {
+pub trait UniverseExtension: Sized + Unpin + 'static {
+    fn init(universe: &mut Universe<Self>) -> Self;
+    fn spawn_player(universe: &mut Universe<Self>, player: ConfiguringPlayer<Self>);
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct WorldId(usize);
+
+pub struct Universe<U: UniverseExtension> {
+    configuring_players: Slab<Rc<UnsafeCell<ConfiguringPlayer<U>>>>,
+    worlds: Slab<Box<dyn GenericWorld>>,
+    extension: Option<U>
+}
+
+pub struct ConfiguringPlayer<U: UniverseExtension> {
     connection: Rc<RefCell<Connection>>,
+    universe: NonNull<Universe<U>>,
     packet_buffer: PacketBuffer,
     idx: Option<usize>
 }
 
-impl FramedPacketHandler for ConfiguringPlayer {
+impl <T: UniverseExtension> Drop for ConfiguringPlayer<T> {
+    fn drop(&mut self) {
+        if Rc::strong_count(&self.connection) <= 2 {
+            self.connection.borrow_mut().disconnect();
+        }
+    }
+}
+
+impl <T: UniverseExtension> FramedPacketHandler for ConfiguringPlayer<T> {
     fn handle(&mut self, data: &[u8]) -> HandleAction {
         self.parse_and_handle(data).unwrap();
         HandleAction::Continue
@@ -30,63 +62,33 @@ impl FramedPacketHandler for ConfiguringPlayer {
     }
 }
 
-impl graphite_mc_protocol::configuration::serverbound::PacketHandler for ConfiguringPlayer {
+impl <T: UniverseExtension> graphite_mc_protocol::configuration::serverbound::PacketHandler for ConfiguringPlayer<T> {
     fn handle_finish_configuration(&mut self, _: configuration::serverbound::FinishConfiguration) -> anyhow::Result<()> {
-        // send join game
-        let join_game = play::clientbound::JoinGame {
-            entity_id: 0,
-            is_hardcore: false,
-            dimension_names: vec!["graphite:default_world"],
-            max_players: 100,
-            view_distance: 8,
-            simulation_distance: 8,
-            reduced_debug_info: false,
-            enable_respawn_screen: false,
-            do_limited_crafting: false,
-            dimension_type: "graphite:default_dimension_type",
-            dimension_name: "graphite:default_world",
-            hashed_seed: 0,
-            gamemode: 1,
-            previous_gamemode: -1,
-            is_debug: false,
-            is_flat: false,
-            death_location: None,
-            portal_cooldown: 0,
-        };
-        self.packet_buffer.write_packet(&join_game).unwrap();
+        self.connection.borrow_mut().disconnect_handler();
 
-        // send teleport
-        self.packet_buffer.write_packet(&play::clientbound::PlayerPosition {
-            x: 0.0,
-            y: 400.0,
-            z: 0.0,
-            yaw: 0.0,
-            pitch: 0.0,
-            relative_arguments: 0,
-            id: 0
-        }).unwrap();
+        let universe = unsafe { self.universe.as_mut() };
 
-        // send StartWaitingForLevelChunks game event
-        self.packet_buffer.write_packet(&play::clientbound::GameEvent {
-            event_type: GameEventType::StartWaitingForLevelChunks,
-            param: 0.0,
-        }).unwrap();
+        let configuring_player = universe.configuring_players.remove(self.idx.unwrap());
+        let configuring_player = Rc::into_inner(configuring_player).unwrap();
+        let mut configuring_player = UnsafeCell::into_inner(configuring_player);
 
-        // send all packets
-        self.connection.borrow_mut().send(self.packet_buffer.pop_written());
+        configuring_player.idx = None;
+        T::spawn_player(universe, configuring_player);
 
         Ok(())   
     }
 }
 
-impl NetworkHandlerService for Pin<Box<CoreServer>> {
+impl <T: UniverseExtension> NetworkHandlerService for Pin<Box<Universe<T>>> {
     const MAXIMUM_PACKET_SIZE: usize = 2097151;
+    const TICK_RATE: Option<std::time::Duration> = Some(Duration::from_millis(50));
 
     type ExtraData = LoginInformation;
 
-    fn accept_new_connection(&mut self, extra_data: Self::ExtraData, connection: Rc<RefCell<Connection>>) {
+    fn accept_new_connection(&mut self, _: Self::ExtraData, connection: Rc<RefCell<Connection>>) {
         let configuring_player = ConfiguringPlayer {
             connection: connection.clone(),
+            universe: self.as_mut().get_mut().into(),
             packet_buffer: PacketBuffer::new(),
             idx: None
         };
@@ -112,6 +114,12 @@ impl NetworkHandlerService for Pin<Box<CoreServer>> {
         connection.set_handler(configuring_player.clone());
         connection.send(configuring_player_ref.packet_buffer.pop_written());
     }
+
+    fn tick(&mut self) {
+        for (_, world) in &mut self.worlds {
+            world.tick();
+        }
+    }
 }
 
 pub fn get_default_registry() -> nbt::NBT {
@@ -119,14 +127,33 @@ pub fn get_default_registry() -> nbt::NBT {
     registries.to_nbt()
 }
 
-impl CoreServer {
-    pub fn new() -> (NetworkHandler<Pin<Box<CoreServer>>>, TcpStreamSender<LoginInformation>) {
-        let core_server = CoreServer {
-            configuring_players: Slab::new()
+impl <U: UniverseExtension> Universe<U> {
+    pub fn new() -> (NetworkHandler<Pin<Box<Universe<U>>>>, TcpStreamSender<LoginInformation>) {
+        let mut universe = Universe {
+            configuring_players: Slab::new(),
+            worlds: Slab::new(),
+            extension: None
         };
 
+        let extension = U::init(&mut universe);
+        universe.extension = Some(extension);
+
         graphite_network::NetworkHandler::new_channel(
-            Box::pin(core_server)
+            Box::pin(universe)
         ).unwrap()
+    }
+
+    pub fn create_world<W: WorldExtension<Universe = U> + 'static>(&mut self, extension: W, chunks: ChunkList) -> WorldId {
+        let world: World<W> = World::new(self, extension, chunks);
+        let id = self.worlds.insert(Box::new(world));
+        WorldId(id)
+    }
+
+    pub fn world<W: WorldExtension + 'static>(&mut self, world_id: WorldId) -> Option<&mut World<W>> {
+        self.worlds.get_mut(world_id.0)?.downcast_mut::<World<W>>()
+    }
+
+    pub fn extension(&mut self) -> &mut U {
+        self.extension.as_mut().unwrap()
     }
 }

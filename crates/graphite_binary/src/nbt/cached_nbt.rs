@@ -35,6 +35,12 @@ impl From<NBT> for CachedNBT {
     }
 }
 
+impl PartialEq for CachedNBT {
+    fn eq(&self, other: &Self) -> bool {
+        self.deref() == other.deref()
+    }
+}
+
 impl Deref for CachedNBT {
     type Target = NBT;
 
@@ -66,12 +72,11 @@ impl CachedNBT {
         if self.inner.borrow().bytes_dirty {
             let inner = unsafe { &mut *self.inner.as_ptr() };
             inner.bytes_dirty = false;
-            inner.bytes.truncate(0);
+            inner.bytes.clear();
 
-            encode::write_any_into(&inner.nbt, &mut inner.bytes);
+            encode::write_protocol_into(&inner.nbt, &mut inner.bytes);
         }
 
-        // &[0]
         unsafe { &*self.inner.as_ptr() }.bytes.as_slice()
     }
 }

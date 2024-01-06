@@ -10,7 +10,7 @@ impl<'a> SliceSerializable<'a, Cow<'a, CachedNBT>> for NBTBlob {
     type CopyType = &'a CachedNBT;
 
     fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, CachedNBT>> {
-        let nbt = decode::read(bytes)?;
+        let nbt = decode::read_protocol(bytes)?;
         Ok(Cow::Owned(nbt.into()))
     }
 

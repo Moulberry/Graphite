@@ -1,0 +1,15 @@
+[package]
+name = "graphite_anvil"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Anvil loader for the graphite_minecraft project"
+
+[dependencies]
+graphite_binary = { path = "../graphite_binary" }
+graphite_core_server = { path = "../graphite_core_server" }
+graphite_mc_constants = { path = "../graphite_mc_constants" }
+byteorder = "1.5.0"
+flate2 = "1.0.28"
+heapless = "0.8.0"
+include_dir = "0.7.3"

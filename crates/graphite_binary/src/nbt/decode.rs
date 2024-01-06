@@ -7,7 +7,27 @@ use anyhow::bail;
 
 const DECODE_CAPACITY: usize = 2_097_152;
 
-pub fn read(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
+pub fn read_protocol(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
+    let type_id: u8 = Single::read(bytes)?;
+    if type_id == TAG_END_ID.0 {
+        return Ok(NBT::new());
+    } else if type_id != TAG_COMPOUND_ID.0 {
+        bail!("nbt_decode: root must be a compound, got type_id = {type_id}");
+    }
+
+    let mut size = 0;
+
+    let mut nodes = Vec::new();
+    let children = read_compound(bytes, &mut nodes, 0, &mut size)?;
+
+    Ok(NBT {
+        root_name: String::new(),
+        root_children: children,
+        nodes,
+    })
+}
+
+pub fn read_named(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     let type_id: u8 = Single::read(bytes)?;
     if type_id == TAG_END_ID.0 {
         return Ok(NBT::new());
@@ -134,7 +154,7 @@ fn read_byte_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i8
 fn read_string<'a>(bytes: &mut &'a [u8], size: &mut usize) -> anyhow::Result<Cow<'a, str>> {
     let length: u16 = BigEndian::read(bytes)?;
     if bytes.len() < length as _ {
-        bail!("read_string: not enough bytes to read string");
+        bail!("read_string: not enough bytes ({} remaining) to read string of length {}", bytes.len(), length);
     }
     let length = length as usize;
 
@@ -193,14 +213,18 @@ fn read_int_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i32
         bail!("read_int_array: nbt too large, capacity reached")
     }
 
+    let (arr_bytes, rest_bytes) = bytes.split_at(length*4);
+    *bytes = rest_bytes;
+
     let mut values = vec![0; length];
-    byteorder::BigEndian::read_i32_into(&bytes[..length*4], values.as_mut_slice());
+    byteorder::BigEndian::read_i32_into(arr_bytes, values.as_mut_slice());
     Ok(values)
 }
 
 #[inline]
 fn read_long_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i64>> {
     let length: i32 = BigEndian::read(bytes)?;
+
     if length < 0 {
         bail!("read_long_array: length cannot be negative");
     } else if bytes.len() < (length as usize) * 8 {
@@ -213,7 +237,10 @@ fn read_long_array(bytes: &mut &[u8], size: &mut usize) -> anyhow::Result<Vec<i6
         bail!("read_long_array: nbt too large, capacity reached")
     }
 
+    let (arr_bytes, rest_bytes) = bytes.split_at(length*8);
+    *bytes = rest_bytes;
+
     let mut values = vec![0; length];
-    byteorder::BigEndian::read_i64_into(&bytes[..length*8], values.as_mut_slice());
+    byteorder::BigEndian::read_i64_into(arr_bytes, values.as_mut_slice());
     Ok(values)
 }

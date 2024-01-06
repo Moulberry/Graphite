@@ -97,6 +97,7 @@ struct Concierge {
 
 impl NetworkHandlerService for Pin<Box<Concierge>> {
     const MAXIMUM_PACKET_SIZE: usize = 2097151;
+    const TICK_RATE: Option<std::time::Duration> = None;
     type ExtraData = SocketAddr;
 
     fn accept_new_connection(&mut self, _address: SocketAddr, connection: Rc<RefCell<Connection>>) {
@@ -120,6 +121,9 @@ impl NetworkHandlerService for Pin<Box<Concierge>> {
         connection.borrow_mut().set_handler(state.clone());
 
         println!("Got new connection, total: {}", self.client_states.len());
+    }
+
+    fn tick(&mut self) {
     }
 }
 
@@ -146,13 +150,13 @@ fn handle_intention(client_state: &mut ClientState, mut bytes: &[u8]) -> anyhow:
             match packet_id {
                 handshake::serverbound::PacketId::Intention => {
                     let intention_packet = Intention::read_fully(&mut bytes)?;
-                    println!("Read intention packet: {:?}", intention_packet);
+
+                    client_state.connected_host = intention_packet.host_name.to_string();
+                    client_state.connected_port = intention_packet.port;
+                    client_state.protocol_version = intention_packet.protocol_version;
 
                     match intention_packet.intention {
                         handshake::serverbound::IntentionType::Status => {
-                            client_state.connected_host = intention_packet.host_name.to_string();
-                            client_state.connected_port = intention_packet.port;
-                            client_state.protocol_version = intention_packet.protocol_version;
                             client_state.phase = Phase::Status;
                         },
                         handshake::serverbound::IntentionType::Login => {

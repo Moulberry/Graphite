@@ -1,4 +1,4 @@
-use std::borrow::{Cow, Borrow};
+use std::borrow::Cow;
 
 use graphite_binary::{
     nbt::CachedNBT,
@@ -210,11 +210,11 @@ impl SliceSerializable<'_, f32> for QuantizedShort {
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<f32> {
         let short: i16 = BigEndian::read(bytes)?;
-        Ok(short as f32 * 8000.0)
+        Ok(short as f32 / 8000.0)
     }
 
     unsafe fn write(bytes: &mut [u8], data: f32) -> &mut [u8] {
-        let short = (data / 8000.0) as i16;
+        let short = (data * 8000.0).clamp(i16::MIN as f32, i16::MAX as f32) as i16;
         <BigEndian as SliceSerializable<i16>>::write(bytes, short)
     }
 
@@ -233,6 +233,14 @@ pub struct BlockPosition {
 }
 
 impl BlockPosition {
+    pub fn new(x: i32, y: i32, z: i32) -> Self {
+        Self {
+            x,
+            y,
+            z
+        }
+    }
+
     pub fn relative(self, direction: Direction) -> Self {
         match direction {
             Direction::Down => Self {

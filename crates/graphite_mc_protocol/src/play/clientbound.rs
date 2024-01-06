@@ -12,16 +12,16 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 identify_packets! {
     PacketId,
-    // AddEntity = 0x00,
+    AddEntity = 0x01,
     // AddExperienceOrb = 0x01,
     // AddPlayer = 0x02,
     // AnimateEntity = 0x03,
     // AwardStats = 0x04,
-    // BlockChangedAck = 0x05,
+    BlockChangedAck = 0x05,
     // BlockDestruction = 0x06,
     // BlockEntityData = 0x07,
     // BlockEvent = 0x08,
-    // BlockUpdate = 0x09,
+    BlockUpdate = 0x09,
     // BossEvent = 0x0a,
     // ChangeDifficulty = 0x0b,
     // ChatPreview = 0x0c,
@@ -31,10 +31,10 @@ identify_packets! {
     // ContainerClose = 0x10,
     // ContainerSetContent = 0x11,
     // ContainerSetData = 0x12,
-    // ContainerSetSlot<'_> = 0x13,
+    ContainerSetSlot<'_> = 0x15,
     // Cooldown = 0x14,
     // CustomChatCompletions = 0x15,
-    // CustomPayload<'_> = 0x16,
+    CustomPayload<'_> = 0x18,
     // CustomSound = 0x17,
     // DeleteChat = 0x18,
     // Disconnect = 0x19,
@@ -44,8 +44,8 @@ identify_packets! {
     GameEvent = 0x20,
     // HorseScreenOpen = 0x1e,
     // InitializeBorder = 0x1f,
-    // KeepAlive = 0x20,
-    // LevelChunkWithLight<'_> = 0x21,
+    KeepAlive = 0x24,
+    LevelChunkWithLight<'_> = 0x25,
     // LevelEvent = 0x22,
     // LevelParticles = 0x23,
     // LightUpdate = 0x24,
@@ -53,7 +53,7 @@ identify_packets! {
     // MapItemData = 0x26,
     // MerchantOffers = 0x27,
     // MoveEntityPos = 0x28,
-    // MoveEntityPosRot = 0x29,
+    MoveEntityPosRot = 0x2d,
     // MoveEntityRot = 0x2a,
     // MoveVehicle = 0x2b,
     // OpenBook = 0x2c,
@@ -69,9 +69,9 @@ identify_packets! {
     // PlayerCombatKill = 0x36,
     // PlayerInfo<'_> = 0x37,
     // PlayerLookAt = 0x38,
-    PlayerPosition = 0x3e
+    PlayerPosition = 0x3e,
     // UnlockRecipe = 0x3a,
-    // RemoveEntities = 0x3b,
+    RemoveEntities = 0x40,
     // RemoveMobEffect = 0x3c,
     // ResourcePack = 0x3d,
     // Respawn<'_> = 0x3e,
@@ -87,14 +87,14 @@ identify_packets! {
     // SetBorderWarningDistance = 0x48,
     // SetCamera = 0x49,
     // SetCarriedItem = 0x4a,
-    // SetChunkCacheCenter = 0x4b,
+    SetChunkCacheCenter = 0x52,
     // SetChunkCacheRadius = 0x4c,
     // SetDefaultSpawnPosition = 0x4d,
     // SetDisplayChatPreview = 0x4e,
     // SetDisplayObjective = 0x4f,
     // SetEntityData<'_> = 0x50,
     // SetEntityLink = 0x51,
-    // SetEntityMotion = 0x52,
+    SetEntityMotion = 0x58,
     // SetEquipment<'_> = 0x53,
     // SetExperience = 0x54,
     // SetHealth = 0x55,
@@ -114,12 +114,12 @@ identify_packets! {
     // TabList = 0x63,
     // TagQuery = 0x64,
     // TakeItemEntity = 0x65,
-    // TeleportEntity = 0x66,
+    TeleportEntity = 0x6d,
     // UpdateAdvancements = 0x67,
     // UpdateAttributes = 0x68,
     // UpdateMobEffect = 0x69,
     // UpdateRecipes = 0x6f,
-    // UpdateTags<'_> = 0x6b
+    UpdateTags<'_> = 0x74
 }
 
 // Add Entity
@@ -133,8 +133,8 @@ slice_serializable! {
         pub x: f64 as BigEndian,
         pub y: f64 as BigEndian,
         pub z: f64 as BigEndian,
-        pub yaw: f32 as ByteRotation,
         pub pitch: f32 as ByteRotation,
+        pub yaw: f32 as ByteRotation,
         pub head_yaw: f32 as ByteRotation,
         pub data: i32 as VarInt, // nice naming mojang
         pub x_vel: f32 as QuantizedShort,
@@ -303,8 +303,7 @@ slice_serializable! {
         pub heightmaps: Cow<'a, CachedNBT> as NBTBlob,
         pub data: &'a [u8] as SizedBlob,
         pub block_entity_count: i32 as VarInt,
-        pub block_entity_data: &'a [u8] as WriteOnlyBlob,
-        pub trust_edges: bool as Single
+        pub block_entity_data: &'a [u8] as WriteOnlyBlob
     }
 }
 
@@ -606,6 +605,17 @@ slice_serializable! {
     }
 }
 
+// Set Entity Motion
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetEntityMotion {
+        pub entity_id: i32 as VarInt,
+        pub x_vel: f32 as QuantizedShort,
+        pub y_vel: f32 as QuantizedShort,
+        pub z_vel: f32 as QuantizedShort,
+    }
+}
+
 // Set Equipment
 slice_serializable! {
     #[derive(Debug)]
@@ -651,7 +661,6 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct Tag<'a> {
-        // Tag identifier (Vanilla required tags are minecraft:block, minecraft:item, minecraft:fluid, minecraft:entity_type, and minecraft:game_event)
         pub name: &'a str as SizedString,
         pub entries: Vec<u16> as SizedArray<VarInt>
     }

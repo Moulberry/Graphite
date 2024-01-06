@@ -11,7 +11,7 @@ pub use reference::{NBTRef, NBTRefMut, ListRef, CompoundRef, ListRefMut, Compoun
 
 pub use cached_nbt::CachedNBT;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct TagType(pub(crate) u8);
 
 pub const TAG_END_ID: TagType = TagType(0);
@@ -42,6 +42,36 @@ impl Debug for NBT {
         } else {
             stringified::to_snbt(f, self)
         }
+    }
+}
+
+impl PartialEq for NBT {
+    fn eq(&self, other: &Self) -> bool {
+        if self.root_name != other.root_name {
+            return false;
+        }
+
+        let self_children = &self.root_children.0;
+        let other_children = &other.root_children.0;
+        if self_children.len() != other_children.len() {
+            return false;
+        }
+
+        let zipped = self_children.iter().zip(other_children.iter());
+        for ((self_name, self_idx), (other_name, other_idx)) in zipped {
+            if self_name != other_name {
+                return false;
+            }
+
+            let self_element = self.get_reference(*self_idx);
+            let other_element = other.get_reference(*other_idx);
+
+            if self_element != other_element {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
@@ -114,6 +144,14 @@ impl NBT {
             root_children: NBTCompound(Vec::new()),
             nodes: Vec::new(),
         }
+    }
+
+    pub fn keys(&self) -> Vec<&str> {
+        let mut refs: Vec<&str> = vec![];
+        for (ele, _) in self.root_children.0.iter() {
+            refs.push(ele);
+        }
+        refs
     }
 
     fn insert_node(&mut self, key: &str, node: NBTNode) -> usize {

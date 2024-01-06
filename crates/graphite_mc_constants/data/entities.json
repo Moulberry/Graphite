@@ -1,0 +1,9062 @@
+{
+  "allay": {
+    "height": 0.6,
+    "id": 0,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "dancing",
+        "serializer": "boolean"
+      },
+      {
+        "name": "can_duplicate",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.allay",
+    "width": 0.35
+  },
+  "area_effect_cloud": {
+    "height": 0.5,
+    "id": 1,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "radius",
+        "serializer": "float"
+      },
+      {
+        "name": "color",
+        "serializer": "int"
+      },
+      {
+        "name": "waiting",
+        "serializer": "boolean"
+      },
+      {
+        "name": "particle",
+        "serializer": "particle"
+      }
+    ],
+    "translationKey": "entity.minecraft.area_effect_cloud",
+    "width": 6.0
+  },
+  "armor_stand": {
+    "height": 1.975,
+    "id": 2,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "client_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "head_pose",
+        "serializer": "rotations"
+      },
+      {
+        "name": "body_pose",
+        "serializer": "rotations"
+      },
+      {
+        "name": "left_arm_pose",
+        "serializer": "rotations"
+      },
+      {
+        "name": "right_arm_pose",
+        "serializer": "rotations"
+      },
+      {
+        "name": "left_leg_pose",
+        "serializer": "rotations"
+      },
+      {
+        "name": "right_leg_pose",
+        "serializer": "rotations"
+      }
+    ],
+    "translationKey": "entity.minecraft.armor_stand",
+    "width": 0.5
+  },
+  "arrow": {
+    "height": 0.5,
+    "id": 3,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "pierce_level",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_effect_color",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.arrow",
+    "width": 0.5
+  },
+  "axolotl": {
+    "height": 0.42,
+    "id": 4,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "variant",
+        "serializer": "int"
+      },
+      {
+        "name": "playing_dead",
+        "serializer": "boolean"
+      },
+      {
+        "name": "from_bucket",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.axolotl",
+    "width": 0.75
+  },
+  "bat": {
+    "height": 0.9,
+    "id": 5,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.bat",
+    "width": 0.5
+  },
+  "bee": {
+    "height": 0.6,
+    "id": 6,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "remaining_anger_time",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.bee",
+    "width": 0.7
+  },
+  "blaze": {
+    "height": 1.8,
+    "id": 7,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.blaze",
+    "width": 0.6
+  },
+  "block_display": {
+    "height": 0.0,
+    "id": 8,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "transformation_interpolation_start_delta_ticks",
+        "serializer": "int"
+      },
+      {
+        "name": "transformation_interpolation_duration",
+        "serializer": "int"
+      },
+      {
+        "name": "pos_rot_interpolation_duration",
+        "serializer": "int"
+      },
+      {
+        "name": "translation",
+        "serializer": "vector3"
+      },
+      {
+        "name": "scale",
+        "serializer": "vector3"
+      },
+      {
+        "name": "left_rotation",
+        "serializer": "quaternion"
+      },
+      {
+        "name": "right_rotation",
+        "serializer": "quaternion"
+      },
+      {
+        "name": "billboard_render_constraints",
+        "serializer": "byte"
+      },
+      {
+        "name": "brightness_override",
+        "serializer": "int"
+      },
+      {
+        "name": "view_range",
+        "serializer": "float"
+      },
+      {
+        "name": "shadow_radius",
+        "serializer": "float"
+      },
+      {
+        "name": "shadow_strength",
+        "serializer": "float"
+      },
+      {
+        "name": "width",
+        "serializer": "float"
+      },
+      {
+        "name": "height",
+        "serializer": "float"
+      },
+      {
+        "name": "glow_color_override",
+        "serializer": "int"
+      },
+      {
+        "name": "block_state",
+        "serializer": "block_state"
+      }
+    ],
+    "translationKey": "entity.minecraft.block_display",
+    "width": 0.0
+  },
+  "boat": {
+    "height": 0.5625,
+    "id": 9,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_type",
+        "serializer": "int"
+      },
+      {
+        "name": "id_paddle_left",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_paddle_right",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_bubble_time",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.boat",
+    "width": 1.375
+  },
+  "breeze": {
+    "height": 1.7,
+    "id": 10,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.breeze",
+    "width": 0.6
+  },
+  "camel": {
+    "height": 2.375,
+    "id": 11,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "dash",
+        "serializer": "boolean"
+      },
+      {
+        "name": "last_pose_change_tick",
+        "serializer": "long"
+      }
+    ],
+    "translationKey": "entity.minecraft.camel",
+    "width": 1.7
+  },
+  "cat": {
+    "height": 0.7,
+    "id": 12,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "owneruuid",
+        "serializer": "optional_uuid"
+      },
+      {
+        "name": "variant",
+        "serializer": "cat_variant"
+      },
+      {
+        "name": "is_lying",
+        "serializer": "boolean"
+      },
+      {
+        "name": "relax_state_one",
+        "serializer": "boolean"
+      },
+      {
+        "name": "collar_color",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.cat",
+    "width": 0.6
+  },
+  "cave_spider": {
+    "height": 0.5,
+    "id": 13,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.cave_spider",
+    "width": 0.7
+  },
+  "chest_boat": {
+    "height": 0.5625,
+    "id": 14,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_type",
+        "serializer": "int"
+      },
+      {
+        "name": "id_paddle_left",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_paddle_right",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_bubble_time",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.chest_boat",
+    "width": 1.375
+  },
+  "chest_minecart": {
+    "height": 0.7,
+    "id": 15,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_display_block",
+        "serializer": "int"
+      },
+      {
+        "name": "id_display_offset",
+        "serializer": "int"
+      },
+      {
+        "name": "id_custom_display",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.chest_minecart",
+    "width": 0.98
+  },
+  "chicken": {
+    "height": 0.7,
+    "id": 16,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.chicken",
+    "width": 0.4
+  },
+  "cod": {
+    "height": 0.3,
+    "id": 17,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "from_bucket",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.cod",
+    "width": 0.5
+  },
+  "command_block_minecart": {
+    "height": 0.7,
+    "id": 18,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_display_block",
+        "serializer": "int"
+      },
+      {
+        "name": "id_display_offset",
+        "serializer": "int"
+      },
+      {
+        "name": "id_custom_display",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_command_name",
+        "serializer": "string"
+      },
+      {
+        "name": "id_last_output",
+        "serializer": "component"
+      }
+    ],
+    "translationKey": "entity.minecraft.command_block_minecart",
+    "width": 0.98
+  },
+  "cow": {
+    "height": 1.4,
+    "id": 19,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.cow",
+    "width": 0.9
+  },
+  "creeper": {
+    "height": 1.7,
+    "id": 20,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "swell_dir",
+        "serializer": "int"
+      },
+      {
+        "name": "is_powered",
+        "serializer": "boolean"
+      },
+      {
+        "name": "is_ignited",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.creeper",
+    "width": 0.6
+  },
+  "dolphin": {
+    "height": 0.6,
+    "id": 21,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "treasure_pos",
+        "serializer": "block_pos"
+      },
+      {
+        "name": "got_fish",
+        "serializer": "boolean"
+      },
+      {
+        "name": "moistness_level",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.dolphin",
+    "width": 0.9
+  },
+  "donkey": {
+    "height": 1.5,
+    "id": 22,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_chest",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.donkey",
+    "width": 1.3964844
+  },
+  "dragon_fireball": {
+    "height": 1.0,
+    "id": 23,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.dragon_fireball",
+    "width": 1.0
+  },
+  "drowned": {
+    "height": 1.95,
+    "id": 24,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "special_type",
+        "serializer": "int"
+      },
+      {
+        "name": "drowned_conversion",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.drowned",
+    "width": 0.6
+  },
+  "egg": {
+    "height": 0.25,
+    "id": 25,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.egg",
+    "width": 0.25
+  },
+  "elder_guardian": {
+    "height": 1.9975,
+    "id": 26,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_moving",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_attack_target",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.elder_guardian",
+    "width": 1.9975
+  },
+  "end_crystal": {
+    "height": 2.0,
+    "id": 27,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "beam_target",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "show_bottom",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.end_crystal",
+    "width": 2.0
+  },
+  "ender_dragon": {
+    "height": 8.0,
+    "id": 28,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "phase",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.ender_dragon",
+    "width": 16.0
+  },
+  "ender_pearl": {
+    "height": 0.25,
+    "id": 29,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.ender_pearl",
+    "width": 0.25
+  },
+  "enderman": {
+    "height": 2.9,
+    "id": 30,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "carry_state",
+        "serializer": "optional_block_state"
+      },
+      {
+        "name": "creepy",
+        "serializer": "boolean"
+      },
+      {
+        "name": "stared_at",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.enderman",
+    "width": 0.6
+  },
+  "endermite": {
+    "height": 0.3,
+    "id": 31,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.endermite",
+    "width": 0.4
+  },
+  "evoker": {
+    "height": 1.95,
+    "id": 32,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "is_celebrating",
+        "serializer": "boolean"
+      },
+      {
+        "name": "spell_casting",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.evoker",
+    "width": 0.6
+  },
+  "evoker_fangs": {
+    "height": 0.8,
+    "id": 33,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.evoker_fangs",
+    "width": 0.5
+  },
+  "experience_bottle": {
+    "height": 0.25,
+    "id": 34,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.experience_bottle",
+    "width": 0.25
+  },
+  "experience_orb": {
+    "height": 0.5,
+    "id": 35,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.experience_orb",
+    "width": 0.5
+  },
+  "eye_of_ender": {
+    "height": 0.25,
+    "id": 36,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.eye_of_ender",
+    "width": 0.25
+  },
+  "falling_block": {
+    "height": 0.98,
+    "id": 37,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "start_pos",
+        "serializer": "block_pos"
+      }
+    ],
+    "translationKey": "entity.minecraft.falling_block",
+    "width": 0.98
+  },
+  "fireball": {
+    "height": 1.0,
+    "id": 58,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.fireball",
+    "width": 1.0
+  },
+  "firework_rocket": {
+    "height": 0.25,
+    "id": 38,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_fireworks_item",
+        "serializer": "item_stack"
+      },
+      {
+        "name": "attached_to_target",
+        "serializer": "optional_unsigned_int"
+      },
+      {
+        "name": "shot_at_angle",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.firework_rocket",
+    "width": 0.25
+  },
+  "fishing_bobber": {
+    "height": 0.25,
+    "id": 125,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "hooked_entity",
+        "serializer": "int"
+      },
+      {
+        "name": "biting",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.fishing_bobber",
+    "width": 0.25
+  },
+  "fox": {
+    "height": 0.7,
+    "id": 39,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "type",
+        "serializer": "int"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "trusted_0",
+        "serializer": "optional_uuid"
+      },
+      {
+        "name": "trusted_1",
+        "serializer": "optional_uuid"
+      }
+    ],
+    "translationKey": "entity.minecraft.fox",
+    "width": 0.6
+  },
+  "frog": {
+    "height": 0.5,
+    "id": 40,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "variant",
+        "serializer": "frog_variant"
+      },
+      {
+        "name": "tongue_target",
+        "serializer": "optional_unsigned_int"
+      }
+    ],
+    "translationKey": "entity.minecraft.frog",
+    "width": 0.5
+  },
+  "furnace_minecart": {
+    "height": 0.7,
+    "id": 41,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_display_block",
+        "serializer": "int"
+      },
+      {
+        "name": "id_display_offset",
+        "serializer": "int"
+      },
+      {
+        "name": "id_custom_display",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_fuel",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.furnace_minecart",
+    "width": 0.98
+  },
+  "ghast": {
+    "height": 4.0,
+    "id": 42,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "is_charging",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.ghast",
+    "width": 4.0
+  },
+  "giant": {
+    "height": 12.0,
+    "id": 43,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.giant",
+    "width": 3.6
+  },
+  "glow_item_frame": {
+    "height": 0.5,
+    "id": 44,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item",
+        "serializer": "item_stack"
+      },
+      {
+        "name": "rotation",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.glow_item_frame",
+    "width": 0.5
+  },
+  "glow_squid": {
+    "height": 0.8,
+    "id": 45,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "dark_ticks_remaining",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.glow_squid",
+    "width": 0.8
+  },
+  "goat": {
+    "height": 1.3,
+    "id": 46,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "is_screaming_goat",
+        "serializer": "boolean"
+      },
+      {
+        "name": "has_left_horn",
+        "serializer": "boolean"
+      },
+      {
+        "name": "has_right_horn",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.goat",
+    "width": 0.9
+  },
+  "guardian": {
+    "height": 0.85,
+    "id": 47,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_moving",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_attack_target",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.guardian",
+    "width": 0.85
+  },
+  "hoglin": {
+    "height": 1.4,
+    "id": 48,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "immune_to_zombification",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.hoglin",
+    "width": 1.3964844
+  },
+  "hopper_minecart": {
+    "height": 0.7,
+    "id": 49,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_display_block",
+        "serializer": "int"
+      },
+      {
+        "name": "id_display_offset",
+        "serializer": "int"
+      },
+      {
+        "name": "id_custom_display",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.hopper_minecart",
+    "width": 0.98
+  },
+  "horse": {
+    "height": 1.6,
+    "id": 50,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_type_variant",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.horse",
+    "width": 1.3964844
+  },
+  "husk": {
+    "height": 1.95,
+    "id": 51,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "special_type",
+        "serializer": "int"
+      },
+      {
+        "name": "drowned_conversion",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.husk",
+    "width": 0.6
+  },
+  "illusioner": {
+    "height": 1.95,
+    "id": 52,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "is_celebrating",
+        "serializer": "boolean"
+      },
+      {
+        "name": "spell_casting",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.illusioner",
+    "width": 0.6
+  },
+  "interaction": {
+    "height": 0.0,
+    "id": 53,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "width",
+        "serializer": "float"
+      },
+      {
+        "name": "height",
+        "serializer": "float"
+      },
+      {
+        "name": "response",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.interaction",
+    "width": 0.0
+  },
+  "iron_golem": {
+    "height": 2.7,
+    "id": 54,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.iron_golem",
+    "width": 1.4
+  },
+  "item": {
+    "height": 0.25,
+    "id": 55,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.item",
+    "width": 0.25
+  },
+  "item_display": {
+    "height": 0.0,
+    "id": 56,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "transformation_interpolation_start_delta_ticks",
+        "serializer": "int"
+      },
+      {
+        "name": "transformation_interpolation_duration",
+        "serializer": "int"
+      },
+      {
+        "name": "pos_rot_interpolation_duration",
+        "serializer": "int"
+      },
+      {
+        "name": "translation",
+        "serializer": "vector3"
+      },
+      {
+        "name": "scale",
+        "serializer": "vector3"
+      },
+      {
+        "name": "left_rotation",
+        "serializer": "quaternion"
+      },
+      {
+        "name": "right_rotation",
+        "serializer": "quaternion"
+      },
+      {
+        "name": "billboard_render_constraints",
+        "serializer": "byte"
+      },
+      {
+        "name": "brightness_override",
+        "serializer": "int"
+      },
+      {
+        "name": "view_range",
+        "serializer": "float"
+      },
+      {
+        "name": "shadow_radius",
+        "serializer": "float"
+      },
+      {
+        "name": "shadow_strength",
+        "serializer": "float"
+      },
+      {
+        "name": "width",
+        "serializer": "float"
+      },
+      {
+        "name": "height",
+        "serializer": "float"
+      },
+      {
+        "name": "glow_color_override",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      },
+      {
+        "name": "item_display",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.item_display",
+    "width": 0.0
+  },
+  "item_frame": {
+    "height": 0.5,
+    "id": 57,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item",
+        "serializer": "item_stack"
+      },
+      {
+        "name": "rotation",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.item_frame",
+    "width": 0.5
+  },
+  "leash_knot": {
+    "height": 0.5,
+    "id": 59,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.leash_knot",
+    "width": 0.375
+  },
+  "lightning_bolt": {
+    "height": 0.0,
+    "id": 60,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.lightning_bolt",
+    "width": 0.0
+  },
+  "llama": {
+    "height": 1.87,
+    "id": 61,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_chest",
+        "serializer": "boolean"
+      },
+      {
+        "name": "strength",
+        "serializer": "int"
+      },
+      {
+        "name": "swag",
+        "serializer": "int"
+      },
+      {
+        "name": "variant",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.llama",
+    "width": 0.9
+  },
+  "llama_spit": {
+    "height": 0.25,
+    "id": 62,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.llama_spit",
+    "width": 0.25
+  },
+  "magma_cube": {
+    "height": 2.04,
+    "id": 63,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_size",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.magma_cube",
+    "width": 2.04
+  },
+  "marker": {
+    "height": 0.0,
+    "id": 64,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.marker",
+    "width": 0.0
+  },
+  "minecart": {
+    "height": 0.7,
+    "id": 65,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_display_block",
+        "serializer": "int"
+      },
+      {
+        "name": "id_display_offset",
+        "serializer": "int"
+      },
+      {
+        "name": "id_custom_display",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.minecart",
+    "width": 0.98
+  },
+  "mooshroom": {
+    "height": 1.4,
+    "id": 66,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "type",
+        "serializer": "string"
+      }
+    ],
+    "translationKey": "entity.minecraft.mooshroom",
+    "width": 0.9
+  },
+  "mule": {
+    "height": 1.6,
+    "id": 67,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_chest",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.mule",
+    "width": 1.3964844
+  },
+  "ocelot": {
+    "height": 0.7,
+    "id": 68,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "trusting",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.ocelot",
+    "width": 0.6
+  },
+  "painting": {
+    "height": 0.5,
+    "id": 69,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "painting_variant",
+        "serializer": "painting_variant"
+      }
+    ],
+    "translationKey": "entity.minecraft.painting",
+    "width": 0.5
+  },
+  "panda": {
+    "height": 1.25,
+    "id": 70,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "unhappy_counter",
+        "serializer": "int"
+      },
+      {
+        "name": "sneeze_counter",
+        "serializer": "int"
+      },
+      {
+        "name": "eat_counter",
+        "serializer": "int"
+      },
+      {
+        "name": "main_gene",
+        "serializer": "byte"
+      },
+      {
+        "name": "hidden_gene",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.panda",
+    "width": 1.3
+  },
+  "parrot": {
+    "height": 0.9,
+    "id": 71,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "owneruuid",
+        "serializer": "optional_uuid"
+      },
+      {
+        "name": "variant",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.parrot",
+    "width": 0.5
+  },
+  "phantom": {
+    "height": 0.5,
+    "id": 72,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_size",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.phantom",
+    "width": 0.9
+  },
+  "pig": {
+    "height": 0.9,
+    "id": 73,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "saddle",
+        "serializer": "boolean"
+      },
+      {
+        "name": "boost_time",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.pig",
+    "width": 0.9
+  },
+  "piglin": {
+    "height": 1.95,
+    "id": 74,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "immune_to_zombification",
+        "serializer": "boolean"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "is_charging_crossbow",
+        "serializer": "boolean"
+      },
+      {
+        "name": "is_dancing",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.piglin",
+    "width": 0.6
+  },
+  "piglin_brute": {
+    "height": 1.95,
+    "id": 75,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "immune_to_zombification",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.piglin_brute",
+    "width": 0.6
+  },
+  "pillager": {
+    "height": 1.95,
+    "id": 76,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "is_celebrating",
+        "serializer": "boolean"
+      },
+      {
+        "name": "is_charging_crossbow",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.pillager",
+    "width": 0.6
+  },
+  "player": {
+    "height": 1.8,
+    "id": 124,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "player_absorption",
+        "serializer": "float"
+      },
+      {
+        "name": "score",
+        "serializer": "int"
+      },
+      {
+        "name": "player_mode_customisation",
+        "serializer": "byte"
+      },
+      {
+        "name": "player_main_hand",
+        "serializer": "byte"
+      },
+      {
+        "name": "shoulder_left",
+        "serializer": "compound_tag"
+      },
+      {
+        "name": "shoulder_right",
+        "serializer": "compound_tag"
+      }
+    ],
+    "translationKey": "entity.minecraft.player",
+    "width": 0.6
+  },
+  "polar_bear": {
+    "height": 1.4,
+    "id": 77,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "standing",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.polar_bear",
+    "width": 1.4
+  },
+  "potion": {
+    "height": 0.25,
+    "id": 78,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.potion",
+    "width": 0.25
+  },
+  "pufferfish": {
+    "height": 0.7,
+    "id": 79,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "from_bucket",
+        "serializer": "boolean"
+      },
+      {
+        "name": "puff_state",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.pufferfish",
+    "width": 0.7
+  },
+  "rabbit": {
+    "height": 0.5,
+    "id": 80,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "type",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.rabbit",
+    "width": 0.4
+  },
+  "ravager": {
+    "height": 2.2,
+    "id": 81,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "is_celebrating",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.ravager",
+    "width": 1.95
+  },
+  "salmon": {
+    "height": 0.4,
+    "id": 82,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "from_bucket",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.salmon",
+    "width": 0.7
+  },
+  "sheep": {
+    "height": 1.3,
+    "id": 83,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "wool",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.sheep",
+    "width": 0.9
+  },
+  "shulker": {
+    "height": 1.0,
+    "id": 84,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "attach_face",
+        "serializer": "direction"
+      },
+      {
+        "name": "peek",
+        "serializer": "byte"
+      },
+      {
+        "name": "color",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.shulker",
+    "width": 1.0
+  },
+  "shulker_bullet": {
+    "height": 0.3125,
+    "id": 85,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.shulker_bullet",
+    "width": 0.3125
+  },
+  "silverfish": {
+    "height": 0.3,
+    "id": 86,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.silverfish",
+    "width": 0.4
+  },
+  "skeleton": {
+    "height": 1.99,
+    "id": 87,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "stray_conversion",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.skeleton",
+    "width": 0.6
+  },
+  "skeleton_horse": {
+    "height": 1.6,
+    "id": 88,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.skeleton_horse",
+    "width": 1.3964844
+  },
+  "slime": {
+    "height": 2.04,
+    "id": 89,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_size",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.slime",
+    "width": 2.04
+  },
+  "small_fireball": {
+    "height": 0.3125,
+    "id": 90,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.small_fireball",
+    "width": 0.3125
+  },
+  "sniffer": {
+    "height": 1.75,
+    "id": 91,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "state",
+        "serializer": "sniffer_state"
+      },
+      {
+        "name": "drop_seed_at_tick",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.sniffer",
+    "width": 1.9
+  },
+  "snow_golem": {
+    "height": 1.9,
+    "id": 92,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "pumpkin",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.snow_golem",
+    "width": 0.7
+  },
+  "snowball": {
+    "height": 0.25,
+    "id": 93,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "item_stack",
+        "serializer": "item_stack"
+      }
+    ],
+    "translationKey": "entity.minecraft.snowball",
+    "width": 0.25
+  },
+  "spawner_minecart": {
+    "height": 0.7,
+    "id": 94,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_display_block",
+        "serializer": "int"
+      },
+      {
+        "name": "id_display_offset",
+        "serializer": "int"
+      },
+      {
+        "name": "id_custom_display",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.spawner_minecart",
+    "width": 0.98
+  },
+  "spectral_arrow": {
+    "height": 0.5,
+    "id": 95,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "pierce_level",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.spectral_arrow",
+    "width": 0.5
+  },
+  "spider": {
+    "height": 0.9,
+    "id": 96,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.spider",
+    "width": 1.4
+  },
+  "squid": {
+    "height": 0.8,
+    "id": 97,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.squid",
+    "width": 0.8
+  },
+  "stray": {
+    "height": 1.99,
+    "id": 98,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.stray",
+    "width": 0.6
+  },
+  "strider": {
+    "height": 1.7,
+    "id": 99,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "boost_time",
+        "serializer": "int"
+      },
+      {
+        "name": "suffocating",
+        "serializer": "boolean"
+      },
+      {
+        "name": "saddle",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.strider",
+    "width": 0.9
+  },
+  "tadpole": {
+    "height": 0.3,
+    "id": 100,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "from_bucket",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.tadpole",
+    "width": 0.4
+  },
+  "text_display": {
+    "height": 0.0,
+    "id": 101,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "transformation_interpolation_start_delta_ticks",
+        "serializer": "int"
+      },
+      {
+        "name": "transformation_interpolation_duration",
+        "serializer": "int"
+      },
+      {
+        "name": "pos_rot_interpolation_duration",
+        "serializer": "int"
+      },
+      {
+        "name": "translation",
+        "serializer": "vector3"
+      },
+      {
+        "name": "scale",
+        "serializer": "vector3"
+      },
+      {
+        "name": "left_rotation",
+        "serializer": "quaternion"
+      },
+      {
+        "name": "right_rotation",
+        "serializer": "quaternion"
+      },
+      {
+        "name": "billboard_render_constraints",
+        "serializer": "byte"
+      },
+      {
+        "name": "brightness_override",
+        "serializer": "int"
+      },
+      {
+        "name": "view_range",
+        "serializer": "float"
+      },
+      {
+        "name": "shadow_radius",
+        "serializer": "float"
+      },
+      {
+        "name": "shadow_strength",
+        "serializer": "float"
+      },
+      {
+        "name": "width",
+        "serializer": "float"
+      },
+      {
+        "name": "height",
+        "serializer": "float"
+      },
+      {
+        "name": "glow_color_override",
+        "serializer": "int"
+      },
+      {
+        "name": "text",
+        "serializer": "component"
+      },
+      {
+        "name": "line_width",
+        "serializer": "int"
+      },
+      {
+        "name": "background_color",
+        "serializer": "int"
+      },
+      {
+        "name": "text_opacity",
+        "serializer": "byte"
+      },
+      {
+        "name": "style_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.text_display",
+    "width": 0.0
+  },
+  "tnt": {
+    "height": 0.98,
+    "id": 102,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "fuse",
+        "serializer": "int"
+      },
+      {
+        "name": "block_state",
+        "serializer": "block_state"
+      }
+    ],
+    "translationKey": "entity.minecraft.tnt",
+    "width": 0.98
+  },
+  "tnt_minecart": {
+    "height": 0.7,
+    "id": 103,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurt",
+        "serializer": "int"
+      },
+      {
+        "name": "id_hurtdir",
+        "serializer": "int"
+      },
+      {
+        "name": "id_damage",
+        "serializer": "float"
+      },
+      {
+        "name": "id_display_block",
+        "serializer": "int"
+      },
+      {
+        "name": "id_display_offset",
+        "serializer": "int"
+      },
+      {
+        "name": "id_custom_display",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.tnt_minecart",
+    "width": 0.98
+  },
+  "trader_llama": {
+    "height": 1.87,
+    "id": 104,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_chest",
+        "serializer": "boolean"
+      },
+      {
+        "name": "strength",
+        "serializer": "int"
+      },
+      {
+        "name": "swag",
+        "serializer": "int"
+      },
+      {
+        "name": "variant",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.trader_llama",
+    "width": 0.9
+  },
+  "trident": {
+    "height": 0.5,
+    "id": 105,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "pierce_level",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_loyalty",
+        "serializer": "byte"
+      },
+      {
+        "name": "id_foil",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.trident",
+    "width": 0.5
+  },
+  "tropical_fish": {
+    "height": 0.4,
+    "id": 106,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "from_bucket",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_type_variant",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.tropical_fish",
+    "width": 0.5
+  },
+  "turtle": {
+    "height": 0.4,
+    "id": 107,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "home_pos",
+        "serializer": "block_pos"
+      },
+      {
+        "name": "has_egg",
+        "serializer": "boolean"
+      },
+      {
+        "name": "laying_egg",
+        "serializer": "boolean"
+      },
+      {
+        "name": "travel_pos",
+        "serializer": "block_pos"
+      },
+      {
+        "name": "going_home",
+        "serializer": "boolean"
+      },
+      {
+        "name": "travelling",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.turtle",
+    "width": 1.2
+  },
+  "vex": {
+    "height": 0.8,
+    "id": 108,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.vex",
+    "width": 0.4
+  },
+  "villager": {
+    "height": 1.95,
+    "id": 109,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "unhappy_counter",
+        "serializer": "int"
+      },
+      {
+        "name": "villager_data",
+        "serializer": "villager_data"
+      }
+    ],
+    "translationKey": "entity.minecraft.villager",
+    "width": 0.6
+  },
+  "vindicator": {
+    "height": 1.95,
+    "id": 110,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "is_celebrating",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.vindicator",
+    "width": 0.6
+  },
+  "wandering_trader": {
+    "height": 1.95,
+    "id": 111,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "unhappy_counter",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.wandering_trader",
+    "width": 0.6
+  },
+  "warden": {
+    "height": 2.9,
+    "id": 112,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "client_anger_level",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.warden",
+    "width": 0.9
+  },
+  "wind_charge": {
+    "height": 0.3125,
+    "id": 113,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.wind_charge",
+    "width": 0.3125
+  },
+  "witch": {
+    "height": 1.95,
+    "id": 114,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "is_celebrating",
+        "serializer": "boolean"
+      },
+      {
+        "name": "using_item",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.witch",
+    "width": 0.6
+  },
+  "wither": {
+    "height": 3.5,
+    "id": 115,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "target_a",
+        "serializer": "int"
+      },
+      {
+        "name": "target_b",
+        "serializer": "int"
+      },
+      {
+        "name": "target_c",
+        "serializer": "int"
+      },
+      {
+        "name": "id_inv",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.wither",
+    "width": 0.9
+  },
+  "wither_skeleton": {
+    "height": 2.4,
+    "id": 116,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.wither_skeleton",
+    "width": 0.7
+  },
+  "wither_skull": {
+    "height": 0.3125,
+    "id": 117,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "dangerous",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.wither_skull",
+    "width": 0.3125
+  },
+  "wolf": {
+    "height": 0.85,
+    "id": 118,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "owneruuid",
+        "serializer": "optional_uuid"
+      },
+      {
+        "name": "interested",
+        "serializer": "boolean"
+      },
+      {
+        "name": "collar_color",
+        "serializer": "int"
+      },
+      {
+        "name": "remaining_anger_time",
+        "serializer": "int"
+      }
+    ],
+    "translationKey": "entity.minecraft.wolf",
+    "width": 0.6
+  },
+  "zoglin": {
+    "height": 1.4,
+    "id": 119,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.zoglin",
+    "width": 1.3964844
+  },
+  "zombie": {
+    "height": 1.95,
+    "id": 120,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "special_type",
+        "serializer": "int"
+      },
+      {
+        "name": "drowned_conversion",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.zombie",
+    "width": 0.6
+  },
+  "zombie_horse": {
+    "height": 1.6,
+    "id": 121,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "id_flags",
+        "serializer": "byte"
+      }
+    ],
+    "translationKey": "entity.minecraft.zombie_horse",
+    "width": 1.3964844
+  },
+  "zombie_villager": {
+    "height": 1.95,
+    "id": 122,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "special_type",
+        "serializer": "int"
+      },
+      {
+        "name": "drowned_conversion",
+        "serializer": "boolean"
+      },
+      {
+        "name": "converting",
+        "serializer": "boolean"
+      },
+      {
+        "name": "villager_data",
+        "serializer": "villager_data"
+      }
+    ],
+    "translationKey": "entity.minecraft.zombie_villager",
+    "width": 0.6
+  },
+  "zombified_piglin": {
+    "height": 1.95,
+    "id": 123,
+    "metadata": [
+      {
+        "name": "shared_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "air_supply",
+        "serializer": "int"
+      },
+      {
+        "name": "custom_name",
+        "serializer": "optional_component"
+      },
+      {
+        "name": "custom_name_visible",
+        "serializer": "boolean"
+      },
+      {
+        "name": "silent",
+        "serializer": "boolean"
+      },
+      {
+        "name": "no_gravity",
+        "serializer": "boolean"
+      },
+      {
+        "name": "pose",
+        "serializer": "pose"
+      },
+      {
+        "name": "ticks_frozen",
+        "serializer": "int"
+      },
+      {
+        "name": "living_entity_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "health",
+        "serializer": "float"
+      },
+      {
+        "name": "effect_color",
+        "serializer": "int"
+      },
+      {
+        "name": "effect_ambience",
+        "serializer": "boolean"
+      },
+      {
+        "name": "arrow_count",
+        "serializer": "int"
+      },
+      {
+        "name": "stinger_count",
+        "serializer": "int"
+      },
+      {
+        "name": "sleeping_pos",
+        "serializer": "optional_block_pos"
+      },
+      {
+        "name": "mob_flags",
+        "serializer": "byte"
+      },
+      {
+        "name": "baby",
+        "serializer": "boolean"
+      },
+      {
+        "name": "special_type",
+        "serializer": "int"
+      },
+      {
+        "name": "drowned_conversion",
+        "serializer": "boolean"
+      }
+    ],
+    "translationKey": "entity.minecraft.zombified_piglin",
+    "width": 0.6
+  }
+}

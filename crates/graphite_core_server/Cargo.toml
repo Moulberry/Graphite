@@ -14,4 +14,16 @@ graphite_binary = { path = "../graphite_binary" }
 graphite_mc_protocol = { path = "../graphite_mc_protocol" }
 graphite_network = { path = "../graphite_network" }
 graphite_concierge = { path = "../graphite_concierge" }
+graphite_mc_constants = { path = "../graphite_mc_constants" }
 slab = "0.4.9"
+enum_dispatch = "0.3.12"
+downcast-rs = "1.2.0"
+heapless = "0.8.0"
+num = "0.4.1"
+glam = "0.25.0"
+rand = "0.8.5"
+thiserror = "1.0.56"
+
+[dev-dependencies]
+proptest = "1.0.0"
+criterion = "0.3.6"

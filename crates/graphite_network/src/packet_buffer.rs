@@ -56,6 +56,45 @@ impl PacketBuffer {
         slice
     }
 
+    pub fn peek_written(&self) -> &[u8] {
+        let ptr = self.vec.as_ptr();
+        unsafe { std::slice::from_raw_parts(ptr, self.write_index) }
+    }
+
+    pub fn copy_from(&mut self, other: &PacketBuffer) {
+        let other_bytes = other.peek_written();
+        if other_bytes.is_empty() {
+            return;
+        }
+
+        let bytes = self.get_unwritten(other_bytes.len());
+        bytes.copy_from_slice(other_bytes);
+        unsafe {
+            self.advance(other_bytes.len());
+        }
+    }
+
+    pub fn write_raw<'a, T>(&mut self, serializable: &'a T)
+    where
+        T: SliceSerializable<'a, T>,
+    {
+        let ref_type = T::as_copy_type(serializable);
+
+        let expected_size = T::get_write_size(ref_type.clone());
+
+        // allocate necessary bytes
+        let bytes = self.get_unwritten(expected_size);
+
+        // write the serializable
+        let slice_after_writing = unsafe { T::write(bytes, ref_type) };
+        let bytes_written = expected_size - slice_after_writing.len();
+
+        // advance the write buffer
+        unsafe {
+            self.advance(bytes_written);
+        }
+    }
+
     pub fn write_packet<'a, I: std::fmt::Debug, T>(&mut self, packet: &'a T) -> Result<(), PacketWriteError>
     where
         T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,

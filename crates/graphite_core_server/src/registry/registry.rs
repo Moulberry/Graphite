@@ -1,5 +1,3 @@
-use std::{marker::PhantomData, any::TypeId};
-
 use graphite_binary::nbt::{self, TAG_COMPOUND_ID, ListRefMut};
 
 use crate::registry::{dimension_type::DimensionType, damage_type::{DamageType, DamageTypeEffect}, biome::Biome};
@@ -127,6 +125,7 @@ impl Default for DamageTypeRegistry {
                 ("minecraft:stalagmite".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:outside_border".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:generic_kill".into(), DamageType(DamageTypeEffect::Hurt)),
+                ("minecraft:player_attack".into(), DamageType(DamageTypeEffect::Hurt)),
             ]
         }
     }

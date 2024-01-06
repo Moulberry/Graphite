@@ -1,11 +1,12 @@
-use std::any::{TypeId, Any};
 use std::cell::{UnsafeCell, RefCell};
 use std::collections::HashMap;
 use std::error::Error;
 use std::io::{self, Read, Write};
 use std::net::{ToSocketAddrs, SocketAddr};
+use std::ops::Mul;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use graphite_binary::varint;
 use mio::event::Event;
@@ -13,6 +14,7 @@ use mio::net::{TcpListener, TcpStream};
 use mio::{Poll, Events, Token, Interest};
 
 mod packet_buffer;
+pub use packet_buffer::PacketWriteError;
 pub use packet_buffer::PacketBuffer;
 
 const NEW_CONNECTION_TOKEN: Token = Token(0);
@@ -37,6 +39,18 @@ pub struct Connection {
 }
 
 impl Connection {
+    pub fn disconnect_handler(&mut self) {
+        if self.shutdown {
+            return;
+        }
+
+        if self.handler.is_none() {
+            panic!("No handler is set!");
+        }
+
+        self.handler = None;
+    }
+
     pub fn set_handler<T: FramedPacketHandler + 'static>(&mut self, handler: Rc<UnsafeCell<T>>) {
         if self.shutdown {
             return;
@@ -93,10 +107,12 @@ impl Connection {
 
 pub trait NetworkHandlerService: Sized {
     const MAXIMUM_PACKET_SIZE: usize;
+    const TICK_RATE: Option<Duration>;
+
     type ExtraData: 'static + From<SocketAddr>;
 
     fn accept_new_connection(&mut self, extra_data: Self::ExtraData, connection: Rc<RefCell<Connection>>);
-    // game loop
+    fn tick(&mut self);
 }
 
 #[derive(Clone)]
@@ -182,9 +198,39 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
         // todo: use slab instead of hashmap
         let mut unique_token = Token(NEW_CONNECTION_TOKEN.0 + 1);
     
+        let mut next_tick = if let Some(tick_rate) = T::TICK_RATE {
+            Instant::now().checked_add(tick_rate).unwrap()
+        } else {
+            Instant::now() // value doesn't actually matter  
+        };
+
         loop {
+            let timeout = if let Some(tick_rate) = T::TICK_RATE {
+                let now = Instant::now();
+
+                let since = now.checked_duration_since(next_tick);
+                if let Some(elapsed) = since {
+                    let mut tick_count = (elapsed.as_millis() / tick_rate.as_millis()).max(1);
+
+                    if tick_count > 100 {
+                        println!("Server can't keep up, running {} ticks behind", tick_count-100);
+                        tick_count = 100;
+                    }
+
+                    for _ in 0..tick_count {
+                        self.service.tick();
+                    }
+
+                    next_tick = next_tick.checked_add(tick_rate.mul(tick_count as u32)).unwrap();
+                }
+
+                next_tick.checked_duration_since(now)
+            } else {
+                None
+            };
+
             // Poll Mio for events, blocking until we get an event.
-            if let Err(err) = self.poll.poll(&mut events, None) {
+            if let Err(err) = self.poll.poll(&mut events, timeout) {
                 if interrupted(&err) {
                     continue;
                 }

@@ -1,5 +1,0 @@
-/Users/james/MinecraftModding/Graphite2/target/debug/deps/libgraphite_concierge-2bdcba610aa61574.rmeta: crates/graphite_concierge/src/lib.rs
-
-/Users/james/MinecraftModding/Graphite2/target/debug/deps/graphite_concierge-2bdcba610aa61574.d: crates/graphite_concierge/src/lib.rs
-
-crates/graphite_concierge/src/lib.rs:

@@ -1,6 +1,6 @@
 use std::hint::unreachable_unchecked;
 
-use super::{NBTNode, NBT, TagType};
+use super::{NBTNode, NBT, TagType, NBTCompound};
 
 #[derive(Copy, Clone, Debug)]
 pub enum NBTRef<'a> {
@@ -16,6 +16,26 @@ pub enum NBTRef<'a> {
     Compound(CompoundRef<'a>),
     IntArray(&'a Vec<i32>),
     LongArray(&'a Vec<i64>),
+}
+
+impl PartialEq for NBTRef<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Byte(l0), Self::Byte(r0)) => l0 == r0,
+            (Self::Short(l0), Self::Short(r0)) => l0 == r0,
+            (Self::Int(l0), Self::Int(r0)) => l0 == r0,
+            (Self::Long(l0), Self::Long(r0)) => l0 == r0,
+            (Self::Float(l0), Self::Float(r0)) => l0 == r0 || (l0.is_nan() && r0.is_nan()),
+            (Self::Double(l0), Self::Double(r0)) => l0 == r0 || (l0.is_nan() && r0.is_nan()),
+            (Self::ByteArray(l0), Self::ByteArray(r0)) => l0 == r0,
+            (Self::String(l0), Self::String(r0)) => l0 == r0,
+            (Self::List(l0), Self::List(r0)) => l0 == r0,
+            (Self::Compound(l0), Self::Compound(r0)) => l0 == r0,
+            (Self::IntArray(l0), Self::IntArray(r0)) => l0 == r0,
+            (Self::LongArray(l0), Self::LongArray(r0)) => l0 == r0,
+            _ => false,
+        }
+    }
 }
 
 macro_rules! as_basic {
@@ -102,18 +122,69 @@ pub struct CompoundRef<'a> {
     pub(crate) node_idx: usize
 }
 
+impl PartialEq for CompoundRef<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        let self_compound = self.get_self_node();
+        let other_compound = other.get_self_node();
+
+        if self_compound.0.len() != other_compound.0.len() {
+            return false;
+        }
+
+        let zipped = self_compound.0.iter().zip(other_compound.0.iter());
+        for ((self_child_name, self_child_idx), (other_child_name, other_child_idx)) in zipped {
+            if self_child_name != other_child_name {
+                return false;
+            }
+            if self.nbt.get_reference(*self_child_idx) != other.nbt.get_reference(*other_child_idx) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
 impl <'a> CompoundRef<'a> {
-    fn find_idx(&self, key: &str) -> Option<usize> {
+    fn get_self_node(&self) -> &NBTCompound {
         match self.nbt.nodes.get(self.node_idx) {
-            Some(NBTNode::Compound(compound)) => {
-                compound.find(key)
-            },
+            Some(NBTNode::Compound(compound)) => compound,
             _ => unsafe { unreachable_unchecked() }
         }
     }
 
+    fn find_idx(&self, key: &str) -> Option<usize> {
+        let compound = self.get_self_node();
+        compound.find(key)
+    }
+
     fn get_node(&self, idx: usize) -> &NBTNode {
         &self.nbt.nodes[idx]
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let compound = self.get_self_node();
+        compound.0.is_empty()
+    }
+
+    pub fn entries(&self) -> CompoundIterator<'_> {
+        CompoundIterator {
+            nbt: self.nbt,
+            compound: self.get_self_node(),
+            index: 0
+        }
+    }
+
+    // todo: should probably return an iterator instead
+    pub fn keys(&self) -> Vec<&str> {
+        let mut refs: Vec<&str> = vec![];
+
+        let compound = self.get_self_node();
+        for (ele, _) in compound.0.iter() {
+            refs.push(ele);
+        }
+
+        refs
     }
 
     super::enumerate_basic_types!(super::find);
@@ -157,27 +228,33 @@ pub struct CompoundRefMut<'a> {
 }
 
 impl <'a> CompoundRefMut<'a> {
+    fn get_self_node(&self) -> &NBTCompound {
+        match self.nbt.nodes.get(self.node_idx) {
+            Some(NBTNode::Compound(compound)) => compound,
+            _ => unsafe { unreachable_unchecked() }
+        }
+    }
+
+    fn get_self_node_mut(&mut self) -> &mut NBTCompound {
+        match self.nbt.nodes.get_mut(self.node_idx) {
+            Some(NBTNode::Compound(compound)) => compound,
+            _ => unsafe { unreachable_unchecked() }
+        }
+    }
+
     fn insert_node(&mut self, key: &str, node: NBTNode) -> usize {
         let idx = self.nbt.nodes.len();
         self.nbt.nodes.push(node);
 
-        match self.nbt.nodes.get_mut(self.node_idx) {
-            Some(NBTNode::Compound(compound)) => {
-                compound.insert(key, idx);
-            },
-            _ => unsafe { unreachable_unchecked() }
-        };
+        let compound = self.get_self_node_mut();
+        compound.insert(key, idx);
 
         idx
     }
 
     fn find_idx(&self, key: &str) -> Option<usize> {
-        match self.nbt.nodes.get(self.node_idx) {
-            Some(NBTNode::Compound(compound)) => {
-                compound.find(key)
-            },
-            _ => unsafe { unreachable_unchecked() }
-        }
+        let compound = self.get_self_node();
+        compound.find(key)
     }
 
     fn get_node(&self, idx: usize) -> &NBTNode {
@@ -186,6 +263,31 @@ impl <'a> CompoundRefMut<'a> {
 
     fn get_node_mut(&mut self, idx: usize) -> &mut NBTNode {
         &mut self.nbt.nodes[idx]
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let compound = self.get_self_node();
+        compound.0.is_empty()
+    }
+
+    pub fn entries(&self) -> CompoundIterator<'_> {
+        CompoundIterator {
+            nbt: self.nbt,
+            compound: self.get_self_node(),
+            index: 0
+        }
+    }
+
+    // todo: should probably return an iterator instead
+    pub fn keys(&self) -> Vec<&str> {
+        let mut refs: Vec<&str> = vec![];
+
+        let compound = self.get_self_node();
+        for (ele, _) in compound.0.iter() {
+            refs.push(ele);
+        }
+
+        refs
     }
 
     super::enumerate_basic_types!(super::insert);
@@ -279,18 +381,44 @@ pub struct ListRef<'a> {
     pub(crate) node_idx: usize
 }
 
+impl PartialEq for ListRef<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        let (self_type, self_children) = self.get_self_node();
+        let (other_type, other_children) = other.get_self_node();
+
+        if self_type != other_type || self_children.len() != other_children.len() {
+            return false;
+        }
+
+        let zipped = self_children.iter().zip(other_children.iter());
+        for (self_child, other_child) in zipped {
+            if self.nbt.get_reference(*self_child) != other.nbt.get_reference(*other_child) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
 impl <'a> ListRef<'a> {
-    pub fn iter(&self) -> NBTIterator<'_> {
+    fn get_self_node(&self) -> (TagType, &Vec<usize>) {
         match self.nbt.nodes.get(self.node_idx) {
-            Some(NBTNode::List { type_id: _, children} ) => {
-                NBTIterator {
-                    nbt: self.nbt,
-                    indices: children,
-                    index: 0,
-                }
-            },
+            Some(NBTNode::List { type_id, children} ) => (*type_id, children),
             _ => unsafe { unreachable_unchecked() }
+        }   
+    }
+
+    pub fn iter(&self) -> ListIterator<'_> {
+        ListIterator {
+            nbt: self.nbt,
+            indices: self.get_self_node().1,
+            index: 0,
         }        
+    }
+
+    pub fn len(&self) -> usize {
+        self.get_self_node().1.len()
     }
 }
 
@@ -332,13 +460,13 @@ impl <'a> ListRefMut<'a> {
     }
 }
 
-pub struct NBTIterator<'a> {
+pub struct ListIterator<'a> {
     nbt: &'a NBT,
     indices: &'a [usize],
     index: usize,
 }
 
-impl<'a> Iterator for NBTIterator<'a> {
+impl<'a> Iterator for ListIterator<'a> {
     type Item = NBTRef<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -348,6 +476,27 @@ impl<'a> Iterator for NBTIterator<'a> {
             let next = self.nbt.get_reference(self.indices[self.index]);
             self.index += 1;
             Some(next)
+        }
+    }
+}
+
+pub struct CompoundIterator<'a> {
+    nbt: &'a NBT,
+    compound: &'a NBTCompound,
+    index: usize,
+}
+
+impl<'a> Iterator for CompoundIterator<'a> {
+    type Item = (&'a str, NBTRef<'a>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.compound.0.len() {
+            None
+        } else {
+            let entry = &self.compound.0[self.index];
+            let next = self.nbt.get_reference(entry.1);
+            self.index += 1;
+            Some((&entry.0, next))
         }
     }
 }

@@ -11,3 +11,7 @@ mio = { version = "0.8.10", features = ["os-poll", "net"] }
 graphite_concierge = { path = "./crates/graphite_concierge" }
 graphite_network = { path = "./crates/graphite_network" }
 graphite_core_server = { path = "./crates/graphite_core_server" }
+graphite_anvil = { path = "./crates/graphite_anvil" }
+enum_dispatch = "0.3.12"
+glam = "0.25.0"
+include_dir = "0.7.3"

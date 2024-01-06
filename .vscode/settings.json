@@ -3,6 +3,8 @@
         "./crates/graphite_mc_protocol/Cargo.toml",
         "./crates/graphite_concierge/Cargo.toml",
         "./crates/graphite_core_server/Cargo.toml",
+        "./crates/graphite_mc_constants/Cargo.toml",
+        "./crates/graphite_anvil/Cargo.toml",
         "./Cargo.toml",
         "./crates/graphite_network/Cargo.toml"
     ]
