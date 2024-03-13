@@ -4,8 +4,7 @@ use std::borrow::Cow;
 
 use crate::identify_packets;
 use crate::types::{
-    BlockPosition, ByteRotation, CommandNode, EquipmentList, EquipmentSlot, GameProfile,
-    ProtocolItemStack, QuantizedShort, SignatureData, GlobalPosition,
+    BlockPosition, ByteRotation, CommandNode, EquipmentList, EquipmentSlot, GameProfile, GlobalPosition, Position, ProtocolItemStack, QuantizedShort, SignatureData
 };
 use crate::IdentifiedPacket;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
@@ -15,7 +14,7 @@ identify_packets! {
     AddEntity = 0x01,
     // AddExperienceOrb = 0x01,
     // AddPlayer = 0x02,
-    // AnimateEntity = 0x03,
+    AnimateEntity = 0x03,
     // AwardStats = 0x04,
     BlockChangedAck = 0x05,
     // BlockDestruction = 0x06,
@@ -32,13 +31,14 @@ identify_packets! {
     // ContainerSetContent = 0x11,
     // ContainerSetData = 0x12,
     ContainerSetSlot<'_> = 0x15,
-    // Cooldown = 0x14,
+    Cooldown = 0x16,
     // CustomChatCompletions = 0x15,
     CustomPayload<'_> = 0x18,
     // CustomSound = 0x17,
     // DeleteChat = 0x18,
     // Disconnect = 0x19,
-    // EntityEvent = 0x1a,
+    DamageEvent = 0x19,
+    EntityEvent = 0x1d,
     // Explode = 0x1b,
     // ForgetLevelChunk = 0x1c,
     GameEvent = 0x20,
@@ -47,14 +47,14 @@ identify_packets! {
     KeepAlive = 0x24,
     LevelChunkWithLight<'_> = 0x25,
     // LevelEvent = 0x22,
-    // LevelParticles = 0x23,
+    LevelParticles<'_> = 0x27,
     // LightUpdate = 0x24,
     JoinGame<'_> = 0x29,
     // MapItemData = 0x26,
     // MerchantOffers = 0x27,
-    // MoveEntityPos = 0x28,
+    MoveEntityPos = 0x2c,
     MoveEntityPosRot = 0x2d,
-    // MoveEntityRot = 0x2a,
+    MoveEntityRot = 0x2e,
     // MoveVehicle = 0x2b,
     // OpenBook = 0x2c,
     // OpenScreen = 0x2d,
@@ -71,7 +71,7 @@ identify_packets! {
     // PlayerLookAt = 0x38,
     PlayerPosition = 0x3e,
     // UnlockRecipe = 0x3a,
-    RemoveEntities = 0x40,
+    RemoveEntities<'_> = 0x40,
     // RemoveMobEffect = 0x3c,
     // ResourcePack = 0x3d,
     // Respawn<'_> = 0x3e,
@@ -92,14 +92,14 @@ identify_packets! {
     // SetDefaultSpawnPosition = 0x4d,
     // SetDisplayChatPreview = 0x4e,
     // SetDisplayObjective = 0x4f,
-    // SetEntityData<'_> = 0x50,
+    SetEntityData<'_> = 0x56,
     // SetEntityLink = 0x51,
     SetEntityMotion = 0x58,
     // SetEquipment<'_> = 0x53,
     // SetExperience = 0x54,
     // SetHealth = 0x55,
     // SetObjective = 0x56,
-    // SetPassengers = 0x57,
+    SetPassengers<'_> = 0x5d,
     // SetPlayerTeam = 0x58,
     // SetScore = 0x59,
     // SetSimulationDistance = 0x5a,
@@ -110,13 +110,13 @@ identify_packets! {
     // SoundEntity = 0x5f,
     // Sound = 0x60,
     // StopSound = 0x61,
-    // SystemChat<'_> = 0x62,
+    SystemChat<'_> = 0x69,
     // TabList = 0x63,
     // TagQuery = 0x64,
     // TakeItemEntity = 0x65,
     TeleportEntity = 0x6d,
     // UpdateAdvancements = 0x67,
-    // UpdateAttributes = 0x68,
+    UpdateAttributes = 0x71,
     // UpdateMobEffect = 0x69,
     // UpdateRecipes = 0x6f,
     UpdateTags<'_> = 0x74
@@ -174,7 +174,7 @@ pub enum EntityAnimation {
 slice_serializable! {
     #[derive(Debug)]
     pub struct AnimateEntity {
-        pub id: i32 as VarInt,
+        pub entity_id: i32 as VarInt,
         pub animation: EntityAnimation as AttemptFrom<Single, u8>
     }
 }
@@ -222,7 +222,16 @@ slice_serializable! {
         pub window_id: i8 as Single,
         pub state_id: i32 as VarInt,
         pub slot: i16 as BigEndian,
-        pub item: Option<ProtocolItemStack<'a>>
+        pub item: ProtocolItemStack<'a>
+    }
+}
+
+// Commands
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Cooldown {
+        pub item_id: i32 as VarInt,
+        pub cooldown: i32 as VarInt
     }
 }
 
@@ -232,6 +241,27 @@ slice_serializable! {
     pub struct CustomPayload<'a> {
         pub channel: &'a str as SizedString,
         pub data: &'a [u8] as GreedyBlob
+    }
+}
+
+// Damage Event
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct DamageEvent {
+        pub entity_id: i32 as VarInt,
+        pub source_type_id: i32 as VarInt,
+        pub source_cause_id: i32 as VarInt,
+        pub source_direct_id: i32 as VarInt,
+        pub source_position: Option<Position>,
+    }
+}
+
+// Entity Event
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct EntityEvent {
+        pub entity_id: i32 as BigEndian,
+        pub status: u8 as Single,
     }
 }
 
@@ -304,6 +334,24 @@ slice_serializable! {
         pub data: &'a [u8] as SizedBlob,
         pub block_entity_count: i32 as VarInt,
         pub block_entity_data: &'a [u8] as WriteOnlyBlob
+    }
+}
+
+// Level Particles
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct LevelParticles<'a> {
+        pub particle_id: i32 as VarInt,
+        pub long_distance: bool as Single,
+        pub x: f64 as BigEndian,
+        pub y: f64 as BigEndian,
+        pub z: f64 as BigEndian,
+        pub offset_x: f32 as BigEndian,
+        pub offset_y: f32 as BigEndian,
+        pub offset_z: f32 as BigEndian,
+        pub max_speed: f32 as BigEndian,
+        pub particle_count: i32 as BigEndian,
+        pub extra_data: Cow<'a, [u8]> as GreedyBlob
     }
 }
 
@@ -403,8 +451,8 @@ slice_serializable! {
         pub block_light_mask: Vec<u64> as SizedArray<BigEndian>,
         pub empty_sky_light_mask: Vec<u64> as SizedArray<BigEndian>,
         pub empty_block_light_mask: Vec<u64> as SizedArray<BigEndian>,
-        pub sky_light_entries: Vec<&'a [u8]> as SizedArray<SizedBlob>,
-        pub block_light_entries: Vec<&'a [u8]> as SizedArray<SizedBlob>
+        pub sky_light_entries: Vec<Cow<'a, [u8]>> as SizedArray<SizedBlob>,
+        pub block_light_entries: Vec<Cow<'a, [u8]>> as SizedArray<SizedBlob>
     }
 }
 
@@ -552,8 +600,8 @@ slice_serializable! {
 // Remove Entities
 slice_serializable! {
     #[derive(Debug)]
-    pub struct RemoveEntities {
-        pub entities: Vec<i32> as SizedArray<VarInt>
+    pub struct RemoveEntities<'a> {
+        pub entities: Cow<'a, [i32]> as SizedArray<VarInt>
     }
 }
 
@@ -616,6 +664,15 @@ slice_serializable! {
     }
 }
 
+// Set Passengers
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetPassengers<'a> {
+        pub entity_id: i32 as VarInt,
+        pub passengers: Cow<'a, [i32]> as SizedArray<VarInt>,
+    }
+}
+
 // Set Equipment
 slice_serializable! {
     #[derive(Debug)]
@@ -638,7 +695,7 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct SystemChat<'a> {
-        pub message: &'a str as SizedString,
+        pub message: Cow<'a, CachedNBT> as NBTBlob,
         pub overlay: bool as Single
     }
 }
@@ -654,6 +711,34 @@ slice_serializable! {
         pub yaw: f32 as ByteRotation,
         pub pitch: f32 as ByteRotation,
         pub on_ground: bool as Single
+    }
+}
+
+// Update Attributes
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct AttributeModifier {
+        pub uuid: u128 as BigEndian,
+        pub amount: f64 as BigEndian,
+        pub operation: u8 as Single,
+        
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Attribute {
+        pub key: String as SizedString,
+        pub value: f64 as BigEndian,
+        pub modifiers: Vec<AttributeModifier> as SizedArray<AttributeModifier>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct UpdateAttributes {
+        pub entity_id: i32 as VarInt,
+        pub attribute: Vec<Attribute> as SizedArray<Attribute>,
     }
 }
 

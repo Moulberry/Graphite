@@ -6,6 +6,7 @@ license = "Apache-2.0"
 description = "Code-generated constants for Minecraft for the graphite_minecraft project"
 
 [dependencies]
+anyhow = "1.0.57"
 thiserror = "1.0.31"
 num_enum = "0.5.7"
 strum = "0.25.0"
@@ -13,6 +14,7 @@ strum_macros = "0.25.0"
 readonly = "0.2.1"
 graphite_mc_protocol = { path = "../graphite_mc_protocol", version = "0.1.0" }
 graphite_binary = { path = "../graphite_binary", version = "0.1.0" }
+graphite_network = { path = "../graphite_network" }
 phf = "0.11.2"
 
 [build-dependencies]

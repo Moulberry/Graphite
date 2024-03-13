@@ -35,6 +35,16 @@ pub fn write_items(block_name_to_state: HashMap<String, u16>) -> anyhow::Result<
 
     let mut write_buffer = String::new();
 
+    let mut perfect_string_to_u16 = phf_codegen::Map::new();
+    for (item_name, value) in &items {
+        perfect_string_to_u16.entry(format!("minecraft:{}", item_name), &format!("{}_u16", value.id));
+    }
+
+    // String to u16
+    write_string_to_u16(&mut write_buffer, perfect_string_to_u16)?;
+
+    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/item_string_to_u16.rs\"));\n");
+
     // Item Enum
     write_buffer.push_str("#[derive(Debug, Clone, Copy, Eq, PartialEq)]\n");
     write_buffer.push_str("#[repr(u16)]\n");
@@ -44,9 +54,14 @@ pub fn write_items(block_name_to_state: HashMap<String, u16>) -> anyhow::Result<
     }
     write_buffer.push_str("}\n\n");
 
+    // String->Block Lookup
+    write_buffer.push_str("pub fn string_to_u16(string: &str) -> Option<u16> {\n");
+    write_buffer.push_str("\tSTRING_TO_U16.get(string).copied()\n");
+    write_buffer.push_str("}\n\n");
+
     write_buffer.push_str(
         r#"impl Item {
-    pub fn get_properties(self) -> &'static ItemProperties {
+    pub const fn get_properties(self) -> &'static ItemProperties {
         &ITEM_PROPERTIES_LUT[self as usize]
     }
 }"#,
@@ -58,7 +73,7 @@ pub fn write_items(block_name_to_state: HashMap<String, u16>) -> anyhow::Result<
     write_buffer.push_str("#[derive(Debug)]\n");
     write_buffer.push_str("pub struct ItemProperties {\n");
     write_buffer.push_str("\tpub max_stack_size: u8,\n");
-    write_buffer.push_str("\tpub use_duration: u32,\n");
+    // write_buffer.push_str("\tpub use_duration: u32,\n");
     write_buffer.push_str("\tpub corresponding_block: Option<u16>,\n");
     write_buffer.push_str("}\n\n");
 
@@ -70,7 +85,7 @@ pub fn write_items(block_name_to_state: HashMap<String, u16>) -> anyhow::Result<
     for (item_name, item) in &items {
         writeln!(write_buffer, "\tItemProperties {{ // {}", item_name)?;
         writeln!(write_buffer, "\t\tmax_stack_size: {},", item.max_stack_size)?;
-        writeln!(write_buffer, "\t\tuse_duration: {},", item.use_duration)?;
+        // writeln!(write_buffer, "\t\tuse_duration: {},", item.use_duration)?;
         if item.corresponding_block.is_empty() {
             writeln!(write_buffer, "\t\tcorresponding_block: None,")?;
         } else {
@@ -101,5 +116,15 @@ pub fn write_items(block_name_to_state: HashMap<String, u16>) -> anyhow::Result<
     let mut f = crate::file_src("item.rs");
     f.write_all(write_buffer.as_bytes())?;
 
+    Ok(())
+}
+
+fn write_string_to_u16(write_buffer: &mut String, string_to_u16_def: phf_codegen::Map<String>) -> Result<(), anyhow::Error> {
+    write!(write_buffer, "static STRING_TO_U16: phf::Map<&'static str, u16> = {}", string_to_u16_def.build())?;
+    write!(write_buffer, ";\n").unwrap();
+
+    let mut f = crate::file_out("item_string_to_u16.rs");
+    f.write_all(write_buffer.as_bytes())?;
+    write_buffer.clear();
     Ok(())
 }

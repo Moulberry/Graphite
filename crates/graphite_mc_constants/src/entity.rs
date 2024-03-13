@@ -138,12 +138,28 @@ pub enum Entity {
 #[derive(Debug, thiserror::Error)]
 #[error("Invalid metadata changes")]
 pub struct InvalidMetadataChanges;
-
 pub trait Metadata {
     // fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
     fn read_changes(&mut self, bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges>;
     unsafe fn write_changes<'b>(&mut self, bytes: &'b mut [u8]) -> &'b mut [u8];
     fn get_write_size(&self) -> usize;
+
+    fn write_metadata_changes_packet(&mut self, entity_id: i32, buffer: &mut graphite_network::PacketBuffer) -> std::result::Result<(), graphite_network::PacketWriteError> {
+        let metadata_size = self.get_write_size();
+        if metadata_size == 0 {
+            return Ok(());
+        }
+
+        let expected_packet_size = 16 + metadata_size;
+		use graphite_mc_protocol::IdentifiedPacket;
+        buffer.write_custom(graphite_mc_protocol::play::clientbound::SetEntityData::ID as u8, expected_packet_size, |mut bytes| {
+            unsafe {
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, entity_id);
+                bytes = self.write_changes(bytes);
+            }
+            bytes
+        })
+    }
 }
 
 #[derive(Default)]
@@ -187,7 +203,7 @@ pub struct AllayMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -214,7 +230,7 @@ impl AllayMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -284,7 +300,7 @@ impl AllayMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -320,7 +336,7 @@ impl AllayMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -482,7 +498,7 @@ pub struct AreaEffectCloudMetadata {
 	changes: MetadataChanges<12>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -503,7 +519,7 @@ impl AreaEffectCloudMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -549,7 +565,7 @@ impl AreaEffectCloudMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -579,7 +595,7 @@ impl AreaEffectCloudMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -699,7 +715,7 @@ pub struct ArmorStandMetadata {
 	changes: MetadataChanges<22>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -730,7 +746,7 @@ impl ArmorStandMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -816,7 +832,7 @@ impl ArmorStandMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -856,7 +872,7 @@ impl ArmorStandMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -1070,7 +1086,7 @@ pub struct ArrowMetadata {
 	changes: MetadataChanges<11>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -1090,7 +1106,7 @@ impl ArrowMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -1132,7 +1148,7 @@ impl ArrowMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -1161,7 +1177,7 @@ impl ArrowMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -1274,7 +1290,7 @@ pub struct AxolotlMetadata {
 	changes: MetadataChanges<20>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -1303,7 +1319,7 @@ impl AxolotlMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -1381,7 +1397,7 @@ impl AxolotlMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -1419,7 +1435,7 @@ impl AxolotlMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -1595,7 +1611,7 @@ pub struct BatMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -1621,7 +1637,7 @@ impl BatMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -1687,7 +1703,7 @@ impl BatMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -1722,7 +1738,7 @@ impl BatMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -1877,7 +1893,7 @@ pub struct BeeMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -1905,7 +1921,7 @@ impl BeeMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -1979,7 +1995,7 @@ impl BeeMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -2016,7 +2032,7 @@ impl BeeMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -2185,7 +2201,7 @@ pub struct BlazeMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -2211,7 +2227,7 @@ impl BlazeMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -2277,7 +2293,7 @@ impl BlazeMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -2312,7 +2328,7 @@ impl BlazeMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -2467,7 +2483,7 @@ pub struct BlockDisplayMetadata {
 	changes: MetadataChanges<24>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -2476,10 +2492,10 @@ pub struct BlockDisplayMetadata {
 	pub transformation_interpolation_start_delta_ticks: i32,
 	pub transformation_interpolation_duration: i32,
 	pub pos_rot_interpolation_duration: i32,
-	pub translation: (),
-	pub scale: (),
-	pub left_rotation: (),
-	pub right_rotation: (),
+	pub translation: (f32, f32, f32),
+	pub scale: (f32, f32, f32),
+	pub left_rotation: (f32, f32, f32, f32),
+	pub right_rotation: (f32, f32, f32, f32),
 	pub billboard_render_constraints: u8,
 	pub brightness_override: i32,
 	pub view_range: f32,
@@ -2488,7 +2504,7 @@ pub struct BlockDisplayMetadata {
 	pub width: f32,
 	pub height: f32,
 	pub glow_color_override: i32,
-	pub block_state: Option<i32>,
+	pub block_state: i32,
 }
 
 impl BlockDisplayMetadata {
@@ -2500,7 +2516,7 @@ impl BlockDisplayMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -2536,19 +2552,19 @@ impl BlockDisplayMetadata {
 		self.changes.mark_dirty(10);
 		self.pos_rot_interpolation_duration = value;
 	}
-	pub fn set_translation(&mut self, value: ()) {
+	pub fn set_translation(&mut self, value: (f32, f32, f32)) {
 		self.changes.mark_dirty(11);
 		self.translation = value;
 	}
-	pub fn set_scale(&mut self, value: ()) {
+	pub fn set_scale(&mut self, value: (f32, f32, f32)) {
 		self.changes.mark_dirty(12);
 		self.scale = value;
 	}
-	pub fn set_left_rotation(&mut self, value: ()) {
+	pub fn set_left_rotation(&mut self, value: (f32, f32, f32, f32)) {
 		self.changes.mark_dirty(13);
 		self.left_rotation = value;
 	}
-	pub fn set_right_rotation(&mut self, value: ()) {
+	pub fn set_right_rotation(&mut self, value: (f32, f32, f32, f32)) {
 		self.changes.mark_dirty(14);
 		self.right_rotation = value;
 	}
@@ -2584,7 +2600,7 @@ impl BlockDisplayMetadata {
 		self.changes.mark_dirty(22);
 		self.glow_color_override = value;
 	}
-	pub fn set_block_state(&mut self, value: Option<i32>) {
+	pub fn set_block_state(&mut self, value: i32) {
 		self.changes.mark_dirty(23);
 		self.block_state = value;
 	}
@@ -2594,7 +2610,7 @@ impl BlockDisplayMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -2603,10 +2619,10 @@ impl BlockDisplayMetadata {
 			8 => 5,
 			9 => 5,
 			10 => 5,
-			11 => unimplemented!(),
-			12 => unimplemented!(),
-			13 => unimplemented!(),
-			14 => unimplemented!(),
+			11 => 12,
+			12 => 12,
+			13 => 16,
+			14 => 16,
 			15 => 1,
 			16 => 5,
 			17 => 4,
@@ -2636,7 +2652,7 @@ impl BlockDisplayMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -2681,22 +2697,40 @@ impl BlockDisplayMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 26);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.2)
+        }
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 26);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.2)
+        }
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 27);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.1);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.2);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.3)
+        }
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 27);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.1);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.2);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.3)
+        }
 			},
 			15 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
@@ -2741,7 +2775,7 @@ impl BlockDisplayMetadata {
 			23 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 23);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
-				unimplemented!()
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.block_state)
 			},
 			_ => unreachable!()
 		}
@@ -2840,7 +2874,7 @@ pub struct BoatMetadata {
 	changes: MetadataChanges<15>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -2864,7 +2898,7 @@ impl BoatMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -2922,7 +2956,7 @@ impl BoatMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -2955,7 +2989,7 @@ impl BoatMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -3096,7 +3130,7 @@ pub struct BreezeMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -3121,7 +3155,7 @@ impl BreezeMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -3183,7 +3217,7 @@ impl BreezeMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -3217,7 +3251,7 @@ impl BreezeMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -3365,7 +3399,7 @@ pub struct CamelMetadata {
 	changes: MetadataChanges<20>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -3394,7 +3428,7 @@ impl CamelMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -3472,7 +3506,7 @@ impl CamelMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -3510,7 +3544,7 @@ impl CamelMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -3686,7 +3720,7 @@ pub struct CatMetadata {
 	changes: MetadataChanges<23>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -3718,7 +3752,7 @@ impl CatMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -3808,7 +3842,7 @@ impl CatMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -3849,7 +3883,7 @@ impl CatMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -4046,7 +4080,7 @@ pub struct CaveSpiderMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -4072,7 +4106,7 @@ impl CaveSpiderMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -4138,7 +4172,7 @@ impl CaveSpiderMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -4173,7 +4207,7 @@ impl CaveSpiderMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -4328,7 +4362,7 @@ pub struct ChestBoatMetadata {
 	changes: MetadataChanges<15>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -4352,7 +4386,7 @@ impl ChestBoatMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -4410,7 +4444,7 @@ impl ChestBoatMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -4443,7 +4477,7 @@ impl ChestBoatMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -4584,7 +4618,7 @@ pub struct ChestMinecartMetadata {
 	changes: MetadataChanges<14>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -4607,7 +4641,7 @@ impl ChestMinecartMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -4661,7 +4695,7 @@ impl ChestMinecartMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -4693,7 +4727,7 @@ impl ChestMinecartMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -4827,7 +4861,7 @@ pub struct ChickenMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -4853,7 +4887,7 @@ impl ChickenMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -4919,7 +4953,7 @@ impl ChickenMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -4954,7 +4988,7 @@ impl ChickenMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -5109,7 +5143,7 @@ pub struct CodMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -5135,7 +5169,7 @@ impl CodMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -5201,7 +5235,7 @@ impl CodMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -5236,7 +5270,7 @@ impl CodMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -5391,7 +5425,7 @@ pub struct CommandBlockMinecartMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -5404,7 +5438,7 @@ pub struct CommandBlockMinecartMetadata {
 	pub id_display_offset: i32,
 	pub id_custom_display: bool,
 	pub id_command_name: String,
-	pub id_last_output: String,
+	pub id_last_output: graphite_binary::nbt::CachedNBT,
 }
 
 impl CommandBlockMinecartMetadata {
@@ -5416,7 +5450,7 @@ impl CommandBlockMinecartMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -5468,7 +5502,7 @@ impl CommandBlockMinecartMetadata {
 		self.changes.mark_dirty(14);
 		self.id_command_name = value;
 	}
-	pub fn set_id_last_output(&mut self, value: String) {
+	pub fn set_id_last_output(&mut self, value: graphite_binary::nbt::CachedNBT) {
 		self.changes.mark_dirty(15);
 		self.id_last_output = value;
 	}
@@ -5478,7 +5512,7 @@ impl CommandBlockMinecartMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -5491,7 +5525,7 @@ impl CommandBlockMinecartMetadata {
 			12 => 5,
 			13 => 1,
 			14 => 5 + self.id_command_name.len(),
-			15 => 5 + self.id_last_output.len(),
+			15 => self.id_last_output.to_bytes().len(),
 			_ => unreachable!()
 		}
 	}
@@ -5512,7 +5546,7 @@ impl CommandBlockMinecartMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -5577,7 +5611,7 @@ impl CommandBlockMinecartMetadata {
 			15 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
-				<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.id_last_output)
+				<NBTBlob as SliceSerializable<_>>::write(bytes, &self.id_last_output)
 			},
 			_ => unreachable!()
 		}
@@ -5660,7 +5694,7 @@ pub struct CowMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -5686,7 +5720,7 @@ impl CowMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -5752,7 +5786,7 @@ impl CowMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -5787,7 +5821,7 @@ impl CowMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -5942,7 +5976,7 @@ pub struct CreeperMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -5970,7 +6004,7 @@ impl CreeperMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -6044,7 +6078,7 @@ impl CreeperMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -6081,7 +6115,7 @@ impl CreeperMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -6250,7 +6284,7 @@ pub struct DolphinMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -6278,7 +6312,7 @@ impl DolphinMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -6352,7 +6386,7 @@ impl DolphinMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -6389,7 +6423,7 @@ impl DolphinMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -6558,7 +6592,7 @@ pub struct DonkeyMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -6586,7 +6620,7 @@ impl DonkeyMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -6660,7 +6694,7 @@ impl DonkeyMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -6697,7 +6731,7 @@ impl DonkeyMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -6866,7 +6900,7 @@ pub struct DragonFireballMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -6883,7 +6917,7 @@ impl DragonFireballMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -6913,7 +6947,7 @@ impl DragonFireballMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -6939,7 +6973,7 @@ impl DragonFireballMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -7031,7 +7065,7 @@ pub struct DrownedMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -7059,7 +7093,7 @@ impl DrownedMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -7133,7 +7167,7 @@ impl DrownedMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -7170,7 +7204,7 @@ impl DrownedMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -7339,7 +7373,7 @@ pub struct EggMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -7357,7 +7391,7 @@ impl<'a> EggMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -7391,7 +7425,7 @@ impl<'a> EggMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -7418,7 +7452,7 @@ impl<'a> EggMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -7517,7 +7551,7 @@ pub struct ElderGuardianMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -7544,7 +7578,7 @@ impl ElderGuardianMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -7614,7 +7648,7 @@ impl ElderGuardianMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -7650,7 +7684,7 @@ impl ElderGuardianMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -7812,7 +7846,7 @@ pub struct EndCrystalMetadata {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -7831,7 +7865,7 @@ impl EndCrystalMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -7869,7 +7903,7 @@ impl EndCrystalMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -7897,7 +7931,7 @@ impl EndCrystalMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -8003,7 +8037,7 @@ pub struct EnderDragonMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -8029,7 +8063,7 @@ impl EnderDragonMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -8095,7 +8129,7 @@ impl EnderDragonMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -8130,7 +8164,7 @@ impl EnderDragonMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -8285,7 +8319,7 @@ pub struct EnderPearlMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -8303,7 +8337,7 @@ impl<'a> EnderPearlMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -8337,7 +8371,7 @@ impl<'a> EnderPearlMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -8364,7 +8398,7 @@ impl<'a> EnderPearlMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -8463,7 +8497,7 @@ pub struct EndermanMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -8477,7 +8511,7 @@ pub struct EndermanMetadata {
 	pub stinger_count: i32,
 	pub sleeping_pos: Option<graphite_mc_protocol::types::BlockPosition>,
 	pub mob_flags: u8,
-	pub carry_state: (),
+	pub carry_state: Option<i32>,
 	pub creepy: bool,
 	pub stared_at: bool,
 }
@@ -8491,7 +8525,7 @@ impl EndermanMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -8547,7 +8581,7 @@ impl EndermanMetadata {
 		self.changes.mark_dirty(15);
 		self.mob_flags = value;
 	}
-	pub fn set_carry_state(&mut self, value: ()) {
+	pub fn set_carry_state(&mut self, value: Option<i32>) {
 		self.changes.mark_dirty(16);
 		self.carry_state = value;
 	}
@@ -8565,7 +8599,7 @@ impl EndermanMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -8579,7 +8613,7 @@ impl EndermanMetadata {
 			13 => 5,
 			14 => 1 + if self.sleeping_pos.is_some() { 8 } else { 0 },
 			15 => 1,
-			16 => unimplemented!(),
+			16 => 5,
 			17 => 1,
 			18 => 1,
 			_ => unreachable!()
@@ -8602,7 +8636,7 @@ impl EndermanMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -8672,7 +8706,7 @@ impl EndermanMetadata {
 			16 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 16);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
-				unimplemented!()
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.carry_state.unwrap_or(0))
 			},
 			17 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 17);
@@ -8771,7 +8805,7 @@ pub struct EndermiteMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -8796,7 +8830,7 @@ impl EndermiteMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -8858,7 +8892,7 @@ impl EndermiteMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -8892,7 +8926,7 @@ impl EndermiteMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -9040,7 +9074,7 @@ pub struct EvokerMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -9067,7 +9101,7 @@ impl EvokerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -9137,7 +9171,7 @@ impl EvokerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -9173,7 +9207,7 @@ impl EvokerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -9335,7 +9369,7 @@ pub struct EvokerFangsMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -9352,7 +9386,7 @@ impl EvokerFangsMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -9382,7 +9416,7 @@ impl EvokerFangsMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -9408,7 +9442,7 @@ impl EvokerFangsMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -9500,7 +9534,7 @@ pub struct ExperienceBottleMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -9518,7 +9552,7 @@ impl<'a> ExperienceBottleMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -9552,7 +9586,7 @@ impl<'a> ExperienceBottleMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -9579,7 +9613,7 @@ impl<'a> ExperienceBottleMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -9678,7 +9712,7 @@ pub struct ExperienceOrbMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -9695,7 +9729,7 @@ impl ExperienceOrbMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -9725,7 +9759,7 @@ impl ExperienceOrbMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -9751,7 +9785,7 @@ impl ExperienceOrbMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -9843,7 +9877,7 @@ pub struct EyeOfEnderMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -9861,7 +9895,7 @@ impl<'a> EyeOfEnderMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -9895,7 +9929,7 @@ impl<'a> EyeOfEnderMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -9922,7 +9956,7 @@ impl<'a> EyeOfEnderMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -10021,7 +10055,7 @@ pub struct FallingBlockMetadata {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -10039,7 +10073,7 @@ impl FallingBlockMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -10073,7 +10107,7 @@ impl FallingBlockMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -10100,7 +10134,7 @@ impl FallingBlockMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -10199,7 +10233,7 @@ pub struct FireworkRocketMetadata<'a> {
 	changes: MetadataChanges<11>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -10219,7 +10253,7 @@ impl<'a> FireworkRocketMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -10261,7 +10295,7 @@ impl<'a> FireworkRocketMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -10290,7 +10324,7 @@ impl<'a> FireworkRocketMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -10403,7 +10437,7 @@ pub struct FoxMetadata {
 	changes: MetadataChanges<21>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -10433,7 +10467,7 @@ impl FoxMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -10515,7 +10549,7 @@ impl FoxMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -10554,7 +10588,7 @@ impl FoxMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -10737,7 +10771,7 @@ pub struct FrogMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -10765,7 +10799,7 @@ impl FrogMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -10839,7 +10873,7 @@ impl FrogMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -10876,7 +10910,7 @@ impl FrogMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -11045,7 +11079,7 @@ pub struct FurnaceMinecartMetadata {
 	changes: MetadataChanges<15>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -11069,7 +11103,7 @@ impl FurnaceMinecartMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -11127,7 +11161,7 @@ impl FurnaceMinecartMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -11160,7 +11194,7 @@ impl FurnaceMinecartMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -11301,7 +11335,7 @@ pub struct GhastMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -11327,7 +11361,7 @@ impl GhastMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -11393,7 +11427,7 @@ impl GhastMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -11428,7 +11462,7 @@ impl GhastMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -11583,7 +11617,7 @@ pub struct GiantMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -11608,7 +11642,7 @@ impl GiantMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -11670,7 +11704,7 @@ impl GiantMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -11704,7 +11738,7 @@ impl GiantMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -11852,7 +11886,7 @@ pub struct GlowItemFrameMetadata<'a> {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -11871,7 +11905,7 @@ impl<'a> GlowItemFrameMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -11909,7 +11943,7 @@ impl<'a> GlowItemFrameMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -11937,7 +11971,7 @@ impl<'a> GlowItemFrameMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -12043,7 +12077,7 @@ pub struct GlowSquidMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -12069,7 +12103,7 @@ impl GlowSquidMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -12135,7 +12169,7 @@ impl GlowSquidMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -12170,7 +12204,7 @@ impl GlowSquidMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -12325,7 +12359,7 @@ pub struct GoatMetadata {
 	changes: MetadataChanges<20>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -12354,7 +12388,7 @@ impl GoatMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -12432,7 +12466,7 @@ impl GoatMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -12470,7 +12504,7 @@ impl GoatMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -12646,7 +12680,7 @@ pub struct GuardianMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -12673,7 +12707,7 @@ impl GuardianMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -12743,7 +12777,7 @@ impl GuardianMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -12779,7 +12813,7 @@ impl GuardianMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -12941,7 +12975,7 @@ pub struct HoglinMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -12968,7 +13002,7 @@ impl HoglinMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -13038,7 +13072,7 @@ impl HoglinMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -13074,7 +13108,7 @@ impl HoglinMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -13236,7 +13270,7 @@ pub struct HopperMinecartMetadata {
 	changes: MetadataChanges<14>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -13259,7 +13293,7 @@ impl HopperMinecartMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -13313,7 +13347,7 @@ impl HopperMinecartMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -13345,7 +13379,7 @@ impl HopperMinecartMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -13479,7 +13513,7 @@ pub struct HorseMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -13507,7 +13541,7 @@ impl HorseMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -13581,7 +13615,7 @@ impl HorseMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -13618,7 +13652,7 @@ impl HorseMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -13787,7 +13821,7 @@ pub struct HuskMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -13815,7 +13849,7 @@ impl HuskMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -13889,7 +13923,7 @@ impl HuskMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -13926,7 +13960,7 @@ impl HuskMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -14095,7 +14129,7 @@ pub struct IllusionerMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -14122,7 +14156,7 @@ impl IllusionerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -14192,7 +14226,7 @@ impl IllusionerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -14228,7 +14262,7 @@ impl IllusionerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -14390,7 +14424,7 @@ pub struct InteractionMetadata {
 	changes: MetadataChanges<11>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -14410,7 +14444,7 @@ impl InteractionMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -14452,7 +14486,7 @@ impl InteractionMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -14481,7 +14515,7 @@ impl InteractionMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -14594,7 +14628,7 @@ pub struct IronGolemMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -14620,7 +14654,7 @@ impl IronGolemMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -14686,7 +14720,7 @@ impl IronGolemMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -14721,7 +14755,7 @@ impl IronGolemMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -14876,7 +14910,7 @@ pub struct ItemMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -14894,7 +14928,7 @@ impl<'a> ItemMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -14928,7 +14962,7 @@ impl<'a> ItemMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -14955,7 +14989,7 @@ impl<'a> ItemMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -15054,7 +15088,7 @@ pub struct ItemDisplayMetadata<'a> {
 	changes: MetadataChanges<25>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -15063,10 +15097,10 @@ pub struct ItemDisplayMetadata<'a> {
 	pub transformation_interpolation_start_delta_ticks: i32,
 	pub transformation_interpolation_duration: i32,
 	pub pos_rot_interpolation_duration: i32,
-	pub translation: (),
-	pub scale: (),
-	pub left_rotation: (),
-	pub right_rotation: (),
+	pub translation: (f32, f32, f32),
+	pub scale: (f32, f32, f32),
+	pub left_rotation: (f32, f32, f32, f32),
+	pub right_rotation: (f32, f32, f32, f32),
 	pub billboard_render_constraints: u8,
 	pub brightness_override: i32,
 	pub view_range: f32,
@@ -15088,7 +15122,7 @@ impl<'a> ItemDisplayMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -15124,19 +15158,19 @@ impl<'a> ItemDisplayMetadata<'a> {
 		self.changes.mark_dirty(10);
 		self.pos_rot_interpolation_duration = value;
 	}
-	pub fn set_translation(&mut self, value: ()) {
+	pub fn set_translation(&mut self, value: (f32, f32, f32)) {
 		self.changes.mark_dirty(11);
 		self.translation = value;
 	}
-	pub fn set_scale(&mut self, value: ()) {
+	pub fn set_scale(&mut self, value: (f32, f32, f32)) {
 		self.changes.mark_dirty(12);
 		self.scale = value;
 	}
-	pub fn set_left_rotation(&mut self, value: ()) {
+	pub fn set_left_rotation(&mut self, value: (f32, f32, f32, f32)) {
 		self.changes.mark_dirty(13);
 		self.left_rotation = value;
 	}
-	pub fn set_right_rotation(&mut self, value: ()) {
+	pub fn set_right_rotation(&mut self, value: (f32, f32, f32, f32)) {
 		self.changes.mark_dirty(14);
 		self.right_rotation = value;
 	}
@@ -15186,7 +15220,7 @@ impl<'a> ItemDisplayMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -15195,10 +15229,10 @@ impl<'a> ItemDisplayMetadata<'a> {
 			8 => 5,
 			9 => 5,
 			10 => 5,
-			11 => unimplemented!(),
-			12 => unimplemented!(),
-			13 => unimplemented!(),
-			14 => unimplemented!(),
+			11 => 12,
+			12 => 12,
+			13 => 16,
+			14 => 16,
 			15 => 1,
 			16 => 5,
 			17 => 4,
@@ -15229,7 +15263,7 @@ impl<'a> ItemDisplayMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -15274,22 +15308,40 @@ impl<'a> ItemDisplayMetadata<'a> {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 26);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.2)
+        }
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 26);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.2)
+        }
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 27);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.1);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.2);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.3)
+        }
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 27);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.1);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.2);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.3)
+        }
 			},
 			15 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
@@ -15440,7 +15492,7 @@ pub struct ItemFrameMetadata<'a> {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -15459,7 +15511,7 @@ impl<'a> ItemFrameMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -15497,7 +15549,7 @@ impl<'a> ItemFrameMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -15525,7 +15577,7 @@ impl<'a> ItemFrameMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -15631,7 +15683,7 @@ pub struct FireballMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -15649,7 +15701,7 @@ impl<'a> FireballMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -15683,7 +15735,7 @@ impl<'a> FireballMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -15710,7 +15762,7 @@ impl<'a> FireballMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -15809,7 +15861,7 @@ pub struct LeashKnotMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -15826,7 +15878,7 @@ impl LeashKnotMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -15856,7 +15908,7 @@ impl LeashKnotMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -15882,7 +15934,7 @@ impl LeashKnotMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -15974,7 +16026,7 @@ pub struct LightningBoltMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -15991,7 +16043,7 @@ impl LightningBoltMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -16021,7 +16073,7 @@ impl LightningBoltMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -16047,7 +16099,7 @@ impl LightningBoltMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -16139,7 +16191,7 @@ pub struct LlamaMetadata {
 	changes: MetadataChanges<22>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -16170,7 +16222,7 @@ impl LlamaMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -16256,7 +16308,7 @@ impl LlamaMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -16296,7 +16348,7 @@ impl LlamaMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -16486,7 +16538,7 @@ pub struct LlamaSpitMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -16503,7 +16555,7 @@ impl LlamaSpitMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -16533,7 +16585,7 @@ impl LlamaSpitMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -16559,7 +16611,7 @@ impl LlamaSpitMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -16651,7 +16703,7 @@ pub struct MagmaCubeMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -16677,7 +16729,7 @@ impl MagmaCubeMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -16743,7 +16795,7 @@ impl MagmaCubeMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -16778,7 +16830,7 @@ impl MagmaCubeMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -16933,7 +16985,7 @@ pub struct MarkerMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -16950,7 +17002,7 @@ impl MarkerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -16980,7 +17032,7 @@ impl MarkerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -17006,7 +17058,7 @@ impl MarkerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -17098,7 +17150,7 @@ pub struct MinecartMetadata {
 	changes: MetadataChanges<14>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -17121,7 +17173,7 @@ impl MinecartMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -17175,7 +17227,7 @@ impl MinecartMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -17207,7 +17259,7 @@ impl MinecartMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -17341,7 +17393,7 @@ pub struct MooshroomMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -17368,7 +17420,7 @@ impl MooshroomMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -17438,7 +17490,7 @@ impl MooshroomMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -17474,7 +17526,7 @@ impl MooshroomMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -17636,7 +17688,7 @@ pub struct MuleMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -17664,7 +17716,7 @@ impl MuleMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -17738,7 +17790,7 @@ impl MuleMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -17775,7 +17827,7 @@ impl MuleMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -17944,7 +17996,7 @@ pub struct OcelotMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -17971,7 +18023,7 @@ impl OcelotMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -18041,7 +18093,7 @@ impl OcelotMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -18077,7 +18129,7 @@ impl OcelotMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -18239,7 +18291,7 @@ pub struct PaintingMetadata {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -18257,7 +18309,7 @@ impl PaintingMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -18291,7 +18343,7 @@ impl PaintingMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -18318,7 +18370,7 @@ impl PaintingMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -18417,7 +18469,7 @@ pub struct PandaMetadata {
 	changes: MetadataChanges<23>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -18449,7 +18501,7 @@ impl PandaMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -18539,7 +18591,7 @@ impl PandaMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -18580,7 +18632,7 @@ impl PandaMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -18777,7 +18829,7 @@ pub struct ParrotMetadata {
 	changes: MetadataChanges<20>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -18806,7 +18858,7 @@ impl ParrotMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -18884,7 +18936,7 @@ impl ParrotMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -18922,7 +18974,7 @@ impl ParrotMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -19098,7 +19150,7 @@ pub struct PhantomMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -19124,7 +19176,7 @@ impl PhantomMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -19190,7 +19242,7 @@ impl PhantomMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -19225,7 +19277,7 @@ impl PhantomMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -19380,7 +19432,7 @@ pub struct PigMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -19408,7 +19460,7 @@ impl PigMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -19482,7 +19534,7 @@ impl PigMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -19519,7 +19571,7 @@ impl PigMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -19688,7 +19740,7 @@ pub struct PiglinMetadata {
 	changes: MetadataChanges<20>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -19717,7 +19769,7 @@ impl PiglinMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -19795,7 +19847,7 @@ impl PiglinMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -19833,7 +19885,7 @@ impl PiglinMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -20009,7 +20061,7 @@ pub struct PiglinBruteMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -20035,7 +20087,7 @@ impl PiglinBruteMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -20101,7 +20153,7 @@ impl PiglinBruteMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -20136,7 +20188,7 @@ impl PiglinBruteMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -20291,7 +20343,7 @@ pub struct PillagerMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -20318,7 +20370,7 @@ impl PillagerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -20388,7 +20440,7 @@ impl PillagerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -20424,7 +20476,7 @@ impl PillagerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -20586,7 +20638,7 @@ pub struct PolarBearMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -20613,7 +20665,7 @@ impl PolarBearMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -20683,7 +20735,7 @@ impl PolarBearMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -20719,7 +20771,7 @@ impl PolarBearMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -20881,7 +20933,7 @@ pub struct PotionMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -20899,7 +20951,7 @@ impl<'a> PotionMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -20933,7 +20985,7 @@ impl<'a> PotionMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -20960,7 +21012,7 @@ impl<'a> PotionMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -21059,7 +21111,7 @@ pub struct PufferfishMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -21086,7 +21138,7 @@ impl PufferfishMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -21156,7 +21208,7 @@ impl PufferfishMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -21192,7 +21244,7 @@ impl PufferfishMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -21354,7 +21406,7 @@ pub struct RabbitMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -21381,7 +21433,7 @@ impl RabbitMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -21451,7 +21503,7 @@ impl RabbitMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -21487,7 +21539,7 @@ impl RabbitMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -21649,7 +21701,7 @@ pub struct RavagerMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -21675,7 +21727,7 @@ impl RavagerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -21741,7 +21793,7 @@ impl RavagerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -21776,7 +21828,7 @@ impl RavagerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -21931,7 +21983,7 @@ pub struct SalmonMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -21957,7 +22009,7 @@ impl SalmonMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -22023,7 +22075,7 @@ impl SalmonMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -22058,7 +22110,7 @@ impl SalmonMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -22213,7 +22265,7 @@ pub struct SheepMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -22240,7 +22292,7 @@ impl SheepMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -22310,7 +22362,7 @@ impl SheepMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -22346,7 +22398,7 @@ impl SheepMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -22508,7 +22560,7 @@ pub struct ShulkerMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -22536,7 +22588,7 @@ impl ShulkerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -22610,7 +22662,7 @@ impl ShulkerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -22647,7 +22699,7 @@ impl ShulkerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -22816,7 +22868,7 @@ pub struct ShulkerBulletMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -22833,7 +22885,7 @@ impl ShulkerBulletMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -22863,7 +22915,7 @@ impl ShulkerBulletMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -22889,7 +22941,7 @@ impl ShulkerBulletMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -22981,7 +23033,7 @@ pub struct SilverfishMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -23006,7 +23058,7 @@ impl SilverfishMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -23068,7 +23120,7 @@ impl SilverfishMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -23102,7 +23154,7 @@ impl SilverfishMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -23250,7 +23302,7 @@ pub struct SkeletonMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -23276,7 +23328,7 @@ impl SkeletonMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -23342,7 +23394,7 @@ impl SkeletonMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -23377,7 +23429,7 @@ impl SkeletonMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -23532,7 +23584,7 @@ pub struct SkeletonHorseMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -23559,7 +23611,7 @@ impl SkeletonHorseMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -23629,7 +23681,7 @@ impl SkeletonHorseMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -23665,7 +23717,7 @@ impl SkeletonHorseMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -23827,7 +23879,7 @@ pub struct SlimeMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -23853,7 +23905,7 @@ impl SlimeMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -23919,7 +23971,7 @@ impl SlimeMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -23954,7 +24006,7 @@ impl SlimeMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -24109,7 +24161,7 @@ pub struct SmallFireballMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -24127,7 +24179,7 @@ impl<'a> SmallFireballMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -24161,7 +24213,7 @@ impl<'a> SmallFireballMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -24188,7 +24240,7 @@ impl<'a> SmallFireballMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -24287,7 +24339,7 @@ pub struct SnifferMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -24315,7 +24367,7 @@ impl SnifferMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -24389,7 +24441,7 @@ impl SnifferMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -24426,7 +24478,7 @@ impl SnifferMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -24595,7 +24647,7 @@ pub struct SnowGolemMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -24621,7 +24673,7 @@ impl SnowGolemMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -24687,7 +24739,7 @@ impl SnowGolemMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -24722,7 +24774,7 @@ impl SnowGolemMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -24877,7 +24929,7 @@ pub struct SnowballMetadata<'a> {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -24895,7 +24947,7 @@ impl<'a> SnowballMetadata<'a> {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -24929,7 +24981,7 @@ impl<'a> SnowballMetadata<'a> {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -24956,7 +25008,7 @@ impl<'a> SnowballMetadata<'a> {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -25055,7 +25107,7 @@ pub struct SpawnerMinecartMetadata {
 	changes: MetadataChanges<14>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -25078,7 +25130,7 @@ impl SpawnerMinecartMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -25132,7 +25184,7 @@ impl SpawnerMinecartMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -25164,7 +25216,7 @@ impl SpawnerMinecartMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -25298,7 +25350,7 @@ pub struct SpectralArrowMetadata {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -25317,7 +25369,7 @@ impl SpectralArrowMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -25355,7 +25407,7 @@ impl SpectralArrowMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -25383,7 +25435,7 @@ impl SpectralArrowMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -25489,7 +25541,7 @@ pub struct SpiderMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -25515,7 +25567,7 @@ impl SpiderMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -25581,7 +25633,7 @@ impl SpiderMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -25616,7 +25668,7 @@ impl SpiderMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -25771,7 +25823,7 @@ pub struct SquidMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -25796,7 +25848,7 @@ impl SquidMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -25858,7 +25910,7 @@ impl SquidMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -25892,7 +25944,7 @@ impl SquidMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -26040,7 +26092,7 @@ pub struct StrayMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -26065,7 +26117,7 @@ impl StrayMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -26127,7 +26179,7 @@ impl StrayMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -26161,7 +26213,7 @@ impl StrayMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -26309,7 +26361,7 @@ pub struct StriderMetadata {
 	changes: MetadataChanges<20>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -26338,7 +26390,7 @@ impl StriderMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -26416,7 +26468,7 @@ impl StriderMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -26454,7 +26506,7 @@ impl StriderMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -26630,7 +26682,7 @@ pub struct TadpoleMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -26656,7 +26708,7 @@ impl TadpoleMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -26722,7 +26774,7 @@ impl TadpoleMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -26757,7 +26809,7 @@ impl TadpoleMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -26912,7 +26964,7 @@ pub struct TextDisplayMetadata {
 	changes: MetadataChanges<28>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -26921,10 +26973,10 @@ pub struct TextDisplayMetadata {
 	pub transformation_interpolation_start_delta_ticks: i32,
 	pub transformation_interpolation_duration: i32,
 	pub pos_rot_interpolation_duration: i32,
-	pub translation: (),
-	pub scale: (),
-	pub left_rotation: (),
-	pub right_rotation: (),
+	pub translation: (f32, f32, f32),
+	pub scale: (f32, f32, f32),
+	pub left_rotation: (f32, f32, f32, f32),
+	pub right_rotation: (f32, f32, f32, f32),
 	pub billboard_render_constraints: u8,
 	pub brightness_override: i32,
 	pub view_range: f32,
@@ -26933,7 +26985,7 @@ pub struct TextDisplayMetadata {
 	pub width: f32,
 	pub height: f32,
 	pub glow_color_override: i32,
-	pub text: String,
+	pub text: graphite_binary::nbt::CachedNBT,
 	pub line_width: i32,
 	pub background_color: i32,
 	pub text_opacity: u8,
@@ -26949,7 +27001,7 @@ impl TextDisplayMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -26985,19 +27037,19 @@ impl TextDisplayMetadata {
 		self.changes.mark_dirty(10);
 		self.pos_rot_interpolation_duration = value;
 	}
-	pub fn set_translation(&mut self, value: ()) {
+	pub fn set_translation(&mut self, value: (f32, f32, f32)) {
 		self.changes.mark_dirty(11);
 		self.translation = value;
 	}
-	pub fn set_scale(&mut self, value: ()) {
+	pub fn set_scale(&mut self, value: (f32, f32, f32)) {
 		self.changes.mark_dirty(12);
 		self.scale = value;
 	}
-	pub fn set_left_rotation(&mut self, value: ()) {
+	pub fn set_left_rotation(&mut self, value: (f32, f32, f32, f32)) {
 		self.changes.mark_dirty(13);
 		self.left_rotation = value;
 	}
-	pub fn set_right_rotation(&mut self, value: ()) {
+	pub fn set_right_rotation(&mut self, value: (f32, f32, f32, f32)) {
 		self.changes.mark_dirty(14);
 		self.right_rotation = value;
 	}
@@ -27033,7 +27085,7 @@ impl TextDisplayMetadata {
 		self.changes.mark_dirty(22);
 		self.glow_color_override = value;
 	}
-	pub fn set_text(&mut self, value: String) {
+	pub fn set_text(&mut self, value: graphite_binary::nbt::CachedNBT) {
 		self.changes.mark_dirty(23);
 		self.text = value;
 	}
@@ -27059,7 +27111,7 @@ impl TextDisplayMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -27068,10 +27120,10 @@ impl TextDisplayMetadata {
 			8 => 5,
 			9 => 5,
 			10 => 5,
-			11 => unimplemented!(),
-			12 => unimplemented!(),
-			13 => unimplemented!(),
-			14 => unimplemented!(),
+			11 => 12,
+			12 => 12,
+			13 => 16,
+			14 => 16,
 			15 => 1,
 			16 => 5,
 			17 => 4,
@@ -27080,7 +27132,7 @@ impl TextDisplayMetadata {
 			20 => 4,
 			21 => 4,
 			22 => 5,
-			23 => 5 + self.text.len(),
+			23 => self.text.to_bytes().len(),
 			24 => 5,
 			25 => 5,
 			26 => 1,
@@ -27105,7 +27157,7 @@ impl TextDisplayMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -27150,22 +27202,40 @@ impl TextDisplayMetadata {
 			11 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 11);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 26);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.translation.2)
+        }
 			},
 			12 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 12);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 26);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.scale.2)
+        }
 			},
 			13 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 13);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 27);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.1);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.2);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.left_rotation.3)
+        }
 			},
 			14 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 27);
-				unimplemented!()
+				{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.1);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.2);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.right_rotation.3)
+        }
 			},
 			15 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 15);
@@ -27210,7 +27280,7 @@ impl TextDisplayMetadata {
 			23 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 23);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 5);
-				<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.text)
+				<NBTBlob as SliceSerializable<_>>::write(bytes, &self.text)
 			},
 			24 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 24);
@@ -27337,14 +27407,14 @@ pub struct TntMetadata {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
 	pub pose: graphite_mc_protocol::types::Pose,
 	pub ticks_frozen: i32,
 	pub fuse: i32,
-	pub block_state: Option<i32>,
+	pub block_state: i32,
 }
 
 impl TntMetadata {
@@ -27356,7 +27426,7 @@ impl TntMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -27384,7 +27454,7 @@ impl TntMetadata {
 		self.changes.mark_dirty(8);
 		self.fuse = value;
 	}
-	pub fn set_block_state(&mut self, value: Option<i32>) {
+	pub fn set_block_state(&mut self, value: i32) {
 		self.changes.mark_dirty(9);
 		self.block_state = value;
 	}
@@ -27394,7 +27464,7 @@ impl TntMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -27422,7 +27492,7 @@ impl TntMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -27457,7 +27527,7 @@ impl TntMetadata {
 			9 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 9);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 14);
-				unimplemented!()
+				<VarInt as SliceSerializable<i32>>::write(bytes, self.block_state)
 			},
 			_ => unreachable!()
 		}
@@ -27528,7 +27598,7 @@ pub struct TntMinecartMetadata {
 	changes: MetadataChanges<14>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -27551,7 +27621,7 @@ impl TntMinecartMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -27605,7 +27675,7 @@ impl TntMinecartMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -27637,7 +27707,7 @@ impl TntMinecartMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -27771,7 +27841,7 @@ pub struct TraderLlamaMetadata {
 	changes: MetadataChanges<22>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -27802,7 +27872,7 @@ impl TraderLlamaMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -27888,7 +27958,7 @@ impl TraderLlamaMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -27928,7 +27998,7 @@ impl TraderLlamaMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -28118,7 +28188,7 @@ pub struct TridentMetadata {
 	changes: MetadataChanges<12>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -28139,7 +28209,7 @@ impl TridentMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -28185,7 +28255,7 @@ impl TridentMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -28215,7 +28285,7 @@ impl TridentMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -28335,7 +28405,7 @@ pub struct TropicalFishMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -28362,7 +28432,7 @@ impl TropicalFishMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -28432,7 +28502,7 @@ impl TropicalFishMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -28468,7 +28538,7 @@ impl TropicalFishMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -28630,7 +28700,7 @@ pub struct TurtleMetadata {
 	changes: MetadataChanges<23>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -28662,7 +28732,7 @@ impl TurtleMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -28752,7 +28822,7 @@ impl TurtleMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -28793,7 +28863,7 @@ impl TurtleMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -28990,7 +29060,7 @@ pub struct VexMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -29016,7 +29086,7 @@ impl VexMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -29082,7 +29152,7 @@ impl VexMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -29117,7 +29187,7 @@ impl VexMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -29272,7 +29342,7 @@ pub struct VillagerMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -29300,7 +29370,7 @@ impl VillagerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -29374,7 +29444,7 @@ impl VillagerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -29411,7 +29481,7 @@ impl VillagerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -29580,7 +29650,7 @@ pub struct VindicatorMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -29606,7 +29676,7 @@ impl VindicatorMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -29672,7 +29742,7 @@ impl VindicatorMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -29707,7 +29777,7 @@ impl VindicatorMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -29862,7 +29932,7 @@ pub struct WanderingTraderMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -29889,7 +29959,7 @@ impl WanderingTraderMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -29959,7 +30029,7 @@ impl WanderingTraderMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -29995,7 +30065,7 @@ impl WanderingTraderMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -30157,7 +30227,7 @@ pub struct WardenMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -30183,7 +30253,7 @@ impl WardenMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -30249,7 +30319,7 @@ impl WardenMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -30284,7 +30354,7 @@ impl WardenMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -30439,7 +30509,7 @@ pub struct WindChargeMetadata {
 	changes: MetadataChanges<8>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -30456,7 +30526,7 @@ impl WindChargeMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -30486,7 +30556,7 @@ impl WindChargeMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -30512,7 +30582,7 @@ impl WindChargeMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -30604,7 +30674,7 @@ pub struct WitchMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -30631,7 +30701,7 @@ impl WitchMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -30701,7 +30771,7 @@ impl WitchMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -30737,7 +30807,7 @@ impl WitchMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -30899,7 +30969,7 @@ pub struct WitherMetadata {
 	changes: MetadataChanges<20>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -30928,7 +30998,7 @@ impl WitherMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -31006,7 +31076,7 @@ impl WitherMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -31044,7 +31114,7 @@ impl WitherMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -31220,7 +31290,7 @@ pub struct WitherSkeletonMetadata {
 	changes: MetadataChanges<16>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -31245,7 +31315,7 @@ impl WitherSkeletonMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -31307,7 +31377,7 @@ impl WitherSkeletonMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -31341,7 +31411,7 @@ impl WitherSkeletonMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -31489,7 +31559,7 @@ pub struct WitherSkullMetadata {
 	changes: MetadataChanges<9>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -31507,7 +31577,7 @@ impl WitherSkullMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -31541,7 +31611,7 @@ impl WitherSkullMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -31568,7 +31638,7 @@ impl WitherSkullMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -31667,7 +31737,7 @@ pub struct WolfMetadata {
 	changes: MetadataChanges<22>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -31698,7 +31768,7 @@ impl WolfMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -31784,7 +31854,7 @@ impl WolfMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -31824,7 +31894,7 @@ impl WolfMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -32014,7 +32084,7 @@ pub struct ZoglinMetadata {
 	changes: MetadataChanges<17>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -32040,7 +32110,7 @@ impl ZoglinMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -32106,7 +32176,7 @@ impl ZoglinMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -32141,7 +32211,7 @@ impl ZoglinMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -32296,7 +32366,7 @@ pub struct ZombieMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -32324,7 +32394,7 @@ impl ZombieMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -32398,7 +32468,7 @@ impl ZombieMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -32435,7 +32505,7 @@ impl ZombieMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -32604,7 +32674,7 @@ pub struct ZombieHorseMetadata {
 	changes: MetadataChanges<18>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -32631,7 +32701,7 @@ impl ZombieHorseMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -32701,7 +32771,7 @@ impl ZombieHorseMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -32737,7 +32807,7 @@ impl ZombieHorseMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -32899,7 +32969,7 @@ pub struct ZombieVillagerMetadata {
 	changes: MetadataChanges<21>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -32929,7 +32999,7 @@ impl ZombieVillagerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -33011,7 +33081,7 @@ impl ZombieVillagerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -33050,7 +33120,7 @@ impl ZombieVillagerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -33233,7 +33303,7 @@ pub struct ZombifiedPiglinMetadata {
 	changes: MetadataChanges<19>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -33261,7 +33331,7 @@ impl ZombifiedPiglinMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -33335,7 +33405,7 @@ impl ZombifiedPiglinMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -33372,7 +33442,7 @@ impl ZombifiedPiglinMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -33541,7 +33611,7 @@ pub struct PlayerMetadata {
 	changes: MetadataChanges<21>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -33571,7 +33641,7 @@ impl PlayerMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -33653,7 +33723,7 @@ impl PlayerMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -33692,7 +33762,7 @@ impl PlayerMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);
@@ -33875,7 +33945,7 @@ pub struct FishingBobberMetadata {
 	changes: MetadataChanges<10>,
 	pub shared_flags: u8,
 	pub air_supply: i32,
-	pub custom_name: Option<String>,
+	pub custom_name: Option<graphite_binary::nbt::CachedNBT>,
 	pub custom_name_visible: bool,
 	pub silent: bool,
 	pub no_gravity: bool,
@@ -33894,7 +33964,7 @@ impl FishingBobberMetadata {
 		self.changes.mark_dirty(1);
 		self.air_supply = value;
 	}
-	pub fn set_custom_name(&mut self, value: Option<String>) {
+	pub fn set_custom_name(&mut self, value: Option<graphite_binary::nbt::CachedNBT>) {
 		self.changes.mark_dirty(2);
 		self.custom_name = value;
 	}
@@ -33932,7 +34002,7 @@ impl FishingBobberMetadata {
 		match index {
 			0 => 1,
 			1 => 5,
-			2 => 1 + if let Some(value) = &self.custom_name { 5 + value.len() } else { 0 },
+			2 => 1 + if let Some(value) = &self.custom_name { value.to_bytes().len() } else { 0 },
 			3 => 1,
 			4 => 1,
 			5 => 1,
@@ -33960,7 +34030,7 @@ impl FishingBobberMetadata {
 			2 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 2);
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 6);
-				<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.custom_name)
+				<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.custom_name.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))
 			},
 			3 => {
 				bytes = <Single as SliceSerializable<u8>>::write(bytes, 3);

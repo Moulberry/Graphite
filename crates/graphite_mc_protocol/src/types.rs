@@ -105,14 +105,70 @@ pub enum EquipmentSlot {
 
 // ItemStack
 
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct ProtocolItemStack<'a> {
-        pub item: i32 as VarInt,
-        pub count: i8 as Single,
-        pub nbt: Cow<'a, CachedNBT> as NBTBlob
+#[derive(Debug)]
+pub struct ProtocolItemStack<'a> {
+    pub item: i32,
+    pub count: i8,
+    pub nbt: Cow<'a, CachedNBT>
+}
+
+impl ProtocolItemStack<'_> {
+    pub const EMPTY: Self = Self {
+        item: 0,
+        count: 0,
+        nbt: Cow::Owned(CachedNBT::new())
+    };
+
+    pub fn is_empty(&self) -> bool {
+        self.item == 0 || self.count == 0
     }
 }
+
+impl <'a> SliceSerializable<'a> for ProtocolItemStack<'a> {
+    type CopyType = &'a ProtocolItemStack<'a>;
+
+    fn as_copy_type(t: &'a Self) -> Self::CopyType {
+        t
+    }
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Self> {
+        let present: bool = Single::read(bytes)?;
+
+        if !present {
+            Ok(Self::EMPTY)
+        } else {
+            let item = VarInt::read(bytes)?;
+            let count = Single::read(bytes)?;
+            let nbt = NBTBlob::read(bytes)?;
+            Ok(Self { item, count, nbt })
+        }
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+        if data.is_empty() {
+            <Single as SliceSerializable<bool>>::write(bytes, false)
+        } else {
+            bytes = <Single as SliceSerializable<bool>>::write(bytes, true);
+            bytes = <VarInt as SliceSerializable<i32>>::write(bytes, data.item);
+            bytes = <Single as SliceSerializable<i8>>::write(bytes, data.count);
+            bytes = NBTBlob::write(bytes, &data.nbt);
+            bytes
+        }
+
+    }
+
+    fn get_write_size(data: Self::CopyType) -> usize {
+        if data.is_empty() {
+            <Single as SliceSerializable<bool>>::get_write_size(false)
+        } else {
+            <Single as SliceSerializable<bool>>::get_write_size(true) + 
+                <VarInt as SliceSerializable<i32>>::get_write_size(data.item) +
+                <Single as SliceSerializable<i8>>::get_write_size(data.count) +
+                NBTBlob::get_write_size(&data.nbt)
+        }
+    }
+}
+
 
 impl<'a> Default for ProtocolItemStack<'a> {
     fn default() -> Self {
@@ -175,6 +231,16 @@ slice_serializable! {
 
 pub enum ByteRotation {}
 
+impl ByteRotation {
+    pub fn to_f32(byte: u8) -> f32 {
+        byte as f32 * 360.0 / 256.0
+    }
+
+    pub fn from_f32(float: f32) -> u8 {
+        (float * 256.0 / 360.0) as i64 as u8
+    }
+}
+
 impl SliceSerializable<'_, f32> for ByteRotation {
     type CopyType = f32;
 
@@ -184,11 +250,11 @@ impl SliceSerializable<'_, f32> for ByteRotation {
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<f32> {
         let byte: u8 = Single::read(bytes)?;
-        Ok(byte as f32 * 360.0 / 256.0)
+        Ok(Self::to_f32(byte))
     }
 
     unsafe fn write(bytes: &mut [u8], data: f32) -> &mut [u8] {
-        let byte = (data * 256.0 / 360.0).to_int_unchecked::<u8>();
+        let byte = Self::from_f32(data);
         <Single as SliceSerializable<u8>>::write(bytes, byte)
     }
 
@@ -304,6 +370,15 @@ impl SliceSerializable<'_> for BlockPosition {
 
     fn get_write_size(_: Self) -> usize {
         <slice_serialization::BigEndian as SliceSerializable<i64>>::get_write_size(0)
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Position {
+        pub x: f64 as BigEndian,
+        pub y: f64 as BigEndian,
+        pub z: f64 as BigEndian,
     }
 }
 
@@ -432,7 +507,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
             CommandNode::Root { children } => {
                 let flags = 0; // root type
                 let bytes = <Single as SliceSerializable<u8>>::write(bytes, flags);
-                SizedArray::<VarInt>::write(bytes, children)
+                <SizedArray<VarInt> as SliceSerializable<Vec<i32>>>::write(bytes, children)
             }
             CommandNode::Literal {
                 children,
@@ -445,7 +520,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 flags |= if redirect.is_some() { 8 } else { 0 };
 
                 bytes = <Single as SliceSerializable<u8>>::write(bytes, flags);
-                bytes = SizedArray::<VarInt>::write(bytes, children);
+                bytes = <SizedArray<VarInt> as SliceSerializable<Vec<i32>>>::write(bytes, children);
 
                 if let Some(redirect) = redirect {
                     <VarInt as SliceSerializable<i32>>::write(bytes, *redirect);
@@ -467,7 +542,7 @@ impl<'a> SliceSerializable<'a> for CommandNode {
                 flags |= if suggestion.is_some() { 16 } else { 0 };
 
                 bytes = <Single as SliceSerializable<u8>>::write(bytes, flags);
-                bytes = SizedArray::<VarInt>::write(bytes, children);
+                bytes = <SizedArray<VarInt> as SliceSerializable<Vec<i32>>>::write(bytes, children);
 
                 if let Some(redirect) = redirect {
                     <VarInt as SliceSerializable<i32>>::write(bytes, *redirect);

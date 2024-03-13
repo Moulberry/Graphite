@@ -60,7 +60,7 @@ impl Default for DimensionType {
             min_y: 0,
             height: 384,
             effects: DimensionEffects::Overworld,
-            ambient_light: 1.0,
+            ambient_light: 0.0,
             piglin_safe: true
         }
     }

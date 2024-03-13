@@ -28,7 +28,7 @@ identify_packets! {
     // CommandSuggestion = 0x0a,
     // AcknowledgeConfiguration = 0x0b,
     // ContainerButtonClick = 0x0c,
-    // ContainerClick = 0x0d,
+    ContainerClick<'_> = 0x0d,
     // ContainerClose = 0x0e,
     // ChangeContainerSlotState = 0x0f,
     CustomPayload<'_> = 0x10,
@@ -128,6 +128,14 @@ slice_serializable! {
         pub arm_position: ArmPosition as AttemptFrom<Single, u8>,
         pub text_filtering_enabled: bool as Single,
         pub show_on_server_list: bool as Single
+    }
+}
+
+// Container Click
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ContainerClick<'a> {
+        pub data: &'a [u8] as GreedyBlob
     }
 }
 
@@ -256,7 +264,7 @@ slice_serializable! {
     #[derive(Debug)]
     pub struct SetCreativeModeSlot<'a> {
         pub slot: i16 as BigEndian,
-        pub item: Option<ProtocolItemStack<'a>>
+        pub item: ProtocolItemStack<'a>
     }
 }
 

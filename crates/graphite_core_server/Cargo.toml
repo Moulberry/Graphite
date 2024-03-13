@@ -23,6 +23,12 @@ num = "0.4.1"
 glam = "0.25.0"
 rand = "0.8.5"
 thiserror = "1.0.56"
+lazy_static = "1.4.0"
+once_cell = "1.19.0"
+serde = "1.0.196"
+serde_json = "1.0.113"
+rustc-hash = "1.1.0"
+parry3d = "0.13.6"
 
 [dev-dependencies]
 proptest = "1.0.0"

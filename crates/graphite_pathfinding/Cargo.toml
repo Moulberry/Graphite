@@ -1,0 +1,13 @@
+[package]
+name = "graphite_pathfinding"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+graphite_core_server = { path = "../graphite_core_server" }
+graphite_mc_constants = { path = "../graphite_mc_constants" }
+indexmap = "2.2.3"
+rustc-hash = "1.1.0"
+glam = "0.25.0"

@@ -41,6 +41,10 @@ impl PacketBuffer {
         self.write_index
     }
 
+    pub fn capacity(&self) -> usize {
+        self.vec.capacity()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.write_index == 0
     }
@@ -61,17 +65,20 @@ impl PacketBuffer {
         unsafe { std::slice::from_raw_parts(ptr, self.write_index) }
     }
 
-    pub fn copy_from(&mut self, other: &PacketBuffer) {
-        let other_bytes = other.peek_written();
-        if other_bytes.is_empty() {
+    pub fn copy_bytes(&mut self, bytes: &[u8]) {
+        if bytes.is_empty() {
             return;
         }
 
-        let bytes = self.get_unwritten(other_bytes.len());
-        bytes.copy_from_slice(other_bytes);
+        let unwritten = self.get_unwritten(bytes.len());
+        unwritten.copy_from_slice(bytes);
         unsafe {
-            self.advance(other_bytes.len());
+            self.advance(bytes.len());
         }
+    }
+
+    pub fn copy_from(&mut self, other: &PacketBuffer) {
+        self.copy_bytes(other.peek_written());        
     }
 
     pub fn write_raw<'a, T>(&mut self, serializable: &'a T)
@@ -107,13 +114,20 @@ impl PacketBuffer {
         T: SliceSerializable<'a, T>,
     {
         let expected_packet_size = T::get_write_size(T::as_copy_type(serializable));
+        
+        self.write_custom(packet_id, expected_packet_size, |bytes| {
+            unsafe { T::write(bytes, T::as_copy_type(serializable)) }
+        })
+    }
+
+    pub fn write_custom(&mut self, packet_id: u8, expected_packet_size: usize, mut function: impl FnMut(&mut [u8]) -> &mut [u8]) -> Result<(), PacketWriteError> {
         if expected_packet_size > 2097148 {
             return Err(PacketWriteError::PacketTooLarge);
         }
 
         if expected_packet_size <= 126 {
             let bytes = self.get_unwritten(2 + expected_packet_size);
-            let slice_after_writing = unsafe { T::write(&mut bytes[2..], T::as_copy_type(serializable)) };
+            let slice_after_writing = function(&mut bytes[2..]);
 
             let bytes_written = expected_packet_size - slice_after_writing.len();
             let packet_length_header = 1 + bytes_written;
@@ -128,7 +142,7 @@ impl PacketBuffer {
             }
         } else {
             let bytes = self.get_unwritten(4 + expected_packet_size);
-            let slice_after_writing = unsafe { T::write(&mut bytes[4..], T::as_copy_type(serializable)) };
+            let slice_after_writing = function(&mut bytes[4..]);
 
             let bytes_written = expected_packet_size - slice_after_writing.len();
             let packet_length_header = 1 + bytes_written;

@@ -102,6 +102,7 @@ impl Default for DamageTypeRegistry {
     fn default() -> Self {
         Self {
             damage_types: vec![
+                ("minecraft:generic".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:in_fire".into(), DamageType(DamageTypeEffect::Burning)),
                 ("minecraft:lightning_bolt".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:on_fire".into(), DamageType(DamageTypeEffect::Burning)),
@@ -115,7 +116,6 @@ impl Default for DamageTypeRegistry {
                 ("minecraft:fall".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:fly_into_wall".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:out_of_world".into(), DamageType(DamageTypeEffect::Hurt)),
-                ("minecraft:generic".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:magic".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:wither".into(), DamageType(DamageTypeEffect::Hurt)),
                 ("minecraft:dragon_breath".into(), DamageType(DamageTypeEffect::Hurt)),

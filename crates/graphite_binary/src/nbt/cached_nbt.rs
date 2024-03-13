@@ -1,36 +1,30 @@
-use std::{
-    cell::RefCell,
-    ops::{Deref, DerefMut},
-};
+use std::{cell::{Ref, RefCell}, ops::{Deref, DerefMut}};
 
 use super::*;
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct CachedNBT {
-    inner: RefCell<CachedNBTInner>,
+    nbt: NBT,
+    cached_bytes: RefCell<Vec<u8>>,
 }
 
 #[derive(Clone)]
 struct CachedNBTInner {
     nbt: NBT,
-    bytes_dirty: bool,
     bytes: Vec<u8>,
 }
 
 impl Debug for CachedNBT {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.inner.borrow().nbt.fmt(f)
+        self.nbt.fmt(f)
     }
 }
 
 impl From<NBT> for CachedNBT {
     fn from(nbt: NBT) -> Self {
         Self {
-            inner: RefCell::new(CachedNBTInner {
-                nbt,
-                bytes_dirty: true,
-                bytes: Vec::new(),
-            }),
+            nbt,
+            cached_bytes: RefCell::new(Vec::new()),
         }
     }
 }
@@ -45,38 +39,38 @@ impl Deref for CachedNBT {
     type Target = NBT;
 
     fn deref(&self) -> &Self::Target {
-        &unsafe { &*self.inner.as_ptr() }.nbt
+        &self.nbt
     }
 }
 
 impl DerefMut for CachedNBT {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        let inner = self.inner.get_mut();
-        inner.bytes_dirty = true;
-        &mut inner.nbt
+        self.cached_bytes.get_mut().clear();
+        &mut self.nbt
     }
 }
 
 impl CachedNBT {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            inner: RefCell::new(CachedNBTInner {
-                nbt: NBT::new(),
-                bytes_dirty: true,
-                bytes: Vec::new(),
-            }),
+            nbt: NBT::new(),
+            cached_bytes: RefCell::new(Vec::new()),
         }
     }
 
-    pub fn to_bytes(&self) -> &[u8] {
-        if self.inner.borrow().bytes_dirty {
-            let inner = unsafe { &mut *self.inner.as_ptr() };
-            inner.bytes_dirty = false;
-            inner.bytes.clear();
+    pub fn to_bytes(&self) -> Ref<[u8]> {
+        let slice = Ref::map(self.cached_bytes.borrow(), |v| v.as_slice());
 
-            encode::write_protocol_into(&inner.nbt, &mut inner.bytes);
+        if slice.is_empty() {
+            drop(slice);
+
+            let mut cached_bytes = self.cached_bytes.borrow_mut();
+            encode::write_protocol_into(&self.nbt, &mut cached_bytes);
+            drop(cached_bytes);
+
+            Ref::map(self.cached_bytes.borrow(), |v| v.as_slice())
+        } else {
+            slice
         }
-
-        unsafe { &*self.inner.as_ptr() }.bytes.as_slice()
     }
 }

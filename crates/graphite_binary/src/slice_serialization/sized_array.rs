@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, borrow::Cow};
 
 use super::*;
 
@@ -42,6 +42,49 @@ impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Vec<T>> for S
 
     #[inline(always)]
     fn as_copy_type(t: &'a Vec<T>) -> Self::CopyType {
+        t
+    }
+}
+
+impl<'a, T: 'a, S: SliceSerializable<'a, T>> SliceSerializable<'a, Cow<'a, [T]>> for SizedArray<S>
+where
+    [T]: ToOwned<Owned = Vec<T>>,
+{
+    type CopyType = &'a [T];
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, [T]>> {
+        let array_length: usize = VarInt::read(bytes)?;
+
+        if array_length == 0 {
+            return Ok(Cow::Owned(vec![]));
+        }
+
+        let mut vec = Vec::with_capacity(array_length as usize);
+        for _ in 0..array_length {
+            vec.push(S::read(bytes)?);
+        }
+
+        Ok(Cow::Owned(vec))
+    }
+
+    fn get_write_size(entries: &'a [T]) -> usize {
+        let mut size: usize = <VarInt as SliceSerializable<usize>>::get_write_size(entries.len());
+        for entry in entries {
+            size += S::get_write_size(S::as_copy_type(entry));
+        }
+        size
+    }
+
+    unsafe fn write<'b>(mut bytes: &'b mut [u8], entries: &'a [T]) -> &'b mut [u8] {
+        bytes = <VarInt as SliceSerializable<usize>>::write(bytes, entries.len());
+        for entry in entries {
+            bytes = S::write(bytes, S::as_copy_type(entry));
+        }
+        bytes
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'a Cow<'a, [T]>) -> Self::CopyType {
         t
     }
 }

@@ -20,7 +20,7 @@ impl<'a> SliceSerializable<'a, Cow<'a, CachedNBT>> for NBTBlob {
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &CachedNBT) -> &'b mut [u8] {
         let to_write = data.to_bytes();
-        bytes[0..to_write.len()].clone_from_slice(to_write);
+        bytes[0..to_write.len()].clone_from_slice(&*to_write);
         &mut bytes[to_write.len()..]
     }
 
@@ -80,6 +80,30 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
     }
 }
 
+impl<'a> SliceSerializable<'a, Cow<'a, [u8]>> for GreedyBlob {
+    type CopyType = &'a [u8];
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, [u8]>> {
+        let ret_bytes = *bytes;
+        *bytes = &bytes[bytes.len()..];
+        Ok(Cow::Borrowed(ret_bytes))
+    }
+
+    fn get_write_size(data: &[u8]) -> usize {
+        data.len()
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
+        bytes[0..data.len()].clone_from_slice(data);
+        &mut bytes[data.len()..]
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'a Cow<'a, [u8]>) -> Self::CopyType {
+        t
+    }
+}
+
 pub enum SizedBlob<const MAX_SIZE: usize = 2097152, const SIZE_MULT: usize = 1> {}
 impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'a [u8]>
     for SizedBlob<MAX_SIZE, SIZE_MULT>
@@ -132,6 +156,57 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
     }
 }
 
+impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, Cow<'a, [u8]>>
+    for SizedBlob<MAX_SIZE, SIZE_MULT>
+{
+    type CopyType = &'a [u8];
+
+    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, [u8]>> {
+        let blob_size: usize = VarInt::read(bytes)?;
+
+        // Validate blob byte-length
+        if blob_size > MAX_SIZE * SIZE_MULT {
+            return Err(
+                BinaryReadError::BlobBytesExceedMaxSize(blob_size, MAX_SIZE * SIZE_MULT).into(),
+            );
+        }
+        if blob_size > bytes.len() {
+            return Err(BinaryReadError::NotEnoughRemainingBytes.into());
+        }
+
+        let (blob_bytes, rest_bytes) = bytes.split_at(blob_size);
+        *bytes = rest_bytes;
+
+        Ok(Cow::Borrowed(blob_bytes))
+    }
+
+    fn get_write_size(data: &[u8]) -> usize {
+        <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
+    }
+
+    unsafe fn write<'b>(mut bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
+        let len = data.len();
+
+        // 1. write len(blob) as varint header
+        bytes = <VarInt as SliceSerializable<usize>>::write(bytes, len);
+
+        // 2. write blob itself
+        debug_assert!(
+            bytes.len() >= len,
+            "invariant: slice must contain at least 5+len(blob) bytes to perform write"
+        );
+
+        // split bytes, write into first, set bytes to remaining
+        bytes[..len].clone_from_slice(data);
+        &mut bytes[len..]
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'a Cow<'a, [u8]>) -> Self::CopyType {
+        t
+    }
+}
+
 pub enum SizedString<const MAX_SIZE: usize = 32767> {}
 
 impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<MAX_SIZE> {
@@ -161,7 +236,7 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<M
     }
 
     unsafe fn write<'b>(bytes: &'b mut [u8], data: &str) -> &'b mut [u8] {
-        SizedBlob::<MAX_SIZE, 4>::write(bytes, data.as_bytes())
+        <SizedBlob::<MAX_SIZE, 4> as SliceSerializable<&[u8]>>::write(bytes, data.as_bytes())
     }
 
     #[inline(always)]

@@ -1,4 +1,4 @@
-use std::fmt::Write as _;
+use std::{cell::RefCell, fmt::Write as _};
 use std::io::Write;
 
 use convert_case::{Case, Casing};
@@ -53,12 +53,28 @@ pub fn write_entities() -> anyhow::Result<()> {
 #[derive(Debug, thiserror::Error)]
 #[error("Invalid metadata changes")]
 pub struct InvalidMetadataChanges;
-
 pub trait Metadata {
     // fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
     fn read_changes(&mut self, bytes: &mut &[u8]) -> std::result::Result<(), InvalidMetadataChanges>;
     unsafe fn write_changes<'b>(&mut self, bytes: &'b mut [u8]) -> &'b mut [u8];
     fn get_write_size(&self) -> usize;
+
+    fn write_metadata_changes_packet(&mut self, entity_id: i32, buffer: &mut graphite_network::PacketBuffer) -> std::result::Result<(), graphite_network::PacketWriteError> {
+        let metadata_size = self.get_write_size();
+        if metadata_size == 0 {
+            return Ok(());
+        }
+
+        let expected_packet_size = 16 + metadata_size;
+		use graphite_mc_protocol::IdentifiedPacket;
+        buffer.write_custom(graphite_mc_protocol::play::clientbound::SetEntityData::ID as u8, expected_packet_size, |mut bytes| {
+            unsafe {
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, entity_id);
+                bytes = self.write_changes(bytes);
+            }
+            bytes
+        })
+    }
 }
 
 #[derive(Default)]
@@ -276,6 +292,86 @@ use graphite_binary::slice_serialization::*;
 "#,
         );
 
+//         if lifetime.is_empty() {
+//             write!(
+//                 write_buffer,
+//                 "impl <'a> SliceSerializable<'a> for {}Metadata {{",
+//                 pascal_name
+//             )?;
+//             write_buffer.push_str("\n\ttype CopyType = &'a Self;");
+//         } else {
+//             write!(
+//                 write_buffer,
+//                 "impl <'a> SliceSerializable<'a> for {}Metadata<'a> {{",
+//                 pascal_name
+//             )?;
+//             write!(write_buffer, "\n\ttype CopyType = &'a {}Metadata<'a>;", pascal_name)?;
+//         }
+//         write_buffer.push_str(r#"
+
+//     fn as_copy_type(t: &'a Self) -> Self::CopyType {
+//         t
+//     }
+
+//     fn get_write_size(data: Self::CopyType) -> usize {
+// 		let reference = data.changes.borrow();
+//         match &*reference {
+//             MetadataChanges::NoChanges => 0,
+//             MetadataChanges::SingleChange { index } => {
+//                 1 + 2 + data.get_write_size_for_index(*index)
+//             },
+//             MetadataChanges::ManyChanges { indices } => {
+//                 let mut size = 1;
+// "#);
+//         for index in 0..metadata.len() {
+//             writeln!(
+//                 write_buffer,
+//                 "\t\t\t\tif indices[{}] {{ size += 2 + data.get_write_size_for_index({}); }}",
+//                 index, index
+//             )?;
+//         }
+
+//         write_buffer.push_str(
+//             r#"                size
+//             }
+//         }
+//     }
+
+//     fn read(_: &mut &'a [u8]) -> anyhow::Result<Self> {
+//         unimplemented!()
+//     }
+
+//     unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+// 		let reference = data.changes.borrow();
+//         match &*reference {
+//             MetadataChanges::NoChanges => {},
+//             MetadataChanges::SingleChange { index } => {
+//                 bytes = data.write_for_index(bytes, *index);
+//                 bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
+//             },
+//             MetadataChanges::ManyChanges { indices } => {
+// "#,
+//         );
+//         for index in 0..metadata.len() {
+//             writeln!(
+//                 write_buffer,
+//                 "\t\t\t\tif indices[{}] {{ bytes = data.write_for_index(bytes, {}); }}",
+//                 index, index
+//             )?;
+//         }
+
+//         write_buffer.push_str(
+//             r#"                bytes = <Single as SliceSerializable<u8>>::write(bytes, 255);
+//             }
+//         }
+//         drop(reference);
+
+//         *data.changes.borrow_mut() = MetadataChanges::NoChanges;
+//         bytes
+//     }
+// "#,
+//         );
+
         write_buffer.push_str("}\n\n");
 
         // break;
@@ -345,10 +441,10 @@ fn serialize_type_to_write(typ: &String, varname: &str) -> String {
             "<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.{varname})"
         ),
         "component" => format!(
-            "<SizedString<32767> as SliceSerializable<String>>::write(bytes, &self.{varname})"
+            "<NBTBlob as SliceSerializable<_>>::write(bytes, &self.{varname})"
         ),
         "optional_component" => format!(
-            "<Option<SizedString<32767>> as SliceSerializable<_>>::write(bytes, &self.{varname})"
+            "<Option<NBTBlob> as SliceSerializable<_>>::write(bytes, &self.{varname}.as_ref().map(|v| std::borrow::Cow::Borrowed(v)))"
         ),
         "item_stack" => {
             format!("graphite_mc_protocol::types::ProtocolItemStack::write(bytes, &self.{varname})")
@@ -365,8 +461,8 @@ fn serialize_type_to_write(typ: &String, varname: &str) -> String {
         "optional_block_pos" => "unimplemented!()".into(),
         "direction" => "unimplemented!()".into(),
         "optional_uuid" => "unimplemented!()".into(),
-        "block_state" => "unimplemented!()".into(),
-        "optional_block_state" => "unimplemented!()".into(),
+        "block_state" => format!("<VarInt as SliceSerializable<i32>>::write(bytes, self.{varname})"),
+        "optional_block_state" => format!("<VarInt as SliceSerializable<i32>>::write(bytes, self.{varname}.unwrap_or(0))"),
         "compound_tag" => "unimplemented!()".into(),
         "particle" => "unimplemented!()".into(),
         "villager_data" => "unimplemented!()".into(),
@@ -377,8 +473,21 @@ fn serialize_type_to_write(typ: &String, varname: &str) -> String {
         "optional_global_pos" => "unimplemented!()".into(),
         "painting_variant" => "unimplemented!()".into(),
         "sniffer_state" => "unimplemented!()".into(),
-        "vector3" => "unimplemented!()".into(),
-        "quaternion" => "unimplemented!()".into(),
+        "vector3" => format!(
+            "{{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.1);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.2)
+        }}"
+        ),
+        "quaternion" => format!(
+            "{{
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.0);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.1);
+            bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.2);
+            <BigEndian as SliceSerializable<f32>>::write(bytes, self.{varname}.3)
+        }}"
+        ),
         _ => panic!("unknown serialize type: {}", typ),
     }
 }
@@ -424,9 +533,9 @@ fn serialize_type_to_write_size(typ: &String, varname: &str) -> String {
         "long" => "unimplemented!()".into(),
         "float" => "4".into(),
         "string" => format!("5 + self.{varname}.len()"),
-        "component" => format!("5 + self.{varname}.len()"),
+        "component" => format!("self.{varname}.to_bytes().len()"),
         "optional_component" => {
-            format!("1 + if let Some(value) = &self.{varname} {{ 5 + value.len() }} else {{ 0 }}")
+            format!("1 + if let Some(value) = &self.{varname} {{ value.to_bytes().len() }} else {{ 0 }}")
         }
         "item_stack" => {
             format!("graphite_mc_protocol::types::ProtocolItemStack::get_write_size(&self.{varname})")
@@ -438,7 +547,7 @@ fn serialize_type_to_write_size(typ: &String, varname: &str) -> String {
         "direction" => "1".into(),
         "optional_uuid" => format!("1 + if self.{varname}.is_some() {{ 16 }} else {{ 0 }}"),
         "block_state" => "5".into(),
-        "optional_block_state" => "unimplemented!()".into(),
+        "optional_block_state" => "5".into(),
         "compound_tag" => "unimplemented!()".into(),
         "particle" => "unimplemented!()".into(),
         "villager_data" => "7".into(), // todo: add data type in protocol
@@ -451,8 +560,8 @@ fn serialize_type_to_write_size(typ: &String, varname: &str) -> String {
         ),
         "painting_variant" => "1".into(),
         "sniffer_state" => "unimplemented!()".into(),
-        "vector3" => "unimplemented!()".into(),
-        "quaternion" => "unimplemented!()".into(),
+        "vector3" => "12".into(),
+        "quaternion" => "16".into(),
         _ => panic!("unknown serialize type: {}", typ),
     }
 }
@@ -464,8 +573,8 @@ fn serialize_type_to_rust_type(typ: &String) -> &'static str {
         "long" => "()",
         "float" => "f32",
         "string" => "String",
-        "component" => "String",
-        "optional_component" => "Option<String>",
+        "component" => "graphite_binary::nbt::CachedNBT",
+        "optional_component" => "Option<graphite_binary::nbt::CachedNBT>",
         "item_stack" => "graphite_mc_protocol::types::ProtocolItemStack<'a>",
         "boolean" => "bool",
         "rotations" => "(f32, f32, f32)",
@@ -473,8 +582,8 @@ fn serialize_type_to_rust_type(typ: &String) -> &'static str {
         "optional_block_pos" => "Option<graphite_mc_protocol::types::BlockPosition>",
         "direction" => "graphite_mc_protocol::types::Direction",
         "optional_uuid" => "Option<u128>",
-        "block_state" => "Option<i32>",
-        "optional_block_state" => "()",
+        "block_state" => "i32",
+        "optional_block_state" => "Option<i32>",
         "compound_tag" => "()",
         "particle" => "()",
         "villager_data" => "(u8, u8, i32)", // todo: add data type in protocol
@@ -485,8 +594,8 @@ fn serialize_type_to_rust_type(typ: &String) -> &'static str {
         "optional_global_pos" => "Option<(String, graphite_mc_protocol::types::BlockPosition)>",
         "painting_variant" => "u8",
         "sniffer_state" => "()",
-        "vector3" => "()",
-        "quaternion" => "()",
+        "vector3" => "(f32, f32, f32)",
+        "quaternion" => "(f32, f32, f32, f32)",
         _ => panic!("unknown serialize type: {}", typ),
     }
 }

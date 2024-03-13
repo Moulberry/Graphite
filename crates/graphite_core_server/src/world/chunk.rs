@@ -5,11 +5,12 @@ use graphite_mc_protocol::{play::{clientbound::{ChunkBlockData, ChunkLightData},
 use graphite_network::PacketBuffer;
 use slab::Slab;
 
-use crate::{world::paletted_container::{BlockPalettedContainer, BiomePalettedContainer}, entity::GenericEntity};
+use crate::{entity::{EntityExtension, GenericEntity}, player::{GenericPlayer, PlayerExtension}, world::paletted_container::{BiomePalettedContainer, BlockPalettedContainer}};
 
-use super::chunk_section::ChunkSection;
+use super::{chunk_section::ChunkSection, entity_iterator::{EntityIterator, EntityIteratorMut, PlayerIterator, PlayerIteratorMut}};
 
 pub(crate) struct ChunkEntityRef(usize);
+pub(crate) struct ChunkPlayerRef(usize);
 
 pub struct Chunk {
     block_sections: Vec<ChunkSection>,
@@ -18,6 +19,7 @@ pub struct Chunk {
     pub(crate) chunk_viewable: PacketBuffer,
 
     pub(crate) entities: Slab<Rc<UnsafeCell<dyn GenericEntity>>>,
+    pub(crate) players: Slab<Rc<UnsafeCell<dyn GenericPlayer>>>,
 
     valid_cache: bool,
     cached_block_data: PacketBuffer,
@@ -46,13 +48,34 @@ impl Chunk {
             block_entity_data: &[]
         };
 
+        let mut all_sections_mask: u64 = 0;
+        let mut block_light_mask: u64 = 0;
+        let mut sky_light_mask: u64 = 0;
+        let mut sky_light_entries = vec![];
+        let mut block_light_entries = vec![];
+
+        for i in 0..self.block_sections.len() {
+            all_sections_mask |= 1 << (i+1);
+            
+            let block_section = &self.block_sections[i];
+            if let Some(block_light) = &block_section.block_light {
+                block_light_mask |= 1 << (i+1);
+                block_light_entries.push(Cow::Borrowed(block_light.as_ref()));
+            }
+            if let Some(sky_light) = &block_section.sky_light {
+                sky_light_mask |= 1 << (i+1);
+                sky_light_entries.push(Cow::Borrowed(sky_light.as_ref()));
+            }
+        }
+        all_sections_mask |= 1 | (1 << (self.block_sections.len()+1));
+
         let chunk_light_data = ChunkLightData {
-            sky_light_mask: vec![],
-            block_light_mask: vec![],
-            empty_sky_light_mask: vec![],
-            empty_block_light_mask: vec![],
-            sky_light_entries: vec![],
-            block_light_entries: vec![],
+            sky_light_mask: vec![sky_light_mask],
+            block_light_mask: vec![block_light_mask],
+            empty_sky_light_mask: vec![(!sky_light_mask) & all_sections_mask],
+            empty_block_light_mask: vec![(!block_light_mask) & all_sections_mask],
+            sky_light_entries,
+            block_light_entries,
         };
 
         self.cached_block_data.clear();
@@ -62,9 +85,38 @@ impl Chunk {
         self.cached_light_data.write_raw(&chunk_light_data);
     }
 
+    pub fn players<P: PlayerExtension>(&self) -> PlayerIterator<'_, P> {
+        PlayerIterator::new(self.players.iter(), false)
+    }
+
+    pub fn players_mut<P: PlayerExtension>(&mut self) -> PlayerIteratorMut<'_, P> {
+        PlayerIteratorMut::new(self.players.iter_mut(), false)
+    }
+
+    pub fn entities<E: EntityExtension>(&mut self) -> EntityIterator<'_, E> {
+        EntityIterator::new(self.entities.iter(), false)
+    }
+
+    pub fn entities_mut<E: EntityExtension>(&mut self) -> EntityIteratorMut<'_, E> {
+        EntityIteratorMut::new(self.entities.iter_mut(), false)
+    }
+
     pub(crate) fn insert_entity(&mut self, entity: Rc<UnsafeCell<dyn GenericEntity>>) -> ChunkEntityRef {
         let idx = self.entities.insert(entity);
         ChunkEntityRef(idx)
+    }
+
+    pub(crate) fn remove_entity(&mut self, chunk_ref: ChunkEntityRef) {
+        self.entities.remove(chunk_ref.0);
+    }
+
+    pub(crate) fn insert_player(&mut self, player: Rc<UnsafeCell<dyn GenericPlayer>>) -> ChunkPlayerRef {
+        let idx = self.players.insert(player);
+        ChunkPlayerRef(idx)
+    }
+
+    pub(crate) fn remove_player(&mut self, chunk_ref: ChunkPlayerRef) {
+        self.players.remove(chunk_ref.0);
     }
 
     pub(crate) fn clear_viewable_packets(&mut self) {
@@ -77,6 +129,10 @@ impl Chunk {
         T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
     {
         let _ = self.entity_viewable.write_packet(packet);
+    }
+
+    pub fn write_viewable(&mut self, mut lambda: impl FnMut(&mut PacketBuffer)) {
+        lambda(&mut self.entity_viewable);
     }
 
     pub fn copy_entity_viewable_packets(&self, buffer: &mut PacketBuffer) {
@@ -108,6 +164,16 @@ impl Chunk {
         // todo: players
     }
 
+    pub fn has_players(&self) -> bool {
+        !self.players.is_empty()
+    }
+
+    pub fn write_immediately_to_players(&mut self, data: &[u8]) {
+        for (_, player) in &self.players {
+            unsafe { player.get().as_mut().unwrap() }.send_packet_data(data);
+        }
+    }
+
     pub fn write(
         &mut self,
         packet_buffer: &mut PacketBuffer,
@@ -135,6 +201,7 @@ impl Chunk {
             entity_viewable: PacketBuffer::new(),
             chunk_viewable: PacketBuffer::new(),
             entities: Slab::new(),
+            players: Slab::new(),
             valid_cache: false,
             cached_block_data: PacketBuffer::new(),
             cached_light_data: PacketBuffer::new(),
@@ -208,6 +275,44 @@ impl Chunk {
                 pos: BlockPosition::new(x, y, z),
                 block_state: block as _,
             })
+        }
+    }
+
+    pub fn set_block_light_array(&mut self, section_y: usize, light: Box<[u8]>) {
+        self.invalidate_cache();
+
+        let section = &mut self.block_sections[section_y];
+
+        section.block_light = Some(light);
+    }
+
+    pub fn set_block_light(&mut self, x: i32, y: i32, z: i32, mut light: u8) {
+        self.invalidate_cache();
+
+        let chunk_y = (y >> 4) as usize;
+        let section = &mut self.block_sections[chunk_y];
+
+        let index = ((((y & 0xF) << 8) | ((z & 0xF) << 4) | (x & 0xF)) / 2) as usize;
+
+        if let Some(block_light) = &mut section.block_light {
+            if x & 1 == 1 {
+                block_light[index] &= 0x0F;
+                block_light[index] |= (light << 4) & 0xF0;
+            } else {
+                block_light[index] &= 0xF0;
+                block_light[index] |= light & 0xF;
+            }
+        } else {
+            let mut block_light = vec![0_u8; 2048].into_boxed_slice();
+
+            if x & 1 == 1 {
+                light = (light << 4) & 0xF0;
+            } else {
+                light = light & 0xF;
+            }
+
+            block_light[index] = light;
+            section.block_light = Some(block_light);
         }
     }
 }

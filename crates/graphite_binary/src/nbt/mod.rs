@@ -28,7 +28,7 @@ pub const TAG_COMPOUND_ID: TagType = TagType(10);
 pub const TAG_INT_ARRAY_ID: TagType = TagType(11);
 pub const TAG_LONG_ARRAY_ID: TagType = TagType(12);
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct NBT {
     pub root_name: String,
     root_children: NBTCompound,
@@ -85,6 +85,39 @@ macro_rules! insert {
     }
 }
 
+macro_rules! get_list {
+    ($name:ident, $value_type:ty, $node:ident) => {
+        paste::paste! {
+            pub fn [<get_ $name>](&self, index: usize) -> Option<&$value_type> {
+                match self.get(index) {
+                    Some(v) => v.[<as_ $name>](),
+                    None => None,
+                }
+            }
+        }
+    }
+}
+
+macro_rules! insert_list {
+    ($name:ident, $value_type:ty, $node:ident) => {
+        paste::paste! {
+            pub fn [<insert_ $name>](&mut self, value: $value_type) {
+                self.insert_node(NBTNode::$node(value));
+            }
+        }
+    }
+}
+
+macro_rules! insert_list_at {
+    ($name:ident, $value_type:ty, $node:ident) => {
+        paste::paste! {
+            pub fn [<insert_ $name _at>](&mut self, index: usize, value: $value_type) {
+                self.insert_node_at(index, NBTNode::$node(value));
+            }
+        }
+    }
+}
+
 macro_rules! find {
     ($name:ident, $value_type:ty, $node:ident) => {
         paste::paste! {
@@ -130,15 +163,18 @@ macro_rules! enumerate_basic_types {
 
 pub(crate) use enumerate_basic_types;
 pub(crate) use insert;
+pub(crate) use get_list;
+pub(crate) use insert_list;
+pub(crate) use insert_list_at;
 pub(crate) use find;
 pub(crate) use find_mut;
 
 impl NBT {
-    pub fn new() -> NBT {
+    pub const fn new() -> NBT {
         Self::new_named(String::new())
     }
 
-    pub fn new_named(root_name: String) -> NBT {
+    pub const fn new_named(root_name: String) -> NBT {
         NBT {
             root_name,
             root_children: NBTCompound(Vec::new()),
@@ -186,8 +222,8 @@ impl NBT {
             NBTNode::Double(value) => NBTRef::Double(value),
             NBTNode::ByteArray(value) => NBTRef::ByteArray(value),
             NBTNode::String(value) => NBTRef::String(value),
-            NBTNode::List { type_id: _, children: _ } => {
-                NBTRef::List(ListRef { nbt: self, node_idx })
+            NBTNode::List { type_id, children: _ } => {
+                NBTRef::List(ListRef { nbt: self, node_idx, children_type: *type_id })
             },
             NBTNode::Compound(_) => {
                 NBTRef::Compound(CompoundRef { nbt: self, node_idx })
@@ -249,7 +285,8 @@ impl NBT {
             NBTNode::List { type_id: list_type_id, children: _ } if *list_type_id == type_id => {
                 Some(ListRef {
                     nbt: self,
-                    node_idx: idx
+                    node_idx: idx,
+                    children_type: type_id
                 })
             },
             _ => None
@@ -467,7 +504,7 @@ fn read_test() {
     // https://wiki.vg/NBT#bigtest.nbt
 
     let input = include_bytes!("../../../../assets/bigtest.nbt");
-    let nbt = decode::read(&mut input.as_slice()).unwrap();
+    let nbt = decode::read_named(&mut input.as_slice()).unwrap();
 
     assert_eq!(nbt.root_name.as_str(), "Level");
     verify_bigtest_nbt(&nbt);
@@ -478,9 +515,9 @@ fn read_and_write_test() {
     // https://wiki.vg/NBT#bigtest.nbt
 
     let input = include_bytes!("../../../../assets/bigtest.nbt");
-    let nbt = decode::read(&mut input.as_slice()).unwrap();
+    let nbt = decode::read_named(&mut input.as_slice()).unwrap();
     let input = encode::write_named(&nbt);
-    let nbt = decode::read(&mut input.as_slice()).unwrap();
+    let nbt = decode::read_named(&mut input.as_slice()).unwrap();
     
     assert_eq!(nbt.root_name.as_str(), "Level");
     verify_bigtest_nbt(&nbt);
@@ -491,7 +528,7 @@ fn to_from_snbt_test() {
     // https://wiki.vg/NBT#bigtest.nbt
 
     let input = include_bytes!("../../../../assets/bigtest.nbt");
-    let nbt = decode::read(&mut input.as_slice()).unwrap();
+    let nbt = decode::read_named(&mut input.as_slice()).unwrap();
     let snbt = stringified::to_snbt_string(&nbt);
     let nbt = stringified::from_snbt(&snbt).unwrap();
 

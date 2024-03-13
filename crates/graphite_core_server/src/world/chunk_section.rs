@@ -9,6 +9,8 @@ pub struct ChunkSection {
     non_air_blocks: u16,
     block_palette: BlockPalettedContainer,
     biome_palette: BiomePalettedContainer,
+    pub(crate) block_light: Option<Box<[u8]>>, // Length 2048
+    pub(crate) sky_light: Option<Box<[u8]>>, // Length 2048
 }
 
 impl ChunkSection {
@@ -65,7 +67,9 @@ impl ChunkSection {
         Self {
             non_air_blocks,
             block_palette,
-            biome_palette
+            biome_palette,
+            block_light: None,
+            sky_light: None,
         }
     }
 
@@ -73,7 +77,9 @@ impl ChunkSection {
         Self {
             non_air_blocks: 0,
             block_palette: BlockPalettedContainer::Single(0),
-            biome_palette: BiomePalettedContainer::Single(0)
+            biome_palette: BiomePalettedContainer::Single(0),
+            block_light: None,
+            sky_light: None,
         }
     }
 }

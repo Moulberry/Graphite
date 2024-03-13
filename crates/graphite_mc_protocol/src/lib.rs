@@ -116,6 +116,9 @@ macro_rules! identify_packets {
                         )*
                     }
                 } else {
+                    if Self::DEBUG {
+                        println!("<= Unknown packet 0x{:x}", packet_id_byte)
+                    }
                     Ok(())
                     // anyhow::bail!("unknown packet_id 0x{:x}", packet_id_byte)
                 }

@@ -1,3 +1,5 @@
+use std::array;
+
 use graphite_network::PacketBuffer;
 use thiserror::Error;
 
@@ -5,68 +7,117 @@ use self::item_stack::ItemStack;
 
 pub mod item_stack;
 
-struct Slot {
-    server_item: Option<ItemStack>,
+struct Slot<H: ItemHolder> {
+    server_item: H,
     remote_item: Option<ItemStack>,
     maybe_changed: bool
 }
 
-impl Default for Slot {
-    fn default() -> Self {
+impl <H: ItemHolder> Slot<H> {
+    fn new(slot: InventorySlot) -> Self {
         Self {
-            server_item: None,
-            remote_item: None,
-            maybe_changed: false
+            server_item: H::create_empty(slot),
+            remote_item: Some(ItemStack::EMPTY),
+            maybe_changed: true
         }
     }
 }
 
-pub struct Inventory {
-    slots: [Slot; 46],
-    state_id: i32,
-    maybe_changed: bool
+pub trait ItemHolder {
+    fn get_item_stack(&self) -> &ItemStack;
+    fn create_empty(slot: InventorySlot) -> Self;
+    fn create_out_of_bounds() -> Self;
 }
 
-impl Inventory {
+impl ItemHolder for ItemStack {
+    fn get_item_stack(&self) -> &ItemStack {
+        self
+    }
+
+    fn create_empty(slot: InventorySlot) -> Self {
+        ItemStack::EMPTY
+    }
+
+    fn create_out_of_bounds() -> Self {
+        ItemStack::EMPTY
+    }
+}
+
+pub struct Inventory<H: ItemHolder> {
+    slots: [Slot<H>; 46],
+    state_id: i32,
+    maybe_changed: bool,
+    out_of_bounds: H
+}
+
+impl <H: ItemHolder> Inventory<H> {
     pub fn new() -> Self {
         Self {
-            slots: [(); 46].map(|_| Default::default()),
+            slots: array::from_fn(|index| Slot::new(InventorySlot::from_index(index as i16).unwrap())),
             state_id: 0,
-            maybe_changed: false
+            maybe_changed: true,
+            out_of_bounds: H::create_out_of_bounds()
         }
     }
 
-    pub fn set(&mut self, slot: InventorySlot, item_stack: Option<ItemStack>) {
+    pub fn set(&mut self, slot: InventorySlot, holder: H) {
         if let Ok(index) = slot.get_index() {
             self.maybe_changed = true;
             self.slots[index].maybe_changed = true;
-            self.slots[index].server_item = item_stack;
+            self.slots[index].server_item = holder;
         }
     }
 
-    pub fn get(&self, slot: InventorySlot) -> Option<&ItemStack> {
+    pub fn get(&self, slot: InventorySlot) -> &H {
         if let Ok(index) = slot.get_index() {
-            self.slots[index].server_item.as_ref()
+            &self.slots[index].server_item
         } else {
-            None
+            &self.out_of_bounds
         }
     }
 
-    pub(crate) fn mark_modified_by_client(&mut self, index: usize, remote: Option<ItemStack>) {
+    pub fn get_mut(&mut self, slot: InventorySlot) -> &mut H {
+        if let Ok(index) = slot.get_index() {
+            self.maybe_changed = true;
+            self.slots[index].maybe_changed = true;
+            &mut self.slots[index].server_item
+        } else {
+            &mut self.out_of_bounds
+        }
+    }
+
+    pub fn take(&mut self, slot: InventorySlot) -> H {
+        if let Ok(index) = slot.get_index() {
+            self.maybe_changed = true;
+            self.slots[index].maybe_changed = true;
+
+            let mut swap = H::create_empty(slot);
+            std::mem::swap(&mut swap, &mut self.slots[index].server_item);
+            swap
+        } else {
+            H::create_out_of_bounds()
+        }
+    }
+
+    pub fn get_item_stack(&self, slot: InventorySlot) -> &ItemStack {
+        self.get(slot).get_item_stack()
+    }
+
+    pub fn mark_modified_by_client(&mut self, index: usize, remote: Option<ItemStack>) {
         self.maybe_changed = true;
         self.slots[index].maybe_changed = true;
         self.slots[index].remote_item = remote;
     }
 
-    pub fn get_mut(&mut self, slot: InventorySlot) -> Option<&mut ItemStack> {
-        if let Ok(index) = slot.get_index() {
-            self.maybe_changed = true;
-            self.slots[index].maybe_changed = true;
-            self.slots[index].server_item.as_mut()
-        } else {
-            None
-        }
-    }
+    // pub fn get_mut(&mut self, slot: InventorySlot) -> Option<&mut ItemStack> {
+    //     if let Ok(index) = slot.get_index() {
+    //         self.maybe_changed = true;
+    //         self.slots[index].maybe_changed = true;
+    //         self.slots[index].server_item.as_mut()
+    //     } else {
+    //         None
+    //     }
+    // }
 
     pub fn synchronize(&mut self, packet_buffer: &mut PacketBuffer) {
         if !self.maybe_changed {
@@ -74,17 +125,29 @@ impl Inventory {
         }
 
         for (index, slot) in &mut self.slots.iter_mut().enumerate() {
-            if slot.maybe_changed && slot.server_item != slot.remote_item {
-                self.state_id += 1;
+            if slot.maybe_changed {
+                let mut update = false;
+                if slot.remote_item.is_none() {
+                    update = true;
+                } else if let Some(known) = &slot.remote_item {
+                    update = known != slot.server_item.get_item_stack();
+                }
 
-                packet_buffer.write_packet(&graphite_mc_protocol::play::clientbound::ContainerSetSlot {
-                    window_id: 0,
-                    state_id: self.state_id,
-                    slot: index as i16,
-                    item: slot.server_item.as_ref().map(|item_stack| item_stack.into()),
-                }).unwrap();
+                if update {
+                    self.state_id += 1;
 
-                slot.maybe_changed = false;
+                    let item_stack = slot.server_item.get_item_stack().clone();
+
+                    packet_buffer.write_packet(&graphite_mc_protocol::play::clientbound::ContainerSetSlot {
+                        window_id: 0,
+                        state_id: self.state_id,
+                        slot: index as i16,
+                        item: (&item_stack).into(),
+                    }).unwrap();
+    
+                    slot.remote_item = Some(item_stack);
+                    slot.maybe_changed = false;
+                }
             }
         }
 
@@ -92,6 +155,7 @@ impl Inventory {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum InventorySlot {
     Hotbar(usize),
     Main(usize),

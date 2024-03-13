@@ -14,246 +14,6 @@ pub enum Face {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
 #[strum(serialize_all = "snake_case")]
-pub enum StraightRailShape {
-	NorthSouth,
-	EastWest,
-	AscendingEast,
-	AscendingWest,
-	AscendingNorth,
-	AscendingSouth,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum SculkSensorPhase {
-	Inactive,
-	Active,
-	Cooldown,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Hinge {
-	Left,
-	Right,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum PistonType {
-	Normal,
-	Sticky,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum UpperOrLower {
-	Upper,
-	Lower,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Half {
-	Top,
-	Bottom,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum StairShape {
-	Straight,
-	InnerLeft,
-	InnerRight,
-	OuterLeft,
-	OuterRight,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Direction {
-	North,
-	South,
-	West,
-	East,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Facing {
-	North,
-	East,
-	South,
-	West,
-	Up,
-	Down,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum RailShape {
-	NorthSouth,
-	EastWest,
-	AscendingEast,
-	AscendingWest,
-	AscendingNorth,
-	AscendingSouth,
-	SouthEast,
-	SouthWest,
-	NorthWest,
-	NorthEast,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum WireConnection {
-	Up,
-	Side,
-	None,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum WallConnection {
-	None,
-	Low,
-	Tall,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum VerticalDirection {
-	Up,
-	Down,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Leaves {
-	None,
-	Small,
-	Large,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Attachment {
-	Floor,
-	Ceiling,
-	SingleWall,
-	DoubleWall,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Tilt {
-	None,
-	Unstable,
-	Partial,
-	Full,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Part {
-	Head,
-	Foot,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum SlabType {
-	Top,
-	Bottom,
-	Double,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum ChestType {
-	Single,
-	Left,
-	Right,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Thickness {
-	TipMerge,
-	Tip,
-	Frustum,
-	Middle,
-	Base,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Orientation {
-	DownEast,
-	DownNorth,
-	DownSouth,
-	DownWest,
-	UpEast,
-	UpNorth,
-	UpSouth,
-	UpWest,
-	WestUp,
-	EastUp,
-	NorthUp,
-	SouthUp,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum DirectionOrDown {
-	Down,
-	North,
-	South,
-	West,
-	East,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Axis3D {
-	X,
-	Y,
-	Z,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Axis2D {
-	X,
-	Z,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
-#[strum(serialize_all = "snake_case")]
 pub enum Instrument {
 	Harp,
 	Basedrum,
@@ -283,6 +43,190 @@ pub enum Instrument {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
 #[strum(serialize_all = "snake_case")]
+pub enum Facing {
+	North,
+	East,
+	South,
+	West,
+	Up,
+	Down,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Direction {
+	North,
+	South,
+	West,
+	East,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Part {
+	Head,
+	Foot,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Half {
+	Top,
+	Bottom,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum StairShape {
+	Straight,
+	InnerLeft,
+	InnerRight,
+	OuterLeft,
+	OuterRight,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum UpperOrLower {
+	Upper,
+	Lower,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum StraightRailShape {
+	NorthSouth,
+	EastWest,
+	AscendingEast,
+	AscendingWest,
+	AscendingNorth,
+	AscendingSouth,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum PistonType {
+	Normal,
+	Sticky,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum ChestType {
+	Single,
+	Left,
+	Right,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Axis2D {
+	X,
+	Z,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum WallConnection {
+	None,
+	Low,
+	Tall,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum WireConnection {
+	Up,
+	Side,
+	None,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Axis3D {
+	X,
+	Y,
+	Z,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Hinge {
+	Left,
+	Right,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum RailShape {
+	NorthSouth,
+	EastWest,
+	AscendingEast,
+	AscendingWest,
+	AscendingNorth,
+	AscendingSouth,
+	SouthEast,
+	SouthWest,
+	NorthWest,
+	NorthEast,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Attachment {
+	Floor,
+	Ceiling,
+	SingleWall,
+	DoubleWall,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum DirectionOrDown {
+	Down,
+	North,
+	South,
+	West,
+	East,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum SlabType {
+	Top,
+	Bottom,
+	Double,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Leaves {
+	None,
+	Small,
+	Large,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
 pub enum ComparatorMode {
 	Compare,
 	Subtract,
@@ -296,6 +240,62 @@ pub enum StructureBlockMode {
 	Load,
 	Corner,
 	Data,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Orientation {
+	DownEast,
+	DownNorth,
+	DownSouth,
+	DownWest,
+	UpEast,
+	UpNorth,
+	UpSouth,
+	UpWest,
+	WestUp,
+	EastUp,
+	NorthUp,
+	SouthUp,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum SculkSensorPhase {
+	Inactive,
+	Active,
+	Cooldown,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Thickness {
+	TipMerge,
+	Tip,
+	Frustum,
+	Middle,
+	Base,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum VerticalDirection {
+	Up,
+	Down,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, strum_macros::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum Tilt {
+	None,
+	Unstable,
+	Partial,
+	Full,
 }
 
 #[repr(u8)]

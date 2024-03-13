@@ -39,15 +39,15 @@ struct BlockAttributes {
     #[serde(default)]
     air: Option<bool>,
     #[serde(default)]
-    is_north_face_sturdy: Option<bool>,
+    is_pathfindable_land: Option<bool>,
     #[serde(default)]
-    is_east_face_sturdy: Option<bool>,
+    is_pathfindable_air: Option<bool>,
     #[serde(default)]
-    is_south_face_sturdy: Option<bool>,
+    is_pathfindable_water: Option<bool>,
     #[serde(default)]
-    is_west_face_sturdy: Option<bool>,
+    solid: Option<bool>,
     #[serde(default)]
-    is_up_face_sturdy: Option<bool>
+    lightEmission: Option<u8>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -93,7 +93,8 @@ pub fn write_block_states() -> anyhow::Result<(
     HashMap<String, u16>
 )> {
     let raw_data = include_str!("../data/blocks.json");
-    let blocks: IndexMap<String, Block> = serde_json::from_str(raw_data)?;
+    let mut blocks: IndexMap<String, Block> = serde_json::from_str(raw_data)?;
+    blocks.sort_by(|_, value1, _, value2| value1.min_state_id.cmp(&value2.min_state_id));
 
     // Codegen all the parameters
     let mut parameter_writer: ParameterWriter = Default::default();
@@ -112,6 +113,7 @@ pub fn write_block_states() -> anyhow::Result<(
     let mut block_name_to_state_ids: BTreeMap<String, Vec<usize>> = BTreeMap::new();
     let mut block_name_to_id: BTreeMap<String, usize> = BTreeMap::new();
 
+    let mut block_state_def = String::new();
     let mut block_def = String::new();
     let mut u16_from_block_def = String::new();
     let mut item_lut = String::new();
@@ -126,7 +128,7 @@ pub fn write_block_states() -> anyhow::Result<(
     for (block_name, block) in &blocks {
         let min_state_id = block.min_state_id;
         let num_states = write_block_state(
-            &mut block_def,
+            &mut block_state_def,
             &mut state_lut,
             &mut u16_from_block_def,
             &mut set_property_value_string,
@@ -135,6 +137,8 @@ pub fn write_block_states() -> anyhow::Result<(
             block,
             min_state_id,
         )?;
+
+        block_def.push_str(&format!("\t{} = {},\n", &block_name.to_case(Case::Pascal), block_id));
 
         state_count += num_states;
         let max_state_id = min_state_id + num_states;
@@ -167,7 +171,7 @@ pub fn write_block_states() -> anyhow::Result<(
     let mut write_buffer = String::new();
 
     // Write Main block.rs
-    write_block_rs(&mut write_buffer, block_def)?;
+    write_block_rs(&mut write_buffer, block_state_def, block_def)?;
 
     // Block Parameters
     let mut f = file_src("block_parameter.rs");
@@ -177,7 +181,7 @@ pub fn write_block_states() -> anyhow::Result<(
     // write_block_tags(block_name_to_state_ids, block_name_to_id, &mut write_buffer)?;
 
     // Block Into<u16>
-    write_block_to_u16(&mut write_buffer, u16_from_block_def)?;
+    write_block_state_to_u16(&mut write_buffer, u16_from_block_def)?;
 
     // Block TryFrom<u16> + LUT
     write_u16_to_block(&mut write_buffer, state_count, state_lut)?;
@@ -344,10 +348,10 @@ fn write_state_to_item(write_buffer: &mut String, state_count: usize, item_lut: 
 //     Ok(())
 // }
 
-fn write_block_rs(write_buffer: &mut String, block_def: String) -> Result<(), anyhow::Error> {
+fn write_block_rs(write_buffer: &mut String, block_state_def: String, block_def: String) -> Result<(), anyhow::Error> {
     write_buffer.push_str("use crate::block_parameter::*;\n\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/block_to_u16.rs\"));\n");
-    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/string_to_u16.rs\"));\n");
+    write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/block_string_to_u16.rs\"));\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_block.rs\"));\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/u16_to_item.rs\"));\n");
     write_buffer.push_str("include!(concat!(env!(\"OUT_DIR\"), \"/set_block_property.rs\"));\n");
@@ -367,17 +371,50 @@ fn write_block_rs(write_buffer: &mut String, block_def: String) -> Result<(), an
     write_buffer.push_str("\tSTRING_TO_U16.get(string).copied()\n");
     write_buffer.push_str("}\n\n");
 
+    // Helper for parsing block
+    write_buffer.push_str(r#"
+pub fn parse_block_state(block: graphite_binary::nbt::CompoundRef<'_>) -> u16 {
+    let Some(name) = block.find_string("Name") else {
+        return 0;
+    };
+    
+    let Some(mut id) = string_to_u16(name) else {
+        return 0;
+    };
+
+    if let Some(properties) = block.find_compound("Properties") {
+        if !properties.is_empty() {
+            let mut block: BlockState = id.try_into().unwrap();
+            for (key, value) in properties.entries() {
+                if let Some(value_str) = value.as_string() {
+                    block = block.set_property(key, value_str).unwrap_or(block);
+                }
+            }
+            id = block.to_id();
+        }
+    }
+
+    id
+}"#);
+
+    write_buffer.push_str("\n\n");
+
     // Block Attributes
     write_buffer.push_str("#[derive(Debug)]\n");
     write_buffer.push_str("pub struct BlockAttributes {\n");
     write_buffer.push_str("\tpub hardness: f32,\n");
     write_buffer.push_str("\tpub replaceable: bool,\n");
     write_buffer.push_str("\tpub air: bool,\n");
-    write_buffer.push_str("\tpub is_north_face_sturdy: bool,\n");
-    write_buffer.push_str("\tpub is_east_face_sturdy: bool,\n");
-    write_buffer.push_str("\tpub is_south_face_sturdy: bool,\n");
-    write_buffer.push_str("\tpub is_west_face_sturdy: bool,\n");
-    write_buffer.push_str("\tpub is_up_face_sturdy: bool,\n");
+    write_buffer.push_str("\tpub is_pathfindable_land: bool,\n");
+    write_buffer.push_str("\tpub is_pathfindable_air: bool,\n");
+    write_buffer.push_str("\tpub is_pathfindable_water: bool,\n");
+    write_buffer.push_str("\tpub solid: bool,\n");
+    write_buffer.push_str("\tpub light_emission: u8,\n");
+    // write_buffer.push_str("\tpub is_north_face_sturdy: bool,\n");
+    // write_buffer.push_str("\tpub is_east_face_sturdy: bool,\n");
+    // write_buffer.push_str("\tpub is_south_face_sturdy: bool,\n");
+    // write_buffer.push_str("\tpub is_west_face_sturdy: bool,\n");
+    // write_buffer.push_str("\tpub is_up_face_sturdy: bool,\n");
     write_buffer.push_str("}\n\n");
 
     // Write Error
@@ -388,8 +425,13 @@ fn write_block_rs(write_buffer: &mut String, block_def: String) -> Result<(), an
     // State Id to Item
 
 
+    // Write BlockState Enum
+    write_buffer.push_str("#[derive(Debug, Copy, Clone)]\npub enum BlockState {\n");
+    write_buffer.push_str(&block_state_def);
+    write_buffer.push_str("}\n\n");
+
     // Write Block Enum
-    write_buffer.push_str("#[derive(Debug, Copy, Clone)]\npub enum Block {\n");
+    write_buffer.push_str("#[derive(Debug, Copy, Clone)]\n#[repr(u16)]\npub enum Block {\n");
     write_buffer.push_str(&block_def);
     write_buffer.push_str("}\n\n");
 
@@ -424,9 +466,9 @@ fn write_u16_to_attributes(write_buffer: &mut String, state_count: usize, state_
 }
 
 fn write_u16_to_block(write_buffer: &mut String, state_count: usize, state_lut: Vec<String>) -> Result<(), anyhow::Error> {
-    write_buffer.push_str("impl TryFrom<u16> for Block {\n");
+    write_buffer.push_str("impl TryFrom<u16> for BlockState {\n");
     write_buffer.push_str("\ttype Error = NoSuchBlockError;");
-    write_buffer.push_str("\tfn try_from(id: u16) -> Result<Block, Self::Error> {\n");
+    write_buffer.push_str("\tfn try_from(id: u16) -> Result<BlockState, Self::Error> {\n");
     write_buffer
         .push_str("\t\tif id >= BLOCK_LUT.len() as _ { return Err(NoSuchBlockError(id)); }\n");
     write_buffer.push_str("\t\tOk(BLOCK_LUT[id as usize])\n");
@@ -434,7 +476,7 @@ fn write_u16_to_block(write_buffer: &mut String, state_count: usize, state_lut: 
     write_buffer.push_str("}\n");
     writeln!(
         write_buffer,
-        "const BLOCK_LUT: [Block; {}] = [",
+        "const BLOCK_LUT: [BlockState; {}] = [",
         state_count
     )?;
     for element in state_lut {
@@ -449,13 +491,13 @@ fn write_u16_to_block(write_buffer: &mut String, state_count: usize, state_lut: 
     Ok(())
 }
 
-fn write_block_to_u16(write_buffer: &mut String, u16_from_block_def: String) -> Result<(), anyhow::Error> {
-    write_buffer.push_str("impl From<&Block> for u16 {\n");
-    write_buffer.push_str("\tfn from(block: &Block) -> u16 {\n");
+fn write_block_state_to_u16(write_buffer: &mut String, u16_from_block_def: String) -> Result<(), anyhow::Error> {
+    write_buffer.push_str("impl From<&BlockState> for u16 {\n");
+    write_buffer.push_str("\tfn from(block: &BlockState) -> u16 {\n");
     write_buffer.push_str("\t\tblock.to_id()\n");
     write_buffer.push_str("\t}\n");
     write_buffer.push_str("}\n");
-    write_buffer.push_str("impl Block {\n");
+    write_buffer.push_str("impl BlockState {\n");
     write_buffer.push_str("\tpub const fn to_id(&self) -> u16 {\n");
     write_buffer.push_str("\t\tmatch self {\n");
     write_buffer.push_str(&u16_from_block_def);
@@ -473,15 +515,15 @@ fn write_string_to_u16(write_buffer: &mut String, string_to_u16_def: phf_codegen
     write!(write_buffer, "static STRING_TO_U16: phf::Map<&'static str, u16> = {}", string_to_u16_def.build())?;
     write!(write_buffer, ";\n").unwrap();
 
-    let mut f = crate::file_out("string_to_u16.rs");
+    let mut f = crate::file_out("block_string_to_u16.rs");
     f.write_all(write_buffer.as_bytes())?;
     write_buffer.clear();
     Ok(())
 }
 
 fn write_set_block_property(write_buffer: &mut String, set_property_value_string: String) -> Result<(), anyhow::Error> {
-    write_buffer.push_str("impl Block {\n");
-    write_buffer.push_str("pub fn set_property(self, name: &str, value: &str) -> Option<Block> {\n");
+    write_buffer.push_str("impl BlockState {\n");
+    write_buffer.push_str("pub fn set_property(self, name: &str, value: &str) -> Option<BlockState> {\n");
     write_buffer.push_str("\tmatch self {\n");
     write_buffer.push_str(&set_property_value_string);
     write_buffer.push_str("\t\t_ => None\n");
@@ -493,23 +535,6 @@ fn write_set_block_property(write_buffer: &mut String, set_property_value_string
     f.write_all(write_buffer.as_bytes())?;
     write_buffer.clear();
     Ok(())
-
-
-    /*
-    pub fn set_property(block: Block, name: &str, value: &str) -> Option<Block> {
-	match block {
-		Block::AcaciaButton{face, facing, powered} => {
-			match name {
-				"face" => Some(Block::AcaciaButton{ face: value.parse().ok()?, facing, powered }),
-				"facing" => Some(Block::AcaciaButton{ face, facing: value.parse().ok()?, powered }),
-				"powered" => Some(Block::AcaciaButton{ face, facing, powered: value.parse().ok()? }),
-				_ => None
-			}
-		},
-		_ => None
-	}
-    }
-    */
 }
 
 fn write_state_attributes(state_attributes_lut: &mut String, block_name: &String, state_id: usize, block: &Block) -> Result<(), anyhow::Error> {
@@ -522,32 +547,47 @@ fn write_state_attributes(state_attributes_lut: &mut String, block_name: &String
     let mut hardness = block.attributes.hardness.unwrap_or(0.0);
     let mut replaceable = block.attributes.replaceable.unwrap_or(false);
     let mut air = block.attributes.air.unwrap_or(false);
-    let mut is_north_face_sturdy = block.attributes.is_north_face_sturdy.unwrap_or(true);
-    let mut is_east_face_sturdy = block.attributes.is_east_face_sturdy.unwrap_or(true);
-    let mut is_south_face_sturdy = block.attributes.is_south_face_sturdy.unwrap_or(true);
-    let mut is_west_face_sturdy = block.attributes.is_west_face_sturdy.unwrap_or(true);
-    let mut is_up_face_sturdy = block.attributes.is_up_face_sturdy.unwrap_or(true);
+    let mut is_pathfindable_land = block.attributes.is_pathfindable_land.unwrap_or(false);
+    let mut is_pathfindable_air = block.attributes.is_pathfindable_air.unwrap_or(false);
+    let mut is_pathfindable_water = block.attributes.is_pathfindable_water.unwrap_or(false);
+    let mut solid = block.attributes.solid.unwrap_or(true);
+    let mut light_emission = block.attributes.lightEmission.unwrap_or(0);
+    // let mut is_north_face_sturdy = block.attributes.is_north_face_sturdy.unwrap_or(true);
+    // let mut is_east_face_sturdy = block.attributes.is_east_face_sturdy.unwrap_or(true);
+    // let mut is_south_face_sturdy = block.attributes.is_south_face_sturdy.unwrap_or(true);
+    // let mut is_west_face_sturdy = block.attributes.is_west_face_sturdy.unwrap_or(true);
+    // let mut is_up_face_sturdy = block.attributes.is_up_face_sturdy.unwrap_or(true);
     let state_attributes = block.state_attributes.get(&state_id.to_string());
 
     if let Some(state_attributes) = state_attributes {
         hardness = state_attributes.hardness.unwrap_or(hardness);
         replaceable = state_attributes.replaceable.unwrap_or(replaceable);
         air = state_attributes.air.unwrap_or(air);
-        is_north_face_sturdy = state_attributes.is_north_face_sturdy.unwrap_or(is_north_face_sturdy);
-        is_east_face_sturdy = state_attributes.is_east_face_sturdy.unwrap_or(is_east_face_sturdy);
-        is_south_face_sturdy = state_attributes.is_south_face_sturdy.unwrap_or(is_south_face_sturdy);
-        is_west_face_sturdy = state_attributes.is_west_face_sturdy.unwrap_or(is_west_face_sturdy);
-        is_up_face_sturdy = state_attributes.is_up_face_sturdy.unwrap_or(is_up_face_sturdy);
+        is_pathfindable_land = state_attributes.is_pathfindable_land.unwrap_or(is_pathfindable_land);
+        is_pathfindable_air = state_attributes.is_pathfindable_air.unwrap_or(is_pathfindable_air);
+        is_pathfindable_water = state_attributes.is_pathfindable_water.unwrap_or(is_pathfindable_water);
+        solid = state_attributes.solid.unwrap_or(solid);
+        light_emission = state_attributes.lightEmission.unwrap_or(light_emission);
+        // is_north_face_sturdy = state_attributes.is_north_face_sturdy.unwrap_or(is_north_face_sturdy);
+        // is_east_face_sturdy = state_attributes.is_east_face_sturdy.unwrap_or(is_east_face_sturdy);
+        // is_south_face_sturdy = state_attributes.is_south_face_sturdy.unwrap_or(is_south_face_sturdy);
+        // is_west_face_sturdy = state_attributes.is_west_face_sturdy.unwrap_or(is_west_face_sturdy);
+        // is_up_face_sturdy = state_attributes.is_up_face_sturdy.unwrap_or(is_up_face_sturdy);
     }
 
     writeln!(state_attributes_lut, "\t\thardness: {}_f32,", hardness)?;
     writeln!(state_attributes_lut, "\t\treplaceable: {},", replaceable)?;
     writeln!(state_attributes_lut, "\t\tair: {},", air)?;
-    writeln!(state_attributes_lut, "\t\tis_north_face_sturdy: {},", is_north_face_sturdy)?;
-    writeln!(state_attributes_lut, "\t\tis_east_face_sturdy: {},", is_east_face_sturdy)?;
-    writeln!(state_attributes_lut, "\t\tis_south_face_sturdy: {},", is_south_face_sturdy)?;
-    writeln!(state_attributes_lut, "\t\tis_west_face_sturdy: {},", is_west_face_sturdy)?;
-    writeln!(state_attributes_lut, "\t\tis_up_face_sturdy: {},", is_up_face_sturdy)?;
+    writeln!(state_attributes_lut, "\t\tis_pathfindable_land: {},", is_pathfindable_land)?;
+    writeln!(state_attributes_lut, "\t\tis_pathfindable_air: {},", is_pathfindable_air)?;
+    writeln!(state_attributes_lut, "\t\tis_pathfindable_water: {},", is_pathfindable_water)?;
+    writeln!(state_attributes_lut, "\t\tsolid: {},", solid)?;
+    writeln!(state_attributes_lut, "\t\tlight_emission: {},", light_emission)?;
+    // writeln!(state_attributes_lut, "\t\tis_north_face_sturdy: {},", is_north_face_sturdy)?;
+    // writeln!(state_attributes_lut, "\t\tis_east_face_sturdy: {},", is_east_face_sturdy)?;
+    // writeln!(state_attributes_lut, "\t\tis_south_face_sturdy: {},", is_south_face_sturdy)?;
+    // writeln!(state_attributes_lut, "\t\tis_west_face_sturdy: {},", is_west_face_sturdy)?;
+    // writeln!(state_attributes_lut, "\t\tis_up_face_sturdy: {},", is_up_face_sturdy)?;
 
     state_attributes_lut.push_str("\t},\n");
     Ok(())
@@ -568,24 +608,24 @@ fn write_block_state(
     block_def.push('\t');
     block_def.push_str(&block_name.to_case(Case::Pascal));
 
-    let block_enum_ref = format!("Block::{}", block_name.to_case(Case::Pascal));
+    let block_enum_ref = format!("BlockState::{}", block_name.to_case(Case::Pascal));
 
     if block.properties.is_empty() {
-        block_def.push_str(",\n");
+        block_def.push_str(" {},\n");
 
-        writeln!(u16_from_block_def, "\t\t\t{} => {},", block_enum_ref, current_state_id)?;
+        writeln!(u16_from_block_def, "\t\t\t{} {{}} => {},", block_enum_ref, current_state_id)?;
 
         while state_lut.len() <= current_state_id {
             state_lut.push(String::new());
         }
-        state_lut[current_state_id] = format!("\t{}", block_enum_ref);
+        state_lut[current_state_id] = format!("\t{} {{}}", block_enum_ref);
 
         return Ok(1);
     } else {
         block_def.push_str(" {\n");
 
-        // Emit eg. "Block::AcaciaButton{face, facing, powered} => {" for set_property method
-        set_property_value_string.push_str("\t\tBlock::");
+        // Emit eg. "BlockState::AcaciaButton{face, facing, powered} => {" for set_property method
+        set_property_value_string.push_str("\t\tBlockState::");
         set_property_value_string.push_str(&block_name.to_case(Case::Pascal));
         set_property_value_string.push_str("{");
         let mut first = true;
@@ -702,7 +742,7 @@ fn write_block_state(
     let mut index = current_state_id;
     for one in all {
         let mut state_def = String::new();
-        state_def.push_str("\tBlock::");
+        state_def.push_str("\tBlockState::");
         state_def.push_str(&block_name.to_case(Case::Pascal));
         state_def.push('{');
         state_def.push_str(&one);

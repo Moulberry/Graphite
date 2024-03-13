@@ -7,7 +7,7 @@ description = "Networking loop for Graphite server"
 
 [dependencies]
 mio = { version = "0.8.10", features = ["os-poll", "net"] }
+thiserror = "1.0.51"
 
 graphite_binary = { path = "../graphite_binary" }
 graphite_mc_protocol = { path = "../graphite_mc_protocol" }
-thiserror = "1.0.51"

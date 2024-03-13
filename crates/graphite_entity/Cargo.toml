@@ -1,0 +1,19 @@
+[package]
+name = "graphite_entity"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+glam = "0.25.0"
+serde = "1.0.196"
+serde_json = "1.0.113"
+rand = "0.8.5"
+parry3d = "0.13.6"
+
+graphite_binary = { path = "../graphite_binary" }
+graphite_core_server = { path = "../graphite_core_server" }
+graphite_mc_protocol = { path = "../graphite_mc_protocol" }
+graphite_network = { path = "../graphite_network" }
+graphite_mc_constants = { path = "../graphite_mc_constants" }
