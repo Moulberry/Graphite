@@ -3,18 +3,54 @@ use std::fmt::Write;
 
 pub fn to_pretty_debug<T: Write>(writer: &mut T, nbt: &NBT) -> std::fmt::Result {
     let mut indentation = String::new();
+    write_node(writer, &nbt.nodes, &mut indentation, Some(&nbt.root_name), &nbt.nodes[nbt.root_index])
+}
+
+pub fn to_pretty_debug_compound<T: Write>(writer: &mut T, compound: &CompoundRef) -> std::fmt::Result {
+    let mut indentation = String::new();
     write_compound(
         writer,
-        &nbt.nodes,
+        &compound.nbt.nodes,
         &mut indentation,
-        Some(&nbt.root_name),
-        &nbt.root_children,
+        None,
+        &compound.get_self_node().0,
+    )
+}
+
+pub fn to_pretty_debug_compound_mut<T: Write>(writer: &mut T, compound: &CompoundRefMut) -> std::fmt::Result {
+    let mut indentation = String::new();
+    write_compound(
+        writer,
+        &compound.nbt.nodes,
+        &mut indentation,
+        None,
+        &compound.get_self_node().0,
+    )
+}
+
+pub fn to_pretty_debug_list<T: Write>(writer: &mut T, list: &ListRef) -> std::fmt::Result {
+    let mut indentation = String::new();
+    write_list(writer,
+        &list.nbt.nodes,
+        &mut indentation,
+        None,
+        list.get_self_node().1
+    )
+}
+
+pub fn to_pretty_debug_list_mut<T: Write>(writer: &mut T, list: &ListRefMut) -> std::fmt::Result {
+    let mut indentation = String::new();
+    write_list(writer,
+        &list.nbt.nodes,
+        &mut indentation,
+        None,
+        list.get_self_node().1
     )
 }
 
 fn write_node<T: Write>(
     writer: &mut T,
-    nodes: &Vec<NBTNode>,
+    nodes: &Slab<NBTNode>,
     indentation: &mut String,
     name: Option<&String>,
     node: &NBTNode,
@@ -32,7 +68,7 @@ fn write_node<T: Write>(
             type_id: _,
             children,
         } => write_list(writer, nodes, indentation, name, children),
-        NBTNode::Compound(value) => write_compound(writer, nodes, indentation, name, value),
+        NBTNode::Compound(value) => write_compound(writer, nodes, indentation, name, &value.0),
         NBTNode::IntArray(values) => write_int_array(writer, indentation, name, values),
         NBTNode::LongArray(values) => write_long_array(writer, indentation, name, values),
     }
@@ -40,19 +76,19 @@ fn write_node<T: Write>(
 
 fn write_compound<T: Write>(
     writer: &mut T,
-    nodes: &Vec<NBTNode>,
+    nodes: &Slab<NBTNode>,
     indentation: &mut String,
     name: Option<&String>,
-    children: &NBTCompound,
+    children: &Vec<(String, usize)>,
 ) -> std::fmt::Result {
     // Write type header and opening brace
     writer.write_str(indentation)?;
     if let Some(name) = name {
-        write!(writer, "Compound('{}'): {} entries", name, children.0.len())?;
+        write!(writer, "Compound('{}'): {} entries", name, children.len())?;
     } else {
-        write!(writer, "Compound(None): {} entries", children.0.len())?;
+        write!(writer, "Compound(None): {} entries", children.len())?;
     }
-    if children.0.is_empty() {
+    if children.is_empty() {
         return Ok(());
     }
     writeln!(writer, "\n{}{{", indentation)?;
@@ -60,7 +96,7 @@ fn write_compound<T: Write>(
     // Increase indentation
     indentation.push_str("  ");
 
-    for (child_name, child_idx) in &children.0 {
+    for (child_name, child_idx) in children {
         let child = &nodes[*child_idx];
         write_node(writer, nodes, indentation, Some(child_name), child)?;
         writer.write_char('\n')?;
@@ -174,7 +210,7 @@ fn write_double<T: Write>(
 
 fn write_list<T: Write>(
     writer: &mut T,
-    nodes: &Vec<NBTNode>,
+    nodes: &Slab<NBTNode>,
     indentation: &mut String,
     name: Option<&String>,
     children: &Vec<usize>,

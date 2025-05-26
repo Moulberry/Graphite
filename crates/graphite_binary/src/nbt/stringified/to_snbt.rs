@@ -8,10 +8,10 @@ pub fn to_snbt_string(nbt: &NBT) -> String {
 }
 
 pub fn to_snbt<T: Write>(writer: &mut T, nbt: &NBT) -> std::fmt::Result {
-    write_compound(writer, &nbt.nodes, &nbt.root_children)
+    write_node(writer, &nbt.nodes, &nbt.nodes[nbt.root_index])
 }
 
-fn write_node<T: Write>(writer: &mut T, nodes: &Vec<NBTNode>, node: &NBTNode) -> std::fmt::Result {
+fn write_node<T: Write>(writer: &mut T, nodes: &Slab<NBTNode>, node: &NBTNode) -> std::fmt::Result {
     match node {
         NBTNode::Byte(value) => write_byte(writer, *value),
         NBTNode::Short(value) => write_short(writer, *value),
@@ -33,7 +33,7 @@ fn write_node<T: Write>(writer: &mut T, nodes: &Vec<NBTNode>, node: &NBTNode) ->
 
 fn write_compound<T: Write>(
     writer: &mut T,
-    nodes: &Vec<NBTNode>,
+    nodes: &Slab<NBTNode>,
     children: &NBTCompound,
 ) -> std::fmt::Result {
     writer.write_char('{')?;
@@ -135,7 +135,7 @@ fn write_byte_array<T: Write>(writer: &mut T, values: &Vec<i8>) -> std::fmt::Res
 fn write_list<T: Write>(
     writer: &mut T,
     children: &Vec<usize>,
-    nodes: &Vec<NBTNode>,
+    nodes: &Slab<NBTNode>,
 ) -> std::fmt::Result {
     writer.write_str("[")?;
     let mut first = true;

@@ -1,16 +1,17 @@
 use super::*;
 
+#[derive(Clone)]
 pub struct AttemptFrom<S, F> {
     _phantom1: S,
     _phantom2: F,
 }
 
-impl<'a, F, T: TryFrom<F> + Into<F> + Copy, S: SliceSerializable<'a, F, CopyType = F>>
-    SliceSerializable<'a, T> for AttemptFrom<S, F>
+impl<'r, 'd: 'r, F, T: TryFrom<F> + Into<F> + Copy, S: SliceSerializable<'r, 'd, F, CopyType = F>>
+    SliceSerializable<'r, 'd, T> for AttemptFrom<S, F>
 {
     type CopyType = T;
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<T> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<T> {
         let intermediate = S::read(bytes)?;
         T::try_from(intermediate).map_err(|_| anyhow::anyhow!("try_from failed"))
     }

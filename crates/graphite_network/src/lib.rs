@@ -1,7 +1,7 @@
 use std::cell::{UnsafeCell, RefCell};
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::net::{ToSocketAddrs, SocketAddr};
 use std::ops::Mul;
 use std::rc::Rc;
@@ -14,7 +14,7 @@ use mio::net::{TcpListener, TcpStream};
 use mio::{Poll, Events, Token, Interest};
 
 mod packet_buffer;
-pub use packet_buffer::PacketWriteError;
+mod monitor;
 pub use packet_buffer::PacketBuffer;
 
 const NEW_CONNECTION_TOKEN: Token = Token(0);
@@ -22,7 +22,7 @@ const NEW_CONNECTION_TOKEN: Token = Token(0);
 pub enum HandleAction {
     Continue,
     Disconnect,
-    Transfer(Box<dyn FnOnce(TcpStream)>)
+    Transfer(Box<dyn FnOnce(SendableConnection)>)
 }
 
 pub trait FramedPacketHandler {
@@ -34,20 +34,53 @@ pub struct Connection {
     shutdown: bool,
 
     stream: TcpStream,
-    unfinished_buffer: Vec<u8>,
+    unfinished_read_buffer: Vec<u8>,
+
     handler: Option<Rc<UnsafeCell<dyn FramedPacketHandler>>>
+}
+
+pub struct SendableConnection {
+    shutdown: bool,
+
+    stream: TcpStream,
+    unfinished_read_buffer: Vec<u8>,
+}
+
+impl SendableConnection {
+    pub fn send(&mut self, buffer: &mut PacketBuffer) {
+        if self.shutdown || buffer.is_empty() {
+            return;
+        }
+
+        if !buffer.pop_written_into(&mut self.stream) {
+            self.shutdown();
+        }
+    }
+
+    pub fn is_shutdown(&self) -> bool {
+        self.shutdown
+    }
+
+    pub fn shutdown(&mut self) {
+        if !self.shutdown {
+            self.shutdown = true;
+            let _ = self.stream.shutdown(std::net::Shutdown::Both);
+        }
+    }
+}
+
+impl From<Connection> for SendableConnection {
+    fn from(value: Connection) -> Self {
+        Self {
+            shutdown: value.shutdown,
+            stream: value.stream,
+            unfinished_read_buffer: value.unfinished_read_buffer
+        }
+    }
 }
 
 impl Connection {
     pub fn disconnect_handler(&mut self) {
-        if self.shutdown {
-            return;
-        }
-
-        if self.handler.is_none() {
-            panic!("No handler is set!");
-        }
-
         self.handler = None;
     }
 
@@ -56,40 +89,35 @@ impl Connection {
             return;
         }
 
-        if self.handler.is_some() {
-            panic!("Handler set twice!");
+        if let Some(old_handler) = &self.handler {
+            if Rc::strong_count(old_handler) > 1 {
+                panic!("Handler set without clearing references to old handler");
+            }
         }
 
-        let t = handler.clone() as Rc<UnsafeCell<dyn FramedPacketHandler>>;
+        let t = handler as Rc<UnsafeCell<dyn FramedPacketHandler>>;
         self.handler = Some(t);
     }
 
-    pub fn send(&mut self, mut bytes: &[u8]) {
-        if self.shutdown {
+    pub fn has_handler(&self) -> bool {
+        self.handler.is_some()
+    }
+
+    pub fn handler_ref_count(&self) -> usize {
+        if let Some(handler) = &self.handler {
+            Rc::strong_count(handler)
+        } else {
+            0
+        }
+    }
+
+    pub fn send(&mut self, buffer: &mut PacketBuffer) {
+        if self.shutdown || buffer.is_empty() {
             return;
         }
 
-        loop {
-            match self.stream.write(bytes) {
-                // Partial write
-                Ok(n) if n < bytes.len() => {
-                    bytes = &bytes[n..];
-                    continue;
-                }
-                // Success
-                Ok(_) => {
-                    break;
-                }
-                // WouldBlock or Interrupted... try again
-                Err(ref err) if would_block(err) || interrupted(err) => {
-                    continue;
-                }
-                // Other errors we'll consider fatal.
-                Err(err) => {
-                    panic!("err: {}", err); // todo: disconnect instead of panicing
-                    // return Err(err)
-                },
-            }
+        if !buffer.pop_written_into(&mut self.stream) {
+            self.shutdown();
         }
     }
 
@@ -97,7 +125,7 @@ impl Connection {
         self.shutdown
     }
 
-    pub fn disconnect(&mut self) {
+    pub fn shutdown(&mut self) {
         if !self.shutdown {
             self.shutdown = true;
             let _ = self.stream.shutdown(std::net::Shutdown::Both);
@@ -109,28 +137,37 @@ pub trait NetworkHandlerService: Sized {
     const MAXIMUM_PACKET_SIZE: usize;
     const TICK_RATE: Option<Duration>;
 
-    type ExtraData: 'static + From<SocketAddr>;
+    type ExtraData: 'static + TryFrom<SocketAddr> + Send;
 
     fn accept_new_connection(&mut self, extra_data: Self::ExtraData, connection: Rc<RefCell<Connection>>);
-    fn tick(&mut self);
+    fn tick(&mut self) -> ServiceTickAction;
+}
+
+#[derive(PartialEq)]
+pub enum ServiceTickAction {
+    None,
+    Shutdown
 }
 
 #[derive(Clone)]
-pub struct TcpStreamSender<E> {
-    inner: std::sync::mpsc::Sender<(TcpStream, E)>,
-    waker: Arc<mio::Waker>
+pub struct ConnectionSender<E> {
+    pub inner: std::sync::mpsc::Sender<(SendableConnection, E)>,
+    pub waker: Option<Arc<mio::Waker>>
 }
 
-impl <E> TcpStreamSender<E> {
-    pub fn send(&mut self, stream: TcpStream, extra_data: E) {
-        self.inner.send((stream, extra_data)).unwrap();
-        self.waker.wake().unwrap();
+impl <E> ConnectionSender<E> {
+    pub fn send(&mut self, stream: SendableConnection, extra_data: E) {
+        if self.inner.send((stream, extra_data)).is_ok() {
+            if let Some(waker) = self.waker.as_ref() {
+                let _ = waker.wake();
+            }
+        }
     }
 }
 
 pub enum ConnectionReceiver<E> {
     TcpListener(TcpListener),
-    Channel(std::sync::mpsc::Receiver<(TcpStream, E)>)
+    Channel(std::sync::mpsc::Receiver<(SendableConnection, E)>)
 }
 
 pub struct NetworkHandler<T: NetworkHandlerService> {
@@ -167,7 +204,34 @@ impl <T: NetworkHandlerService<ExtraData = SocketAddr>> NetworkHandler<T> {
 }
 
 impl <T: NetworkHandlerService> NetworkHandler<T> {
-    pub fn new_channel(service: T) -> Result<(NetworkHandler<T>, TcpStreamSender<T::ExtraData>), Box<dyn Error>> {
+    pub fn start<F: 'static + Send + FnOnce() -> T>(service: F) -> Result<ConnectionSender<T::ExtraData>, Box<dyn Error>> {
+        let poll = Poll::new()?;
+
+        let waker = mio::Waker::new(poll.registry(), NEW_CONNECTION_TOKEN)?;
+
+        let (tx, rx) = std::sync::mpsc::channel();
+
+        std::thread::spawn(move || {
+            let mut network_handler = Self {
+                service: service(),
+                poll,
+                receiver: ConnectionReceiver::Channel(rx),
+                connections: HashMap::new(),
+    
+                read_buffer: vec![0_u8; 4_194_304].into_boxed_slice(),
+                bytes_read: 0
+            };
+            network_handler.listen().unwrap();
+        });
+
+        Ok(ConnectionSender {
+            inner: tx,
+            waker: Some(Arc::new(waker))
+        })
+    }
+
+    // todo: don't need this any more?
+    pub fn new_channel(service: T) -> Result<(NetworkHandler<T>, ConnectionSender<T::ExtraData>), Box<dyn Error>> {
         let poll = Poll::new()?;
 
         let waker = mio::Waker::new(poll.registry(), NEW_CONNECTION_TOKEN)?;
@@ -183,12 +247,16 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
             read_buffer: vec![0_u8; 4_194_304].into_boxed_slice(),
             bytes_read: 0
         };
-        let sender = TcpStreamSender {
+        let sender = ConnectionSender {
             inner: tx,
-            waker: Arc::new(waker)
+            waker: Some(Arc::new(waker))
         };
 
         Ok((network_handler, sender))
+    }
+
+    pub fn get_service(&mut self) -> &mut T {
+        &mut self.service
     }
 
     pub fn listen(&mut self) -> Result<(), Box<dyn Error>> {
@@ -198,36 +266,62 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
         // todo: use slab instead of hashmap
         let mut unique_token = Token(NEW_CONNECTION_TOKEN.0 + 1);
     
-        let mut next_tick = if let Some(tick_rate) = T::TICK_RATE {
-            Instant::now().checked_add(tick_rate).unwrap()
-        } else {
-            Instant::now() // value doesn't actually matter  
-        };
+        let now = Instant::now();
+        let mut last_tick = now;
+        let mut next_tick = last_tick + T::TICK_RATE.unwrap_or_default();
 
-        loop {
+        let mut monitor = None;
+
+        if let Some(tick_rate) = T::TICK_RATE {
+            if tick_rate < Duration::from_secs(20) {
+                monitor = Some(monitor::register())
+            }
+        }
+
+        'main: loop {
             let timeout = if let Some(tick_rate) = T::TICK_RATE {
                 let now = Instant::now();
+
+                if now < last_tick {
+                    eprintln!("Time went backwards. Did the system time change?");
+                    last_tick = now;
+                    next_tick = last_tick + tick_rate;
+                }
 
                 let since = now.checked_duration_since(next_tick);
                 if let Some(elapsed) = since {
                     let mut tick_count = (elapsed.as_millis() / tick_rate.as_millis()).max(1);
 
                     if tick_count > 100 {
-                        println!("Server can't keep up, running {} ticks behind", tick_count-100);
+                        eprintln!("Server can't keep up, running {} ticks behind", tick_count-100);
                         tick_count = 100;
                     }
 
-                    for _ in 0..tick_count {
-                        self.service.tick();
+                    if let Some(monitor) = &monitor {
+                        monitor.keep_alive();
                     }
 
-                    next_tick = next_tick.checked_add(tick_rate.mul(tick_count as u32)).unwrap();
+                    for _ in 0..tick_count {
+                        if self.service.tick() == ServiceTickAction::Shutdown {
+                            break 'main;
+                        }
+                    }
+
+                    let duration = tick_rate.mul(tick_count as u32);
+                    last_tick += duration;
+                    next_tick = last_tick + tick_rate;
                 }
 
-                next_tick.checked_duration_since(now)
+                let timeout = if let Some(duration) = next_tick.checked_duration_since(now) {
+                    duration.min(tick_rate)
+                } else {
+                    tick_rate
+                };
+                Some(timeout)
             } else {
                 None
             };
+
 
             // Poll Mio for events, blocking until we get an event.
             if let Err(err) = self.poll.poll(&mut events, timeout) {
@@ -240,9 +334,9 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
             for event in events.iter() {
                 match event.token() {
                     NEW_CONNECTION_TOKEN => loop {
-                        let (mut stream, extra_data) = match &mut self.receiver {
+                        let (mut sendable_connection, extra_data) = match &mut self.receiver {
                             ConnectionReceiver::Channel(receiver) => match receiver.try_recv() {
-                                Ok((stream, extra_data)) => (stream, extra_data),
+                                Ok((sendable_connection, extra_data)) => (sendable_connection, extra_data),
                                 Err(_) => {
                                     // Break out of accept loop, continue processing events
                                     break;
@@ -250,7 +344,17 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
                             },
                             ConnectionReceiver::TcpListener(tcp_listener) => match tcp_listener.accept() {
                                 Ok((stream, address)) => {
-                                    (stream, address.into())
+                                    if let Ok(extra_data) = address.try_into() {
+                                        let sendable_connection = SendableConnection {
+                                            shutdown: false,
+                                            stream,
+                                            unfinished_read_buffer: Vec::new(),
+                                        };
+                                        (sendable_connection, extra_data)
+                                    } else {
+                                        let _ = stream.shutdown(std::net::Shutdown::Both);
+                                        continue;
+                                    }
                                 },
                                 Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
                                     // Break out of accept loop, continue processing events
@@ -261,50 +365,61 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
                                 }
                             },
                         };
+
+                        if sendable_connection.shutdown {
+                            continue;
+                        }
     
                         let token_id = unique_token.0;
                         unique_token.0 += 1;
                         let token = Token(token_id);
     
                         self.poll.registry().register(
-                            &mut stream,
+                            &mut sendable_connection.stream,
                             token,
                             Interest::READABLE.add(Interest::WRITABLE),
                         )?;
     
                         let connection = Rc::new(RefCell::new(Connection {
-                            shutdown: false,
-
-                            stream,
-                            unfinished_buffer: Vec::new(),
-                            handler: None
+                            shutdown: sendable_connection.shutdown,
+                            stream: sendable_connection.stream,
+                            unfinished_read_buffer: sendable_connection.unfinished_read_buffer,
+                            handler: None,
                         }));
     
                         self.connections.insert(token, (Some(extra_data), connection));
                     }
                     token => {
                         // Maybe received an event for a TCP connection.
-                        let action = self.handle_connection_event(token, event)?;
+                        let action = self.handle_connection_event(token, event);
                         match action {
-                            HandleAction::Continue => {},
-                            HandleAction::Disconnect => {
-                                if let Some(connection) = self.remove_connection(token) {
+                            Ok(HandleAction::Continue) => {},
+                            Ok(HandleAction::Disconnect) => {
+                                if let Some(connection) = self.take_connection(token) {
                                     drop(connection);
                                 }
                             },
-                            HandleAction::Transfer(callback) => {
-                                if let Some(connection) = self.remove_connection(token) {
-                                    callback(connection.stream);
+                            Ok(HandleAction::Transfer(callback)) => {
+                                if let Some(connection) = self.take_connection(token) {
+                                    callback(connection.into());
                                 }
                             },
+                            Err(err) => {
+                                println!("Disconnect: {:?}", err);
+                                if let Some(connection) = self.take_connection(token) {
+                                    drop(connection);
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
+        Ok(())
     }
 
-    fn remove_connection(&mut self, token: Token) -> Option<Connection> {
+    fn take_connection(&mut self, token: Token) -> Option<Connection> {
         if let Some((_, connection)) = self.connections.remove(&token) {
             let mut connection_ref = connection.borrow_mut();
             let _ = self.poll.registry().deregister(&mut connection_ref.stream);
@@ -338,12 +453,12 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
 
         let mut connection_ref = connection.borrow_mut();
 
-        if connection_ref.is_shutdown() {
+        if connection_ref.shutdown {
             return Ok(HandleAction::Disconnect);
         }
 
         if event.is_writable() {
-            connection_ref.stream.set_nodelay(true).unwrap();
+            let _ = connection_ref.stream.set_nodelay(true);
 
             if let Some(extra_data) = extra_data.take() {
                 self.poll.registry().reregister(&mut connection_ref.stream, event.token(), Interest::READABLE)?;
@@ -351,22 +466,26 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
                 drop(connection_ref);
                 self.service.accept_new_connection(extra_data, Rc::clone(connection));
                 connection_ref = connection.borrow_mut();
-
-                // No handler? Disconnect
-                if connection_ref.handler.is_none() {
-                    return Ok(HandleAction::Disconnect);
-                }
             } else {
                 self.poll.registry().reregister(&mut connection_ref.stream, event.token(), Interest::READABLE)?;
             }
+        }
+
+        // Disconnect if connection or handler has been dropped
+        // Including the network's own reference, there should be at least 2 at any given time
+        if connection_ref.shutdown || Rc::strong_count(connection) <= 1 || connection_ref.handler_ref_count() <= 1 {
+            return Ok(HandleAction::Disconnect);
         }
     
         if event.is_readable() {
             let mut connection_closed = false;
 
-            self.bytes_read = connection_ref.unfinished_buffer.len();
-            self.read_buffer[0..self.bytes_read].copy_from_slice(&connection_ref.unfinished_buffer);
-            connection_ref.unfinished_buffer.clear();
+            self.bytes_read = connection_ref.unfinished_read_buffer.len();
+            if self.bytes_read >= self.read_buffer.len() {
+                return Ok(HandleAction::Disconnect);
+            } 
+            self.read_buffer[0..self.bytes_read].copy_from_slice(&connection_ref.unfinished_read_buffer);
+            connection_ref.unfinished_read_buffer.clear();
 
             // We can (maybe) read from the connection.
             loop {
@@ -428,15 +547,15 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
                                 if connection_ref.is_shutdown() {
                                     return Ok(HandleAction::Disconnect);
                                 }
+                                // todo: check transfer
                             },
                             PacketReadResult::Partial => {
                                 let slice_len = slice.len();
 
-                                connection_ref.unfinished_buffer.reserve(slice_len);
-                                connection_ref.unfinished_buffer[0..slice_len].copy_from_slice(slice);
-                                unsafe {
-                                    connection_ref.unfinished_buffer.set_len(slice_len);
+                                if connection_ref.unfinished_read_buffer.len() < slice_len {
+                                    connection_ref.unfinished_read_buffer.resize(slice_len, 0);
                                 }
+                                connection_ref.unfinished_read_buffer[0..slice_len].copy_from_slice(slice);
                                 break;
                             },
                             PacketReadResult::Empty => {
@@ -451,7 +570,6 @@ impl <T: NetworkHandlerService> NetworkHandler<T> {
             }
     
             if connection_closed {
-                println!("Connection closed");
                 return Ok(HandleAction::Disconnect);
             }
         }

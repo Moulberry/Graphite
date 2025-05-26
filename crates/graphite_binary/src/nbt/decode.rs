@@ -11,18 +11,16 @@ pub fn read_protocol(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
     let type_id: u8 = Single::read(bytes)?;
     if type_id == TAG_END_ID.0 {
         return Ok(NBT::new());
-    } else if type_id != TAG_COMPOUND_ID.0 {
-        bail!("nbt_decode: root must be a compound, got type_id = {type_id}");
     }
 
     let mut size = 0;
 
-    let mut nodes = Vec::new();
-    let children = read_compound(bytes, &mut nodes, 0, &mut size)?;
+    let mut nodes = Slab::new();
+    let root_index = read_node(bytes, &mut nodes, type_id, 0, &mut size)?;
 
     Ok(NBT {
         root_name: String::new(),
-        root_children: children,
+        root_index,
         nodes,
     })
 }
@@ -37,19 +35,20 @@ pub fn read_named(bytes: &mut &[u8]) -> anyhow::Result<NBT> {
 
     let mut size = 0;
 
-    let mut nodes = Vec::new();
+    let mut nodes = Slab::new();
     let name = read_string(bytes, &mut size)?;
     let children = read_compound(bytes, &mut nodes, 0, &mut size)?;
+    let root_index = nodes.insert(NBTNode::Compound(children));
 
     Ok(NBT {
         root_name: name.into_owned(),
-        root_children: children,
+        root_index,
         nodes,
     })
 }
 
 #[inline]
-fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8, depth: usize, size: &mut usize) -> anyhow::Result<usize> {
+fn read_node(bytes: &mut &[u8], nodes: &mut Slab<NBTNode>, type_id: u8, depth: usize, size: &mut usize) -> anyhow::Result<usize> {
     debug_assert!(
         type_id != TAG_END_ID.0,
         "read_node must not be called with TAG_END"
@@ -101,11 +100,11 @@ fn read_node(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, type_id: u8, depth: us
         TAG_LONG_ARRAY_ID => NBTNode::LongArray(read_long_array(bytes, size)?),
         _ => bail!("unknown type id: {}", type_id),
     };
-    nodes.push(node);
-    Ok(nodes.len() - 1)
+    let idx = nodes.insert(node);
+    Ok(idx)
 }
 
-fn read_compound(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize, size: &mut usize) -> anyhow::Result<NBTCompound> {
+fn read_compound(bytes: &mut &[u8], nodes: &mut Slab<NBTNode>, depth: usize, size: &mut usize) -> anyhow::Result<NBTCompound> {
     let mut children = NBTCompound(Vec::new());
 
     loop {
@@ -169,7 +168,7 @@ fn read_string<'a>(bytes: &mut &'a [u8], size: &mut usize) -> anyhow::Result<Cow
     Ok(cesu8::from_java_cesu8(str_bytes)?)
 }
 
-fn read_list(bytes: &mut &[u8], nodes: &mut Vec<NBTNode>, depth: usize, size: &mut usize) -> anyhow::Result<(u8, Vec<usize>)> {
+fn read_list(bytes: &mut &[u8], nodes: &mut Slab<NBTNode>, depth: usize, size: &mut usize) -> anyhow::Result<(u8, Vec<usize>)> {
     let type_id: u8 = Single::read(bytes)?;
 
     let length: i32 = BigEndian::read(bytes)?;

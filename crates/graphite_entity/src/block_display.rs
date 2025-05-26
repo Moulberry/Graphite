@@ -1,142 +1,113 @@
-use std::{borrow::Cow, marker::PhantomData};
 
-use graphite_binary::nbt::{CachedNBT, NBT, TAG_FLOAT_ID};
-use graphite_core_server::{entity::{entity_view_controller::EntityViewController, next_entity_id, Entity, EntityExtension}, world::WorldExtension};
-use graphite_mc_constants::{block, entity::{BlockDisplayMetadata, ItemDisplayMetadata, Metadata}, item::Item};
-use graphite_mc_protocol::{play, types::ProtocolItemStack};
+
+use glam::DVec3;
+use graphite_binary::nbt::CompoundRef;
+use graphite_core_server::entity::{entity_view::{self, EntityView}, EntityBase};
+use graphite_mc_constants::entity::BlockDisplayMetadata;
+use graphite_mc_protocol::{play::clientbound::{AddEntity, SetEntityData}, IdentifiedPacket};
 use graphite_network::PacketBuffer;
+use hecs::{EntityBuilder, EntityRef};
 
-pub struct BlockDisplay<W: WorldExtension> {
-    _phantom: PhantomData<W>,
-    block: i32,
-    translation: (f32, f32, f32),
-    left_rotation: (f32, f32, f32, f32),
-    scale: (f32, f32, f32),
-    right_rotation: (f32, f32, f32, f32),
+use crate::transform::Transform;
+
+pub fn get_block_state_id(entity: CompoundRef<'_>) -> i32 {
+    if let Some(block_state) = entity.find_compound("block_state") {
+        graphite_mc_constants::block::parse_block_state(block_state) as i32
+    } else {
+        0
+    }
 }
 
-impl <W: WorldExtension> BlockDisplay<W> {
-    pub fn new(entity: NBT) -> Self {
-        let translation;
-        let left_rotation;
-        let scale;
-        let right_rotation;
+#[derive(Clone)]
+pub struct BlockDisplayEntityView {
+    pub block: i32,
+    transform: Transform,
 
-        if let Some(transformation) = entity.find_compound("transformation") {
-            translation = if let Some(translation) = transformation.find_list("translation", TAG_FLOAT_ID) {
-                (
-                    *translation.get_float(0).unwrap(),
-                    *translation.get_float(1).unwrap(),
-                    *translation.get_float(2).unwrap(),
-                )
-            } else {
-                (0.0, 0.0, 0.0)
-            };
-            left_rotation = if let Some(left_rotation) = transformation.find_list("left_rotation", TAG_FLOAT_ID) {
-                (
-                    *left_rotation.get_float(0).unwrap(),
-                    *left_rotation.get_float(1).unwrap(),
-                    *left_rotation.get_float(2).unwrap(),
-                    *left_rotation.get_float(3).unwrap(),
-                )
-            } else {
-                (0.0, 0.0, 0.0, 1.0)
-            };
-            scale = if let Some(scale) = transformation.find_list("scale", TAG_FLOAT_ID) {
-                (
-                    *scale.get_float(0).unwrap(),
-                    *scale.get_float(1).unwrap(),
-                    *scale.get_float(2).unwrap(),
-                )
-            } else {
-                (1.0, 1.0, 1.0)
-            };
-            right_rotation = if let Some(right_rotation) = transformation.find_list("right_rotation", TAG_FLOAT_ID) {
-                (
-                    *right_rotation.get_float(0).unwrap(),
-                    *right_rotation.get_float(1).unwrap(),
-                    *right_rotation.get_float(2).unwrap(),
-                    *right_rotation.get_float(3).unwrap(),
-                )
-            } else {
-                (0.0, 0.0, 0.0, 1.0)
-            };
+    synced_position: Option<DVec3>,
+    old_rotation: (u8, u8),
+    teleport_time: usize,
+}
+
+impl BlockDisplayEntityView {
+    pub fn new_static(block: i32, transform: Transform) -> EntityBuilder {
+        let mut builder = EntityBuilder::new();
+        Self::add(&mut builder, block, transform, false);
+        builder
+    }
+
+    pub fn load_static(entity: CompoundRef<'_>) -> Option<EntityBuilder> {
+        let transform = Transform::load_from_entity(entity);
+
+        if let Some(block_state) = entity.find_compound("block_state") {
+            let block_state = graphite_mc_constants::block::parse_block_state(block_state) as i32;
+
+            let mut builder = EntityBuilder::new();
+            Self::add(&mut builder, block_state, transform, false);
+            Some(builder)
         } else {
-            translation = (0.0, 0.0, 0.0);
-            left_rotation = (0.0, 0.0, 0.0, 1.0);
-            scale = (1.0, 1.0, 1.0);
-            right_rotation = (0.0, 0.0, 0.0, 1.0);
+            None
         }
+    }
 
-        let block = if let Some(block_state) = entity.find_compound("block_state") {
-            graphite_mc_constants::block::parse_block_state(block_state) as i32
-        } else {
-            0
-        };
-
-        Self {
-            _phantom: PhantomData,
+    pub fn add(builder: &mut EntityBuilder, block: i32, transform: Transform, update_position: bool) {
+        if builder.has::<Self>() || builder.has::<EntityView>() {
+            panic!("duplicate view");
+        }
+        builder.add(Self {
             block,
-            translation,
-            left_rotation,
-            scale,
-            right_rotation
-        }
+            transform,
+
+            synced_position: None,
+            old_rotation: (0, 0),
+            teleport_time: 0
+        });
+        builder.add(EntityView::new(
+            1,
+            Some(Self::spawn),
+            None,
+            if update_position {
+                Some(Self::update)
+            } else {
+                None
+            },
+        ));
     }
-}
 
-impl <W: WorldExtension> EntityExtension for BlockDisplay<W> {
-    type World = W;
-    type View = BlockDisplayView;
-
-    fn tick(_: &mut Entity<Self>) {
-    }
-
-    fn create_view_controller(&mut self) -> Self::View {
-        BlockDisplayView {
-            entity_id: next_entity_id()
-        }
-    }
-}
-
-pub struct BlockDisplayView {
-    entity_id: i32
-}
-
-impl <W: WorldExtension> EntityViewController<BlockDisplay<W>> for BlockDisplayView {
-    fn write_spawn_packets(entity: &Entity<BlockDisplay<W>>, buffer: &mut PacketBuffer) {
-        buffer.write_packet(&play::clientbound::AddEntity {
-            id: entity.view.entity_id,
+    pub fn spawn(entity: EntityRef, base: &EntityBase, view: &EntityView, buffer: &mut PacketBuffer) {
+        let block_display = entity.get::<&BlockDisplayEntityView>().unwrap();
+        AddEntity {
+            id: view.entity_ids[0],
             uuid: rand::random(),
             entity_type: graphite_mc_constants::entity::Entity::BlockDisplay as i32,
-            x: entity.position.x,
-            y: entity.position.y,
-            z: entity.position.z,
-            pitch: 0.0,
-            yaw: 0.0,
-            head_yaw: 0.0,
-            data: 0,
-            x_vel: 0.0,
-            y_vel: 0.0,
-            z_vel: 0.0,
-        }).unwrap();
+            x: base.position.x,
+            y: base.position.y,
+            z: base.position.z,
+            pitch: base.rotation.x as f32,
+            yaw: base.rotation.y as f32,
+            head_yaw: base.rotation.y as f32,
+            ..Default::default()
+        }.write_packet(buffer);
 
         let mut metadata = BlockDisplayMetadata::default();
-        metadata.set_block_state(entity.extension.block);
+        metadata.set_block_state(block_display.block);
 
-        metadata.set_translation(entity.extension.translation);
-        metadata.set_left_rotation(entity.extension.left_rotation);
-        metadata.set_scale(entity.extension.scale);
-        metadata.set_right_rotation(entity.extension.right_rotation);
+        metadata.set_pos_rot_interpolation_duration(2);
+        metadata.set_transformation_interpolation_duration(2);
 
-        metadata.write_metadata_changes_packet(entity.view.entity_id, buffer).unwrap();
+        metadata.set_translation(block_display.transform.translation);
+        metadata.set_left_rotation(block_display.transform.left_rotation);
+        metadata.set_scale(block_display.transform.scale);
+        metadata.set_right_rotation(block_display.transform.right_rotation);
+
+        metadata.set_width(4.0);
+        metadata.set_height(4.0);
+
+        SetEntityData::write_changes(&mut metadata, view.entity_ids[0], buffer);
     }
 
-    fn write_despawn_packets(entity: &Entity<BlockDisplay<W>>, despawn_list: &mut Vec<i32>, _: &mut PacketBuffer) {
-        despawn_list.push(entity.view.entity_id)
-    }
-
-    fn update_position(_: &mut Entity<BlockDisplay<W>>) {
-        // nothing
+    pub fn update(entity: EntityRef, base: &mut EntityBase, view: &EntityView) {
+        let block_display = &mut *entity.get::<&mut BlockDisplayEntityView>().unwrap();
+        entity_view::default_position_update(base, view.entity_ids[0], &[],
+            &mut block_display.synced_position, &mut block_display.old_rotation, &mut block_display.teleport_time, false)
     }
 }

@@ -1,15 +1,16 @@
 use std::{fmt::Debug, result, ptr::NonNull};
+use slab::Slab;
+pub use reference::{NBTRef, NBTRefMut, ListRef, CompoundRef, ListRefMut, CompoundRefMut};
+pub use encoded_nbt::EncodedNBT;
 
-mod cached_nbt;
+mod encoded_nbt;
 pub mod decode;
 pub mod encode;
+pub mod encode_raw;
 mod pretty;
 pub mod stringified;
 
 mod reference;
-pub use reference::{NBTRef, NBTRefMut, ListRef, CompoundRef, ListRefMut, CompoundRefMut};
-
-pub use cached_nbt::CachedNBT;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct TagType(pub(crate) u8);
@@ -28,11 +29,17 @@ pub const TAG_COMPOUND_ID: TagType = TagType(10);
 pub const TAG_INT_ARRAY_ID: TagType = TagType(11);
 pub const TAG_LONG_ARRAY_ID: TagType = TagType(12);
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct NBT {
     pub root_name: String,
-    root_children: NBTCompound,
-    nodes: Vec<NBTNode>,
+    root_index: usize,
+    nodes: Slab<NBTNode>,
+}
+
+impl Default for NBT {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Debug for NBT {
@@ -47,31 +54,7 @@ impl Debug for NBT {
 
 impl PartialEq for NBT {
     fn eq(&self, other: &Self) -> bool {
-        if self.root_name != other.root_name {
-            return false;
-        }
-
-        let self_children = &self.root_children.0;
-        let other_children = &other.root_children.0;
-        if self_children.len() != other_children.len() {
-            return false;
-        }
-
-        let zipped = self_children.iter().zip(other_children.iter());
-        for ((self_name, self_idx), (other_name, other_idx)) in zipped {
-            if self_name != other_name {
-                return false;
-            }
-
-            let self_element = self.get_reference(*self_idx);
-            let other_element = other.get_reference(*other_idx);
-
-            if self_element != other_element {
-                return false;
-            }
-        }
-
-        true
+        self.as_reference() == other.as_reference()
     }
 }
 
@@ -108,11 +91,11 @@ macro_rules! insert_list {
     }
 }
 
-macro_rules! insert_list_at {
+macro_rules! set_list_at {
     ($name:ident, $value_type:ty, $node:ident) => {
         paste::paste! {
-            pub fn [<insert_ $name _at>](&mut self, index: usize, value: $value_type) {
-                self.insert_node_at(index, NBTNode::$node(value));
+            pub fn [<set_ $name _at>](&mut self, index: usize, value: $value_type) {
+                self.set_node_at(index, NBTNode::$node(value));
             }
         }
     }
@@ -165,55 +148,73 @@ pub(crate) use enumerate_basic_types;
 pub(crate) use insert;
 pub(crate) use get_list;
 pub(crate) use insert_list;
-pub(crate) use insert_list_at;
+pub(crate) use set_list_at;
 pub(crate) use find;
 pub(crate) use find_mut;
 
 impl NBT {
-    pub const fn new() -> NBT {
+    pub fn new() -> NBT {
         Self::new_named(String::new())
     }
 
-    pub const fn new_named(root_name: String) -> NBT {
+    pub fn new_named(root_name: String) -> NBT {
+        let mut nodes = Slab::new();
+        let root_index = nodes.insert(NBTNode::Compound(NBTCompound(Vec::new())));
         NBT {
             root_name,
-            root_children: NBTCompound(Vec::new()),
-            nodes: Vec::new(),
+            root_index,
+            nodes,
         }
     }
 
-    pub fn keys(&self) -> Vec<&str> {
-        let mut refs: Vec<&str> = vec![];
-        for (ele, _) in self.root_children.0.iter() {
-            refs.push(ele);
+    pub fn as_compound(&self) -> Option<CompoundRef<'_>> {
+        match &self.nodes[self.root_index] {
+            NBTNode::Compound(_) => {
+                Some(CompoundRef { nbt: self, node_idx: self.root_index })
+            },
+            _ => None
         }
-        refs
     }
 
-    fn insert_node(&mut self, key: &str, node: NBTNode) -> usize {
-        let idx = self.nodes.len();
-        self.nodes.push(node);
-        self.root_children.insert(key, idx);
-
-        // todo: delete previous node if this is replacing something
-
-        idx
+    pub fn as_compound_mut(&mut self) -> Option<CompoundRefMut<'_>> {
+        match &self.nodes[self.root_index] {
+            NBTNode::Compound(_) => {
+                let node_idx = self.root_index;
+                Some(CompoundRefMut { nbt: self, node_idx })
+            },
+            _ => None
+        }
     }
 
-    fn find_idx(&self, key: &str) -> Option<usize> {
-        self.root_children.find(key)
+    pub fn as_reference(&self) -> NBTRef<'_> {
+        self.get_reference(self.root_index)
     }
 
-    fn get_node(&self, idx: usize) -> &NBTNode {
-        &self.nodes[idx]
+    pub fn as_reference_mut(&mut self) -> NBTRefMut<'_> {
+        self.get_reference_mut(self.root_index)
     }
 
-    fn get_node_mut(&mut self, idx: usize) -> &mut NBTNode {
-        &mut self.nodes[idx]
+    fn remove_node(&mut self, idx: usize) {
+        if idx == 0 {
+            panic!("Cannot remove root node");
+        }
+        match self.nodes.remove(idx) {
+            NBTNode::List { type_id: _, children } => {
+                for child in children {
+                    self.remove_node(child);
+                }
+            },
+            NBTNode::Compound(compound) => {
+                for (_, child) in compound.0 {
+                    self.remove_node(child);
+                }
+            },
+            _ => {}
+        }
     }
 
     fn get_reference(&self, node_idx: usize) -> NBTRef<'_> {
-        match self.get_node(node_idx) {
+        match &self.nodes[node_idx] {
             NBTNode::Byte(value) => NBTRef::Byte(value),
             NBTNode::Short(value) => NBTRef::Short(value),
             NBTNode::Int(value) => NBTRef::Int(value),
@@ -233,11 +234,11 @@ impl NBT {
         }
     }
 
-    fn get_mutable_reference(&mut self, node_idx: usize) -> NBTRefMut<'_> {
+    fn get_reference_mut(&mut self, node_idx: usize) -> NBTRefMut<'_> {
         // Ptr shenanigans because https://github.com/rust-lang/rust/issues/54663
         let mut nbt_ptr: NonNull<NBT> = self.into();
 
-        match self.get_node_mut(node_idx) {
+        match &mut self.nodes[node_idx] {
             NBTNode::Byte(value) => NBTRefMut::Byte(value),
             NBTNode::Short(value) => NBTRefMut::Short(value),
             NBTNode::Int(value) => NBTRefMut::Int(value),
@@ -256,154 +257,6 @@ impl NBT {
             NBTNode::LongArray(value) => NBTRefMut::LongArray(value),
         }
     }
-
-    enumerate_basic_types!(insert);
-    enumerate_basic_types!(find);
-    enumerate_basic_types!(find_mut);
-
-    pub fn create_list(&mut self, key: &str, type_id: TagType) -> ListRefMut<'_> {
-        let idx = self.insert_node(key, NBTNode::List { type_id, children: Default::default() });
-
-        ListRefMut {
-            nbt: self,
-            node_idx: idx
-        }
-    }
-
-    pub fn create_compound(&mut self, key: &str) -> CompoundRefMut<'_> {
-        let idx = self.insert_node(key, NBTNode::Compound(Default::default()));
-
-        CompoundRefMut {
-            nbt: self,
-            node_idx: idx
-        }
-    }
-
-    pub fn find_list(&self, key: &str, type_id: TagType) -> Option<ListRef<'_>> {
-        let idx = self.find_idx(key)?;
-        match self.get_node(idx) {
-            NBTNode::List { type_id: list_type_id, children: _ } if *list_type_id == type_id => {
-                Some(ListRef {
-                    nbt: self,
-                    node_idx: idx,
-                    children_type: type_id
-                })
-            },
-            _ => None
-        }
-    }
-
-    pub fn find_compound(&self, key: &str) -> Option<CompoundRef<'_>> {
-        let idx = self.find_idx(key)?;
-        match self.get_node(idx) {
-            NBTNode::Compound(_) => {
-                Some(CompoundRef {
-                    nbt: self,
-                    node_idx: idx
-                })
-            },
-            _ => None
-        }
-    }
-
-    pub fn find_list_mut(&mut self, key: &str, type_id: TagType) -> Option<ListRefMut<'_>> {
-        let idx = self.find_idx(key)?;
-        match self.get_node(idx) {
-            NBTNode::List { type_id: list_type_id, children: _ } if *list_type_id == type_id => {
-                Some(ListRefMut {
-                    nbt: self,
-                    node_idx: idx
-                })
-            },
-            _ => None
-        }
-    }
-
-    pub fn find_compound_mut(&mut self, key: &str) -> Option<CompoundRefMut<'_>> {
-        let idx = self.find_idx(key)?;
-        match self.get_node(idx) {
-            NBTNode::Compound(_) => {
-                Some(CompoundRefMut {
-                    nbt: self,
-                    node_idx: idx
-                })
-            },
-            _ => None
-        }
-    }
-
-    pub fn find(&self, key: &str) -> Option<NBTRef<'_>> {
-        let idx = self.find_idx(key)?;
-        Some(self.get_reference(idx))
-    }
-
-    pub fn find_mut(&mut self, key: &str) -> Option<NBTRefMut<'_>> {
-        let idx = self.find_idx(key)?;
-        Some(self.get_mutable_reference(idx))
-    }
-
-    // pub fn find_root(&self, key: &str) -> Option<&NBTNode> {
-    //     let idx = self.root_children.find(key)?;
-    //     Some(&self.nodes[idx])
-    // }
-
-    // pub fn insert_root(&mut self, key: &str, value: NBTNode) {
-    //     let idx = self.nodes.len();
-    //     self.nodes.push(value);
-    //     self.root_children.insert(key, idx);
-    // }
-
-    // pub fn find(&self, node: &NBTNode, key: &str) -> Option<&NBTNode> {
-    //     match node {
-    //         NBTNode::Compound(compound) => {
-    //             let index = compound.find(key)?;
-    //             Some(&self.nodes[index])
-    //         }
-    //         _ => None,
-    //     }
-    // }
-
-    // pub fn insert(&mut self, node: &mut NBTNode, key: &str, value: NBTNode) {
-    //     match node {
-    //         NBTNode::Compound(ref mut compound) => {
-    //             let idx = self.nodes.len();
-    //             self.nodes.push(value);
-    //             compound.insert(key, idx);
-    //         }
-    //         _ => panic!("nbt insert: node is not a compound"),
-    //     }
-    // }
-
-    // pub fn iter<'a>(&'a self, node: &'a NBTNode) -> Option<NBTIterator<'a>> {
-    //     match node {
-    //         NBTNode::List {
-    //             type_id: _,
-    //             children,
-    //         } => Some(NBTIterator {
-    //             nbt: self,
-    //             indices: children,
-    //             index: 0,
-    //         }),
-    //         _ => None,
-    //     }
-    // }
-
-    // pub fn append(&mut self, node: &mut NBTNode, value: NBTNode) {
-    //     match node {
-    //         NBTNode::List {
-    //             type_id,
-    //             children,
-    //         } => {
-    //             if *type_id != value.get_type() {
-    //                 panic!("nbt append: tag type is incorrect")
-    //             }
-    //             let idx = self.nodes.len();
-    //             self.nodes.push(value);
-    //             children.push(idx);
-    //         },
-    //         _ => panic!("nbt append: node is not a list"),
-    //     }
-    // }
 }
 
 #[derive(Debug, Clone)]
@@ -442,29 +295,9 @@ impl NBTNode {
     }
 }
 
-// pub struct NBTIterator<'a> {
-//     nbt: &'a NBT,
-//     indices: &'a [usize],
-//     index: usize,
-// }
-
-// impl<'a> Iterator for NBTIterator<'a> {
-//     type Item = &'a NBTNode;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         if self.index >= self.indices.len() {
-//             None
-//         } else {
-//             let next = &self.nbt.nodes[self.indices[self.index]];
-//             self.index += 1;
-//             Some(next)
-//         }
-//     }
-// }
-
 // Note: Using SmartString instead of String results in worse perf
 #[derive(Debug, Clone, Default)]
-struct NBTCompound(Vec<(String, usize)>);
+pub(crate) struct NBTCompound(Vec<(String, usize)>);
 
 impl NBTCompound {
     fn find(&self, key: &str) -> Option<usize> {
@@ -479,6 +312,13 @@ impl NBTCompound {
 
         match self.binary_search(key) {
             Ok(index) => Some(self.0[index].1),
+            Err(_) => None,
+        }
+    }
+
+    fn remove(&mut self, key: &str) -> Option<usize> {
+        match self.binary_search(key) {
+            Ok(index) => Some(self.0.remove(index).1),
             Err(_) => None,
         }
     }
@@ -538,6 +378,7 @@ fn to_from_snbt_test() {
 #[cfg(test)]
 fn verify_bigtest_nbt(nbt: &NBT) {
     {
+        let nbt = nbt.as_compound().unwrap();
         // TAG_Compound('Level'): 11 entries
         {
             // TAG_Compound('nested compound test'): 2 entries

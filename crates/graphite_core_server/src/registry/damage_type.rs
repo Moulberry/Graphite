@@ -1,4 +1,4 @@
-use graphite_binary::nbt::CompoundRefMut;
+use graphite_binary::nbt::NBT;
 
 #[derive(Copy, Clone, Debug)]
 pub enum DamageTypeEffect {
@@ -26,10 +26,13 @@ impl DamageTypeEffect {
 pub struct DamageType(pub DamageTypeEffect);
 
 impl DamageType {
-    pub fn write(&self, mut compound: CompoundRefMut) {
+    pub fn to_nbt(&self) -> NBT {
+        let mut nbt = NBT::new();
+        let mut compound = nbt.as_compound_mut().unwrap();
         compound.insert_string("message_id", "".into());
         compound.insert_string("scaling", "never".into());
         compound.insert_float("exhaustion", 0.0);
         compound.insert_string("effects", self.0.as_str().into());
+        nbt
     }
 }

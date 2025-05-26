@@ -1,4 +1,4 @@
-use graphite_binary::nbt::CompoundRefMut;
+use graphite_binary::nbt::NBT;
 
 #[derive(Copy, Clone, Debug)]
 pub enum DimensionEffects {
@@ -31,7 +31,9 @@ pub struct DimensionType {
 }
 
 impl DimensionType {
-    pub fn write(&self, mut compound: CompoundRefMut) {
+    pub fn to_nbt(&self) -> NBT {
+        let mut nbt = NBT::new();
+        let mut compound = nbt.as_compound_mut().unwrap();
         compound.insert_byte("has_skylight", self.has_skylight as i8);
         compound.insert_byte("has_ceiling", 0);
         compound.insert_byte("ultrawarm", 0);
@@ -49,6 +51,7 @@ impl DimensionType {
         compound.insert_byte("has_raids", 0);
         compound.insert_int("monster_spawn_light_level", 0);
         compound.insert_int("monster_spawn_block_light_limit", 0);
+        nbt
     }
 }
 

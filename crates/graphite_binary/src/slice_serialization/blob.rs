@@ -1,41 +1,42 @@
 use std::borrow::Cow;
 
-use crate::nbt::{decode, CachedNBT};
+use crate::nbt::{decode, EncodedNBT};
 
 use super::*;
 
 pub enum NBTBlob {}
 
-impl<'a> SliceSerializable<'a, Cow<'a, CachedNBT>> for NBTBlob {
-    type CopyType = &'a CachedNBT;
+impl<'r, 'd: 'r> SliceSerializable<'r, 'd, EncodedNBT> for NBTBlob {
+    type CopyType = &'r EncodedNBT;
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, CachedNBT>> {
-        let nbt = decode::read_protocol(bytes)?;
-        Ok(Cow::Owned(nbt.into()))
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<EncodedNBT> {
+        // todo: use validate_protocol instead of read_protocol
+        let _ = decode::read_protocol(bytes)?;
+        Ok(EncodedNBT::new_from_raw_bytes(bytes.to_vec()))
     }
 
-    fn get_write_size(data: &CachedNBT) -> usize {
+    fn get_write_size(data: &EncodedNBT) -> usize {
         data.to_bytes().len()
     }
 
-    unsafe fn write<'b>(bytes: &'b mut [u8], data: &CachedNBT) -> &'b mut [u8] {
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &EncodedNBT) -> &'b mut [u8] {
         let to_write = data.to_bytes();
         bytes[0..to_write.len()].clone_from_slice(&*to_write);
         &mut bytes[to_write.len()..]
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &'a Cow<'a, CachedNBT>) -> Self::CopyType {
-        t
+    fn as_copy_type(t: &'r EncodedNBT) -> Self::CopyType {
+        &t
     }
 }
 
 pub enum WriteOnlyBlob {}
 
-impl<'a> SliceSerializable<'a, &'a [u8]> for WriteOnlyBlob {
-    type CopyType = &'a [u8];
+impl<'r, 'd: 'r> SliceSerializable<'r, 'd, &'d [u8]> for WriteOnlyBlob {
+    type CopyType = &'r [u8];
 
-    fn read(_: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
+    fn read(_: &mut &'d [u8]) -> anyhow::Result<&'d [u8]> {
         panic!("tried to read a WriteOnlyBlob");
     }
 
@@ -49,17 +50,63 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for WriteOnlyBlob {
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &&'a [u8]) -> Self::CopyType {
+    fn as_copy_type(t: &'r &'d [u8]) -> Self::CopyType {
         *t
+    }
+}
+
+impl<'r, 'd: 'r> SliceSerializable<'r, 'd, Box<[u8]>> for WriteOnlyBlob {
+    type CopyType = &'r [u8];
+
+    fn read(_: &mut &'d [u8]) -> anyhow::Result<Box<[u8]>> {
+        panic!("tried to read a WriteOnlyBlob");
+    }
+
+    fn get_write_size(data: &[u8]) -> usize {
+        data.len()
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
+        bytes[0..data.len()].clone_from_slice(data);
+        &mut bytes[data.len()..]
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'r Box<[u8]>) -> Self::CopyType {
+        &*t
     }
 }
 
 pub enum GreedyBlob {}
 
-impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
-    type CopyType = &'a [u8];
+impl<'r, 'd: 'r> SliceSerializable<'r, 'd, Box<[u8]>> for GreedyBlob {
+    type CopyType = &'r [u8];
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Box<[u8]>> {
+        let ret_bytes = *bytes;
+        *bytes = &bytes[bytes.len()..];
+        Ok(Box::from(ret_bytes))
+    }
+
+    fn get_write_size(data: &[u8]) -> usize {
+        data.len()
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
+        bytes[0..data.len()].clone_from_slice(data);
+        &mut bytes[data.len()..]
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'r Box<[u8]>) -> Self::CopyType {
+        &*t
+    }
+}
+
+impl<'r, 'd: 'r> SliceSerializable<'r, 'd, &'d [u8]> for GreedyBlob {
+    type CopyType = &'r [u8];
+
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<&'d [u8]> {
         let ret_bytes = *bytes;
         *bytes = &bytes[bytes.len()..];
         Ok(ret_bytes)
@@ -75,15 +122,15 @@ impl<'a> SliceSerializable<'a, &'a [u8]> for GreedyBlob {
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &&'a [u8]) -> Self::CopyType {
+    fn as_copy_type(t: &'r &'d [u8]) -> Self::CopyType {
         *t
     }
 }
 
-impl<'a> SliceSerializable<'a, Cow<'a, [u8]>> for GreedyBlob {
-    type CopyType = &'a [u8];
+impl<'r, 'd: 'r> SliceSerializable<'r, 'd, Cow<'d, [u8]>> for GreedyBlob {
+    type CopyType = &'r [u8];
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, [u8]>> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Cow<'d, [u8]>> {
         let ret_bytes = *bytes;
         *bytes = &bytes[bytes.len()..];
         Ok(Cow::Borrowed(ret_bytes))
@@ -99,18 +146,18 @@ impl<'a> SliceSerializable<'a, Cow<'a, [u8]>> for GreedyBlob {
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &'a Cow<'a, [u8]>) -> Self::CopyType {
+    fn as_copy_type(t: &'r Cow<'d, [u8]>) -> Self::CopyType {
         t
     }
 }
 
 pub enum SizedBlob<const MAX_SIZE: usize = 2097152, const SIZE_MULT: usize = 1> {}
-impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'a [u8]>
+impl<'r, 'd: 'r, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'r, 'd, &'d [u8]>
     for SizedBlob<MAX_SIZE, SIZE_MULT>
 {
-    type CopyType = &'a [u8];
+    type CopyType = &'r [u8];
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a [u8]> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<&'d [u8]> {
         let blob_size: usize = VarInt::read(bytes)?;
 
         // Validate blob byte-length
@@ -151,17 +198,17 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, &'
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &&'a [u8]) -> Self::CopyType {
+    fn as_copy_type(t: &'r &'d [u8]) -> Self::CopyType {
         *t
     }
 }
 
-impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, Cow<'a, [u8]>>
+impl<'r, 'd: 'r, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'r, 'd, Cow<'d, [u8]>>
     for SizedBlob<MAX_SIZE, SIZE_MULT>
 {
-    type CopyType = &'a [u8];
+    type CopyType = &'r [u8];
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, [u8]>> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Cow<'d, [u8]>> {
         let blob_size: usize = VarInt::read(bytes)?;
 
         // Validate blob byte-length
@@ -202,17 +249,75 @@ impl<'a, const MAX_SIZE: usize, const SIZE_MULT: usize> SliceSerializable<'a, Co
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &'a Cow<'a, [u8]>) -> Self::CopyType {
+    fn as_copy_type(t: &'r Cow<'d, [u8]>) -> Self::CopyType {
+        t
+    }
+}
+
+pub enum FixedBlob<const SIZE: usize> {}
+impl<'r, 'd: 'r, const SIZE: usize> SliceSerializable<'r, 'd, &'d [u8]> for FixedBlob<SIZE> {
+    type CopyType = &'r [u8];
+
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<&'d [u8]> {
+        if SIZE > bytes.len() {
+            return Err(BinaryReadError::NotEnoughRemainingBytes.into());
+        }
+
+        let (blob_bytes, rest_bytes) = bytes.split_at(SIZE);
+        *bytes = rest_bytes;
+
+        Ok(blob_bytes)
+    }
+
+    fn get_write_size(_: &[u8]) -> usize {
+        SIZE
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &[u8]) -> &'b mut [u8] {
+        debug_assert!(
+            bytes.len() >= SIZE,
+            "invariant: slice must contain at least {} bytes to perform write", SIZE
+        );
+
+        bytes[..SIZE].clone_from_slice(data);
+        &mut bytes[SIZE..]
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'r &'d [u8]) -> Self::CopyType {
+        *t
+    }
+}
+
+pub enum StaticSizedString<const MAX_SIZE: usize = 32767> {}
+
+impl<'r, 'd: 'r, const MAX_SIZE: usize> SliceSerializable<'r, 'd, Cow<'static, str>> for StaticSizedString<MAX_SIZE> {
+    type CopyType = &'r str;
+
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Cow<'static, str>> {
+        Ok(Cow::Owned(<SizedString<MAX_SIZE> as SliceSerializable<'r, 'd, &'d str>>::read(bytes)?.to_string()))
+    }
+
+    fn get_write_size(data: &'r str) -> usize {
+        <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
+    }
+
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &'r str) -> &'b mut [u8] {
+        <SizedString<MAX_SIZE> as SliceSerializable<'r, 'd, &'d str>>::write(bytes, data)
+    }
+
+    #[inline(always)]
+    fn as_copy_type(t: &'r Cow<'static, str>) -> Self::CopyType {
         t
     }
 }
 
 pub enum SizedString<const MAX_SIZE: usize = 32767> {}
 
-impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<MAX_SIZE> {
-    type CopyType = &'a str;
+impl<'r, 'd: 'r, const MAX_SIZE: usize> SliceSerializable<'r, 'd, &'d str> for SizedString<MAX_SIZE> {
+    type CopyType = &'r str;
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<&'a str> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<&'d str> {
         let string_bytes = SizedBlob::<MAX_SIZE, 4>::read(bytes)?;
 
         // Validate utf-8
@@ -240,51 +345,51 @@ impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, &'a str> for SizedString<M
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &&'a str) -> Self::CopyType {
+    fn as_copy_type(t: &'r &'d str) -> Self::CopyType {
         *t
     }
 }
 
-impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, Cow<'a, str>> for SizedString<MAX_SIZE> {
-    type CopyType = &'a str;
+impl<'r, 'd: 'r, const MAX_SIZE: usize> SliceSerializable<'r, 'd, Cow<'d, str>> for SizedString<MAX_SIZE> {
+    type CopyType = &'r str;
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<Cow<'a, str>> {
-        Ok(Cow::Borrowed(<SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::read(bytes)?))
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Cow<'d, str>> {
+        Ok(Cow::Borrowed(<SizedString<MAX_SIZE> as SliceSerializable<'r, 'd, &'d str>>::read(bytes)?))
     }
 
-    fn get_write_size(data: &'a str) -> usize {
+    fn get_write_size(data: &'r str) -> usize {
         <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
     }
 
-    unsafe fn write<'b>(bytes: &'b mut [u8], data: &'a str) -> &'b mut [u8] {
-        <SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::write(bytes, data)
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &'r str) -> &'b mut [u8] {
+        <SizedString<MAX_SIZE> as SliceSerializable<'r, 'd, &'d str>>::write(bytes, data)
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &'a Cow<'a, str>) -> Self::CopyType {
+    fn as_copy_type(t: &'r Cow<'d, str>) -> Self::CopyType {
         t
     }
 }
 
-impl<'a, const MAX_SIZE: usize> SliceSerializable<'a, String> for SizedString<MAX_SIZE> {
-    type CopyType = &'a String;
+impl<'r, 'd: 'r, const MAX_SIZE: usize> SliceSerializable<'r, 'd, String> for SizedString<MAX_SIZE> {
+    type CopyType = &'r String;
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<String> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<String> {
         Ok(String::from(
-            <SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::read(bytes)?,
+            <SizedString<MAX_SIZE> as SliceSerializable<'r, 'd, &'d str>>::read(bytes)?,
         ))
     }
 
-    fn get_write_size(data: &'a String) -> usize {
+    fn get_write_size(data: &'r String) -> usize {
         <VarInt as SliceSerializable<usize>>::get_write_size(data.len()) + data.len()
     }
 
-    unsafe fn write<'b>(bytes: &'b mut [u8], data: &'a String) -> &'b mut [u8] {
-        <SizedString<MAX_SIZE> as SliceSerializable<'a, &'a str>>::write(bytes, data)
+    unsafe fn write<'b>(bytes: &'b mut [u8], data: &'r String) -> &'b mut [u8] {
+        <SizedString<MAX_SIZE> as SliceSerializable<'r, 'd, &'d str>>::write(bytes, data)
     }
 
     #[inline(always)]
-    fn as_copy_type(t: &'a String) -> Self::CopyType {
+    fn as_copy_type(t: &'r String) -> Self::CopyType {
         t
     }
 }

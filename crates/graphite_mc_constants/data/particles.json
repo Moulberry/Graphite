@@ -1,0 +1,144 @@
+{
+  "angry_villager": {},
+  "block": {
+    "particle_options": "block"
+  },
+  "block_marker": {
+    "particle_options": "block"
+  },
+  "bubble": {},
+  "cloud": {},
+  "crit": {},
+  "damage_indicator": {},
+  "dragon_breath": {},
+  "dripping_lava": {},
+  "falling_lava": {},
+  "landing_lava": {},
+  "dripping_water": {},
+  "falling_water": {},
+  "dust": {
+    "particle_options": "dust"
+  },
+  "dust_color_transition": {
+    "particle_options": "dust_color_transition"
+  },
+  "effect": {},
+  "elder_guardian": {},
+  "enchanted_hit": {},
+  "enchant": {},
+  "end_rod": {},
+  "entity_effect": {
+    "particle_options": "color"
+  },
+  "explosion_emitter": {},
+  "explosion": {},
+  "gust": {},
+  "small_gust": {},
+  "gust_emitter_large": {},
+  "gust_emitter_small": {},
+  "sonic_boom": {},
+  "falling_dust": {
+    "particle_options": "block"
+  },
+  "firework": {},
+  "fishing": {},
+  "flame": {},
+  "infested": {},
+  "cherry_leaves": {},
+  "pale_oak_leaves": {},
+  "tinted_leaves": {
+    "particle_options": "color"
+  },
+  "sculk_soul": {},
+  "sculk_charge": {
+    "particle_options": "sculk_charge"
+  },
+  "sculk_charge_pop": {},
+  "soul_fire_flame": {},
+  "soul": {},
+  "flash": {},
+  "happy_villager": {},
+  "composter": {},
+  "heart": {},
+  "instant_effect": {},
+  "item": {
+    "particle_options": "item"
+  },
+  "vibration": {
+    "particle_options": "vibration"
+  },
+  "trail": {
+    "particle_options": "trail"
+  },
+  "item_slime": {},
+  "item_cobweb": {},
+  "item_snowball": {},
+  "large_smoke": {},
+  "lava": {},
+  "mycelium": {},
+  "note": {},
+  "poof": {},
+  "portal": {},
+  "rain": {},
+  "smoke": {},
+  "white_smoke": {},
+  "sneeze": {},
+  "spit": {},
+  "squid_ink": {},
+  "sweep_attack": {},
+  "totem_of_undying": {},
+  "underwater": {},
+  "splash": {},
+  "witch": {},
+  "bubble_pop": {},
+  "current_down": {},
+  "bubble_column_up": {},
+  "nautilus": {},
+  "dolphin": {},
+  "campfire_cosy_smoke": {},
+  "campfire_signal_smoke": {},
+  "dripping_honey": {},
+  "falling_honey": {},
+  "landing_honey": {},
+  "falling_nectar": {},
+  "falling_spore_blossom": {},
+  "ash": {},
+  "crimson_spore": {},
+  "warped_spore": {},
+  "spore_blossom_air": {},
+  "dripping_obsidian_tear": {},
+  "falling_obsidian_tear": {},
+  "landing_obsidian_tear": {},
+  "reverse_portal": {},
+  "white_ash": {},
+  "small_flame": {},
+  "snowflake": {},
+  "dripping_dripstone_lava": {},
+  "falling_dripstone_lava": {},
+  "dripping_dripstone_water": {},
+  "falling_dripstone_water": {},
+  "glow_squid_ink": {},
+  "glow": {},
+  "wax_on": {},
+  "wax_off": {},
+  "electric_spark": {},
+  "scrape": {},
+  "shriek": {
+    "particle_options": "shriek"
+  },
+  "egg_crack": {},
+  "dust_plume": {},
+  "trial_spawner_detection": {},
+  "trial_spawner_detection_ominous": {},
+  "vault_connection": {},
+  "dust_pillar": {
+    "particle_options": "block"
+  },
+  "ominous_spawning": {},
+  "raid_omen": {},
+  "trial_omen": {},
+  "block_crumble": {
+    "particle_options": "block"
+  },
+  "firefly": {}
+}

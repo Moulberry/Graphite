@@ -5,7 +5,7 @@ pub enum Single {}
 
 macro_rules! single_impl {
     ($typ:tt, $conv_from:tt, $conv_to:tt) => {
-        impl SliceSerializable<'_, $typ> for Single {
+        impl <'r, 'd: 'r> SliceSerializable<'r, 'd, $typ> for Single {
             type CopyType = $typ;
 
             fn read(bytes: &mut &[u8]) -> anyhow::Result<$typ> {
@@ -20,6 +20,7 @@ macro_rules! single_impl {
                 Ok(ret)
             }
 
+            #[inline(always)]
             fn get_write_size(_: $typ) -> usize {
                 1
             }
@@ -45,6 +46,7 @@ macro_rules! single_impl {
 // u8
 single_impl!(u8, noop, noop);
 
+#[inline(always)]
 fn noop(byte: u8) -> u8 {
     byte
 }
@@ -65,4 +67,15 @@ fn byte_to_bool(bool: bool) -> u8 {
     } else {
         0
     }
+}
+
+// usize
+single_impl!(usize, byte_from_usize, byte_to_usize);
+
+fn byte_from_usize(byte: u8) -> usize {
+    byte as usize
+}
+
+fn byte_to_usize(value: usize) -> u8 {
+    value as u8
 }

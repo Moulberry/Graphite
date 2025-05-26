@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use thiserror::Error;
 
 mod option;
@@ -15,6 +17,8 @@ mod blob;
 pub use blob::GreedyBlob;
 pub use blob::NBTBlob;
 pub use blob::SizedBlob;
+pub use blob::FixedBlob;
+pub use blob::StaticSizedString;
 pub use blob::SizedString;
 pub use blob::WriteOnlyBlob;
 
@@ -37,12 +41,12 @@ pub enum BinaryReadError {
     DidntFullyConsume(usize),
 }
 
-pub trait SliceSerializable<'a, T = Self> {
+pub trait SliceSerializable<'r, 'd: 'r, T = Self>: Sized {
     type CopyType: Copy;
-    fn as_copy_type(t: &'a T) -> Self::CopyType;
+    fn as_copy_type(t: &'r T) -> Self::CopyType;
 
-    fn read(bytes: &mut &'a [u8]) -> anyhow::Result<T>;
-    fn read_fully(bytes: &mut &'a [u8]) -> anyhow::Result<T> {
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<T>;
+    fn read_fully(bytes: &mut &'d [u8]) -> anyhow::Result<T> {
         let serialized = Self::read(bytes)?;
 
         if bytes.is_empty() {
@@ -56,6 +60,48 @@ pub trait SliceSerializable<'a, T = Self> {
     /// Caller must guarantee that `bytes` contains at least `get_write_size` bytes
     unsafe fn write(bytes: &mut [u8], data: Self::CopyType) -> &mut [u8];
     fn get_write_size(data: Self::CopyType) -> usize;
+}
+
+// Default implementation for Cow<SliceSerializable>
+impl <'r, 'd: 'r, T: Clone + SliceSerializable<'r, 'd, T>> SliceSerializable<'r, 'd, Cow<'d, T>> for Cow<'d, T> {
+    type CopyType = &'r T;
+
+    fn as_copy_type(t: &'r Cow<'r, T>) -> Self::CopyType {
+        t
+    }
+
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Cow<'d, T>> {
+        Ok(Cow::Owned(T::read(bytes)?))
+    }
+
+    unsafe fn write(bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+        T::write(bytes, T::as_copy_type(data))
+    }
+
+    fn get_write_size(data: Self::CopyType) -> usize {
+        T::get_write_size(T::as_copy_type(data))
+    }
+}
+
+// Default implementation for Box<SliceSerializable>
+impl <'r, 'd: 'r, T: Clone + SliceSerializable<'r, 'd, T> + 'r> SliceSerializable<'r, 'd, Box<T>> for Box<T> {
+    type CopyType = &'r T;
+
+    fn as_copy_type(t: &'r Box<T>) -> Self::CopyType {
+        &*t
+    }
+
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Box<T>> {
+        Ok(Box::new(T::read(bytes)?))
+    }
+
+    unsafe fn write(bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+        T::write(bytes, T::as_copy_type(data))
+    }
+
+    fn get_write_size(data: Self::CopyType) -> usize {
+        T::get_write_size(T::as_copy_type(data))
+    }
 }
 
 // Macro to generate composite slice_serializables

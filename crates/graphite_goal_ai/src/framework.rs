@@ -257,7 +257,7 @@ where
 
         Ok(GoalOrientedActionPlanner {
             knowledge_types: knowledge,
-            goal_types,
+            _goal_types: goal_types,
             action_types,
             knowledge: 0,
             goals,

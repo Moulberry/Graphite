@@ -1,5 +1,6 @@
 use std::io::{Cursor, Read};
 
+use glam::{DMat4, DVec3, IVec3};
 use graphite_binary::{nbt::NBT, slice_serialization::*};
 
 use byteorder::ReadBytesExt;
@@ -9,6 +10,22 @@ mod world;
 mod entity;
 pub use world::load_anvil_world;
 pub use entity::load_anvil_entities;
+
+#[derive(Clone, Debug)]
+pub struct EntityNbtWithTransform {
+    pub entity: NBT,
+    pub transform: DMat4
+}
+
+impl EntityNbtWithTransform {
+    pub fn transform_block_position(&self, position: IVec3) -> IVec3 {
+        self.transform.transform_point3(position.as_dvec3() + DVec3::splat(0.5)).floor().as_ivec3()
+    }
+
+    pub fn transform_position(&self, position: DVec3) -> DVec3 {
+        self.transform.transform_point3(position)
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct ChunkCoord {
@@ -28,7 +45,8 @@ impl ChunkCoord {
 fn load_anvil(
     min: ChunkCoord,
     max: ChunkCoord,
-    folder: include_dir::Dir,
+    folder: &include_dir::Dir,
+    prefix: &str,
     mut handle_chunk: impl FnMut(isize, isize, NBT)
 ) {
     assert!(min.x <= max.x);
@@ -41,7 +59,7 @@ fn load_anvil(
 
     for region_x in min_region_x..=max_region_x {
         for region_z in min_region_z..=max_region_z {
-            let file = folder.get_file(format!("r.{}.{}.mca", region_x, region_z));
+            let file = folder.get_file(format!("{}r.{}.{}.mca", prefix, region_x, region_z));
             let Some(file) = file else {
                 continue;
             };

@@ -4,14 +4,14 @@ use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
-    braced, parenthesized, parse::Parse, parse_macro_input, punctuated::Punctuated,
-    spanned::Spanned, Attribute, Token,
+    braced, parenthesized, parse::Parse, parse_macro_input, punctuated::Punctuated, spanned::Spanned, token, Attribute, Token
 };
 
 #[derive(Debug)]
 enum SpecialInstruction {
     None,
     Pack,
+    Unit,
     Invalid(Span, String),
 }
 
@@ -75,6 +75,8 @@ impl Parse for FieldInput {
                             None,
                         ),
                     }
+                } else if instruction_str == "unit" {
+                    (SpecialInstruction::Unit, None)
                 } else {
                     let error_str = format!(
                         "unknown custom serialization instruction: {}",
@@ -116,6 +118,7 @@ struct InputVariant {
     ident: syn::Ident,
     lifetime: Option<syn::Lifetime>,
     fields: Vec<FieldInput>,
+    braced: bool
 }
 
 impl Parse for InputVariant {
@@ -131,14 +134,20 @@ impl Parse for InputVariant {
             None
         };
 
-        let braced;
-        braced!(braced in input);
-        let punctuated: Punctuated<FieldInput, Token![,]> = Punctuated::parse_terminated(&braced)?;
+        let (fields, braced) = if input.peek(token::Brace) {
+            let braced;
+            braced!(braced in input);
+            let punctuated: Punctuated<FieldInput, Token![,]> = Punctuated::parse_terminated(&braced)?;
+            (punctuated.into_iter().collect(), true)
+        } else {
+            (vec![], false)
+        };
 
         Ok(Self {
             ident,
             lifetime,
-            fields: punctuated.into_iter().collect(),
+            fields,
+            braced
         })
     }
 }
@@ -149,11 +158,15 @@ impl ToTokens for InputVariant {
         let lifetime = self.lifetime.iter();
         let fields = &self.fields;
 
-        tokens.extend(quote!(
-            #ident #(<#lifetime>)* {
-                #(#fields),*
-            }
-        ));
+        if self.braced {
+            tokens.extend(quote!(
+                #ident #(<#lifetime>)* {
+                    #(#fields),*
+                }
+            ));
+        } else {
+            tokens.extend(quote!(#ident #(<#lifetime>)*));
+        }
     }
 }
 
@@ -207,7 +220,7 @@ impl InputVariant {
 
             let serializable_impl = quote_spanned!(
                 serialize_type_span =>
-                <#serialize_type as graphite_binary::slice_serialization::SliceSerializable<#lifetime, #field_type>>
+                <#serialize_type as graphite_binary::slice_serialization::SliceSerializable<'r, #lifetime, #field_type>>
             );
 
             match &field.special_instruction {
@@ -284,6 +297,13 @@ impl InputVariant {
                 SpecialInstruction::Invalid(span, msg) => {
                     return Err((*span, msg.clone()));
                 }
+                SpecialInstruction::Unit => {
+                    read_impl.extend(quote_spanned!(
+                        serialize_type_span =>
+                        let #field = #field_type;
+                    ));
+                    continue;
+                }
             }
 
             get_write_size_impl.extend(
@@ -317,6 +337,11 @@ impl InputVariant {
 
 #[derive(Debug)]
 enum Input {
+    Unit {
+        attributes: Vec<syn::Attribute>,
+        vis: syn::Visibility,
+        ident: syn::Ident,
+    },
     Struct {
         attributes: Vec<syn::Attribute>,
         vis: syn::Visibility,
@@ -334,6 +359,16 @@ enum Input {
 impl Input {
     fn get_base_data(&self) -> proc_macro2::TokenStream {
         match self {
+            Input::Unit {
+                attributes,
+                vis,
+                ident,
+            } => {
+                quote!(
+                    #(#attributes)*
+                    #vis struct #ident;
+                )
+            }
             Input::Struct {
                 attributes,
                 vis,
@@ -366,6 +401,33 @@ impl Input {
         &self,
     ) -> result::Result<proc_macro2::TokenStream, (Span, String)> {
         match self {
+            Input::Unit { attributes: _, vis: _, ident } => {
+                Ok(quote!(
+                    impl <'r, 'd: 'r> graphite_binary::slice_serialization::SliceSerializable<'r, 'd> for #ident {
+                        type CopyType = #ident;
+                    
+                        #[inline(always)]
+                        fn as_copy_type(t: &'r Self) -> Self::CopyType {
+                            #ident
+                        }
+                    
+                        #[inline(always)]
+                        fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Self> {
+                            Ok(#ident)
+                        }
+                    
+                        #[inline(always)]
+                        unsafe fn write(bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+                            bytes
+                        }
+                    
+                        #[inline(always)]
+                        fn get_write_size(data: Self::CopyType) -> usize {
+                            0
+                        }
+                    }
+                ))
+            },
             Input::Struct {
                 attributes: _,
                 vis: _,
@@ -385,8 +447,8 @@ impl Input {
                 let lifetime = data.get_lifetime_or_default();
 
                 Ok(quote!(
-                    impl <#lifetime> graphite_binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
-                        type CopyType = &#lifetime #ident;
+                    impl <'r, #lifetime: 'r> graphite_binary::slice_serialization::SliceSerializable<'r, #lifetime> for #ident {
+                        type CopyType = &'r #ident;
 
                         fn read(bytes: &mut &#lifetime [u8]) -> anyhow::Result<#ident> {
                             #read_impl
@@ -396,12 +458,12 @@ impl Input {
                             })
                         }
 
-                        fn get_write_size(object: &#lifetime #ident) -> usize {
+                        fn get_write_size(object: &'r #ident) -> usize {
                             #get_write_size_impl
                             0
                         }
 
-                        unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &#lifetime #ident) -> &'bytes mut [u8] {
+                        unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &'r #ident) -> &'bytes mut [u8] {
                             debug_assert!(
                                 bytes.len() >= Self::get_write_size(object),
                                 "invariant: slice must contain at least {} bytes to perform write #ident",
@@ -413,7 +475,7 @@ impl Input {
                         }
 
                         #[inline(always)]
-                        fn as_copy_type(t: &#lifetime #ident) -> Self::CopyType {
+                        fn as_copy_type(t: &'r #ident) -> Self::CopyType {
                             t
                         }
                     }
@@ -496,8 +558,8 @@ impl Input {
                 }
 
                 Ok(quote!(
-                    impl <#lifetime> graphite_binary::slice_serialization::SliceSerializable<#lifetime> for #ident {
-                        type CopyType = &#lifetime #ident;
+                    impl <'r, #lifetime: 'r> graphite_binary::slice_serialization::SliceSerializable<'r, #lifetime> for #ident {
+                        type CopyType = &'r #ident;
 
                         fn read(bytes: &mut &#lifetime [u8]) -> anyhow::Result<#ident> {
                             let discriminant = <graphite_binary::slice_serialization::Single as graphite_binary::slice_serialization::SliceSerializable<u8>>::read(bytes)?;
@@ -509,13 +571,13 @@ impl Input {
                             }
                         }
 
-                        fn get_write_size(object: &#lifetime #ident) -> usize {
+                        fn get_write_size(object: &'r #ident) -> usize {
                             match object {
                                 #get_write_size_impl
                             }
                         }
 
-                        unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &#lifetime #ident) -> &'bytes mut [u8] {
+                        unsafe fn write<'bytes>(mut bytes: &'bytes mut [u8], object: &'r #ident) -> &'bytes mut [u8] {
                             debug_assert!(
                                 bytes.len() >= Self::get_write_size(object),
                                 "invariant: slice must contain at least {} bytes to perform write #ident",
@@ -528,7 +590,7 @@ impl Input {
                         }
 
                         #[inline(always)]
-                        fn as_copy_type(t: &#lifetime #ident) -> Self::CopyType {
+                        fn as_copy_type(t: &'r #ident) -> Self::CopyType {
                             t
                         }
                     }
@@ -570,6 +632,13 @@ impl Parse for Input {
             })
         } else {
             let _: Token![struct] = input.parse()?;
+
+            if input.peek2(Token![;]) {
+                let ident = input.parse()?;
+                let _: Token![;] = input.parse()?;
+                return Ok(Self::Unit { attributes, vis, ident })
+            }
+
             let data = input.parse()?;
 
             Ok(Self::Struct {

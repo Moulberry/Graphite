@@ -1,4 +1,4 @@
-use graphite_binary::nbt::CompoundRefMut;
+use graphite_binary::nbt::{CompoundRefMut, NBT};
 
 pub struct Biome {
     pub has_precipitation: bool,
@@ -9,12 +9,15 @@ pub struct Biome {
 }
 
 impl Biome {
-    pub fn write(&self, mut compound: CompoundRefMut) {
+    pub fn to_nbt(&self) -> NBT {
+        let mut nbt = NBT::new();
+        let mut compound = nbt.as_compound_mut().unwrap();
         compound.insert_byte("has_precipitation", self.has_precipitation as i8);
         compound.insert_float("temperature", self.temperature);
         compound.insert_string("temperature_modifier", self.temperature_modifier.as_str().to_owned());
         compound.insert_float("downfall", self.downfall);
         self.effects.write(compound.create_compound("effects"));
+        nbt
     }
 }
 

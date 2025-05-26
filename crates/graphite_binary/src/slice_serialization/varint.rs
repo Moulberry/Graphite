@@ -1,9 +1,11 @@
 use std::io::Cursor;
 
 use super::*;
+
+#[derive(Clone)]
 pub enum VarInt {}
 
-impl SliceSerializable<'_, i32> for VarInt {
+impl <'r, 'd: 'r> SliceSerializable<'r, 'd, i32> for VarInt {
     type CopyType = i32;
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<i32> {
@@ -39,7 +41,7 @@ impl SliceSerializable<'_, i32> for VarInt {
 
 macro_rules! for_primitive {
     ($typ:tt) => {
-        impl SliceSerializable<'_, $typ> for VarInt {
+        impl <'r, 'd: 'r> SliceSerializable<'r, 'd, $typ> for VarInt {
             type CopyType = $typ;
 
             fn read(bytes: &mut &[u8]) -> anyhow::Result<$typ> {
@@ -62,11 +64,12 @@ macro_rules! for_primitive {
     };
 }
 
+for_primitive!(u8);
 for_primitive!(u16);
 for_primitive!(u32);
 for_primitive!(usize);
 
-impl SliceSerializable<'_, i64> for VarInt {
+impl <'r, 'd: 'r> SliceSerializable<'r, 'd, i64> for VarInt {
     type CopyType = i64;
 
     fn read(bytes: &mut &[u8]) -> anyhow::Result<i64> {
