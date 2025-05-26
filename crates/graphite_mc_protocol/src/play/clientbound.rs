@@ -1,131 +1,222 @@
-use graphite_binary::nbt::CachedNBT;
+use data_component::DataComponentPredicate;
+use enumset::EnumSet;
+use enumset::EnumSetType;
+use graphite_binary::nbt::EncodedNBT;
 use graphite_binary::slice_serialization::*;
+use graphite_mc_constants::builtin::Attribute;
+use graphite_mc_constants::builtin::RecipeBookCategory;
+use graphite_mc_constants::builtin::SoundEvent;
+use graphite_mc_constants::entity::Metadata;
+use graphite_mc_constants::item::Item;
+use graphite_mc_constants::particle::Particle;
+use graphite_mc_constants::types::*;
+use graphite_network::PacketBuffer;
 use std::borrow::Cow;
+use std::ops::Deref;
+use std::ops::DerefMut;
 
 use crate::identify_packets;
-use crate::types::{
-    BlockPosition, ByteRotation, CommandNode, EquipmentList, EquipmentSlot, GameProfile, GlobalPosition, Position, ProtocolItemStack, QuantizedShort, SignatureData
-};
+use crate::types::holder_set::HolderSet;
+use crate::types::*;
 use crate::IdentifiedPacket;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 identify_packets! {
-    PacketId,
+    PlayPacket,
+    BundleDelimiter = 0x00,
     AddEntity = 0x01,
-    // AddExperienceOrb = 0x01,
-    // AddPlayer = 0x02,
-    AnimateEntity = 0x03,
-    // AwardStats = 0x04,
-    BlockChangedAck = 0x05,
-    // BlockDestruction = 0x06,
-    // BlockEntityData = 0x07,
-    // BlockEvent = 0x08,
-    BlockUpdate = 0x09,
-    // BossEvent = 0x0a,
-    // ChangeDifficulty = 0x0b,
-    // ChatPreview = 0x0c,
-    // ClearTitles = 0x0d,
-    // CommandSuggestions = 0x0e,
-    // Commands = 0x0f,
-    // ContainerClose = 0x10,
-    // ContainerSetContent = 0x11,
-    // ContainerSetData = 0x12,
-    ContainerSetSlot<'_> = 0x15,
-    Cooldown = 0x16,
-    // CustomChatCompletions = 0x15,
+    AnimateEntity = 0x02,
+    // AwardStats = 0x03,
+    BlockChangedAck = 0x04,
+    BlockDestruction = 0x05,
+    // BlockEntityData = 0x06,
+    // BlockEvent = 0x07,
+    BlockUpdate = 0x08,
+    BossEvent = 0x09,
+    // ChangeDifficulty = 0x0a,
+    // ChunkBatchFinished = 0bx0b,
+    // ChunkBatchStart = 0x0c,
+    // ChunksBiomes = 0x0d,
+    // ClearTitles = 0x0e,
+    CommandSuggestions<'_> = 0x0f,
+    Commands = 0x10,
+    ContainerClose = 0x11,
+    ContainerSetContent<'_> = 0x12,
+    // ContainerSetData = 0x13,
+    ContainerSetSlot = 0x14,
+    // CookieRequest = 0x15,
+    Cooldown<'_> = 0x16,
+    // CustomChatCompletions = 0x17,
     CustomPayload<'_> = 0x18,
-    // CustomSound = 0x17,
-    // DeleteChat = 0x18,
-    // Disconnect = 0x19,
     DamageEvent = 0x19,
-    EntityEvent = 0x1d,
-    // Explode = 0x1b,
-    // ForgetLevelChunk = 0x1c,
-    GameEvent = 0x20,
-    // HorseScreenOpen = 0x1e,
-    // InitializeBorder = 0x1f,
-    KeepAlive = 0x24,
-    LevelChunkWithLight<'_> = 0x25,
-    // LevelEvent = 0x22,
-    LevelParticles<'_> = 0x27,
-    // LightUpdate = 0x24,
-    JoinGame<'_> = 0x29,
-    // MapItemData = 0x26,
-    // MerchantOffers = 0x27,
-    MoveEntityPos = 0x2c,
-    MoveEntityPosRot = 0x2d,
-    MoveEntityRot = 0x2e,
-    // MoveVehicle = 0x2b,
-    // OpenBook = 0x2c,
-    // OpenScreen = 0x2d,
-    // OpenSignEditor = 0x2e,
-    // Ping = 0x2f,
-    // PlaceGhostRecipe = 0x30,
-    // PlayerAbilities = 0x31,
-    // PlayerChatHeader = 0x32,
-    // PlayerChat = 0x33,
-    // PlayerCombatEnd = 0x34,
-    // PlayerCombatEnter = 0x35,
-    // PlayerCombatKill = 0x36,
-    // PlayerInfo<'_> = 0x37,
-    // PlayerLookAt = 0x38,
-    PlayerPosition = 0x3e,
-    // UnlockRecipe = 0x3a,
-    RemoveEntities<'_> = 0x40,
-    // RemoveMobEffect = 0x3c,
-    // ResourcePack = 0x3d,
-    // Respawn<'_> = 0x3e,
-    // RotateHead = 0x3f,
-    // SectionBlocksUpdate = 0x40,
-    // SelectAdvancementTab = 0x41,
-    // ServerData = 0x42,
-    // SetActionBarText = 0x43,
-    // SetBorderCenter = 0x44,
-    // SetBorderLerpSize = 0x45,
-    // SetBorderSize = 0x46,
-    // SetBorderWarningDelay = 0x47,
-    // SetBorderWarningDistance = 0x48,
-    // SetCamera = 0x49,
-    // SetCarriedItem = 0x4a,
-    SetChunkCacheCenter = 0x52,
-    // SetChunkCacheRadius = 0x4c,
-    // SetDefaultSpawnPosition = 0x4d,
-    // SetDisplayChatPreview = 0x4e,
-    // SetDisplayObjective = 0x4f,
-    SetEntityData<'_> = 0x56,
-    // SetEntityLink = 0x51,
-    SetEntityMotion = 0x58,
-    // SetEquipment<'_> = 0x53,
-    // SetExperience = 0x54,
-    // SetHealth = 0x55,
-    // SetObjective = 0x56,
-    SetPassengers<'_> = 0x5d,
-    // SetPlayerTeam = 0x58,
-    // SetScore = 0x59,
-    // SetSimulationDistance = 0x5a,
-    // SetSubtitleText = 0x5b,
-    // SetTime = 0x5c,
-    // SetTitleText = 0x5d,
-    // SetTitleAnimation = 0x5e,
-    // SoundEntity = 0x5f,
-    // Sound = 0x60,
-    // StopSound = 0x61,
-    SystemChat<'_> = 0x69,
-    // TabList = 0x63,
-    // TagQuery = 0x64,
-    // TakeItemEntity = 0x65,
-    TeleportEntity = 0x6d,
-    // UpdateAdvancements = 0x67,
-    UpdateAttributes = 0x71,
-    // UpdateMobEffect = 0x69,
-    // UpdateRecipes = 0x6f,
-    UpdateTags<'_> = 0x74
+    // DebugSample = 0x1a,
+    // DeleteChat = 0x1b,
+    Disconnect = 0x1c,
+    // DisguisedChat = 0x1d,
+    EntityEvent = 0x1e,
+    EntityPositionSync = 0x1f,
+    // Explode = 0x20,
+    // ForgetLevelChunk = 0x21,
+    GameEvent = 0x22,
+    // HorseScreenOpen = 0x23,
+    HurtAnimation = 0x24,
+    // InitializeBorder = 0x25,
+    KeepAlive = 0x26,
+    LevelChunkWithLight<'_> = 0x27,
+    LevelEvent = 0x28,
+    LevelParticles = 0x29,
+    // LightUpdate = 0x2a,
+    JoinGame<'_> = 0x2b,
+    // MapItemData = 0x2c,
+    MerchantOffers<'_> = 0x2d,
+    MoveEntityPos = 0x2e,
+    MoveEntityPosRot = 0x2f,
+    // MoveMinecartAlongTrack = 0x30,
+    MoveEntityRot = 0x31,
+    // MoveVehicle = 0x32,
+    // OpenBook = 0x33,
+    OpenScreen = 0x34,
+    // OpenSignEditor = 0x35,
+    Ping = 0x36,
+    // PongResponse = 0x37,
+    PlaceGhostRecipe<'_> = 0x38,
+    PlayerAbilities = 0x39,
+    // PlayerChat = 0x3a,
+    // PlayerCombatEnd = 0x3b,
+    // PlayerCombatEnter = 0x3c,
+    // PlayerCombatKill = 0x3d,
+    PlayerInfoRemove = 0x3e,
+    PlayerInfoUpdate<'_> = 0x3f,
+    PlayerLookAt = 0x40,
+    PlayerPosition = 0x41,
+    // PlayerRotation = 0x42,
+    RecipeBookAdd<'_> = 0x43,
+    // RecipeBookRemove = 0x44,
+    RecipeBookSettings = 0x45,
+    RemoveEntities<'_> = 0x46,
+    // RemoveMobEffect = 0x47,
+    // ResetScore = 0x48,
+    // ResourcePackPop = 0x49,
+    // ResourcePackPush = 0x4a,
+    Respawn<'_> = 0x4b,
+    RotateHead = 0x4c,
+    // SectionBlocksUpdate = 0x4d,
+    // SelectAdvancementTab = 0x4e,
+    // ServerData = 0x4f,
+    // SetActionBarText = 0x50,
+    // SetBorderCenter = 0x51,
+    // SetBorderLerpSize = 0x52,
+    // SetBorderSize = 0x53,
+    // SetBorderWarningDelay = 0x54,
+    // SetBorderWarningDistance = 0x55,
+    SetCamera = 0x56,
+    SetChunkCacheCenter = 0x57,
+    // SetChunkCacheRadius = 0x58,
+    SetCursorItem = 0x59,
+    // SetDefaultSpawnPosition = 0x5a,
+    SetDisplayObjective<'_> = 0x5b,
+    SetEntityData<'_> = 0x5c,
+    // SetEntityLink = 0x5d,
+    SetEntityMotion = 0x5e,
+    SetEquipment = 0x5f,
+    SetExperience = 0x60,
+    // SetHealth = 0x61,
+    // SetHeldSlot = 0x62,
+    SetObjective<'_> = 0x63,
+    SetPassengers<'_> = 0x64,
+    // SetPlayerInventory = 0x65,
+    // SetPlayerTeam = 0x66,
+    // SetScore = 0x67,
+    // SetSimulationDistance = 0x68,
+    SetSubtitleText = 0x69,
+    SetTime = 0x6a,
+    SetTitleText = 0x6b,
+    SetTitleAnimation = 0x6c,
+    SoundEntity<'_> = 0x6d,
+    Sound<'_> = 0x6e,
+    StartConfiguration = 0x6f,
+    // StopSound = 0x70,
+    // StoreCookie = 0x71,
+    SystemChat = 0x72,
+    // TabList = 0x73,
+    // TagQuery = 0x74,
+    TakeItemEntity = 0x75,
+    TeleportEntity = 0x76,
+    // TestInstanceBlockStatus = 0x77,
+    // TickingState = 0x78,
+    // TickingStep = 0x79,
+    // Transfer = 0x7a,
+    UpdateAdvancements<'_> = 0x7b,
+    UpdateAttributes<'_> = 0x7c,
+    // UpdateMobEffect = 0x7d,
+    // UpdateRecipes = 0x7e,
+    UpdateTags<'_> = 0x7f
+    // ProjectilePower = 0x80
+    // CustomReportDetails = 0x81
+    // ServerLinks = 0x82
 }
 
-// Add Entity
-
 slice_serializable! {
-    #[derive(Debug)]
+    #[derive(Debug, Default, Clone, Copy)]
+    struct BundleDelimiter;
+}
+
+pub struct BundledPacketBuffer<'a> {
+    written_bundle: bool,
+    buffer: &'a mut PacketBuffer
+}
+
+impl <'a> BundledPacketBuffer<'a> {
+    pub fn new(buffer: &'a mut PacketBuffer) -> Self {
+        Self {
+            written_bundle: false,
+            buffer
+        }
+    }
+
+    pub fn write<'r, 'd: 'r, T: IdentifiedPacket<PlayPacket> + SliceSerializable<'r, 'd, T>>(&mut self, packet: &'r T) {
+        if !self.written_bundle {
+            self.written_bundle = true;
+            self.buffer.write_serializable(BundleDelimiter.get_packet_id_as_u8(), &BundleDelimiter);
+        }
+        self.buffer.write_serializable(packet.get_packet_id_as_u8(), packet);
+    }
+
+    pub fn finish(self) {
+        // Will call Drop code
+    }
+}
+
+impl <'a> Deref for BundledPacketBuffer<'a> {
+    type Target = PacketBuffer;
+
+    fn deref(&self) -> &Self::Target {
+        self.buffer
+    }
+}
+
+impl <'a> DerefMut for BundledPacketBuffer<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        if !self.written_bundle {
+            self.written_bundle = true;
+            self.buffer.write_serializable(BundleDelimiter.get_packet_id_as_u8(), &BundleDelimiter);
+        }
+        self.buffer
+    }
+}
+
+impl <'a> Drop for BundledPacketBuffer<'a> {
+    fn drop(&mut self) {
+        if self.written_bundle {
+            self.buffer.write_serializable(BundleDelimiter.get_packet_id_as_u8(), &BundleDelimiter);
+        }
+    }
+}
+
+
+// Add Entity
+slice_serializable! {
+    #[derive(Debug, Default)]
     pub struct AddEntity {
         pub id: i32 as VarInt,
         pub uuid: u128 as BigEndian,
@@ -136,7 +227,7 @@ slice_serializable! {
         pub pitch: f32 as ByteRotation,
         pub yaw: f32 as ByteRotation,
         pub head_yaw: f32 as ByteRotation,
-        pub data: i32 as VarInt, // nice naming mojang
+        pub data: i32 as VarInt,
         pub x_vel: f32 as QuantizedShort,
         pub y_vel: f32 as QuantizedShort,
         pub z_vel: f32 as QuantizedShort,
@@ -158,24 +249,11 @@ slice_serializable! {
 }
 
 // Animate Entity
-#[derive(Default, Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
-#[repr(u8)]
-pub enum EntityAnimation {
-    #[default]
-    SwingMainHand,
-    Hurt,
-    WakeUp,
-    SwingOffHand,
-    CriticalHit,
-    MagicCriticalHit,
-}
-
-// Animate Entity
 slice_serializable! {
     #[derive(Debug)]
     pub struct AnimateEntity {
         pub entity_id: i32 as VarInt,
-        pub animation: EntityAnimation as AttemptFrom<Single, u8>
+        pub animation: graphite_mc_constants::types::EntityAnimation as AttemptFrom<Single, u8>
     }
 }
 
@@ -206,6 +284,48 @@ slice_serializable! {
     }
 }
 
+// Boss Event
+slice_serializable! {
+    #[derive(Debug)]
+    pub enum BossEventAction {
+        Add {
+            title: EncodedNBT as NBTBlob,
+            health: f32 as BigEndian,
+            color: BossBarColor as AttemptFrom<Single, u8>,
+            division: BossBarOverlay as AttemptFrom<Single, u8>,
+            flags: u8 as Single
+        },
+        Remove {}
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct BossEvent {
+        pub uuid: u128 as BigEndian,
+        pub action: BossEventAction
+    }
+}
+
+// Command Suggestions
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct CommandSuggestionEntry<'a> {
+        pub text: Cow<'a, str> as SizedString,
+        pub tooltip: Option<EncodedNBT> as Option<NBTBlob>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct CommandSuggestions<'a> {
+        pub id: i32 as VarInt,
+        pub start: i32 as VarInt,
+        pub length: i32 as VarInt,
+        pub entries: Vec<CommandSuggestionEntry<'a>> as SizedArray<CommandSuggestionEntry<'a>>
+    }
+}
+
 // Commands
 slice_serializable! {
     #[derive(Debug)]
@@ -215,22 +335,41 @@ slice_serializable! {
     }
 }
 
+// Container Close
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ContainerClose {
+        pub container_id: i32 as VarInt,
+    }
+}
+
+// Container Set Content
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ContainerSetContent<'a> {
+        pub container_id: i32 as VarInt,
+        pub state_id: i32 as VarInt,
+        pub slots: Cow<'a, [ItemStack]> as SizedArray<ItemStack>,
+        pub carried: ItemStack
+    }
+}
+
 // Container Set Slot
 slice_serializable! {
     #[derive(Debug)]
-    pub struct ContainerSetSlot<'a> {
-        pub window_id: i8 as Single,
+    pub struct ContainerSetSlot {
+        pub container_id: i32 as VarInt,
         pub state_id: i32 as VarInt,
         pub slot: i16 as BigEndian,
-        pub item: ProtocolItemStack<'a>
+        pub item: ItemStack
     }
 }
 
 // Commands
 slice_serializable! {
     #[derive(Debug)]
-    pub struct Cooldown {
-        pub item_id: i32 as VarInt,
+    pub struct Cooldown<'a> {
+        pub group: Cow<'a, str> as SizedString<256>,
         pub cooldown: i32 as VarInt
     }
 }
@@ -256,12 +395,37 @@ slice_serializable! {
     }
 }
 
+// Disconnect
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Disconnect {
+        pub message: EncodedNBT as NBTBlob
+    }
+}
+
 // Entity Event
 slice_serializable! {
     #[derive(Debug)]
     pub struct EntityEvent {
         pub entity_id: i32 as BigEndian,
         pub status: u8 as Single,
+    }
+}
+
+// Entity Position Sync
+slice_serializable! {
+    #[derive(Debug, Default)]
+    pub struct EntityPositionSync {
+        pub entity_id: i32 as VarInt,
+        pub x: f64 as BigEndian,
+        pub y: f64 as BigEndian,
+        pub z: f64 as BigEndian,
+        pub x_vel: f64 as BigEndian,
+        pub y_vel: f64 as BigEndian,
+        pub z_vel: f64 as BigEndian,
+        pub yaw: f32 as BigEndian,
+        pub pitch: f32 as BigEndian,
+        pub on_ground: bool as Single
     }
 }
 
@@ -318,6 +482,15 @@ slice_serializable! {
     }
 }
 
+// Hurt Animation
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct HurtAnimation {
+        pub entity_id: i32 as VarInt,
+        pub hurt_angle: f32 as BigEndian
+    }
+}
+
 // Keep Alive
 slice_serializable! {
     #[derive(Debug)]
@@ -326,23 +499,23 @@ slice_serializable! {
     }
 }
 
-// LevelChunkWithLight
+// Level Event
 slice_serializable! {
     #[derive(Debug)]
-    pub struct ChunkBlockData<'a> {
-        pub heightmaps: Cow<'a, CachedNBT> as NBTBlob,
-        pub data: &'a [u8] as SizedBlob,
-        pub block_entity_count: i32 as VarInt,
-        pub block_entity_data: &'a [u8] as WriteOnlyBlob
+    pub struct LevelEvent {
+        pub event_type: graphite_mc_constants::types::LevelEvent as AttemptFrom<BigEndian, i32>,
+        pub pos: BlockPosition,
+        pub data: i32 as BigEndian,
+        pub global: bool as Single // global used by vanilla for dragon death and portal opening
     }
 }
 
 // Level Particles
 slice_serializable! {
     #[derive(Debug)]
-    pub struct LevelParticles<'a> {
-        pub particle_id: i32 as VarInt,
-        pub long_distance: bool as Single,
+    pub struct LevelParticles {
+        pub override_limiter: bool as Single,
+        pub always_show: bool as Single,
         pub x: f64 as BigEndian,
         pub y: f64 as BigEndian,
         pub z: f64 as BigEndian,
@@ -351,96 +524,37 @@ slice_serializable! {
         pub offset_z: f32 as BigEndian,
         pub max_speed: f32 as BigEndian,
         pub particle_count: i32 as BigEndian,
-        pub extra_data: Cow<'a, [u8]> as GreedyBlob
+        pub particle: Particle
     }
 }
 
-#[derive(Debug, Copy, Clone, TryFromPrimitive, IntoPrimitive)]
-#[repr(i32)]
-pub enum LevelEventType {
-    SoundDispenserDispense = 1000,
-    SoundDispenserFail = 1001,
-    SoundDispenserProjectileLaunch = 1002,
-    SoundEnderEyeLaunch = 1003,
-    SoundFireworkShoot = 1004,
-    SoundOpenIronDoor = 1005,
-    SoundOpenWoodenDoor = 1006,
-    SoundOpenWoodenTrapDoor = 1007,
-    SoundOpenFenceGate = 1008,
-    SoundExtinguishFire = 1009,
-    SoundPlayRecording = 1010,
-    SoundCloseIronDoor = 1011,
-    SoundCloseWoodenDoor = 1012,
-    SoundCloseWoodenTrapDoor = 1013,
-    SoundCloseFenceGate = 1014,
-    SoundGhastWarning = 1015,
-    SoundGhastFireball = 1016,
-    SoundDragonFireball = 1017,
-    SoundBlazeFireball = 1018,
-    SoundZombieWoodenDoor = 1019,
-    SoundZombieIronDoor = 1020,
-    SoundZombieDoorCrash = 1021,
-    SoundWitherBlockBreak = 1022,
-    SoundWitherBossSpawn = 1023,
-    SoundWitherBossShoot = 1024,
-    SoundBatLiftoff = 1025,
-    SoundZombieInfected = 1026,
-    SoundZombieConverted = 1027,
-    SoundDragonDeath = 1028,
-    SoundAnvilBroken = 1029,
-    SoundAnvilUsed = 1030,
-    SoundAnvilLand = 1031,
-    SoundPortalTravel = 1032,
-    SoundChorusGrow = 1033,
-    SoundChorusDeath = 1034,
-    SoundBrewingStandBrew = 1035,
-    SoundCloseIronTrapDoor = 1036,
-    SoundOpenIronTrapDoor = 1037,
-    SoundEndPortalSpawn = 1038,
-    SoundPhantomBite = 1039,
-    SoundZombieToDrowned = 1040,
-    SoundHuskToZombie = 1041,
-    SoundGrindstoneUsed = 1042,
-    SoundPageTurn = 1043,
-    SoundSmithingTableUsed = 1044,
-    SoundPointedDripstoneLand = 1045,
-    SoundDripLavaIntoCauldron = 1046,
-    SoundDripWaterIntoCauldron = 1047,
-    SoundSkeletonToStray = 1048,
-    ComposterFill = 1500,
-    LavaFizz = 1501,
-    RedstoneTorchBurnout = 1502,
-    EndPortalFrameFill = 1503,
-    DripstoneDrip = 1504,
-    ParticlesAndSoundPlantGrowth = 1505,
-    ParticlesShoot = 2000,
-    ParticlesDestroyBlock = 2001,
-    ParticlesSpellPotionSplash = 2002,
-    ParticlesEyeOfEnderDeath = 2003,
-    ParticlesMobblockSpawn = 2004,
-    ParticlesPlantGrowth = 2005,
-    ParticlesDragonFireballSplash = 2006,
-    ParticlesInstantPotionSplash = 2007,
-    ParticlesDragonBlockBreak = 2008,
-    ParticlesWaterEvaporating = 2009,
-    AnimationEndGatewaySpawn = 3000,
-    AnimationDragonSummonRoar = 3001,
-    ParticlesElectricSpark = 3002,
-    ParticlesAndSoundWaxOn = 3003,
-    ParticlesWaxOff = 3004,
-    ParticlesScrape = 3005,
-    ParticlesSculkCharge = 3006,
-    ParticlesSculkShriek = 3007,
-}
 
-// Level Event
+// LevelChunkWithLight
 slice_serializable! {
     #[derive(Debug)]
-    pub struct LevelEvent {
-        pub event_type: LevelEventType as AttemptFrom<BigEndian, i32>,
-        pub pos: BlockPosition,
-        pub data: i32 as BigEndian,
-        pub global: bool as Single // global used by vanilla for dragon death and portal opening
+    pub struct LevelChunkWithLight<'a> {
+        pub chunk_x: i32 as BigEndian,
+        pub chunk_z: i32 as BigEndian,
+        pub chunk_block_data: ChunkBlockData<'a>,
+        pub chunk_light_data: ChunkLightData<'a>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct HeightmapEntry<'a> {
+        pub id: u8 as Single,
+        pub data: Cow<'a, [u64]> as SizedArray<BigEndian>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ChunkBlockData<'a> {
+        pub heightmaps: Cow<'a, [HeightmapEntry<'a>]> as SizedArray<HeightmapEntry<'a>>,
+        pub data: &'a [u8] as SizedBlob,
+        pub block_entity_count: i32 as VarInt,
+        pub block_entity_data: &'a [u8] as WriteOnlyBlob
     }
 }
 
@@ -453,16 +567,6 @@ slice_serializable! {
         pub empty_block_light_mask: Vec<u64> as SizedArray<BigEndian>,
         pub sky_light_entries: Vec<Cow<'a, [u8]>> as SizedArray<SizedBlob>,
         pub block_light_entries: Vec<Cow<'a, [u8]>> as SizedArray<SizedBlob>
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct LevelChunkWithLight<'a> {
-        pub chunk_x: i32 as BigEndian,
-        pub chunk_z: i32 as BigEndian,
-        pub chunk_block_data: ChunkBlockData<'a>,
-        pub chunk_light_data: ChunkLightData<'a>
     }
 }
 
@@ -479,15 +583,57 @@ slice_serializable! {
         pub reduced_debug_info: bool as Single,
         pub enable_respawn_screen: bool as Single,
         pub do_limited_crafting: bool as Single,
-        pub dimension_type: &'a str as SizedString,
+        pub dimension_type: i32 as VarInt,
         pub dimension_name: &'a str as SizedString,
         pub hashed_seed: u64 as BigEndian,
         pub gamemode: u8 as Single,
         pub previous_gamemode: i8 as Single,
         pub is_debug: bool as Single,
         pub is_flat: bool as Single,
-        pub death_location: Option<GlobalPosition<'a>>,
-        pub portal_cooldown: i32 as VarInt
+        pub death_location: Option<GlobalPosition>,
+        pub portal_cooldown: i32 as VarInt,
+        pub sea_level: i32 as VarInt,
+        pub enforces_secure_chat: bool as Single
+    }
+}
+
+// Merchant Offers
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct MerchantOffers<'a> {
+        pub container_id: i32 as VarInt,
+        pub trades: Cow<'a, [MerchantTrade]> as SizedArray<MerchantTrade>,
+        pub villager_level: i32 as VarInt,
+        pub experience: i32 as VarInt,
+        pub is_regular_villager: bool as Single,
+        pub can_restock: bool as Single
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Debug)]
+    pub struct MerchantTrade {
+        pub input: ItemCost,
+        pub output: ItemStack,
+        pub secondary_input: Option<ItemCost>,
+        pub trade_disabled: bool as Single,
+        pub trade_uses: i32 as BigEndian,
+        pub max_trade_uses: i32 as BigEndian,
+        pub experience: i32 as BigEndian,
+        pub special_price: i32 as BigEndian,
+        pub price_multiplier: f32 as BigEndian,
+        pub demand: i32 as BigEndian,
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Debug)]
+    pub struct ItemCost {
+        pub item: Item as AttemptFrom<VarInt, u16>,
+        pub count: i32 as VarInt,
+        pub predicate: DataComponentPredicate
+
     }
 }
 
@@ -527,6 +673,31 @@ slice_serializable! {
     }
 }
 
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct OpenScreen {
+        pub container_id: i32 as VarInt,
+        pub screen_type: i32 as VarInt,
+        pub title: EncodedNBT as NBTBlob
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Ping {
+        pub id: i32 as BigEndian,
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlaceGhostRecipe<'a> {
+        pub container_id: i32 as VarInt,
+        pub recipe_display: Cow<'a, RecipeDisplay<'a>>
+    }
+}
+
+
 // Player Abilities
 slice_serializable! {
     #[derive(Debug)]
@@ -540,63 +711,6 @@ slice_serializable! {
     }
 }
 
-// PlayerInfo
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct PlayerInfoAddPlayer<'a> {
-        pub profile: GameProfile<'a>,
-        pub gamemode: u8 as Single,
-        pub ping: i32 as VarInt,
-        pub display_name: Option<&'a str> as Option<SizedString>,
-        pub signature_data: Option<SignatureData<'a>>
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct PlayerInfoUpdateGamemode {
-        pub uuid: u128 as BigEndian,
-        pub gamemode: u8 as Single
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct PlayerInfoUpdateLatency {
-        pub uuid: u128 as BigEndian,
-        pub ping: i32 as VarInt
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct PlayerInfoDisplayName<'a> {
-        pub uuid: u128 as BigEndian,
-        pub display_name: Option<&'a str> as Option<SizedString>,
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub enum PlayerInfo<'a> {
-        AddPlayer {
-            values: Vec<PlayerInfoAddPlayer<'a>> as SizedArray<PlayerInfoAddPlayer>
-        },
-        UpdateGameMode {
-            values: Vec<PlayerInfoUpdateGamemode> as SizedArray<PlayerInfoUpdateGamemode>
-        },
-        UpdateLatency {
-            values: Vec<PlayerInfoUpdateLatency> as SizedArray<PlayerInfoUpdateLatency>
-        },
-        UpdateDisplayName {
-            values: Vec<PlayerInfoDisplayName<'a>> as SizedArray<PlayerInfoDisplayName>
-        },
-        RemovePlayer {
-            uuids: Vec<u128> as SizedArray<BigEndian>,
-        }
-    }
-}
-
 // Remove Entities
 slice_serializable! {
     #[derive(Debug)]
@@ -605,17 +719,230 @@ slice_serializable! {
     }
 }
 
+// PlayerInfo
+#[derive(Debug)]
+pub struct PlayerInfoEntry<'a> {
+    pub profile: GameProfile<'a>,
+    pub listed: bool,
+    pub latency: i32,
+    pub gamemode: u8,
+    pub display_name: Option<EncodedNBT>
+}
+
+#[derive(EnumSetType, Debug)]
+pub enum PlayerInfoAction {
+    AddPlayer,
+    InitializeChat,
+    UpdateGameMode,
+    UpdateListed,
+    UpdateLatency,
+    UpdateDisplayName
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlayerInfoRemove {
+        pub players: Vec<u128> as SizedArray<BigEndian>
+    }
+}
+
+#[derive(Debug)]
+pub struct PlayerInfoUpdate<'a> {
+    pub actions: EnumSet<PlayerInfoAction>,
+    pub entries: Vec<PlayerInfoEntry<'a>>
+}
+
+impl <'r, 'd: 'r> SliceSerializable<'r, 'd, Self> for PlayerInfoUpdate<'d> {
+    type CopyType = &'r Self;
+
+    fn as_copy_type(t: &'r Self) -> Self::CopyType {
+        t
+    }
+
+    fn read(_: &mut &'d [u8]) -> anyhow::Result<Self> {
+        unimplemented!()
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+        bytes = <Single as SliceSerializable<u8>>::write(bytes, data.actions.as_u8());
+        bytes = <VarInt as SliceSerializable<i32>>::write(bytes, data.entries.len() as i32);
+        for entry in &data.entries {
+            if data.actions.contains(PlayerInfoAction::AddPlayer) {
+                bytes = GameProfile::write(bytes, &entry.profile);
+            } else {
+                bytes = <BigEndian as SliceSerializable<u128>>::write(bytes, entry.profile.uuid);
+            }
+            if data.actions.contains(PlayerInfoAction::InitializeChat) {
+                unimplemented!()
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateGameMode) {
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, entry.gamemode);
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateListed) {
+                bytes = <Single as SliceSerializable<bool>>::write(bytes, entry.listed);
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateLatency) {
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, entry.latency);
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateDisplayName) {
+                if let Some(display_name) = entry.display_name.as_ref() {
+                    bytes = <Single as SliceSerializable<bool>>::write(bytes, true);
+                    bytes = <NBTBlob as SliceSerializable<EncodedNBT>>::write(bytes, display_name);
+                } else {
+                    bytes = <Single as SliceSerializable<bool>>::write(bytes, false);
+                }
+            }
+        }
+        bytes
+    }
+
+    fn get_write_size(data: Self::CopyType) -> usize {
+        let mut size = <Single as SliceSerializable<u8>>::get_write_size(data.actions.as_u8());
+        size += <VarInt as SliceSerializable<i32>>::get_write_size(data.entries.len() as i32);
+        for entry in &data.entries {
+            if data.actions.contains(PlayerInfoAction::AddPlayer) {
+                size += GameProfile::get_write_size(&entry.profile);
+            } else {
+                size += <BigEndian as SliceSerializable<u128>>::get_write_size(entry.profile.uuid);
+            }
+            if data.actions.contains(PlayerInfoAction::InitializeChat) {
+                unimplemented!()
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateGameMode) {
+                size += <Single as SliceSerializable<u8>>::get_write_size(entry.gamemode);
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateListed) {
+                size += <Single as SliceSerializable<bool>>::get_write_size(entry.listed);
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateLatency) {
+                size += <VarInt as SliceSerializable<i32>>::get_write_size(entry.latency);
+            }
+            if data.actions.contains(PlayerInfoAction::UpdateDisplayName) {
+                if let Some(display_name) = entry.display_name.as_ref() {
+                    size += <Single as SliceSerializable<bool>>::get_write_size(true);
+                    size += <NBTBlob as SliceSerializable<EncodedNBT>>::get_write_size(display_name);
+                } else {
+                    size += <Single as SliceSerializable<bool>>::get_write_size(false);
+                }
+            }
+        }
+        size
+    }
+}
+
+// Player Look At
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct LookAtEntity {
+        pub entity: i32 as VarInt,
+        pub anchor: u8 as Single
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlayerLookAt {
+        pub anchor: u8 as Single,
+        pub x: f64 as BigEndian,
+        pub y: f64 as BigEndian,
+        pub z: f64 as BigEndian,
+        pub target: Option<LookAtEntity>
+    }
+}
+
 // Player Position
 slice_serializable! {
     #[derive(Debug)]
     pub struct PlayerPosition {
+        pub teleport_id: i32 as VarInt,
         pub x: f64 as BigEndian,
         pub y: f64 as BigEndian,
         pub z: f64 as BigEndian,
+        pub x_vel: f64 as BigEndian,
+        pub y_vel: f64 as BigEndian,
+        pub z_vel: f64 as BigEndian,
         pub yaw: f32 as BigEndian,
         pub pitch: f32 as BigEndian,
-        pub relative_arguments: u8 as Single,
-        pub id: i32 as VarInt
+        pub relative_arguments: i32 as BigEndian,
+    }
+}
+
+// Recipe Book Add
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct RecipeBookAdd<'a> {
+        pub recipes: Cow<'a, [RecipeBookAddEntry<'a>]> as SizedArray<RecipeBookAddEntry<'a>>,
+        pub replace: bool as Single
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct RecipeBookAddEntry<'a> {
+        pub contents: RecipeDisplayEntry<'a>,
+        pub notify: bool as packed!(),
+        pub highlight: bool as packed!(),
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct RecipeDisplayEntry<'a> {
+        pub id: i32 as VarInt,
+        pub display: Cow<'a, RecipeDisplay<'a>>,
+        pub group: Option<i32> as OptionalVarInt,
+        pub category: RecipeBookCategory as AttemptFrom<Single, u8>,
+        pub crafting_requirements: Option<Cow<'a, [HolderSet<'a, Item>]>> as Option<SizedArray<HolderSet<'a, AttemptFrom<VarInt, u16>>>>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub enum RecipeDisplay<'a> {
+        CraftingShapeless {
+            ingredients: Cow<'a, [SlotDisplay]> as SizedArray<SlotDisplay>,
+            result: SlotDisplay,
+            crafting_station: SlotDisplay,
+        },
+        CraftingShaped {
+            width: i32 as VarInt,
+            height: i32 as VarInt,
+            ingredients: Cow<'a, [SlotDisplay]> as SizedArray<SlotDisplay>,
+            result: SlotDisplay,
+            crafting_station: SlotDisplay,
+        }
+        // other recipe displays are omitted
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub enum SlotDisplay {
+        Empty,
+        AnyFuel,
+        Item {
+            item: Item as AttemptFrom<VarInt, u16>
+        },
+        ItemStack {
+            item_stack: ItemStack,
+        },
+        // other slot displays are omitted
+    }
+}
+
+
+// Recipe Settings
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct RecipeBookSettings {
+        pub crafting_open: bool as Single,
+        pub crafting_filtering: bool as Single,
+        pub furnace_open: bool as Single,
+        pub furnace_filtering: bool as Single,
+        pub blast_furnace_open: bool as Single,
+        pub blast_furnace_filtering: bool as Single,
+        pub smoker_open: bool as Single,
+        pub smoker_filtering: bool as Single,
     }
 }
 
@@ -623,15 +950,17 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct Respawn<'a> {
-        pub dimension_type: &'a str as SizedString,
+        pub dimension_type: i32 as VarInt,
         pub dimension_name: &'a str as SizedString,
         pub hashed_seed: u64 as BigEndian,
         pub gamemode: u8 as Single,
         pub previous_gamemode: i8 as Single,
         pub is_debug: bool as Single,
         pub is_flat: bool as Single,
-        pub copy_metadata: bool as Single,
-        pub death_location: Option<BlockPosition> // todo: this is wrong, also needs identifier
+        pub death_location: Option<GlobalPosition>,
+        pub portal_cooldown: i32 as VarInt,
+        pub sea_level: i32 as VarInt,
+        pub data_to_keep: u8 as Single
     }
 }
 
@@ -644,12 +973,28 @@ slice_serializable! {
     }
 }
 
+// Set Camera
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetCamera {
+        pub entity_id: i32 as VarInt
+    }
+}
+
 // Set Chunk Cache Center
 slice_serializable! {
     #[derive(Debug)]
     pub struct SetChunkCacheCenter {
         pub chunk_x: i32 as VarInt,
         pub chunk_z: i32 as VarInt
+    }
+}
+
+// Set Cursor Item
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetCursorItem {
+        pub item: ItemStack
     }
 }
 
@@ -661,6 +1006,46 @@ slice_serializable! {
         pub x_vel: f32 as QuantizedShort,
         pub y_vel: f32 as QuantizedShort,
         pub z_vel: f32 as QuantizedShort,
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub enum NumberFormat {
+        Blank,
+        Styled {
+            style: EncodedNBT as NBTBlob,
+        },
+        Fixed {
+            text: EncodedNBT as NBTBlob,
+        }
+    }
+}
+
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub enum SetObjectiveMethod {
+        Add {
+            display: EncodedNBT as NBTBlob,
+            render_type: ObjectiveRenderType as AttemptFrom<Single, u8>,
+            number_format: Option<NumberFormat>
+        },
+        Remove,
+        Change {
+            display: EncodedNBT as NBTBlob,
+            render_type: ObjectiveRenderType as AttemptFrom<Single, u8>,
+            number_format: Option<NumberFormat>
+        }
+    }
+}
+
+// Set Objective
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetObjective<'a> {
+        pub objective_name: Cow<'a, str> as SizedString,
+        pub method: SetObjectiveMethod
     }
 }
 
@@ -676,9 +1061,28 @@ slice_serializable! {
 // Set Equipment
 slice_serializable! {
     #[derive(Debug)]
-    pub struct SetEquipment<'a> {
+    pub struct SetEquipment {
         pub entity_id: i32 as VarInt,
-        pub equipment: Vec<(EquipmentSlot, Option<ProtocolItemStack<'a>>)> as EquipmentList
+        pub equipment: Vec<(EquipmentSlot, ItemStack)> as EquipmentList
+    }
+}
+
+// Set Experience
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetExperience {
+        pub progress: f32 as BigEndian,
+        pub level: i32 as VarInt,
+        pub total: i32 as VarInt,
+    }
+}
+
+// Set Display Objective
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetDisplayObjective<'a> {
+        pub slot: DisplaySlot as AttemptFrom<Single, u8>,
+        pub objective_name: Cow<'a, str> as SizedString
     }
 }
 
@@ -691,12 +1095,130 @@ slice_serializable! {
     }
 }
 
+impl <'a> SetEntityData<'a> {
+    pub fn write_changes<M: Metadata>(metadata: &mut M, entity_id: i32, buffer: &mut graphite_network::PacketBuffer) {
+        Self::write_changes_without_clearing(metadata, entity_id, buffer);
+        metadata.clear_all_changes();
+    }
+
+    pub fn write_changes_without_clearing<M: Metadata>(metadata: &mut M, entity_id: i32, buffer: &mut graphite_network::PacketBuffer) {
+        let metadata_size = metadata.get_changes_write_size();
+        if metadata_size == 0 {
+            return;
+        }
+
+        let expected_packet_size = 16 + metadata_size;
+        buffer.write_custom(Self::ID as u8, expected_packet_size, |mut bytes| {
+            unsafe {
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, entity_id);
+                bytes = metadata.write_changes(bytes);
+            }
+            bytes
+        });
+    }
+
+    pub fn write_non_default<M: Metadata>(metadata: &M, entity_id: i32, buffer: &mut graphite_network::PacketBuffer) {
+        let metadata_size = metadata.get_non_default_write_size();
+        if metadata_size == 0 {
+            return;
+        }
+
+        let expected_packet_size = 16 + metadata_size;
+        buffer.write_custom(Self::ID as u8, expected_packet_size, |mut bytes| {
+            unsafe {
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, entity_id);
+                bytes = metadata.write_non_default(bytes);
+            }
+            bytes
+        })
+    }
+}
+
+// Set Subtitle
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetSubtitleText {
+        pub text: EncodedNBT as NBTBlob
+    }
+}
+
+// Set Time
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetTime {
+        pub game_time: i64 as BigEndian,
+        pub day_time: i64 as BigEndian,
+        pub tick_day_time: bool as Single
+    }
+}
+
+// Set Title
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetTitleText {
+        pub text: EncodedNBT as NBTBlob
+    }
+}
+
+// Set Title Animation
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SetTitleAnimation {
+        pub fade_in: i32 as BigEndian,
+        pub stay: i32 as BigEndian,
+        pub fade_out: i32 as BigEndian
+    }
+}
+
+// Sound Entity
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SoundEntity<'a> {
+        pub sound: SoundType<'a>,
+        pub source: SoundSource as AttemptFrom<Single, u8>,
+        pub entity_id: i32 as VarInt,
+        pub volume: f32 as BigEndian,
+        pub pitch: f32 as BigEndian,
+        pub seed: u64 as BigEndian,
+    }
+}
+
+// Sound
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Sound<'a> {
+        pub sound: SoundType<'a>,
+        pub source: SoundSource as AttemptFrom<Single, u8>,
+        pub x: f32 as QuantizedInt<8>,
+        pub y: f32 as QuantizedInt<8>,
+        pub z: f32 as QuantizedInt<8>,
+        pub volume: f32 as BigEndian,
+        pub pitch: f32 as BigEndian,
+        pub seed: u64 as BigEndian,
+    }
+}
+
+slice_serializable! {
+    #[derive(Copy, Clone, Debug)]
+    pub struct StartConfiguration;
+}
+
 // System Chat
 slice_serializable! {
     #[derive(Debug)]
-    pub struct SystemChat<'a> {
-        pub message: Cow<'a, CachedNBT> as NBTBlob,
+    pub struct SystemChat {
+        pub message: EncodedNBT as NBTBlob,
         pub overlay: bool as Single
+    }
+}
+
+// Teleport Entity
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct TakeItemEntity {
+        pub item_id: i32 as VarInt,
+        pub player_id: i32 as VarInt,
+        pub amount: i32 as VarInt,
     }
 }
 
@@ -708,37 +1230,288 @@ slice_serializable! {
         pub x: f64 as BigEndian,
         pub y: f64 as BigEndian,
         pub z: f64 as BigEndian,
-        pub yaw: f32 as ByteRotation,
-        pub pitch: f32 as ByteRotation,
+        pub x_vel: f64 as BigEndian,
+        pub y_vel: f64 as BigEndian,
+        pub z_vel: f64 as BigEndian,
+        pub yaw: f32 as BigEndian,
+        pub pitch: f32 as BigEndian,
+        pub relative_arguments: i32 as BigEndian,
         pub on_ground: bool as Single
+    }
+}
+
+// Update Advancement
+
+#[derive(Debug, Clone)]
+pub struct AdvancementDisplayInfoFlags<'a> {
+    pub background: Option<Cow<'a, str>>,
+    pub show_toast: bool,
+    pub hidden: bool
+}
+
+impl <'r, 'd: 'r> SliceSerializable<'r, 'd> for AdvancementDisplayInfoFlags<'d> {
+    type CopyType = &'r Self;
+
+    fn as_copy_type(t: &'r Self) -> Self::CopyType {
+        t
+    }
+
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Self> {
+        let flags: i32 = BigEndian::read(bytes)?;
+        let background = if (flags & 1) != 0 {
+            Some(SizedString::<32768>::read(bytes)?)
+        } else {
+            None
+        };
+
+        Ok(Self {
+            background,
+            show_toast: (flags & 2) != 0,
+            hidden: (flags & 4) != 0,
+        })
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+        let mut flags = 0;
+        if data.background.is_some() {
+            flags |= 1;
+        }
+        if data.show_toast {
+            flags |= 2;
+        }
+        if data.hidden {
+            flags |= 4;
+        }
+        bytes = <BigEndian as SliceSerializable<i32>>::write(bytes, flags);
+        if let Some(background) = data.background.as_ref() {
+            <SizedString as SliceSerializable<&'d str>>::write(bytes, background)
+        } else {
+            bytes
+        }
+    }
+
+    fn get_write_size(data: Self::CopyType) -> usize {
+        let mut size = <BigEndian as SliceSerializable<i32>>::get_write_size(7);
+        if let Some(background) = data.background.as_ref() {
+            size += <SizedString as SliceSerializable<&'d str>>::get_write_size(background);
+        }
+        size
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct AdvancementDisplayInfo<'a> {
+        pub title: EncodedNBT as NBTBlob,
+        pub description: EncodedNBT as NBTBlob,
+        pub icon: ItemStack,
+        pub advancement_type: AdvancementType as AttemptFrom<Single, u8>,
+        pub flags: AdvancementDisplayInfoFlags<'a>,
+        pub x: f32 as BigEndian,
+        pub y: f32 as BigEndian,
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum AdvancementRequirements<'a> {
+    None,
+    Single(Cow<'a, str>),
+    AnyOf(Vec<Cow<'a, str>>),
+    AllOf(Vec<Cow<'a, str>>),
+    AllOfAnyOf(Vec<Vec<Cow<'a, str>>>),
+}
+
+impl <'r, 'd: 'r> SliceSerializable<'r, 'd> for AdvancementRequirements<'d> {
+    type CopyType = &'r Self;
+
+    fn as_copy_type(t: &'r Self) -> Self::CopyType {
+        t
+    }
+
+    fn read(bytes: &mut &'d [u8]) -> anyhow::Result<Self> {
+        let all_count: i32 = VarInt::read(bytes)?;
+
+        if all_count == 1 {
+            let any_count: i32 = VarInt::read(bytes)?;
+
+            if any_count == 1 {
+                Ok(Self::Single(SizedString::<32767>::read(bytes)?))
+            } else {
+                let mut any = Vec::with_capacity((any_count as usize).min(32));
+                for _ in 0..any_count {
+                    any.push(SizedString::<32767>::read(bytes)?);
+                }
+                Ok(Self::AnyOf(any))
+            }
+        } else {
+            let mut all = Vec::with_capacity((all_count as usize).min(32));
+
+            for _ in 0..all_count {
+                let any_count: i32 = VarInt::read(bytes)?;
+
+                let mut any = Vec::with_capacity((any_count as usize).min(32));
+                for _ in 0..any_count {
+                    any.push(SizedString::<32767>::read(bytes)?);
+                }
+                all.push(any);
+            }
+
+            Ok(Self::AllOfAnyOf(all))
+        }
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: Self::CopyType) -> &mut [u8] {
+        match data {
+            Self::None => {
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 0);
+                bytes
+            },
+            Self::Single(single) => {
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+                bytes = <SizedString as SliceSerializable<&'d str>>::write(bytes, single.as_ref());
+                bytes
+            },
+            Self::AnyOf(any) => {
+                bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, any.len() as i32);
+                for value in any {
+                    bytes = <SizedString as SliceSerializable<&'d str>>::write(bytes, value.as_ref());
+                }
+                bytes
+            },
+            Self::AllOf(all) => {
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, all.len() as i32);
+                for value in all {
+                    bytes = <Single as SliceSerializable<u8>>::write(bytes, 1);
+                    bytes = <SizedString as SliceSerializable<&'d str>>::write(bytes, value.as_ref());
+                }
+                bytes
+            },
+            Self::AllOfAnyOf(all_any) => {
+                bytes = <VarInt as SliceSerializable<i32>>::write(bytes, all_any.len() as i32);
+                for any in all_any {
+                    bytes = <VarInt as SliceSerializable<i32>>::write(bytes, any.len() as i32);
+                    for value in any {
+                        bytes = <SizedString as SliceSerializable<&'d str>>::write(bytes, value.as_ref());
+                    }
+                }
+                bytes
+            },
+        }
+    }
+
+    fn get_write_size(data: Self::CopyType) -> usize {
+        match data {
+            Self::None => {
+                <Single as SliceSerializable<u8>>::get_write_size(0)
+            },
+            Self::Single(single) => {
+                let mut size = <Single as SliceSerializable<u8>>::get_write_size(1);
+                size += <Single as SliceSerializable<u8>>::get_write_size(1);
+                size += <SizedString as SliceSerializable<&'d str>>::get_write_size(single.as_ref());
+                size
+            },
+            Self::AnyOf(any) => {
+                let mut size = <Single as SliceSerializable<u8>>::get_write_size(1);
+                size += <VarInt as SliceSerializable<i32>>::get_write_size(any.len() as i32);
+                for value in any {
+                    size += <SizedString as SliceSerializable<&'d str>>::get_write_size(value.as_ref());
+                }
+                size
+            },
+            Self::AllOf(all) => {
+                let mut size = <VarInt as SliceSerializable<i32>>::get_write_size(all.len() as i32);
+                for value in all {
+                    size += <Single as SliceSerializable<u8>>::get_write_size(1);
+                    size += <SizedString as SliceSerializable<&'d str>>::get_write_size(value.as_ref());
+                }
+                size
+            },
+            Self::AllOfAnyOf(all_any) => {
+                let mut size = <VarInt as SliceSerializable<i32>>::get_write_size(all_any.len() as i32);
+                for any in all_any {
+                    size += <VarInt as SliceSerializable<i32>>::get_write_size(any.len() as i32);
+                    for value in any {
+                        size += <SizedString as SliceSerializable<&'d str>>::get_write_size(value.as_ref());
+                    }
+                }
+                size
+            },
+        }
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct Advancement<'a> {
+        pub parent: Option<Cow<'a, str>> as Option<SizedString>,
+        pub display_info: Option<AdvancementDisplayInfo<'a>>,
+        pub requirements: AdvancementRequirements<'a>,
+        pub sends_telemetry: bool as Single
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug, Clone)]
+    pub struct NamedAdvancement<'a> {
+        pub id: Cow<'a, str> as SizedString,
+        pub advancement: Advancement<'a>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct CriterionProgress<'a> {
+        pub id: Cow<'a, str> as SizedString,
+        pub time: Option<u64> as Option<BigEndian>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct NamedAdvancementProgress<'a> {
+        pub id: Cow<'a, str> as SizedString,
+        pub criteria: Vec<CriterionProgress<'a>> as SizedArray<CriterionProgress<'a>>
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct UpdateAdvancements<'a> {
+        pub reset: bool as Single,
+        pub added: Cow<'a, [NamedAdvancement<'a>]> as SizedArray<NamedAdvancement<'a>>,
+        pub removed: Vec<Cow<'a, str>> as SizedArray<SizedString>,
+        pub progress: Vec<NamedAdvancementProgress<'a>> as SizedArray<NamedAdvancementProgress<'a>>,
+        pub show_advancements: bool as Single
     }
 }
 
 // Update Attributes
 slice_serializable! {
     #[derive(Debug)]
-    pub struct AttributeModifier {
-        pub uuid: u128 as BigEndian,
+    pub struct UpdateAttributes<'a> {
+        pub entity_id: i32 as VarInt,
+        pub attribute: Cow<'a, [AttributeEntry<'a>]> as SizedArray<AttributeEntry>,
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Debug)]
+    pub struct AttributeEntry<'a> {
+        pub id: Attribute as AttemptFrom<VarInt, u8>,
+        pub value: f64 as BigEndian,
+        pub modifiers: Vec<AttributeModifier<'a>> as SizedArray<AttributeModifier>
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Debug)]
+    pub struct AttributeModifier<'a> {
+        pub id: Cow<'a, str> as SizedString<256>,
         pub amount: f64 as BigEndian,
         pub operation: u8 as Single,
         
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct Attribute {
-        pub key: String as SizedString,
-        pub value: f64 as BigEndian,
-        pub modifiers: Vec<AttributeModifier> as SizedArray<AttributeModifier>
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct UpdateAttributes {
-        pub entity_id: i32 as VarInt,
-        pub attribute: Vec<Attribute> as SizedArray<Attribute>,
     }
 }
 

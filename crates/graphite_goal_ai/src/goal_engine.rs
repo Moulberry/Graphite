@@ -1,9 +1,9 @@
-use std::{cmp::Ordering, collections::{BinaryHeap, HashMap}, hash::{BuildHasherDefault, Hash}};
+use std::{collections::{BinaryHeap, HashMap}, fmt::Debug, hash::{BuildHasherDefault, Hash}};
 
 use indexmap::{map::Entry, IndexMap};
 use rustc_hash::FxHasher;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Goal<G> {
     pub(crate) condition_mask: u64,
     pub(crate) condition_cmp: u64,
@@ -12,7 +12,7 @@ pub struct Goal<G> {
     pub(crate) goal: G
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Action<A> {
     pub(crate) condition_mask: u64,
     pub(crate) condition_cmp: u64,
@@ -23,6 +23,7 @@ pub struct Action<A> {
     pub(crate) action: A
 }
 
+#[derive(Clone)]
 pub struct GoalOrientedActionPlanner<K, G, A>
 where
     K: Clone + Hash + Eq + PartialEq,
@@ -31,12 +32,31 @@ where
 {
     // todo: do we need these?
     pub(crate) knowledge_types: HashMap<K, u32>,
-    pub(crate) goal_types: HashMap<G, u32>,
+    pub(crate) _goal_types: HashMap<G, u32>,
     pub(crate) action_types: HashMap<A, u32>,
 
     pub(crate) knowledge: u64,
     pub(crate) goals: Vec<Goal<G>>,
     pub(crate) actions: Vec<Action<A>>,
+}
+
+impl <K, G, A> Debug for GoalOrientedActionPlanner<K, G, A>
+where
+    K: Clone + Hash + Eq + PartialEq + Debug,
+    G: Clone + Hash + Eq + PartialEq,
+    A: Clone + Hash + Eq + PartialEq,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut knowledge = Vec::new();
+
+        for (k, index) in &self.knowledge_types {
+            if (self.knowledge & *index as u64) != 0 {
+                knowledge.push(k.clone());
+            }
+        }
+
+        f.debug_struct("GoalOrientedActionPlanner").field("knowledge", &knowledge).finish()
+    }
 }
 
 struct PlanNode<A: Clone> {

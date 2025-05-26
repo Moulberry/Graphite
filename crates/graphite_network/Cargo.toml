@@ -8,6 +8,8 @@ description = "Networking loop for Graphite server"
 [dependencies]
 mio = { version = "0.8.10", features = ["os-poll", "net"] }
 thiserror = "1.0.51"
+once_cell = "1.19.0"
+slab = "0.4.9"
 
+background_hang_monitor = { path = "../background_hang_monitor" }
 graphite_binary = { path = "../graphite_binary" }
-graphite_mc_protocol = { path = "../graphite_mc_protocol" }

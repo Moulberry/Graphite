@@ -1,27 +1,41 @@
-use std::{borrow::Cow, rc::Rc, cell::UnsafeCell};
+use std::{borrow::Cow, cell::UnsafeCell, collections::{hash_map::Entry, HashMap}, rc::Rc};
 
-use graphite_binary::{slice_serialization::*, nbt::CachedNBT};
-use graphite_mc_protocol::{play::{clientbound::{ChunkBlockData, ChunkLightData}, self}, IdentifiedPacket, types::BlockPosition};
+use graphite_binary::{slice_serialization::*, nbt::EncodedNBT};
+use graphite_mc_protocol::{play::{self, clientbound::{BundledPacketBuffer, ChunkBlockData, ChunkLightData, RemoveEntities}}, types::BlockPosition, IdentifiedPacket};
 use graphite_network::PacketBuffer;
+use rustc_hash::FxHashMap;
 use slab::Slab;
 
-use crate::{entity::{EntityExtension, GenericEntity}, player::{GenericPlayer, PlayerExtension}, world::paletted_container::{BiomePalettedContainer, BlockPalettedContainer}};
+use crate::{entity::{entity_view::EntityView, remote_entity::RemoteEntity, EntityBase}, player::{GenericPlayer, Player, PlayerExtension}, types::AABB, world::paletted_container::{BiomePalettedContainer, BlockPalettedContainer}};
 
-use super::{chunk_section::ChunkSection, entity_iterator::{EntityIterator, EntityIteratorMut, PlayerIterator, PlayerIteratorMut}};
+use super::{chunk_section::ChunkSection, entity_iterator::EntityIterator, player_iterator::{PlayerIterator, PlayerIteratorMut}, BlockGetter, PlayerId};
 
-pub(crate) struct ChunkEntityRef(usize);
-pub(crate) struct ChunkPlayerRef(usize);
+pub(crate) struct ChunkEntityRef {
+    id: usize,
+    entity_id: hecs::Entity
+}
+pub(crate) struct ChunkPlayerRef {
+    id: usize,
+    player_id: PlayerId
+}
 
 pub struct Chunk {
     block_sections: Vec<ChunkSection>,
 
     pub(crate) entity_viewable: PacketBuffer,
     pub(crate) chunk_viewable: PacketBuffer,
+    pub(crate) single_block_changes: FxHashMap<u32, (u16, u16)>,
 
-    pub(crate) entities: Slab<Rc<UnsafeCell<dyn GenericEntity>>>,
     pub(crate) players: Slab<Rc<UnsafeCell<dyn GenericPlayer>>>,
+    pub(crate) entities: Slab<hecs::Entity>,
+
+    pub(crate) solid_entity_aabbs: Vec<AABB>,
+    pub(crate) pending_solid_entity_aabbs: Vec<AABB>,
+    pub(crate) soft_entity_aabbs: Vec<AABB>,
+    pub(crate) pending_soft_entity_aabbs: Vec<AABB>,
 
     valid_cache: bool,
+    has_sent: bool,
     cached_block_data: PacketBuffer,
     cached_light_data: PacketBuffer,
 }
@@ -42,7 +56,7 @@ impl Chunk {
         }
         
         let chunk_block_data = ChunkBlockData {
-            heightmaps: Cow::Owned(CachedNBT::new()),
+            heightmaps: Cow::Borrowed(&[]),
             data: chunk_data.pop_written(),
             block_entity_count: 0,
             block_entity_data: &[]
@@ -93,75 +107,187 @@ impl Chunk {
         PlayerIteratorMut::new(self.players.iter_mut(), false)
     }
 
-    pub fn entities<E: EntityExtension>(&mut self) -> EntityIterator<'_, E> {
-        EntityIterator::new(self.entities.iter(), false)
-    }
-
-    pub fn entities_mut<E: EntityExtension>(&mut self) -> EntityIteratorMut<'_, E> {
-        EntityIteratorMut::new(self.entities.iter_mut(), false)
-    }
-
-    pub(crate) fn insert_entity(&mut self, entity: Rc<UnsafeCell<dyn GenericEntity>>) -> ChunkEntityRef {
+    pub(crate) fn insert_entity(&mut self, entity: hecs::Entity) -> ChunkEntityRef {
         let idx = self.entities.insert(entity);
-        ChunkEntityRef(idx)
+
+        ChunkEntityRef {
+            id: idx,
+            entity_id: entity
+        }
     }
 
     pub(crate) fn remove_entity(&mut self, chunk_ref: ChunkEntityRef) {
-        self.entities.remove(chunk_ref.0);
+        let removed = self.entities.remove(chunk_ref.id);
+        if removed != chunk_ref.entity_id {
+            panic!("Removed entity with wrong id");
+        }
+    }
+
+    // pub fn test<Q: hecs::Query>(&self, query: &mut PreparedQuery<Q>, world: &hecs::World) {
+    //     let mut borrow = query.query(world);
+    //     let mut view = borrow.view();
+    //     for (_, entity) in &self.entities {
+    //         let res = view.get_mut(*entity);
+    //     }
+    // }
+
+    pub fn entities<'a>(&'a self, world: &'a hecs::World) -> EntityIterator<'a> {
+        EntityIterator::new(self.entities.iter(), world)
+    }
+
+
+    pub fn entity_ids(&self) -> slab::Iter<'_, hecs::Entity> {
+        self.entities.iter()
     }
 
     pub(crate) fn insert_player(&mut self, player: Rc<UnsafeCell<dyn GenericPlayer>>) -> ChunkPlayerRef {
+        let player_id = unsafe { player.get().as_ref() }.unwrap().get_player_id();
         let idx = self.players.insert(player);
-        ChunkPlayerRef(idx)
+
+        ChunkPlayerRef {
+            id: idx,
+            player_id
+        }
     }
 
     pub(crate) fn remove_player(&mut self, chunk_ref: ChunkPlayerRef) {
-        self.players.remove(chunk_ref.0);
+        let removed = self.players.remove(chunk_ref.id);
+        if unsafe { removed.get().as_ref() }.unwrap().get_player_id() != chunk_ref.player_id {
+            panic!("Removed player with wrong id");
+        }
     }
 
     pub(crate) fn clear_viewable_packets(&mut self) {
         self.entity_viewable.clear();
         self.chunk_viewable.clear();
+        self.single_block_changes.clear();
     }
 
-    pub fn add_entity_viewable_packet<'a, I: std::fmt::Debug, T>(&mut self, packet: &'a T)
+    pub fn add_entity_viewable_packet<'r, 'd: 'r, I: std::fmt::Debug, T>(&mut self, packet: &'r T)
     where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
+        T: SliceSerializable<'r, 'd, T> + IdentifiedPacket<I> + 'd,
     {
-        let _ = self.entity_viewable.write_packet(packet);
+        packet.write_packet(&mut self.entity_viewable)
     }
 
-    pub fn write_viewable(&mut self, mut lambda: impl FnMut(&mut PacketBuffer)) {
+    pub fn write_viewable(&mut self, lambda: impl FnOnce(&mut PacketBuffer)) {
         lambda(&mut self.entity_viewable);
     }
 
-    pub fn copy_entity_viewable_packets(&self, buffer: &mut PacketBuffer) {
-        buffer.copy_from(&self.entity_viewable);
-    }
-
-    pub fn add_chunk_viewable_packet<'a, I: std::fmt::Debug, T>(&mut self, packet: &'a T)
+    pub fn add_chunk_viewable_packet<'r, 'd: 'r, I: std::fmt::Debug, T>(&mut self, packet: &'r T)
     where
-        T: SliceSerializable<'a, T> + IdentifiedPacket<I> + 'a,
+        T: SliceSerializable<'r, 'd, T> + IdentifiedPacket<I> + 'd,
     {
-        let _ = self.entity_viewable.write_packet(packet);
+        packet.write_packet(&mut self.chunk_viewable)
     }
 
     pub fn copy_chunk_viewable_packets(&self, buffer: &mut PacketBuffer) {
         buffer.copy_from(&self.chunk_viewable);
     }
 
-    pub fn write_spawn_entities_and_players(&mut self, buffer: &mut PacketBuffer) {
-        for (_, entity) in &mut self.entities {
-            unsafe { entity.get().as_ref() }.unwrap().write_spawn(buffer);
+    // todo: don't send to player when moving chunks
+    pub fn write_spawn_entities_and_players<P: PlayerExtension>(
+        &mut self,
+        world: &hecs::World,
+        remote_entities: &Slab<RemoteEntity>,
+        player: &mut Player<P>
+    ) {
+        if !self.players.is_empty() {
+            let player_id = player.entity_id;
+
+            for (_, other) in &self.players {
+                let other = unsafe { other.get().as_mut() }.unwrap();
+
+                if other.get_entity_id() != player_id {
+                    other.write_add_self_packet(&mut player.packet_buffer);
+                    player.write_add_self_packet(other.get_packet_buffer());
+                }
+            }
         }
-        // todo: players
+
+        let buffer = &mut player.packet_buffer;
+
+        if !self.entities.is_empty() {
+            let mut query = world.query::<(&EntityBase, Option<&EntityView>)>();
+            let query_view = query.view();
+    
+            for (_, entity) in &mut self.entities {
+                if let Some((base, view)) = query_view.get(*entity) {
+                    let mut bundle = BundledPacketBuffer::new(buffer);
+
+                    if let Some(view) = view {
+                        if let Some(spawn) = view.spawn {
+                            let entry = world.entity(*entity).unwrap();
+                            (spawn)(entry, &*base, &*view, &mut *bundle);
+                        }
+                    }
+
+                    for remote_entity in &base.remote_entities {
+                        remote_entities[remote_entity.slab_index].spawn(&mut *bundle, base.position, base.rotation.y, base.rotation.x);
+                    }
+                }
+            }
+        }
     }
 
-    pub fn write_despawn_entities_and_players(&mut self, despawn_list: &mut Vec<i32>, buffer: &mut PacketBuffer) {
-        for (_, entity) in &mut self.entities {
-            unsafe { entity.get().as_ref() }.unwrap().write_despawn(despawn_list, buffer);
+    pub fn write_despawn_entities_and_players<P: PlayerExtension>(
+        &mut self,
+        world: &hecs::World,
+        remote_entities: &Slab<RemoteEntity>,
+        despawn_vec: &mut Vec<i32>,
+        player: &mut Player<P>
+    ) {
+        if !self.players.is_empty() {
+            let player_id = player.entity_id;
+
+            for (_, other) in &self.players {
+                let other = unsafe { other.get().as_mut() }.unwrap();
+                
+                if other.get_entity_id() != player_id {
+                    despawn_vec.push(other.get_entity_id());
+
+                    RemoveEntities {
+                        entities: Cow::Borrowed(&[player_id]),
+                    }.write_packet(other.get_packet_buffer());
+                }
+            }
         }
-        // todo: players
+
+        let buffer = &mut player.packet_buffer;
+
+        if !self.entities.is_empty() {
+            let mut query = world.query::<(&EntityBase, Option<&EntityView>)>();
+            let query_view = query.view();
+    
+    
+            for (_, entity) in &mut self.entities {
+                if let Some((base, view)) = query_view.get(*entity) {
+                    let mut bundle = BundledPacketBuffer::new(buffer);
+
+                    for remote_entity in &base.remote_entities {
+                        remote_entities[remote_entity.slab_index].spawn(&mut *bundle, base.position, base.rotation.y, base.rotation.x);
+                    }
+
+                    // Despawn all ids
+                    if let Some(view) = view {
+                        if !view.entity_ids.is_empty() {
+                            despawn_vec.extend(&view.entity_ids);
+                        }
+                        
+                        // Call custom despawn function
+                        if let Some(despawn) = view.despawn {
+                            let entry = world.entity(*entity).unwrap();
+                            (despawn)(entry, &*base, &*view, despawn_vec, &mut *bundle);
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    pub fn iter_entities(&self) -> slab::Iter<'_, hecs::Entity> {
+        self.entities.iter()
     }
 
     pub fn has_players(&self) -> bool {
@@ -170,7 +296,7 @@ impl Chunk {
 
     pub fn write_immediately_to_players(&mut self, data: &[u8]) {
         for (_, player) in &self.players {
-            unsafe { player.get().as_mut().unwrap() }.send_packet_data(data);
+            unsafe { player.get().as_mut().unwrap() }.get_packet_buffer().copy_bytes(data);
         }
     }
 
@@ -183,6 +309,7 @@ impl Chunk {
         if !self.valid_cache {
             self.compute_cache();
         }
+        self.has_sent = true;
 
         let composite = DirectLevelChunkWithLight {
             chunk_x,
@@ -191,7 +318,7 @@ impl Chunk {
             chunk_light_data: self.cached_light_data.peek_written(),
         };
 
-        let packet_id = play::clientbound::PacketId::LevelChunkWithLight as u8;
+        let packet_id = play::clientbound::PlayPacket::LevelChunkWithLight as u8;
         let _ = packet_buffer.write_serializable(packet_id, &composite);
     }
 
@@ -200,9 +327,15 @@ impl Chunk {
             block_sections,
             entity_viewable: PacketBuffer::new(),
             chunk_viewable: PacketBuffer::new(),
-            entities: Slab::new(),
+            single_block_changes: FxHashMap::default(),
             players: Slab::new(),
+            entities: Slab::new(),
+            solid_entity_aabbs: Vec::new(),
+            pending_solid_entity_aabbs: Vec::new(),
+            soft_entity_aabbs: Vec::new(),
+            pending_soft_entity_aabbs: Vec::new(),
             valid_cache: false,
+            has_sent: false,
             cached_block_data: PacketBuffer::new(),
             cached_light_data: PacketBuffer::new(),
         }
@@ -251,6 +384,20 @@ impl Chunk {
         Self::new(block_sections)
     }
 
+    pub fn get_section(&self, chunk_y: i32) -> Option<&ChunkSection> {
+        if chunk_y < 0 {
+            return None;
+        }
+
+        let chunk_y = chunk_y as usize;
+        if chunk_y >= self.block_sections.len() {
+            return None; // out of bounds
+        }
+
+        let section = &self.block_sections[chunk_y];
+        Some(section)
+    }
+
     pub fn get_block(&self, x: i32, y: i32, z: i32) -> Option<u16> {
         if y < 0 {
             return None;
@@ -265,25 +412,57 @@ impl Chunk {
         Some(section.get_block((x & 0xF) as _, (y & 0xF) as _, (z & 0xF) as _))
     }
 
-    pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: u16) {
+    pub(crate) fn get_block_for_client(&self, x: i32, y: i32, z: i32) -> Option<u16> {
+        if y < 0 {
+            return None;
+        }
+
+        let chunk_y = (y >> 4) as usize;
+        if chunk_y >= self.block_sections.len() {
+            return None; // out of bounds
+        }
+
+        let key = (((x & 0xF) as u32) << 28) | ((y as u32) << 4) | ((z & 0xF) as u32);
+        if let Some((old_block, _)) = self.single_block_changes.get(&key) {
+            return Some(*old_block);
+        }
+
+        let section = &self.block_sections[chunk_y];
+        Some(section.get_block((x & 0xF) as _, (y & 0xF) as _, (z & 0xF) as _))
+    }
+
+    pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: u16) -> u16 {
         let chunk_y = (y >> 4) as usize;
         let previous = self.block_sections[chunk_y].set_block((x & 0xF) as _, (y & 0xF) as _, (z & 0xF) as _, block);
 
-        if previous.is_some() {
+        if self.has_sent && previous.is_some() {
             self.invalidate_cache();
-            self.add_chunk_viewable_packet(&graphite_mc_protocol::play::clientbound::BlockUpdate {
-                pos: BlockPosition::new(x, y, z),
-                block_state: block as _,
-            })
+
+            let key = (((x & 0xF) as u32) << 28) | ((y as u32) << 4) | ((z & 0xF) as u32);
+            match self.single_block_changes.entry(key) {
+                Entry::Occupied(mut occupied) => {
+                    let old_previous = occupied.get().0;
+                    occupied.insert((old_previous, block));
+                },
+                Entry::Vacant(vacant) => {
+                    vacant.insert((previous.unwrap_or(block), block));
+                },
+            }
         }
+
+        previous.unwrap_or(block)
     }
 
     pub fn set_block_light_array(&mut self, section_y: usize, light: Box<[u8]>) {
         self.invalidate_cache();
-
         let section = &mut self.block_sections[section_y];
-
         section.block_light = Some(light);
+    }
+
+    pub fn set_sky_light_array(&mut self, section_y: usize, light: Box<[u8]>) {
+        self.invalidate_cache();
+        let section = &mut self.block_sections[section_y];
+        section.sky_light = Some(light);
     }
 
     pub fn set_block_light(&mut self, x: i32, y: i32, z: i32, mut light: u8) {
@@ -313,6 +492,23 @@ impl Chunk {
 
             block_light[index] = light;
             section.block_light = Some(block_light);
+        }
+    }
+
+    pub fn section_count(&self) -> usize {
+        self.block_sections.len()
+    }
+}
+
+pub trait ChunkProvider: BlockGetter {
+    fn get_chunk(&self, x: i32, z: i32) -> Option<&Chunk>;
+    fn get_chunk_mut(&mut self, x: i32, z: i32) -> Option<&mut Chunk>;
+
+    fn set_block(&mut self, x: i32, y: i32, z: i32, block: u16) -> u16 {
+        if let Some(chunk) = self.get_chunk_mut(x >> 4, z >> 4) {
+            chunk.set_block(x, y, z, block)
+        } else {
+            0
         }
     }
 }

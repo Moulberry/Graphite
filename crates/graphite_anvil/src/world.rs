@@ -1,7 +1,7 @@
-use byteorder::ByteOrder;
-use graphite_binary::nbt::{NBT, TAG_COMPOUND_ID};
-use graphite_core_server::world::{chunk_section::ChunkSection, paletted_container::{self, BiomePalettedContainer, BlockPalettedContainer}, ChunkList};
-use graphite_mc_constants::block::BlockState;
+use std::collections::HashSet;
+
+use graphite_binary::nbt::{CompoundRef, TAG_COMPOUND_ID};
+use graphite_core_server::world::{chunk_list::ChunkList, chunk_section::ChunkSection, paletted_container::{self, BiomePalettedContainer, BlockPalettedContainer}};
 
 use crate::ChunkCoord;
 
@@ -12,7 +12,7 @@ pub struct AnvilWorld {
     pub(crate) min_chunk_x: isize,
     pub(crate) min_chunk_y: isize,
     pub(crate) min_chunk_z: isize,
-    chunks: Vec<Vec<ChunkSection>>,
+    chunks: Vec<Vec<ChunkSection>>
 }
 
 impl From<&AnvilWorld> for ChunkList {
@@ -41,7 +41,8 @@ pub fn load_anvil_world(
     min: ChunkCoord,
     chunk_height: usize,
     max: ChunkCoord,
-    folder: include_dir::Dir,
+    folder: &include_dir::Dir,
+    load_light: bool
 ) -> Result<AnvilWorld, ()> { // todo: return errors
     let size_x = (max.x - min.x + 1) as usize;
     let size_y = chunk_height;
@@ -51,7 +52,10 @@ pub fn load_anvil_world(
 
     let mut world_min_y: Option<i32> = None;
 
-    super::load_anvil(min, max, folder, |chunk_x, chunk_z, chunk_data| {
+    super::load_anvil(min, max, folder, "region/", |chunk_x, chunk_z, chunk_data| {
+        let Some(chunk_data) = chunk_data.as_compound() else {
+            return;
+        };
         let Some(min_y) = chunk_data.find_int("yPos") else {
             return;
         };
@@ -66,7 +70,7 @@ pub fn load_anvil_world(
         let rel_x = (chunk_x - min.x) as usize;
         let rel_z = (chunk_z - min.z) as usize;
         let chunk_index = rel_x + rel_z * size_x;
-        read_sections_into(&chunk_data, *min_y, &mut chunks[chunk_index]);
+        read_sections_into(chunk_data, *min_y, &mut chunks[chunk_index], load_light);
     });
 
     Ok(AnvilWorld {
@@ -80,7 +84,7 @@ pub fn load_anvil_world(
     })
 }
 
-fn read_sections_into(chunk_data: &NBT, min_y: i32, section_chunks: &mut Vec<ChunkSection>) {
+fn read_sections_into(chunk_data: CompoundRef<'_>, min_y: i32, section_chunks: &mut Vec<ChunkSection>, load_light: bool) {
     let Some(sections) = chunk_data.find_list("sections", TAG_COMPOUND_ID) else {
         return;
     };
@@ -106,33 +110,70 @@ fn read_sections_into(chunk_data: &NBT, min_y: i32, section_chunks: &mut Vec<Chu
             continue;
         };
 
+        let block_light = if load_light {
+            section.find_byte_array("BlockLight").map(|v| vec_i8_into_u8(v.clone()).into_boxed_slice())
+        } else {
+            None
+        };
+        let sky_light = if load_light {
+            section.find_byte_array("SkyLight").map(|v| vec_i8_into_u8(v.clone()).into_boxed_slice())
+        } else {
+            None
+        };
+
         let mut palette_vec: Vec<u16> = Vec::with_capacity(palette.len());
+        let mut palette_set = HashSet::new();
 
         for palette_entry in palette.iter() {
             let id = graphite_mc_constants::block::parse_block_state(palette_entry.as_compound().unwrap());
+
+            if !palette_set.insert(id) {
+                panic!("duplicate in palette: {:?}", palette);
+            }
+
             palette_vec.push(id);
         }
 
         let Some(data) = block_states.find_long_array("data") else {
             if !palette_vec.is_empty() {
                 let non_air_blocks = if palette_vec[0] == 0 { 0 } else { 4096 };
-                section_chunks[section_index as usize] = ChunkSection::new(
+                let mut section = ChunkSection::new(
                     non_air_blocks,
                     BlockPalettedContainer::filled(palette_vec[0]),
                     BiomePalettedContainer::filled(0),
                 );
+                section.block_light = block_light;
+                section.sky_light = sky_light;
+                section_chunks[section_index as usize] = section;
             }
             continue;
         };
 
         if let Some((non_air_blocks, block_palette)) = create_palette(palette_vec, data) {
-            section_chunks[section_index as usize] = ChunkSection::new(
+            let mut section = ChunkSection::new(
                 non_air_blocks,
                 block_palette,
                 BiomePalettedContainer::filled(0),
             );
+            section.block_light = block_light;
+            section.sky_light = sky_light;
+            section_chunks[section_index as usize] = section;
         }
     }
+}
+
+fn vec_i8_into_u8(v: Vec<i8>) -> Vec<u8> {
+    // first, make sure v's destructor doesn't free the data
+    // it thinks it owns when it goes out of scope
+    let mut v = std::mem::ManuallyDrop::new(v);
+
+    // then, pick apart the existing Vec
+    let p = v.as_mut_ptr();
+    let len = v.len();
+    let cap = v.capacity();
+    
+    // finally, adopt the data into a new Vec
+    unsafe { Vec::from_raw_parts(p as *mut u8, len, cap) }
 }
 
 fn create_palette(palette_vec: Vec<u16>, data: &Vec<i64>) -> Option<(u16, BlockPalettedContainer)> {
@@ -149,20 +190,29 @@ fn create_palette(palette_vec: Vec<u16>, data: &Vec<i64>) -> Option<(u16, BlockP
 }
 
 fn create_array_palette(palette_vec: Vec<u16>, data: &Vec<i64>) -> (u16, BlockPalettedContainer) {
+    let mut set = HashSet::new();
+    for block in &palette_vec {
+        if !set.insert(block) {
+            panic!("duplicate in palette: {}", *block);
+        }
+    }
+
     let mut array_palette: heapless::Vec<(u16, usize), 16> = heapless::Vec::new();
     for block in palette_vec {
         array_palette.push((block, 0)).unwrap();
     }
 
-    let mut array_data = [0_u8; 2048];
-    byteorder::BigEndian::write_i64_into(data, &mut array_data);
+    assert_eq!(data.len(), 256);
 
+    let mut array_data = [0_u64; 256];
     let mut non_air_blocks = 0;
 
-    for byte in array_data {
-        for nibble_index in 0..2 {
-            let nibble = (byte >> (nibble_index*4)) & 0xF;
-            let (block, count) = &mut array_palette[nibble as usize];
+    for (index, &value) in data.iter().enumerate() {
+        array_data[index] = value as u64;
+        
+        for i in 0..16 {
+            let palette_id = (value >> (i*4)) & 0xF;
+            let (block, count) = &mut array_palette[palette_id as usize];
 
             *count += 1;
             if *block != 0 {
@@ -173,6 +223,9 @@ fn create_array_palette(palette_vec: Vec<u16>, data: &Vec<i64>) -> (u16, BlockPa
 
     (non_air_blocks, unsafe { BlockPalettedContainer::array(array_palette, array_data) })
 }
+
+const DIRECT_VOLUME: usize = paletted_container::BLOCK_SIDE_LEN * paletted_container::BLOCK_SIDE_LEN * paletted_container::BLOCK_SIDE_LEN;
+const DIRECT_CAPACITY: usize = DIRECT_VOLUME / (64 / paletted_container::BLOCK_ENTRY_BITS);
 
 fn create_direct_palette(palette_vec: Vec<u16>, data: &Vec<i64>) -> (u16, BlockPalettedContainer) {
     let from_bits_per_block = ((palette_vec.len() - 1).ilog2() + 1) as usize;
@@ -185,9 +238,9 @@ fn create_direct_palette(palette_vec: Vec<u16>, data: &Vec<i64>) -> (u16, BlockP
     let to_mask = (1 << to_bits_per_block) - 1;
 
     let mut non_air_blocks = 0;
-    let mut contents = [0_u64; paletted_container::BLOCK_DIRECT_LEN];
+    let mut contents = [0_u64; DIRECT_CAPACITY];
 
-    for index in 0..4096 {
+    for index in 0..DIRECT_VOLUME {
         let data_index = index / from_per_array;
         let shift_by = from_bits_per_block * (index % from_per_array);
 

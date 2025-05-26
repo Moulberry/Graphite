@@ -1,0 +1,208 @@
+{
+  "empty": {
+    "attributes": {},
+    "minStateId": 0,
+    "stateAttributes": {},
+    "properties": {}
+  },
+  "flowing_water": {
+    "attributes": {
+      "ownHeight": 0.1111111119389534,
+      "amount": 1
+    },
+    "minStateId": 1,
+    "stateAttributes": {
+      "2": {
+        "ownHeight": 0.2222222238779068,
+        "amount": 2
+      },
+      "3": {
+        "ownHeight": 0.3333333432674408,
+        "amount": 3
+      },
+      "4": {
+        "ownHeight": 0.4444444477558136,
+        "amount": 4
+      },
+      "5": {
+        "ownHeight": 0.5555555820465088,
+        "amount": 5
+      },
+      "6": {
+        "ownHeight": 0.6666666865348816,
+        "amount": 6
+      },
+      "7": {
+        "ownHeight": 0.7777777910232544,
+        "amount": 7
+      },
+      "8": {
+        "ownHeight": 0.8888888955116272,
+        "amount": 8
+      },
+      "10": {
+        "ownHeight": 0.2222222238779068,
+        "amount": 2
+      },
+      "11": {
+        "ownHeight": 0.3333333432674408,
+        "amount": 3
+      },
+      "12": {
+        "ownHeight": 0.4444444477558136,
+        "amount": 4
+      },
+      "13": {
+        "ownHeight": 0.5555555820465088,
+        "amount": 5
+      },
+      "14": {
+        "ownHeight": 0.6666666865348816,
+        "amount": 6
+      },
+      "15": {
+        "ownHeight": 0.7777777910232544,
+        "amount": 7
+      },
+      "16": {
+        "ownHeight": 0.8888888955116272,
+        "amount": 8
+      }
+    },
+    "properties": {
+      "falling": {
+        "type": "bool",
+        "defaultValue": true
+      },
+      "level": {
+        "type": "int",
+        "defaultValue": 1,
+        "values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      }
+    }
+  },
+  "water": {
+    "attributes": {
+      "ownHeight": 0.8888888955116272,
+      "amount": 8,
+      "isSource": true
+    },
+    "minStateId": 17,
+    "stateAttributes": {},
+    "properties": {
+      "falling": {
+        "type": "bool",
+        "defaultValue": true
+      }
+    }
+  },
+  "flowing_lava": {
+    "attributes": {
+      "ownHeight": 0.1111111119389534,
+      "amount": 1
+    },
+    "minStateId": 19,
+    "stateAttributes": {
+      "20": {
+        "ownHeight": 0.2222222238779068,
+        "amount": 2
+      },
+      "21": {
+        "ownHeight": 0.3333333432674408,
+        "amount": 3
+      },
+      "22": {
+        "ownHeight": 0.4444444477558136,
+        "amount": 4
+      },
+      "23": {
+        "ownHeight": 0.5555555820465088,
+        "amount": 5
+      },
+      "24": {
+        "ownHeight": 0.6666666865348816,
+        "amount": 6
+      },
+      "25": {
+        "ownHeight": 0.7777777910232544,
+        "amount": 7
+      },
+      "26": {
+        "ownHeight": 0.8888888955116272,
+        "amount": 8
+      },
+      "28": {
+        "ownHeight": 0.2222222238779068,
+        "amount": 2
+      },
+      "29": {
+        "ownHeight": 0.3333333432674408,
+        "amount": 3
+      },
+      "30": {
+        "ownHeight": 0.4444444477558136,
+        "amount": 4
+      },
+      "31": {
+        "ownHeight": 0.5555555820465088,
+        "amount": 5
+      },
+      "32": {
+        "ownHeight": 0.6666666865348816,
+        "amount": 6
+      },
+      "33": {
+        "ownHeight": 0.7777777910232544,
+        "amount": 7
+      },
+      "34": {
+        "ownHeight": 0.8888888955116272,
+        "amount": 8
+      }
+    },
+    "properties": {
+      "falling": {
+        "type": "bool",
+        "defaultValue": true
+      },
+      "level": {
+        "type": "int",
+        "defaultValue": 1,
+        "values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      }
+    }
+  },
+  "lava": {
+    "attributes": {
+      "ownHeight": 0.8888888955116272,
+      "amount": 8,
+      "isSource": true
+    },
+    "minStateId": 35,
+    "stateAttributes": {},
+    "properties": {
+      "falling": {
+        "type": "bool",
+        "defaultValue": true
+      }
+    }
+  }
+}

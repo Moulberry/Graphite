@@ -12,10 +12,10 @@ num_enum = "0.5.7"
 strum = "0.25.0"
 strum_macros = "0.25.0"
 readonly = "0.2.1"
-graphite_mc_protocol = { path = "../graphite_mc_protocol", version = "0.1.0" }
 graphite_binary = { path = "../graphite_binary", version = "0.1.0" }
-graphite_network = { path = "../graphite_network" }
 phf = "0.11.2"
+enumset = "1.1.5"
+enum-map = "2.7.3"
 
 [build-dependencies]
 thiserror = "1.0.31"

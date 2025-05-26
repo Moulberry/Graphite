@@ -1,15 +1,12 @@
 use graphite_binary::slice_serialization::*;
+use graphite_mc_constants::types::*;
 
 use crate::identify_packets;
-use crate::types::ArmPosition;
+use crate::types::hashed_stack::HashedStack;
 use crate::types::BlockHitResult;
 use crate::types::BlockPosition;
-use crate::types::ChatVisibility;
-use crate::types::Direction;
-use crate::types::Hand;
-use crate::types::HandAction;
-use crate::types::MoveAction;
-use crate::types::ProtocolItemStack;
+use crate::types::ChangedSlot;
+use crate::types::ItemStack;
 use crate::IdentifiedPacket;
 use num_enum::TryFromPrimitive;
 
@@ -17,59 +14,68 @@ identify_packets! {
     PacketId,
     AcceptTeleportation = 0x00,
     // BlockEntityTagQuery = 0x01,
-    // ChangeDifficulty = 0x02,
-    // ChatAck = 0x03,
-    ChatCommand<'_> = 0x04,
-    // Chat = 0x05,
-    // PlayerSession = 0x06
-    // ChunkBatchReceived = 0x07,
-    // ClientStatus = 0x08,
-    ClientInformation<'_> = 0x09,
-    // CommandSuggestion = 0x0a,
-    // AcknowledgeConfiguration = 0x0b,
-    // ContainerButtonClick = 0x0c,
-    ContainerClick<'_> = 0x0d,
-    // ContainerClose = 0x0e,
-    // ChangeContainerSlotState = 0x0f,
-    CustomPayload<'_> = 0x10,
-    // EditBook = 0x11,
-    // EntityTagQuery = 0x12,
-    InteractEntity = 0x13,
-    // JigsawGenerate = 0x14,
-    KeepAlive = 0x15,
-    // LockDifficulty = 0x16,
-    MovePlayerPos = 0x17,
-    MovePlayerPosRot = 0x18,
-    MovePlayerRot = 0x19,
-    MovePlayerOnGround = 0x1a,
-    // MoveVehicle = 0x1b,
-    // PaddleBoat = 0x1c,
-    // PickItem = 0x1d,
-    // PingRequest = 0x1e,
-    // PlaceRecipe = 0x1f,
-    PlayerAbilities = 0x20,
-    PlayerHandAction = 0x21,
-    PlayerMoveAction = 0x22,
-    // PlayerInput = 0x23,
-    // Pong = 0x24,
-    // RecipeBookChangeSettings = 0x25,
-    // RecipeBookSeenRecipe = 0x26,
-    // RenameItem = 0x27,
-    // ResourcePack = 0x28,
-    // SeenAdvancements = 0x29,
-    // SelectTrade = 0x2a,
-    // SetBeaconEffect = 0x2b,
-    SetCarriedItem = 0x2c,
-    // SetCommandBlock = 0x2d,
-    // SetCommandBlockMinecart = 0x2e,
-    SetCreativeModeSlot<'_> = 0x2f,
-    // SetJigsawBlock = 0x30,
-    // SetStructureBlock = 0x31,
-    // UpdateSign = 0x32,
-    Swing = 0x33,
-    // TeleportToEntity = 0x34,
-    UseItemOn = 0x35,
-    UseItem = 0x36
+    BundleItemSelected = 0x02,
+    // ChangeDifficulty = 0x03,
+    // ChatAck = 0x04,
+    ChatCommand<'_> = 0x05,
+    // ChatCommandSigned = 0x06,
+    // Chat = 0x07,
+    // ChatSessionUpdate = 0x08
+    // ChunkBatchReceived = 0x09,
+    ClientAction = 0x0a,
+    ClientTickEnd = 0x0b,
+    ClientInformation<'_> = 0x0c,
+    CommandSuggestion<'_> = 0x0d,
+    AcknowledgeConfiguration = 0x0e,
+    // ContainerButtonClick = 0x0f,
+    ContainerClick = 0x10,
+    ContainerClose = 0x11,
+    // ContainerSlotStateChanged = 0x12,
+    // CookieResponse = 0x13,
+    CustomPayload<'_> = 0x14,
+    // DebugSampleSubscription = 0x15,
+    // EditBook = 0x16,
+    // EntityTagQuery = 0x17,
+    InteractEntity = 0x18,
+    // JigsawGenerate = 0x19,
+    KeepAlive = 0x1a,
+    // LockDifficulty = 0x1b,
+    MovePlayerPos = 0x1c,
+    MovePlayerPosRot = 0x1d,
+    MovePlayerRot = 0x1e,
+    MovePlayerOnGround = 0x1f,
+    // MoveVehicle = 0x20,
+    // PaddleBoat = 0x21,
+    // PickItemFromBlock = 0x22,
+    // PickItemFromEntity = 0x23,
+    // PingRequest = 0x24,
+    PlaceRecipe = 0x25,
+    PlayerAbilities = 0x26,
+    PlayerHandAction = 0x27,
+    PlayerMoveAction = 0x28,
+    PlayerInput = 0x29,
+    PlayerLoaded = 0x2a,
+    Pong = 0x2b,
+    // RecipeBookChangeSettings = 0x2c,
+    // RecipeBookSeenRecipe = 0x2d,
+    // RenameItem = 0x2e,
+    // ResourcePack = 0x2f,
+    // SeenAdvancements = 0x30,
+    SelectTrade = 0x31,
+    // SetBeaconEffect = 0x32,
+    SetCarriedItem = 0x33,
+    // SetCommandBlock = 0x34,
+    // SetCommandBlockMinecart = 0x35,
+    SetCreativeModeSlot = 0x36,
+    // SetJigsawBlock = 0x37,
+    // SetStructureBlock = 0x38,
+    // SetTestBlock = 0x39,
+    // UpdateSign = 0x3a,
+    Swing = 0x3b,
+    // TeleportToEntity = 0x3c,
+    // TestInstanceBlockAction = 0x3d,
+    UseItemOn = 0x3e,
+    UseItem = 0x3f
 }
 
 // Accept Teleportation
@@ -81,21 +87,21 @@ slice_serializable! {
     }
 }
 
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct BundleItemSelected {
+        pub slot: i32 as VarInt,
+        pub selected_index: i32 as VarInt,
+    }
+}
+
 // Chat Command
 
 slice_serializable! {
     #[derive(Debug)]
     pub struct Signature<'a> {
-        pub string: &'a str as SizedString<256>,
-        pub bytes: &'a [u8] as SizedBlob<16> // 300?
-    }
-}
-
-slice_serializable! {
-    #[derive(Debug)]
-    pub struct ReceivedMessage<'a> {
-        pub from_uuid: u128 as BigEndian,
-        pub bytes: &'a [u8] as SizedBlob<300>
+        pub string: &'a str as SizedString<16>,
+        pub bytes: &'a [u8] as FixedBlob<256>
     }
 }
 
@@ -103,20 +109,34 @@ slice_serializable! {
     #[derive(Debug)]
     pub struct ChatCommand<'a> {
         pub command: &'a str as SizedString<256>,
-        pub timestamp: u64 as BigEndian,
-        pub salt: u64 as BigEndian,
-        pub signatures: Vec<Signature<'a>> as SizedArray<Signature<'_>>,
-        pub signed: bool as Single,
-        pub last_seen_messages: Vec<ReceivedMessage<'a>> as SizedArray<ReceivedMessage>,
-
-        // only set if the player didn't see the last message (eg. message is from someone they blocked)
-        // the client still informs the server, for ordering reasons
-        pub last_received_message: Option<ReceivedMessage<'a>>
     }
 }
 
-// Client Information
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ChatCommandSigned<'a> {
+        pub command: &'a str as SizedString<256>,
+        pub timestamp: u64 as BigEndian,
+        pub salt: u64 as BigEndian,
+        pub signatures: Vec<Signature<'a>> as SizedArray<Signature<'_>, 8>,
 
+        pub ignored: &'a [u8] as GreedyBlob
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct ClientAction {
+        pub action: graphite_mc_constants::types::ClientAction as AttemptFrom<Single, u8>,
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct ClientTickEnd;
+}
+
+// Client Information
 slice_serializable! {
     #[derive(Debug)]
     pub struct ClientInformation<'a> {
@@ -125,17 +145,45 @@ slice_serializable! {
         pub chat_visibility: ChatVisibility as AttemptFrom<Single, u8>,
         pub chat_colors: bool as Single,
         pub model_customization: i8 as Single,
-        pub arm_position: ArmPosition as AttemptFrom<Single, u8>,
+        pub arm_position: HumanoidArm as AttemptFrom<Single, u8>,
         pub text_filtering_enabled: bool as Single,
-        pub show_on_server_list: bool as Single
+        pub show_on_server_list: bool as Single,
+        pub particle_status: ParticleStatus as AttemptFrom<Single, u8>
     }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct CommandSuggestion<'a> {
+        pub id: i32 as VarInt,
+        pub command: &'a str as SizedString<256>,
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct AcknowledgeConfiguration;
 }
 
 // Container Click
 slice_serializable! {
     #[derive(Debug)]
-    pub struct ContainerClick<'a> {
-        pub data: &'a [u8] as GreedyBlob
+    pub struct ContainerClick {
+        pub container_id: i32 as VarInt,
+        pub state_id: i32 as VarInt,
+        pub slot: i16 as BigEndian,
+        pub button: i8 as Single,
+        pub mode: ClickType as AttemptFrom<Single, u8>,
+        pub changed_slots: Vec<ChangedSlot> as SizedArray<ChangedSlot, 128>,
+        pub carried_item: Option<HashedStack>
+    }
+}
+
+// Container Close
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct ContainerClose {
+        pub container_id: i32 as VarInt
     }
 }
 
@@ -154,7 +202,7 @@ slice_serializable! {
     #[derive(Debug)]
     pub enum InteractMode {
         Interact {
-            hand: Hand as AttemptFrom<Single, u8>
+            hand: InteractionHand as AttemptFrom<Single, u8>
         },
         Attack {
         },
@@ -162,7 +210,7 @@ slice_serializable! {
             offset_x: f32 as BigEndian,
             offset_y: f32 as BigEndian,
             offset_z: f32 as BigEndian,
-            hand: Hand as AttemptFrom<Single, u8>
+            hand: InteractionHand as AttemptFrom<Single, u8>
         }
     }
 }
@@ -191,7 +239,8 @@ slice_serializable! {
         pub x: f64 as BigEndian,
         pub y: f64 as BigEndian,
         pub z: f64 as BigEndian,
-        pub on_ground: bool as Single
+        pub on_ground: bool as packed!(),
+        pub horizontal_collision: bool as packed!()
     }
 }
 
@@ -200,7 +249,8 @@ slice_serializable! {
     pub struct MovePlayerRot {
         pub yaw: f32 as BigEndian,
         pub pitch: f32 as BigEndian,
-        pub on_ground: bool as Single
+        pub on_ground: bool as packed!(),
+        pub horizontal_collision: bool as packed!()
     }
 }
 
@@ -212,14 +262,25 @@ slice_serializable! {
         pub z: f64 as BigEndian,
         pub yaw: f32 as BigEndian,
         pub pitch: f32 as BigEndian,
-        pub on_ground: bool as Single
+        pub on_ground: bool as packed!(),
+        pub horizontal_collision: bool as packed!()
     }
 }
 
 slice_serializable! {
     #[derive(Debug)]
     pub struct MovePlayerOnGround {
-        pub on_ground: bool as Single
+        pub on_ground: bool as packed!(),
+        pub horizontal_collision: bool as packed!()
+    }
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlaceRecipe {
+        pub container_id: i32 as VarInt,
+        pub recipe_id: i32 as VarInt,
+        pub use_max_items: bool as Single
     }
 }
 
@@ -251,6 +312,39 @@ slice_serializable! {
     }
 }
 
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct PlayerInput {
+        pub forward: bool as packed!(),
+        pub backward: bool as packed!(),
+        pub left: bool as packed!(),
+        pub right: bool as packed!(),
+        pub jump: bool as packed!(),
+        pub shift: bool as packed!(),
+        pub sprint: bool as packed!(),
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct PlayerLoaded;
+}
+
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct Pong {
+        pub id: i32 as BigEndian,
+    }
+}
+
+// Select Trade
+slice_serializable! {
+    #[derive(Debug)]
+    pub struct SelectTrade {
+        pub trade: i32 as VarInt
+    }
+}
+
 // Set Carried Item
 slice_serializable! {
     #[derive(Debug)]
@@ -262,9 +356,9 @@ slice_serializable! {
 // Set Creative Mode Slot
 slice_serializable! {
     #[derive(Debug)]
-    pub struct SetCreativeModeSlot<'a> {
+    pub struct SetCreativeModeSlot {
         pub slot: i16 as BigEndian,
-        pub item: ProtocolItemStack<'a>
+        pub item: ItemStack
     }
 }
 
@@ -272,7 +366,7 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct Swing {
-        pub hand: Hand as AttemptFrom<Single, u8>
+        pub hand: InteractionHand as AttemptFrom<Single, u8>
     }
 }
 
@@ -280,7 +374,7 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct UseItemOn {
-        pub hand: Hand as AttemptFrom<Single, u8>,
+        pub hand: InteractionHand as AttemptFrom<Single, u8>,
         pub block_hit: BlockHitResult,
         pub sequence: i32 as VarInt
     }
@@ -290,7 +384,9 @@ slice_serializable! {
 slice_serializable! {
     #[derive(Debug)]
     pub struct UseItem {
-        pub hand: Hand as AttemptFrom<Single, u8>,
-        pub sequence: i32 as VarInt
+        pub hand: InteractionHand as AttemptFrom<Single, u8>,
+        pub sequence: i32 as VarInt,
+        pub yaw: f32 as BigEndian,
+        pub pitch: f32 as BigEndian,
     }
 }

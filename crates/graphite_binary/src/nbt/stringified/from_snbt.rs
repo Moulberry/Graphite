@@ -5,10 +5,7 @@ use anyhow::bail;
 use crate::nbt::*;
 
 pub fn from_snbt(mut snbt: &str) -> anyhow::Result<NBT> {
-    let mut nodes = Vec::new();
-
-    // todo: check if using peekable gives perf
-    // let snbt = snbt.chars().peekable();
+    let mut nodes = Slab::new();
 
     // Make sure snbt starts with an opening brace
     let next_char = peek_non_whitespace(&mut snbt)?;
@@ -28,14 +25,16 @@ pub fn from_snbt(mut snbt: &str) -> anyhow::Result<NBT> {
         }
     }
 
+    let root_index = nodes.insert(NBTNode::Compound(children));
+
     Ok(NBT {
         root_name: String::new(),
-        root_children: children,
+        root_index,
         nodes,
     })
 }
 
-fn read_node(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<(usize, TagType)> {
+fn read_node(snbt: &mut &str, nodes: &mut Slab<NBTNode>) -> anyhow::Result<(usize, TagType)> {
     let (node, type_id) = match peek_non_whitespace(snbt)? {
         '0'..='9' | '.' | '-' => read_numeric_node(snbt)?,
         '{' => {
@@ -67,8 +66,8 @@ fn read_node(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<(usize
         c => bail!("unknown start of type: {}", c),
     };
 
-    nodes.push(node);
-    Ok((nodes.len() - 1, type_id))
+    let idx = nodes.insert(node);
+    Ok((idx, type_id))
 }
 
 fn peek_non_whitespace(snbt: &mut &str) -> anyhow::Result<char> {
@@ -83,7 +82,7 @@ fn peek_non_whitespace(snbt: &mut &str) -> anyhow::Result<char> {
     bail!("next_char: unexpected end of input");
 }
 
-fn read_compound(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<NBTCompound> {
+fn read_compound(snbt: &mut &str, nodes: &mut Slab<NBTNode>) -> anyhow::Result<NBTCompound> {
     let mut children = NBTCompound(Vec::new());
 
     // Special case for empty compound `{}`
@@ -252,7 +251,7 @@ enum PrimArrParseState {
     InNumber { start: usize },
 }
 
-fn read_array_node(snbt: &mut &str, nodes: &mut Vec<NBTNode>) -> anyhow::Result<(NBTNode, TagType)> {
+fn read_array_node(snbt: &mut &str, nodes: &mut Slab<NBTNode>) -> anyhow::Result<(NBTNode, TagType)> {
     let next_char = peek_non_whitespace(snbt)?;
     match next_char {
         // Primitive ByteArray

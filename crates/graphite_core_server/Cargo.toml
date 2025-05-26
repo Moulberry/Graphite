@@ -8,6 +8,10 @@ description = "Core server implementation for the graphite_minecraft project"
 [dependencies]
 anyhow = "1.0.57"
 message-io = "0.18.0"
+num_enum = "0.5.7"
+strum = "0.25.0"
+strum_macros = "0.25.0"
+hecs = "0.10.4"
 mio = { version = "0.8.10", features = ["os-poll", "net"] }
 
 graphite_binary = { path = "../graphite_binary" }
@@ -15,6 +19,7 @@ graphite_mc_protocol = { path = "../graphite_mc_protocol" }
 graphite_network = { path = "../graphite_network" }
 graphite_concierge = { path = "../graphite_concierge" }
 graphite_mc_constants = { path = "../graphite_mc_constants" }
+graphite_command = { path = "../graphite_command" }
 slab = "0.4.9"
 enum_dispatch = "0.3.12"
 downcast-rs = "1.2.0"
@@ -29,6 +34,10 @@ serde = "1.0.196"
 serde_json = "1.0.113"
 rustc-hash = "1.1.0"
 parry3d = "0.13.6"
+byteorder = "1.5.0"
+enumset = "1.1.5"
+enum-map = "2.7.3"
+float_next_after = "1.0.0"
 
 [dev-dependencies]
 proptest = "1.0.0"

@@ -1,19 +1,29 @@
-use std::{borrow::Cow, marker::PhantomData};
-
-use graphite_binary::nbt::{CachedNBT, NBT, TAG_FLOAT_ID};
-use graphite_core_server::{entity::{entity_view_controller::EntityViewController, next_entity_id, Entity, EntityExtension}, world::WorldExtension};
-use graphite_mc_constants::{block, entity::{BlockDisplayMetadata, ItemDisplayMetadata, Metadata}, item::Item};
-use graphite_mc_protocol::{play, types::ProtocolItemStack};
+use glam::DVec3;
+use graphite_binary::nbt::{CompoundRef, NBT, TAG_DOUBLE_ID};
+use graphite_core_server::entity::{entity_view::{self, EntityView}, EntityBase};
+use graphite_mc_constants::{entity::ItemDisplayMetadata, item::Item};
+use graphite_mc_protocol::{play::clientbound::{AddEntity, SetEntityData}, types::{data_component::{CustomModelData, DataComponentMap}, ItemStack}, IdentifiedPacket};
 use graphite_network::PacketBuffer;
+use hecs::{EntityBuilder, EntityRef};
 
-pub fn get_item_and_custom_model_data(entity: &NBT) -> Option<(Item, i32)> {
+use crate::transform::Transform;
+
+pub fn get_item_and_custom_model_data(entity: CompoundRef<'_>) -> Option<(Item, i32)> {
     if let Some(item) = entity.find_compound("item") {
         let item_string = item.find_string("id").unwrap();
         let item_u16 = graphite_mc_constants::item::string_to_u16(item_string).unwrap();
+        let item_type: Item = item_u16.try_into().ok()?;
 
         if let Some(tag) = item.find_compound("tag") {
-            if let Some(custom_model_data) = tag.find_int("CustomModelData") {
-                return item_u16.try_into().ok().and_then(|item| Some((item, *custom_model_data)));
+            let custom_model_data: Option<i32> = tag.find_numeric("CustomModelData");
+            if let Some(custom_model_data) = custom_model_data {
+                return Some((item_type, custom_model_data));
+            }
+        }
+        if let Some(tag) = item.find_compound("components") {
+            let custom_model_data: Option<i32> = tag.find_numeric("minecraft:custom_model_data");
+            if let Some(custom_model_data) = custom_model_data {
+                return Some((item_type, custom_model_data));
             }
         }
     }
@@ -21,158 +31,146 @@ pub fn get_item_and_custom_model_data(entity: &NBT) -> Option<(Item, i32)> {
     None
 }
 
-pub struct ItemDisplay<W: WorldExtension> {
-    _phantom: PhantomData<W>,
-    item: i32,
-    item_nbt: CachedNBT,
-    translation: (f32, f32, f32),
-    left_rotation: (f32, f32, f32, f32),
-    scale: (f32, f32, f32),
-    right_rotation: (f32, f32, f32, f32),
+pub fn get_custom_model(entity: CompoundRef<'_>) -> Option<String> {
+    let item = entity.find_compound("item")?;
+    let components = item.find_compound("components")?;
+    let item_model = components.find_string("minecraft:item_model")?;
+
+    Some(item_model.clone())
 }
 
-impl <W: WorldExtension> ItemDisplay<W> {
-    pub fn new(entity: NBT) -> Self {
-        let translation;
-        let left_rotation;
-        let scale;
-        let right_rotation;
+#[derive(Clone)]
+pub struct ItemDisplayEntityView {
+    metadata: ItemDisplayMetadata,
+    last_transform: Transform,
+    pub transform: Transform,
 
-        if let Some(transformation) = entity.find_compound("transformation") {
-            translation = if let Some(translation) = transformation.find_list("translation", TAG_FLOAT_ID) {
-                (
-                    *translation.get_float(0).unwrap(),
-                    *translation.get_float(1).unwrap(),
-                    *translation.get_float(2).unwrap(),
-                )
-            } else {
-                (0.0, 0.0, 0.0)
-            };
-            left_rotation = if let Some(left_rotation) = transformation.find_list("left_rotation", TAG_FLOAT_ID) {
-                (
-                    *left_rotation.get_float(0).unwrap(),
-                    *left_rotation.get_float(1).unwrap(),
-                    *left_rotation.get_float(2).unwrap(),
-                    *left_rotation.get_float(3).unwrap(),
-                )
-            } else {
-                (0.0, 0.0, 0.0, 1.0)
-            };
-            scale = if let Some(scale) = transformation.find_list("scale", TAG_FLOAT_ID) {
-                (
-                    *scale.get_float(0).unwrap(),
-                    *scale.get_float(1).unwrap(),
-                    *scale.get_float(2).unwrap(),
-                )
-            } else {
-                (1.0, 1.0, 1.0)
-            };
-            right_rotation = if let Some(right_rotation) = transformation.find_list("right_rotation", TAG_FLOAT_ID) {
-                (
-                    *right_rotation.get_float(0).unwrap(),
-                    *right_rotation.get_float(1).unwrap(),
-                    *right_rotation.get_float(2).unwrap(),
-                    *right_rotation.get_float(3).unwrap(),
-                )
-            } else {
-                (0.0, 0.0, 0.0, 1.0)
-            };
-        } else {
-            translation = (0.0, 0.0, 0.0);
-            left_rotation = (0.0, 0.0, 0.0, 1.0);
-            scale = (1.0, 1.0, 1.0);
-            right_rotation = (0.0, 0.0, 0.0, 1.0);
-        }
+    synced_position: Option<DVec3>,
+    old_rotation: (u8, u8),
+    teleport_time: usize,
+}
+
+unsafe impl Send for ItemDisplayEntityView {}
+unsafe impl Sync for ItemDisplayEntityView {}
+
+impl ItemDisplayEntityView {
+    pub fn new_static(item_stack: ItemStack, transform: Transform) -> EntityBuilder {
+        let mut metadata = ItemDisplayMetadata::default();
+        metadata.set_item_stack(Some(item_stack.as_bytes()));
+
+        let mut builder = EntityBuilder::new();
+        Self::add(&mut builder, metadata, transform, false);
+        builder
+    }
+
+    pub fn load_item_from_display(entity: &NBT) -> Option<ItemStack> {
+        let Some(entity) = entity.as_compound() else {
+            return None;
+        };
 
         if let Some(item) = entity.find_compound("item") {
-            let item_string = item.find_string("id").unwrap();
-            let item_u16 = graphite_mc_constants::item::string_to_u16(item_string).unwrap();
-
-            let item_nbt = if let Some(tag) = item.find_compound("tag") {
-                tag.clone_nbt().into()
-            } else {
-                CachedNBT::new()
-            };
-
-            Self {
-                _phantom: PhantomData,
-                item: item_u16 as i32,
-                item_nbt,
-                translation,
-                left_rotation,
-                scale,
-                right_rotation
-            }
+            let item_stack = ItemStack::load_from_nbt(item)?;
+            Some(item_stack)
         } else {
-            Self {
-                _phantom: PhantomData,
-                item: 0,
-                item_nbt: CachedNBT::new(),
-                translation,
-                left_rotation,
-                scale,
-                right_rotation
-            }
+            None
         }
     }
-}
 
-impl <W: WorldExtension> EntityExtension for ItemDisplay<W> {
-    type World = W;
-    type View = ItemDisplayView;
+    pub fn load_static(entity: CompoundRef<'_>) -> Option<(DVec3, EntityBuilder)> {
+        let transform = Transform::load_from_entity(entity);
 
-    fn tick(_: &mut Entity<Self>) {
-    }
+        let pos = entity.find_list("Pos", TAG_DOUBLE_ID)?;
 
-    fn create_view_controller(&mut self) -> Self::View {
-        ItemDisplayView {
-            entity_id: next_entity_id()
+        let x = *pos.get_double(0).unwrap();
+        let y = *pos.get_double(1).unwrap();
+        let z = *pos.get_double(2).unwrap();
+
+        if let Some(item) = entity.find_compound("item") {
+            let item_stack = ItemStack::load_from_nbt(item)?;
+
+            let mut metadata = ItemDisplayMetadata::default();
+            metadata.set_item_stack(Some(item_stack.as_bytes()));
+
+            let mut builder = EntityBuilder::new();
+            Self::add(&mut builder, metadata, transform, false);
+            Some((DVec3::new(x, y, z), builder))
+        } else {
+            None
         }
     }
-}
 
-pub struct ItemDisplayView {
-    entity_id: i32
-}
+    pub fn add(builder: &mut EntityBuilder, metadata: ItemDisplayMetadata, transform: Transform, update_position: bool) {
+        if builder.has::<Self>() || builder.has::<EntityView>() {
+            panic!("duplicate view");
+        }
+        builder.add(Self {
+            metadata,
+            last_transform: transform.clone(),
+            transform,
 
-impl <W: WorldExtension> EntityViewController<ItemDisplay<W>> for ItemDisplayView {
-    fn write_spawn_packets(entity: &Entity<ItemDisplay<W>>, buffer: &mut PacketBuffer) {
-        buffer.write_packet(&play::clientbound::AddEntity {
-            id: entity.view.entity_id,
+            synced_position: None,
+            old_rotation: (0, 0),
+            teleport_time: 0
+        });
+        builder.add(EntityView::new(
+            1,
+            Some(Self::spawn),
+            None,
+            if update_position {
+                Some(Self::update)
+            } else {
+                None
+            },
+        ));
+    }
+
+    pub fn spawn(entity: EntityRef, base: &EntityBase, view: &EntityView, buffer: &mut PacketBuffer) {
+        let item_display = &mut *entity.get::<&mut ItemDisplayEntityView>().unwrap();
+        AddEntity {
+            id: view.entity_ids[0],
             uuid: rand::random(),
             entity_type: graphite_mc_constants::entity::Entity::ItemDisplay as i32,
-            x: entity.position.x,
-            y: entity.position.y,
-            z: entity.position.z,
-            pitch: 0.0,
-            yaw: 0.0,
-            head_yaw: 0.0,
-            data: 0,
-            x_vel: 0.0,
-            y_vel: 0.0,
-            z_vel: 0.0,
-        }).unwrap();
+            x: base.position.x,
+            y: base.position.y,
+            z: base.position.z,
+            pitch: base.rotation.x as f32,
+            yaw: base.rotation.y as f32,
+            head_yaw: base.rotation.y as f32,
+            ..Default::default()
+        }.write_packet(buffer);
 
-        let mut metadata = ItemDisplayMetadata::default();
-        metadata.set_item_stack(ProtocolItemStack {
-            item: entity.extension.item,
-            count: 1,
-            nbt: Cow::Borrowed(&entity.extension.item_nbt),
-        });
+        item_display.metadata.set_pos_rot_interpolation_duration(2);
+        item_display.metadata.set_transformation_interpolation_duration(2);
 
-        metadata.set_translation(entity.extension.translation);
-        metadata.set_left_rotation(entity.extension.left_rotation);
-        metadata.set_scale(entity.extension.scale);
-        metadata.set_right_rotation(entity.extension.right_rotation);
+        item_display.metadata.set_translation(item_display.transform.translation);
+        item_display.metadata.set_left_rotation(item_display.transform.left_rotation);
+        item_display.metadata.set_scale(item_display.transform.scale);
+        item_display.metadata.set_right_rotation(item_display.transform.right_rotation);
 
-        metadata.write_metadata_changes_packet(entity.view.entity_id, buffer).unwrap();
+        let scale_xz = item_display.transform.scale.0.max(item_display.transform.scale.2);
+        item_display.metadata.set_width(4.0 * scale_xz);
+        item_display.metadata.set_height(4.0 * item_display.transform.scale.1);
+
+        SetEntityData::write_non_default(&mut item_display.metadata, view.entity_ids[0], buffer);
     }
 
-    fn write_despawn_packets(entity: &Entity<ItemDisplay<W>>, despawn_list: &mut Vec<i32>, _: &mut PacketBuffer) {
-        despawn_list.push(entity.view.entity_id)
-    }
+    pub fn update(entity: EntityRef, base: &mut EntityBase, view: &EntityView) {
+        let item_display = &mut *entity.get::<&mut ItemDisplayEntityView>().unwrap();
+        entity_view::default_position_update(base, view.entity_ids[0], &[],
+            &mut item_display.synced_position, &mut item_display.old_rotation, &mut item_display.teleport_time, false);
+            
+        if item_display.last_transform != item_display.transform {
+            item_display.last_transform = item_display.transform.clone();
 
-    fn update_position(_: &mut Entity<ItemDisplay<W>>) {
-        // nothing
+            item_display.metadata.set_translation(item_display.transform.translation);
+            item_display.metadata.set_left_rotation(item_display.transform.left_rotation);
+            item_display.metadata.set_scale(item_display.transform.scale);
+            item_display.metadata.set_right_rotation(item_display.transform.right_rotation);
+            item_display.metadata.set_transformation_interpolation_start_delta_ticks(0);
+
+            base.write_viewable(|buffer| {
+                SetEntityData::write_changes(&mut item_display.metadata, view.entity_ids[0], buffer);
+            })
+        }
     }
 }
