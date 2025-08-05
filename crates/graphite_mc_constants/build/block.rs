@@ -352,6 +352,7 @@ pub enum BlockFlag {
     IsPathfindableWater,
     FallDamageResetting,
     Climbable,
+    IsTall
 }
 
 #[derive(Debug)]
@@ -773,6 +774,11 @@ fn write_state_attributes(state_attributes_lut: &mut String, state_attribute_val
         }
         if climbable {
             flags.push("Climbable");
+        }
+        if let Some(collision_bounds) = &collision_bounds {
+            if collision_bounds[4] > 1.0 {
+                flags.push("IsTall");
+            }
         }
 
         if flags.is_empty() {

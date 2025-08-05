@@ -5,16 +5,16 @@ use graphite_mc_constants::block::{BlockAttributes, BlockFlag, BlockState};
 
 pub struct Cost {
     pub value: f32,
-    pub is_swimmable: bool
+    pub is_swimmable: bool,
+    pub is_tall: bool
 }
 
 pub trait NodeCostEvaluator {
     fn get_single_cost(&mut self, x: i32, y: i32, z: i32) -> Cost;
     fn get_combined_cost(&mut self, x: i32, y: i32, z: i32, width: usize, height: usize) -> Cost {
-        let mut worst = Cost {
-            value: 0.0,
-            is_swimmable: false
-        };
+        let mut value = 0.0_f32;
+        let mut is_swimmable = false;
+        let mut is_tall = false;
 
         for yo in 0..height as i32 {
             for xo in 0..width as i32 {
@@ -24,14 +24,18 @@ pub trait NodeCostEvaluator {
                         return cost;
                     }
 
-                    if cost.value > worst.value {
-                        worst = cost;
-                    }
+                    value = value.max(cost.value);
+                    is_swimmable |= cost.is_swimmable;
+                    is_tall |= cost.is_tall;
                 }
             }   
         }
 
-        worst
+        Cost {
+            value,
+            is_swimmable,
+            is_tall,
+        }
     }
 }
 
@@ -48,28 +52,33 @@ impl <'a, W: WorldExtension> NodeCostEvaluator for WorldNodeCostEvaluator<'a, W>
                 if block == HONEY {
                     return Cost {
                         value: f32::INFINITY,
-                        is_swimmable: false
+                        is_swimmable: false,
+                        is_tall: false
                     }
                 }
 
                 let attr = BlockAttributes::from_block_state(block);
 
+                let is_tall = attr.has_flag(BlockFlag::IsTall);
                 if attr.has_flag(BlockFlag::IsPathfindableLand) { // todo: support other types
                     if attr.has_flag(BlockFlag::Waterlogged) {
                         return Cost {
                             value: 4.0,
-                            is_swimmable: true
+                            is_swimmable: true,
+                            is_tall
                         }
                     } else {
                         return Cost {
                             value: 0.0,
-                            is_swimmable: false
+                            is_swimmable: false,
+                            is_tall
                         }
                     }
                 } else {
                     return Cost {
                         value: f32::INFINITY,
-                        is_swimmable: false
+                        is_swimmable: false,
+                        is_tall
                     }
                 }
             }
@@ -77,7 +86,8 @@ impl <'a, W: WorldExtension> NodeCostEvaluator for WorldNodeCostEvaluator<'a, W>
 
         return Cost {
             value: f32::INFINITY,
-            is_swimmable: false
+            is_swimmable: false,
+            is_tall: false
         }
     }
 }
@@ -99,7 +109,8 @@ impl <'a, E: NodeCostEvaluator> NodeCostEvaluator for CachedNodeCostEvaluator<'a
         if (cached.flags & 1) != 0 && cached.region_x == region_x && cached.region_y == region_y && cached.region_z == region_z {
             return Cost {
                 value: cached.cost,
-                is_swimmable: (cached.flags & 2) != 0
+                is_swimmable: (cached.flags & 2) != 0,
+                is_tall: (cached.flags & 4) != 0,
             }
         }
 
@@ -107,6 +118,9 @@ impl <'a, E: NodeCostEvaluator> NodeCostEvaluator for CachedNodeCostEvaluator<'a
         let mut flags = 1;
         if cost.is_swimmable {
             flags |= 2;
+        }
+        if cost.is_tall {
+            flags |= 4;
         }
         self.cache.single[cache_index] = PathfindingCacheEntry {
             region_x,
@@ -129,14 +143,14 @@ impl <'a, E: NodeCostEvaluator> NodeCostEvaluator for CachedNodeCostEvaluator<'a
         if (cached.flags & 1) != 0 && cached.region_x == region_x && cached.region_y == region_y && cached.region_z == region_z {
             return Cost {
                 value: cached.cost,
-                is_swimmable: (cached.flags & 2) != 0
+                is_swimmable: (cached.flags & 2) != 0,
+                is_tall: (cached.flags & 4) != 0,
             }
         }
 
-        let mut worst = Cost {
-            value: 0.0,
-            is_swimmable: false
-        };
+        let mut value = 0.0_f32;
+        let mut is_swimmable = false;
+        let mut is_tall = false;
 
         for yo in 0..height as i32 {
             for xo in 0..width as i32 {
@@ -146,24 +160,32 @@ impl <'a, E: NodeCostEvaluator> NodeCostEvaluator for CachedNodeCostEvaluator<'a
                         return cost;
                     }
 
-                    if cost.value > worst.value {
-                        worst = cost;
-                    }
+                    value = value.max(cost.value);
+                    is_swimmable |= cost.is_swimmable;
+                    is_tall |= cost.is_tall;
                 }
             }   
         }
 
         let mut flags = 1;
-        if worst.is_swimmable {
+        if is_swimmable {
             flags |= 2;
+        }
+        if is_tall {
+            flags |= 4;
         }
         self.cache.combined[cache_index] = PathfindingCacheEntry {
             region_x,
             region_y,
             region_z,
             flags,
-            cost: worst.value,
+            cost: value,
         };
-        worst
+
+        Cost {
+            value,
+            is_swimmable,
+            is_tall,
+        }
     }
 }

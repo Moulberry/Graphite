@@ -145,7 +145,7 @@ impl <P: PlayerExtension> Player<P> {
 
         // Update fall distance
         let new_fall_distance = (self.fall_distance - (self.position.y - previous_position.y) as f32).max(0.0);
-        if prediction.reset_fall_distance || prediction.fluid_heights.water.is_some() || self.is_flying() || new_fall_distance == 0.0 {
+        if prediction.fall_damage_multiplier <= 0.0 || prediction.fluid_heights.water.is_some() || self.is_flying() || new_fall_distance == 0.0 {
             self.fall_distance = 0.0;
         } else if previous_position != self.position {
             let reset_fall_distance = self.world().raycast(previous_position, self.position, |_, _, _, block_state| {
@@ -165,6 +165,7 @@ impl <P: PlayerExtension> Player<P> {
                     self.fall_distance *= 0.5;
                 }
             }
+            self.fall_distance *= prediction.fall_damage_multiplier;
         }
 
         // Update state based on prediction
@@ -809,12 +810,11 @@ impl <P: PlayerExtension> graphite_mc_protocol::play::serverbound::PacketHandler
         if let Some(function) = function {
             (function)(self);
         }
-        self.container_view.force_synchronize_all();
         Ok(())
     }
 
     fn handle_custom_payload(&mut self, payload: play::serverbound::CustomPayload) -> anyhow::Result<()> {
-        if payload.channel == "devutils:debug_velocities" {
+        if crate::debug::DEBUG_MOVEMENT && payload.channel == "devutils:debug_velocities" {
             let mut bytes = payload.data;
             self.known_client_state.debug_state = DebugState::read_fully(&mut bytes)?;
         }
@@ -1267,7 +1267,7 @@ struct MovementPrediction {
     stuck_multiplier: DVec3,
     is_swimming: bool,
     fluid_heights: FluidHeights,
-    reset_fall_distance: bool
+    fall_damage_multiplier: f32
 }
 
 fn get_fluid<W: WorldExtension>(getter: KnownBlockGetter<W>, x: i32, y: i32, z: i32) -> (u16, Fluid) {
@@ -1585,7 +1585,7 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
     let forwards = player.forwards_input as f32;
     let left = -player.strafe_input as f32;
     let mut no_jump_delay = player.no_jump_delay;
-    let mut reset_fall_distance = false;
+    let mut fall_damage_multiplier = 1.0;
     let mut stuck_multiplier = player.stuck_multiplier;
 
     let getter = KnownBlockGetter::new(player);
@@ -1604,7 +1604,9 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
     let is_in_water = fluid_heights.water.is_some();
     let is_in_lava = fluid_heights.lava.is_some() && fluid_heights.lava.unwrap() > 0.0;
 
-    reset_fall_distance |= is_in_water;
+    if is_in_water {
+        fall_damage_multiplier = 0.0;
+    }
 
     if crate::debug::DEBUG_MOVEMENT && is_in_water != player.known_client_state.debug_state.is_in_water {
         println!("is_in_water is wrong. Server: {:?}. Client: {:?}. Position: {:?}", is_in_water, player.known_client_state.debug_state.is_in_water, player.last_client_position);
@@ -1688,7 +1690,7 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
 
     // Player aiStep
     if is_flying {
-        reset_fall_distance = true;
+        fall_damage_multiplier = 0.0;
     }
 
     // LivingEntity aiStep
@@ -1755,7 +1757,7 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
     }
 
     if effects[MobEffect::SlowFalling].is_some() || effects[MobEffect::Levitation].is_some() {
-         reset_fall_distance = true;
+        fall_damage_multiplier = 0.0;
     }
 
     // Player#travel
@@ -1961,7 +1963,7 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
             is_using_item, moving_slowly_speed, player.known_client_state.debug_state.move_inputs);
 
         if !is_flying && is_on_climbable(getter, player.last_client_position) {
-            reset_fall_distance = true;
+            fall_damage_multiplier = 0.0;
 
             velocity.modify(|velocity| {
                 velocity.x = velocity.x.clamp(-0.15000000596046448, 0.15000000596046448);
@@ -2022,13 +2024,10 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         }
     }
     // checkInsideBlocks
-    
-    // todo: this changed in 1.21.5, causing issues with blocks like bubble columns
-    // switch to vanilla's new code for checking inside blocks
 
     if player.last_client_position == new_client_position {
         let mut visited = HashSet::new();
-        check_inside_blocks(player, player.last_client_position, new_client_position, &mut visited, &mut velocity, &mut reset_fall_distance, &mut stuck_multiplier, prediction.on_ground, is_flying);
+        check_inside_blocks(player, player.last_client_position, new_client_position, &mut visited, &mut velocity, &mut fall_damage_multiplier, &mut stuck_multiplier, prediction.on_ground, is_flying);
     } else {
         let mut from_position = player.last_client_position;
         let mut to_position = player.last_client_position;
@@ -2038,26 +2037,26 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
 
         if delta.y.abs() != 0.0 {
             to_position.y = new_client_position.y;
-            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut reset_fall_distance, &mut stuck_multiplier, prediction.on_ground, is_flying);
+            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut fall_damage_multiplier, &mut stuck_multiplier, prediction.on_ground, is_flying);
             from_position.y = new_client_position.y;
         }
 
         let prioritize_z = delta.z.abs() > delta.x.abs();
         if prioritize_z && delta.z != 0.0 {
             to_position.z = new_client_position.z;
-            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut reset_fall_distance, &mut stuck_multiplier, prediction.on_ground, is_flying);
+            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut fall_damage_multiplier, &mut stuck_multiplier, prediction.on_ground, is_flying);
             from_position.z = new_client_position.z;
         }
 
         if delta.x != 0.0 {
             to_position.x = new_client_position.x;
-            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut reset_fall_distance, &mut stuck_multiplier, prediction.on_ground, is_flying);
+            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut fall_damage_multiplier, &mut stuck_multiplier, prediction.on_ground, is_flying);
             from_position.x = new_client_position.x;
         }
 
         if !prioritize_z {
             to_position.z = new_client_position.z;
-            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut reset_fall_distance, &mut stuck_multiplier, prediction.on_ground, is_flying);
+            check_inside_blocks(player, from_position, to_position, &mut visited, &mut velocity, &mut fall_damage_multiplier, &mut stuck_multiplier, prediction.on_ground, is_flying);
             from_position.z = new_client_position.z;
         }
     }
@@ -2066,7 +2065,7 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         velocity,
         no_jump_delay,
         is_swimming,
-        reset_fall_distance,
+        fall_damage_multiplier: prediction.fall_damage_multiplier.min(fall_damage_multiplier),
         stuck_multiplier,
         fluid_heights,
         ..prediction
@@ -2118,7 +2117,7 @@ fn get_block_jump_factor<P: PlayerExtension>(player: &Player<P>) -> f32 {
     return 1.0;
 }
 
-fn check_inside_blocks<P: PlayerExtension>(player: &Player<P>, from: DVec3, to: DVec3, visited: &mut HashSet<(i32, i32, i32)>, velocity: &mut UncertainVelocity, reset_fall_distance: &mut bool, stuck_multiplier: &mut DVec3, on_ground: bool, flying: bool) {
+fn check_inside_blocks<P: PlayerExtension>(player: &Player<P>, from: DVec3, to: DVec3, visited: &mut HashSet<(i32, i32, i32)>, velocity: &mut UncertainVelocity, fall_damage_multiplier: &mut f32, stuck_multiplier: &mut DVec3, on_ground: bool, flying: bool) {
     let aabb = player.create_collision_aabb_at(to).deflate(1.0E-5_f32 as f64).unwrap();
     let delta = to - from;
     if delta.length_squared() < (0.99999_f32 * 0.99999_f32) as f64 {
@@ -2128,7 +2127,7 @@ fn check_inside_blocks<P: PlayerExtension>(player: &Player<P>, from: DVec3, to: 
             for y in min.y .. max.y+1 {
                 for x in min.x .. max.x+1 {
                     if visited.insert((x, y, z)) {
-                        check_inside_block(player, IVec3::new(x, y, z), velocity, reset_fall_distance, stuck_multiplier, to, on_ground, flying);
+                        check_inside_block(player, IVec3::new(x, y, z), velocity, fall_damage_multiplier, stuck_multiplier, to, on_ground, flying);
                     }
                 }
             }
@@ -2211,7 +2210,7 @@ fn check_inside_blocks<P: PlayerExtension>(player: &Player<P>, from: DVec3, to: 
                     for y in map.y .. map_to.y+1 {
                         for z in map.z .. map_to.z+1 {
                             if visited.insert((x, y, z)) {
-                                check_inside_block(player, IVec3::new(x, y, z), velocity, reset_fall_distance, stuck_multiplier, to, on_ground, flying);
+                                check_inside_block(player, IVec3::new(x, y, z), velocity, fall_damage_multiplier, stuck_multiplier, to, on_ground, flying);
                             }
                         }
                     }
@@ -2228,7 +2227,7 @@ fn check_inside_blocks<P: PlayerExtension>(player: &Player<P>, from: DVec3, to: 
                     if visited.contains(&(x, y, z)) {
                         continue;
                     }
-                    check_inside_block(player, IVec3::new(x, y, z), velocity, reset_fall_distance, stuck_multiplier, to, on_ground, flying);
+                    check_inside_block(player, IVec3::new(x, y, z), velocity, fall_damage_multiplier, stuck_multiplier, to, on_ground, flying);
                 }
             }
         }
@@ -2275,7 +2274,7 @@ fn clip_point(delta_scale: &mut f64, delta1: f64, delta2: f64, delta3: f64, side
     }
 }
 
-fn check_inside_block<P: PlayerExtension>(player: &Player<P>, blockpos: IVec3, velocity: &mut UncertainVelocity, reset_fall_distance: &mut bool, stuck_multiplier: &mut DVec3, position: DVec3, on_ground: bool, flying: bool) {
+fn check_inside_block<P: PlayerExtension>(player: &Player<P>, blockpos: IVec3, velocity: &mut UncertainVelocity, fall_damage_multiplier: &mut f32, stuck_multiplier: &mut DVec3, position: DVec3, on_ground: bool, flying: bool) {
     let getter = KnownBlockGetter::new(player);
     let id = getter.get_block(blockpos.x, blockpos.y, blockpos.z).unwrap_or(0);
     if id == 0 {
@@ -2306,7 +2305,7 @@ fn check_inside_block<P: PlayerExtension>(player: &Player<P>, blockpos: IVec3, v
                 } else {
                     velocity.set_y((velocity.get_y() + 0.06).min(0.7));
                 }
-                *reset_fall_distance = true;
+                *fall_damage_multiplier = 0.0;
             }
         },
         BlockState::HoneyBlock {  } => {
@@ -2331,7 +2330,7 @@ fn check_inside_block<P: PlayerExtension>(player: &Player<P>, blockpos: IVec3, v
                 }
                 velocity.set_y((-0.05 - 0.08) * 0.98_f32 as f64);
                 
-                *reset_fall_distance = true;
+                *fall_damage_multiplier = 0.0;
             }
         },
         BlockState::PowderSnow {  } => {
@@ -2856,6 +2855,7 @@ fn finalize_movement<P: PlayerExtension>(player: &Player<P>, trust_client: bool,
     }
 
     // updateEntityMovementAfterFallOn
+    let mut fall_damage_multiplier = 1.0;
     if collide_y {
         let velocity_y = velocity.get_y();
         if !player.shift_pressed { // Fast path: all custom updateEntityMovementAfterFallOn effects (slime & bed) don't apply if "moving carefully"
@@ -2866,12 +2866,14 @@ fn finalize_movement<P: PlayerExtension>(player: &Player<P>, trust_client: bool,
                     if velocity_y < 0.0 {
                         velocity.set_y(-velocity_y);
                     }
+                    fall_damage_multiplier = 0.0;
                 },
                 Block::WhiteBed | Block::OrangeBed | Block::MagentaBed | Block::LightBlueBed | Block::YellowBed | Block::LimeBed | Block::PinkBed | Block::GrayBed |
                 Block::LightGrayBed | Block::CyanBed | Block::PurpleBed | Block::BlueBed | Block::BrownBed | Block::GreenBed | Block::RedBed | Block::BlackBed => {
                     if velocity_y < 0.0 {
                         velocity.set_y(-velocity_y * 0.66_f32 as f64);
                     }
+                    fall_damage_multiplier = 0.5;
                 },
                 _ => {
                     velocity.set_y(0.0);
@@ -2925,7 +2927,7 @@ fn finalize_movement<P: PlayerExtension>(player: &Player<P>, trust_client: bool,
         stuck_multiplier,
         is_swimming: false,
         fluid_heights: FluidHeights::default(),
-        reset_fall_distance: false
+        fall_damage_multiplier
     }
 }
 

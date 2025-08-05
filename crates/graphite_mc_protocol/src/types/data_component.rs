@@ -3,7 +3,7 @@ use std::{borrow::Cow, f32::consts::E, fmt::Debug, fs::read, hash::Hasher, mem::
 use anyhow::bail;
 use enumset::EnumSet;
 use graphite_binary::{nbt::{EncodedNBT, NBT}, slice_serialization::*};
-use graphite_mc_constants::{builtin::{self, ConsumeEffectType, DataComponentType, SoundEvent}, item::Item, types};
+use graphite_mc_constants::{builtin::{self, ConsumeEffectType, DataComponentType, SoundEvent}, item::Item, types::{self, EquipmentSlot}};
 
 use crate::types::hash_ops::HashOps;
 
@@ -11,6 +11,25 @@ use super::{encoded_text::CachedTextComponent, text::TextComponent, GlobalPositi
 
 pub trait DataComponentChecksum {
     fn checksum(&self) -> i32;
+}
+
+fn hash_sound(map: &mut super::hash_ops::HashOpsMap, key: &'static str, sound: &SoundTypeOwned) {
+    match sound {
+        SoundTypeOwned::Event(sound_event) => {
+            map.put_string(key, sound_event.location());
+        },
+        SoundTypeOwned::Direct(sound_id) => {
+            hash_resource_location(map, key, sound_id)
+        },
+    }
+}
+
+fn hash_resource_location(map: &mut super::hash_ops::HashOpsMap, key: &'static str, value: &str) {
+    if value.contains(":") {
+        map.put_string(key, value);
+    } else {
+        map.put_string(key, &format!("minecraft:{}", value));
+    }
 }
 
 pub trait DataComponentTrait<'r, 'd: 'r>: SliceSerializable<'r, 'd, Self> + PartialEq + Debug + Clone + DataComponentChecksum {
@@ -184,6 +203,61 @@ impl DataComponentChecksum for Rarity {
         HashOps::hash_string(self.rarity.into())
     }
 }
+
+slice_serializable! {
+    #[derive(Clone, PartialEq, Debug)]
+    pub struct Equippable {
+        pub inner: Box<EquippableInner>,
+    }
+}
+
+slice_serializable! {
+    #[derive(Clone, PartialEq, Debug)]
+    pub struct EquippableInner {
+        pub slot: EquipmentSlot as AttemptFrom<Single, u8>,
+        pub sound: SoundTypeOwned,
+        pub asset_id: Option<Cow<'static, str>> as Option<StaticSizedString>,
+        pub camera_overlay: Option<Cow<'static, str>> as Option<StaticSizedString>,
+        pub _always_false_entity_types: bool as Single,
+        pub dispensable: bool as Single,
+        pub swappable: bool as Single,
+        pub damage_on_hurt: bool as Single,
+        pub equip_on_interact: bool as Single
+    }
+}
+
+impl DataComponentChecksum for Equippable {
+    fn checksum(&self) -> i32 {
+        let mut map = HashOps::start_map();
+
+        map.put_string("slot", self.inner.slot.into());
+        if self.inner.sound != SoundTypeOwned::Event(SoundEvent::ItemArmorEquipGeneric) {
+            hash_sound(&mut map, "equip_sound", &self.inner.sound);
+        }
+        if let Some(asset_id) = self.inner.asset_id.as_ref() {
+            hash_resource_location(&mut map, "asset_id", &asset_id);
+        }
+        if let Some(camera_overlay) = self.inner.camera_overlay.as_ref() {
+            hash_resource_location(&mut map, "camera_overlay", &camera_overlay);
+        }
+        if !self.inner.dispensable {
+            map.put_boolean("dispensable", false);
+        }
+        if !self.inner.swappable {
+            map.put_boolean("swappable", false);
+        }
+        if !self.inner.damage_on_hurt {
+            map.put_boolean("damage_on_hurt", false);
+        }
+        if self.inner.equip_on_interact {
+            map.put_boolean("equip_on_interact", true);
+        }
+
+        map.finish()
+    }
+}
+
+
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum CustomModelData {
@@ -494,19 +568,6 @@ impl DataComponentChecksum for EnchantmentGlintOverride {
 
 slice_serializable! {
     #[derive(Clone, Copy, PartialEq, Debug)]
-    pub struct Equippable {
-        _unused: bool as Single
-    }
-}
-
-impl DataComponentChecksum for Equippable {
-    fn checksum(&self) -> i32 {
-        0
-    }
-}
-
-slice_serializable! {
-    #[derive(Clone, Copy, PartialEq, Debug)]
     pub struct DyedColor {
         pub rgb: i32 as BigEndian,
     }
@@ -621,18 +682,7 @@ impl DataComponentChecksum for Consumable {
             map.put_string("animation", self.inner.animation.into());
         }
         if self.inner.sound != SoundTypeOwned::Event(SoundEvent::EntityGenericEat) {
-            match &self.inner.sound {
-                SoundTypeOwned::Event(sound_event) => {
-                    map.put_string("sound", sound_event.location());
-                },
-                SoundTypeOwned::Direct(sound_id) => {
-                    if sound_id.contains(":") {
-                        map.put_string("sound", sound_id);
-                    } else {
-                        map.put_string("sound", &format!("minecraft:{}", sound_id));
-                    }
-                },
-            }
+            hash_sound(&mut map, "sound", &self.inner.sound);
         }
         if !self.inner.has_consume_particles {
             map.put_boolean("has_consume_particles", false);
@@ -850,6 +900,7 @@ define_data_components! {
         ItemName,
         ItemModel,
         Lore,
+        Equippable,
         CustomModelData,
         // CanPlaceOn,
         // CanBreak,

@@ -140,11 +140,11 @@ pub enum DyeColor {
 pub enum EquipmentSlot {
 	#[default]
 	Mainhand = 0,
-	Offhand = 1,
-	Feet = 2,
-	Legs = 3,
-	Chest = 4,
-	Head = 5,
+	Offhand = 5,
+	Feet = 1,
+	Legs = 2,
+	Chest = 3,
+	Head = 4,
 	Body = 6,
 	Saddle = 7,
 }
@@ -352,6 +352,17 @@ pub enum ClientAction {
 	#[default]
 	PerformRespawn = 0,
 	RequestStats = 1,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default, strum_macros::IntoStaticStr, num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
+#[strum(serialize_all = "snake_case")]
+#[repr(u8)]
+pub enum BillboardConstraint {
+	#[default]
+	Fixed = 0,
+	Vertical = 1,
+	Horizontal = 2,
+	Center = 3,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default, strum_macros::IntoStaticStr, num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]

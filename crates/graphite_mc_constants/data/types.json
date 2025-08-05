@@ -87,16 +87,16 @@
     "red",
     "black"
   ],
-  "equipment_slot": [
-    "mainhand",
-    "offhand",
-    "feet",
-    "legs",
-    "chest",
-    "head",
-    "body",
-    "saddle"
-  ],
+  "equipment_slot": {
+    "mainhand": 0,
+    "offhand": 5,
+    "feet": 1,
+    "legs": 2,
+    "chest": 3,
+    "head": 4,
+    "body": 6,
+    "saddle": 7
+  },
   "humanoid_arm": [
     "left",
     "right"
@@ -222,6 +222,12 @@
   "client_action": [
     "perform_respawn",
     "request_stats"
+  ],
+  "billboard_constraint": [
+    "fixed",
+    "vertical",
+    "horizontal",
+    "center"
   ],
   "entity_animation": {
     "swing_main_hand": 0,

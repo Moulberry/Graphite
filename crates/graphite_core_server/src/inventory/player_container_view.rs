@@ -466,16 +466,6 @@ impl <P: PlayerExtension> PlayerContainerView<P> {
                 return;
             }
 
-            // 1. Check if force_synchronize
-            // 2. Compare RemoteStack
-            /*
-            enum RemoteStack {
-                HashedStack(HashedStack),
-                ItemStack(ItemStack),
-            }
-             */
-
-
             // Sync main inventory slots
             for (index, &slot) in all_slots.iter().enumerate() {
                 let item_stack = open_menu.menu.get_item_stack(&mut self.inventory, slot);
@@ -516,6 +506,8 @@ impl <P: PlayerExtension> PlayerContainerView<P> {
                 }.write_packet(packet_buffer);
                 P::Menu::on_synchronize_slot(&mut open_menu.menu, packet_buffer, InventorySlot::OffHand);
             }
+
+            self.force_synchronize = 0;
         } else {
             if self.force_synchronize == u128::MAX {
                 self.synchronize_fully(packet_buffer);
@@ -554,6 +546,8 @@ impl <P: PlayerExtension> PlayerContainerView<P> {
                 }.write_packet(packet_buffer);
             }
             self.remote_item_stacks[carried_index] = RemoteStack::ItemStack(carried);
+
+            self.force_synchronize = 0;
         }
     }
 

@@ -4,7 +4,7 @@ use enumset::EnumSet;
 use graphite_binary::{nbt::{CompoundRef, TAG_BYTE_ID, TAG_FLOAT_ID, TAG_INT_ID, TAG_STRING_ID}, slice_serialization::*};
 use graphite_mc_constants::{builtin::DataComponentType, item::Item, types::EquipmentSlot};
 
-use super::{data_component::{ArbitraryCustomModelData, CustomModelData, DataComponentMap, DataComponentTrait, MaxStackSize, TooltipDisplay}, hash_ops::HashOps};
+use super::{data_component::{ArbitraryCustomModelData, CustomModelData, DataComponentMap, DataComponentTrait, Equippable, MaxStackSize, TooltipDisplay}, hash_ops::HashOps};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct ItemStack {
@@ -169,7 +169,11 @@ impl ItemStack {
     }
     
     pub fn get_equipment_slot(&self) -> Option<EquipmentSlot> {
-        None
+        if let Some(equippable) = self.components.get::<Equippable>() {
+            Some(equippable.inner.slot)
+        } else {
+            None
+        }
     }
 
     pub fn get<'r, 'd: 'r, T: DataComponentTrait<'r, 'd>>(&self) -> Option<&T> {

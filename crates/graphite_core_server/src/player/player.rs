@@ -156,20 +156,13 @@ impl <P: PlayerExtension + 'static> GenericPlayer for Player<P> {
     }
 
     fn take_transfer(&mut self) -> Option<(Rc<RefCell<Connection>>, PacketBuffer, Box<dyn FnOnce(SendableConnection)>)> {
-        let Some(transfer) = self.pending_transfer.take() else {
-            return None;
-        };
+        let transfer = self.pending_transfer.take()?;
 
         self.close_menu();
         self.flush_packets();
 
-        let Some(connection) = self.connection.take() else {
-            return None;
-        };
-
-        let Some(extra) = P::get_extra_transfer_data(self) else {
-            return None;
-        };
+        let extra = P::get_extra_transfer_data(self)?;
+        let connection = self.connection.take()?;
 
         let packet_buffer = std::mem::replace(&mut self.packet_buffer, PacketBuffer::new());
 
@@ -614,7 +607,6 @@ impl <P: PlayerExtension> Player<P> {
         if let Some(function) = function {
             (function)(self);
         }
-        self.container_view.force_synchronize_all();
     }
 
     pub fn view_vector(&self) -> Vec3 {
@@ -1738,6 +1730,29 @@ impl <P: PlayerExtension> Player<P> {
 
         if item_stack.is_empty() {
             return;
+        }
+
+        if let Some(equippable) = item_stack.components.get::<Equippable>() {
+            if equippable.inner.swappable {
+                let swap_target = match equippable.inner.slot {
+                    EquipmentSlot::Mainhand => InventorySlot::Hotbar(self.hotbar_slot),
+                    EquipmentSlot::Offhand => InventorySlot::OffHand,
+                    EquipmentSlot::Feet => InventorySlot::Feet,
+                    EquipmentSlot::Legs => InventorySlot::Legs,
+                    EquipmentSlot::Chest => InventorySlot::Chest,
+                    EquipmentSlot::Head => InventorySlot::Head,
+                    _ => hotbar_slot,
+                };
+                if swap_target != hotbar_slot {
+                    let action = self.container_view.do_container_action(ContainerAction::Swap(hotbar_slot, swap_target));
+                    if let Some(action) = action {
+                        (action)(self);
+                    }
+                    self.packets_handled_this_tick.insert(PacketHandledThisTick::SuccessfulInteractOrUseItem);
+                }
+                self.container_view.force_synchronize_slot(swap_target);
+                return;
+            }
         }
 
         match P::use_item(self, hand, on_block) {

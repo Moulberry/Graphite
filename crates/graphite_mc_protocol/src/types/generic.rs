@@ -1,3 +1,4 @@
+use glam::{DVec3, Quat};
 use graphite_binary::slice_serialization::*;
 
 // Byte Rotation
@@ -119,5 +120,61 @@ impl <'r, 'd: 'r> SliceSerializable<'r, 'd, Option<i32>> for OptionalVarInt {
 
     fn get_write_size(data: Option<i32>) -> usize {
         <VarInt as SliceSerializable<i32>>::get_write_size(data.unwrap_or(-1) + 1)
+    }
+}
+
+pub struct DVec3Serializer;
+impl <'r, 'd: 'r> SliceSerializable<'r, 'd, DVec3> for DVec3Serializer {
+    type CopyType = DVec3;
+
+    fn as_copy_type(t: &DVec3) -> Self::CopyType {
+        *t
+    }
+
+    fn read(bytes: &mut &[u8]) -> anyhow::Result<DVec3> {
+        let x = <BigEndian as SliceSerializable<f64>>::read(bytes)?;
+        let y = <BigEndian as SliceSerializable<f64>>::read(bytes)?;
+        let z = <BigEndian as SliceSerializable<f64>>::read(bytes)?;
+        Ok(DVec3::new(x, y, z))
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: DVec3) -> &mut [u8] {
+        bytes = <BigEndian as SliceSerializable<f64>>::write(bytes, data.x);
+        bytes = <BigEndian as SliceSerializable<f64>>::write(bytes, data.y);
+        bytes = <BigEndian as SliceSerializable<f64>>::write(bytes, data.z);
+        bytes
+    }
+
+    fn get_write_size(_: DVec3) -> usize {
+        24
+    }
+}
+
+pub struct QuatSerializer;
+impl <'r, 'd: 'r> SliceSerializable<'r, 'd, Quat> for QuatSerializer {
+    type CopyType = Quat;
+
+    fn as_copy_type(t: &Quat) -> Self::CopyType {
+        *t
+    }
+
+    fn read(bytes: &mut &[u8]) -> anyhow::Result<Quat> {
+        let x = <BigEndian as SliceSerializable<f32>>::read(bytes)?;
+        let y = <BigEndian as SliceSerializable<f32>>::read(bytes)?;
+        let z = <BigEndian as SliceSerializable<f32>>::read(bytes)?;
+        let w = <BigEndian as SliceSerializable<f32>>::read(bytes)?;
+        Ok(Quat::from_xyzw(x, y, z, w))
+    }
+
+    unsafe fn write(mut bytes: &mut [u8], data: Quat) -> &mut [u8] {
+        bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, data.x);
+        bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, data.y);
+        bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, data.z);
+        bytes = <BigEndian as SliceSerializable<f32>>::write(bytes, data.w);
+        bytes
+    }
+
+    fn get_write_size(_: Quat) -> usize {
+        16
     }
 }

@@ -72,6 +72,7 @@ pub enum BlockFlag {
     IsPathfindableWater,
     FallDamageResetting,
     Climbable,
+    IsTall
 }
 
 #[derive(Debug)]

@@ -4,7 +4,7 @@ use enum_map::EnumMap;
 use glam::{DVec2, DVec3, IVec3};
 use graphite_binary::slice_serialization::{slice_serializable, BigEndian, Single, SliceSerializable};
 use graphite_mc_constants::{builtin::MobEffect, item::Item, types::Pose};
-use graphite_mc_protocol::types::ItemStack;
+use graphite_mc_protocol::types::{DVec3Serializer, ItemStack};
 use rustc_hash::FxHashMap;
 
 use super::{Player, PlayerExtension};
@@ -327,33 +327,6 @@ impl KnownClientStateChange {
                 }
             }
         }
-    }
-}
-
-struct DVec3Serializer;
-impl <'r, 'd: 'r> SliceSerializable<'r, 'd, DVec3> for DVec3Serializer {
-    type CopyType = DVec3;
-
-    fn as_copy_type(t: &DVec3) -> Self::CopyType {
-        *t
-    }
-
-    fn read(bytes: &mut &[u8]) -> anyhow::Result<DVec3> {
-        let x = <BigEndian as SliceSerializable<f64>>::read(bytes)?;
-        let y = <BigEndian as SliceSerializable<f64>>::read(bytes)?;
-        let z = <BigEndian as SliceSerializable<f64>>::read(bytes)?;
-        Ok(DVec3::new(x, y, z))
-    }
-
-    unsafe fn write(mut bytes: &mut [u8], data: DVec3) -> &mut [u8] {
-        bytes = <BigEndian as SliceSerializable<f64>>::write(bytes, data.x);
-        bytes = <BigEndian as SliceSerializable<f64>>::write(bytes, data.y);
-        bytes = <BigEndian as SliceSerializable<f64>>::write(bytes, data.z);
-        bytes
-    }
-
-    fn get_write_size(_: DVec3) -> usize {
-        12
     }
 }
 

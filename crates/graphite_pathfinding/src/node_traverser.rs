@@ -26,7 +26,7 @@ impl <E: NodeCostEvaluator> LandPathNodeTraverser<E> {
 
         if cost.value == f32::INFINITY {
             let mut steps = 0;
-            while cost.value == f32::INFINITY && steps < max_steps {
+            while !cost.is_tall && cost.value == f32::INFINITY && steps < max_steps {
                 steps += 1;
                 cost = self.evaluator.get_combined_cost(x, y+steps, z, self.entity_width, self.entity_height);
             }

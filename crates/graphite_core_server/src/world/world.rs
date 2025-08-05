@@ -1454,9 +1454,6 @@ impl <W: WorldExtension + 'static> World<W> {
             uuids.push(player.get_uuid());
             entity_ids.push(player.get_entity_id());
 
-            // todo: make take_transfer() also take the packetbuffer
-            // then move the packet buffer into OutboundPlayer and make the outbound player send the
-            // remaining bytes every tick. Also need to look at InboundPlayer, etc. and make sure the same is happening there
             if let Some((connection, mut buffer, transfer)) = player.take_transfer() {
                 play::clientbound::StartConfiguration.write_packet(&mut buffer);
                 

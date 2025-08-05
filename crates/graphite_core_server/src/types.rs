@@ -120,6 +120,10 @@ impl AABB {
         self.min * 0.5 + self.max * 0.5
     }
 
+    pub fn size(self) -> DVec3 {
+        self.max - self.min
+    }
+
     #[must_use]
     pub fn minkowski_difference(self, other: &AABB) -> AABB {
         Self {
