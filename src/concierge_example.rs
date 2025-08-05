@@ -21,8 +21,8 @@ fn main() {
     graphite_concierge::listen("0.0.0.0:25565", sender, Arc::new(Mutex::new(
         r#"{
             "version": {
-                "name": "1.20.4",
-                "protocol": 765
+                "name": "1.21.5",
+                "protocol": 770
             },
             "players": {
                 "max": 100,

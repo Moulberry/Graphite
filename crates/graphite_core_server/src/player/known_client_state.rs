@@ -375,7 +375,7 @@ impl ForcedPose {
 
 #[derive(Clone)]
 pub(super) struct KnownClientState {
-    pub(super) debug_state: DebugState,
+    pub(super) debug_state: Option<DebugState>,
     pub(super) awaiting_absolute_teleport_count: u8,
     pub(super) pose: Pose,
     pub(super) forced_pose: ForcedPose,

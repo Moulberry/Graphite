@@ -996,6 +996,7 @@ dependencies = [
  "anyhow",
  "crc32c",
  "enumset",
+ "glam",
  "graphite_binary",
  "graphite_mc_constants",
  "graphite_network",

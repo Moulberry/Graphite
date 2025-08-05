@@ -816,7 +816,7 @@ impl <P: PlayerExtension> graphite_mc_protocol::play::serverbound::PacketHandler
     fn handle_custom_payload(&mut self, payload: play::serverbound::CustomPayload) -> anyhow::Result<()> {
         if crate::debug::DEBUG_MOVEMENT && payload.channel == "devutils:debug_velocities" {
             let mut bytes = payload.data;
-            self.known_client_state.debug_state = DebugState::read_fully(&mut bytes)?;
+            self.known_client_state.debug_state = Some(DebugState::read_fully(&mut bytes)?);
         }
         
         Ok(())
@@ -1590,7 +1590,9 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
 
     let getter = KnownBlockGetter::new(player);
 
-    check_velocity(player.known_client_state.debug_state.base_tick_velocity, &velocity, "base tick");
+    if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+        check_velocity(debug_state.base_tick_velocity, &velocity, "base tick");
+    }
 
     // updateIsUnderwater
     let is_under_water = is_same_fluid(Fluid::Water, player.fluid_at_eyes); // Note: Player #isUnderWater removes is_in_water condition
@@ -1608,11 +1610,13 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         fall_damage_multiplier = 0.0;
     }
 
-    if crate::debug::DEBUG_MOVEMENT && is_in_water != player.known_client_state.debug_state.is_in_water {
-        println!("is_in_water is wrong. Server: {:?}. Client: {:?}. Position: {:?}", is_in_water, player.known_client_state.debug_state.is_in_water, player.last_client_position);
-    }
-    if crate::debug::DEBUG_MOVEMENT && is_in_lava != player.known_client_state.debug_state.is_in_lava {
-        println!("is_in_lava is wrong. Server: {:?}. Client: {:?}. Position: {:?}", is_in_lava, player.known_client_state.debug_state.is_in_lava, player.last_client_position);
+    if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+        if crate::debug::DEBUG_MOVEMENT && is_in_water != debug_state.is_in_water {
+            println!("is_in_water is wrong. Server: {:?}. Client: {:?}. Position: {:?}", is_in_water, debug_state.is_in_water, player.last_client_position);
+        }
+        if crate::debug::DEBUG_MOVEMENT && is_in_lava != debug_state.is_in_lava {
+            println!("is_in_lava is wrong. Server: {:?}. Client: {:?}. Position: {:?}", is_in_lava, debug_state.is_in_lava, player.last_client_position);
+        }
     }
 
     // updateSwimming
@@ -1625,13 +1629,17 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         let block_position = player.last_client_position.floor().as_ivec3();
         is_swimming = player.sprinting_last_tick && is_under_water && is_same_fluid(Fluid::Water, get_fluid(getter, block_position.x, block_position.y, block_position.z).1);
     }
-    if crate::debug::DEBUG_MOVEMENT && is_swimming != player.known_client_state.debug_state.is_swimming {
-        println!("is_swimming is wrong. Server: {:?}. Client: {:?}", is_swimming, player.known_client_state.debug_state.is_swimming);
+    if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+        if crate::debug::DEBUG_MOVEMENT && is_swimming != debug_state.is_swimming {
+            println!("is_swimming is wrong. Server: {:?}. Client: {:?}", is_swimming, debug_state.is_swimming);
+        }
     }
 
     // LocalPlayer aiStep
-    check_velocity(player.known_client_state.debug_state.local_player_ai_step_velocity, &velocity, "local player ai step");
-    
+    if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+        check_velocity(debug_state.local_player_ai_step_velocity, &velocity, "local player ai step");
+    }
+
     let forced_pose = if player.camera_entity_id == player.entity_id {
         calculate_forced_pose(player)
     } else {
@@ -1694,8 +1702,10 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
     }
 
     // LivingEntity aiStep
-    check_velocity(player.known_client_state.debug_state.living_ai_step_velocity, &velocity, "living ai step");
-
+    if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+        check_velocity(debug_state.living_ai_step_velocity, &velocity, "living ai step");
+    }
+    
     if no_jump_delay > 0 && no_jump_delay != u8::MAX {
         no_jump_delay -= 1;
     }
@@ -1777,7 +1787,9 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
 
     let before_travel_velocity_y = velocity.get_y();
 
-    check_velocity(player.known_client_state.debug_state.travel_velocity, &velocity, "travel");
+    if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+        check_velocity(debug_state.travel_velocity, &velocity, "travel");
+    }
 
     let prediction;
 
@@ -1805,15 +1817,23 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
                 slowdown = 0.96_f32;
             }
 
-            if crate::debug::DEBUG_MOVEMENT && speed != player.known_client_state.debug_state.move_relative_speed {
-                println!("Move relative speed is wrong. Server: {:?}. Client: {:?}", speed, player.known_client_state.debug_state.move_relative_speed);
+            let mut debug_move_inputs = None;
+            if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+                if crate::debug::DEBUG_MOVEMENT && speed != debug_state.move_relative_speed {
+                    println!("Move relative speed is wrong. Server: {:?}. Client: {:?}", speed, debug_state.move_relative_speed);
+                }
+                check_velocity(debug_state.move_relative_velocity, &velocity, "move relative");    
+                debug_move_inputs = Some(debug_state.move_inputs);
             }
-            check_velocity(player.known_client_state.debug_state.move_relative_velocity, &velocity, "move relative");
+            
             move_relative(player.yaw, left, forwards, speed, &mut velocity, client_position - player.last_client_position,
-                is_using_item, moving_slowly_speed, player.known_client_state.debug_state.move_inputs);
+                is_using_item, moving_slowly_speed, debug_move_inputs);
 
             // Move
-            check_velocity(player.known_client_state.debug_state.move_velocity, &velocity, "move");
+            if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+                check_velocity(debug_state.move_velocity, &velocity, "move");
+            }
+
             prediction = finalize_movement(player, trust_client, velocity, stuck_multiplier, is_flying, client_position, is_in_water);
             velocity = prediction.velocity;
             stuck_multiplier = prediction.stuck_multiplier;
@@ -1834,15 +1854,23 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
                 }
             }
         } else {
-            if crate::debug::DEBUG_MOVEMENT && 0.02_f32 != player.known_client_state.debug_state.move_relative_speed {
-                println!("Move relative speed is wrong. Server: {:?}. Client: {:?}", 0.02_f32, player.known_client_state.debug_state.move_relative_speed);
+            let mut debug_move_inputs = None;
+            if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+                if crate::debug::DEBUG_MOVEMENT && 0.02_f32 != debug_state.move_relative_speed {
+                    println!("Move relative speed is wrong. Server: {:?}. Client: {:?}", 0.02_f32, debug_state.move_relative_speed);
+                }
+                check_velocity(debug_state.move_relative_velocity, &velocity, "move relative");    
+                debug_move_inputs = Some(debug_state.move_inputs);
             }
-            check_velocity(player.known_client_state.debug_state.move_relative_velocity, &velocity, "move relative");
+
             move_relative(player.yaw, left, forwards, 0.02_f32, &mut velocity, client_position - player.last_client_position,
-                is_using_item, moving_slowly_speed, player.known_client_state.debug_state.move_inputs);
+                is_using_item, moving_slowly_speed, debug_move_inputs);
 
             // Move
-            check_velocity(player.known_client_state.debug_state.move_velocity, &velocity, "move");
+            if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+                check_velocity(debug_state.move_velocity, &velocity, "move");
+            }
+
             prediction = finalize_movement(player, trust_client, velocity, stuck_multiplier, is_flying, client_position, is_in_water);
             velocity = prediction.velocity;
             stuck_multiplier = prediction.stuck_multiplier;
@@ -1918,7 +1946,10 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         });
 		
         // Move
-        check_velocity(player.known_client_state.debug_state.move_velocity, &velocity, "move");
+        if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+            check_velocity(debug_state.move_velocity, &velocity, "move");
+        }
+
         prediction = finalize_movement(player, trust_client, velocity, stuck_multiplier, is_flying, client_position, is_in_water);
         velocity = prediction.velocity;
         stuck_multiplier = prediction.stuck_multiplier;
@@ -1949,18 +1980,22 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         };
 
         // Move relative
-        if crate::debug::DEBUG_MOVEMENT && friction_influenced_speed != player.known_client_state.debug_state.move_relative_speed {
-            println!("Move relative speed is wrong. Server: {:?}. Client: {:?}", friction_influenced_speed, player.known_client_state.debug_state.move_relative_speed);
+        let mut debug_move_inputs = None;
+        if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+            if crate::debug::DEBUG_MOVEMENT && friction_influenced_speed != debug_state.move_relative_speed {
+                println!("Move relative speed is wrong. Server: {:?}. Client: {:?}", friction_influenced_speed, debug_state.move_relative_speed);
+            }
+            if crate::debug::DEBUG_MOVEMENT && is_sprinting != debug_state.is_sprinting {
+                println!("Sprint state is wrong. Server: {:?}. Client: {:?}", is_sprinting, debug_state.is_sprinting);
+            }
+            if crate::debug::DEBUG_MOVEMENT && player.known_client_state.applied_sprint_modifier_to_movement_speed != debug_state.has_sprint_modifier_applied {
+                println!("Sprint modifier state is wrong. Sprinting: {:?}. Server: {:?}. Client: {:?}", is_sprinting, player.known_client_state.applied_sprint_modifier_to_movement_speed, debug_state.has_sprint_modifier_applied);
+            }
+            check_velocity(debug_state.move_relative_velocity, &velocity, "move relative");
+            debug_move_inputs = Some(debug_state.move_inputs);
         }
-        if crate::debug::DEBUG_MOVEMENT && is_sprinting != player.known_client_state.debug_state.is_sprinting {
-            println!("Sprint state is wrong. Server: {:?}. Client: {:?}", is_sprinting, player.known_client_state.debug_state.is_sprinting);
-        }
-        if crate::debug::DEBUG_MOVEMENT && player.known_client_state.applied_sprint_modifier_to_movement_speed != player.known_client_state.debug_state.has_sprint_modifier_applied {
-            println!("Sprint modifier state is wrong. Sprinting: {:?}. Server: {:?}. Client: {:?}", is_sprinting, player.known_client_state.applied_sprint_modifier_to_movement_speed, player.known_client_state.debug_state.has_sprint_modifier_applied);
-        }
-        check_velocity(player.known_client_state.debug_state.move_relative_velocity, &velocity, "move relative");
         move_relative(player.yaw, left, forwards, friction_influenced_speed, &mut velocity, client_position - player.last_client_position,
-            is_using_item, moving_slowly_speed, player.known_client_state.debug_state.move_inputs);
+            is_using_item, moving_slowly_speed, debug_move_inputs);
 
         if !is_flying && is_on_climbable(getter, player.last_client_position) {
             fall_damage_multiplier = 0.0;
@@ -1978,7 +2013,9 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         }
 
         // Move
-        check_velocity(player.known_client_state.debug_state.move_velocity, &velocity, "move");
+        if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+            check_velocity(debug_state.move_velocity, &velocity, "move");
+        }
         prediction = finalize_movement(player, trust_client, velocity, stuck_multiplier, is_flying, client_position, is_in_water);
         velocity = prediction.velocity;
         stuck_multiplier = prediction.stuck_multiplier;
@@ -1998,7 +2035,9 @@ fn predict_movement<P: PlayerExtension>(player: &Player<P>, client_position: DVe
         velocity *= DVec3::new(resistance as f64, 0.98_f32 as f64, resistance as f64);
     }
 
-    check_velocity(player.known_client_state.debug_state.after_travel_velocity, &velocity, "after travel");
+    if let Some(debug_state) = player.known_client_state.debug_state.as_ref() {
+        check_velocity(debug_state.after_travel_velocity, &velocity, "after travel");
+    }
 
     if is_flying {
         velocity.set_y(before_travel_velocity_y * 0.6);
@@ -2523,14 +2562,14 @@ fn get_fluid_at_eye<P: PlayerExtension>(player: &Player<P>) -> Fluid {
 }
 
 fn move_relative(yaw: f32, left: f32, forwards: f32, speed: f32, velocity: &mut UncertainVelocity, player_delta: DVec3,
-    is_using_item: bool, moving_slowly_speed: Option<f32>, debug_move_inputs: DVec3
+    is_using_item: bool, moving_slowly_speed: Option<f32>, debug_move_inputs: Option<DVec3>
 ) {
     if is_using_item {
         let min = velocity.get_min();
         let max = velocity.get_max();
 
-        let movement = calculate_relative_movement(yaw, left, forwards, speed, true, moving_slowly_speed, DVec3::ZERO);
-        let no_slow_movement = calculate_relative_movement(yaw, left, forwards, speed, false, moving_slowly_speed, DVec3::ZERO);
+        let movement = calculate_relative_movement(yaw, left, forwards, speed, true, moving_slowly_speed, None);
+        let no_slow_movement = calculate_relative_movement(yaw, left, forwards, speed, false, moving_slowly_speed, None);
 
         let adjusted_min_x = min.x + movement.x - 1E-4;
         let adjusted_max_x = max.x + movement.x + 1E-4;
@@ -2556,7 +2595,7 @@ fn move_relative(yaw: f32, left: f32, forwards: f32, speed: f32, velocity: &mut 
     }
 }
 
-fn calculate_relative_movement(yaw: f32, mut left: f32, mut forwards: f32, speed: f32, is_using_item: bool, moving_slowly_speed: Option<f32>, debug_move_inputs: DVec3) -> DVec3 {
+fn calculate_relative_movement(yaw: f32, mut left: f32, mut forwards: f32, speed: f32, is_using_item: bool, moving_slowly_speed: Option<f32>, debug_move_inputs: Option<DVec3>) -> DVec3 {
     let mut input = mojang_math::normalize_vec2(Vec2::new(left, forwards));
     
     // modifyInput
@@ -2586,12 +2625,14 @@ fn calculate_relative_movement(yaw: f32, mut left: f32, mut forwards: f32, speed
         forwards = normalized.y * scale;
     }
 
-    if crate::debug::DEBUG_MOVEMENT && debug_move_inputs != DVec3::ZERO {
-        if left != debug_move_inputs.x as f32 {
-            println!("xxa is wrong. Server: {:?}. Client: {:?}", left, debug_move_inputs.x as f32);
-        }
-        if forwards != debug_move_inputs.z as f32 {
-            println!("zza is wrong. Server: {:?}. Client: {:?}", forwards, debug_move_inputs.z as f32);
+    if let Some(debug_move_inputs) = debug_move_inputs {
+        if crate::debug::DEBUG_MOVEMENT {
+            if left != debug_move_inputs.x as f32 {
+                println!("xxa is wrong. Server: {:?}. Client: {:?}", left, debug_move_inputs.x as f32);
+            }
+            if forwards != debug_move_inputs.z as f32 {
+                println!("zza is wrong. Server: {:?}. Client: {:?}", forwards, debug_move_inputs.z as f32);
+            }
         }
     }
 

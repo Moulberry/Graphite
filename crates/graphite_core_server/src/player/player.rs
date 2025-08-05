@@ -380,7 +380,7 @@ impl <P: PlayerExtension> Player<P> {
         let entity_id = next_entity_id();
         let known_client_state = KnownClientState {
             awaiting_absolute_teleport_count: 0,
-            debug_state: DebugState::default(),
+            debug_state: None,
             pose: Pose::Standing,
             forced_pose: ForcedPose::Standing,
             velocity: UncertainVelocity::default(),
@@ -402,6 +402,11 @@ impl <P: PlayerExtension> Player<P> {
             effects: EnumMap::default(),
             known_blocks: FxHashMap::default()
         };
+        let mut attributes = SyncableAttributeMap::new();
+        attributes.set_base_value(Attribute::AttackDamage, 1.0);
+        attributes.set_base_value(Attribute::MovementSpeed, 0.1);
+        attributes.set_base_value(Attribute::BlockInteractionRange, 4.5);
+        attributes.set_base_value(Attribute::EntityInteractionRange, 3.0);
         Self {
             world,
             player_id,
@@ -422,7 +427,7 @@ impl <P: PlayerExtension> Player<P> {
             on_ground: false,
             yaw: 0.0,
             pitch: 0.0,
-            attributes: SyncableAttributeMap::new(),
+            attributes,
             chunk_ref: None,
 
             hotbar_slot: 0,
